@@ -21,7 +21,8 @@ public class SettingsServiceTests
             new SettingsRepository(db.Factory),
             audit,
             currentUser,
-            environment);
+            environment,
+            new NoopSecretProtector());
 
         return (service, currentUser, audit, environment, db);
     }

@@ -142,11 +142,13 @@ public class AppointmentServiceTests
             .Where(x => x.AppointmentId == result.AppointmentId)
             .ToList();
 
-        Assert.Equal(3, reminders.Count);
+        Assert.Equal(4, reminders.Count);
         Assert.All(reminders, x => Assert.Equal(ReminderState.Pending, x.State));
+        Assert.Equal(3, reminders.Count(x => x.Kind == ReminderKind.Appointment));
+        Assert.Single(reminders, x => x.Kind == ReminderKind.Call && x.OffsetMinutes == 5);
         Assert.Equal(
             new DateTime(2026, 11, 7, 7, 0, 0, DateTimeKind.Utc),
-            reminders.Single(x => x.OffsetMinutes == 1440).DueAtUtc);
+            reminders.Single(x => x.Kind == ReminderKind.Appointment && x.OffsetMinutes == 1440).DueAtUtc);
     }
 
     [Fact]
@@ -163,7 +165,8 @@ public class AppointmentServiceTests
 
         using var db = sut.Db.CreateContext();
         var offsets = db.ReminderDispatches
-            .Where(x => x.AppointmentId == result.AppointmentId)
+            .Where(x => x.AppointmentId == result.AppointmentId
+                        && x.Kind == ReminderKind.Appointment)
             .Select(x => x.OffsetMinutes)
             .ToList();
 
@@ -331,7 +334,8 @@ public class AppointmentServiceTests
 
         using var db = sut.Db.CreateContext();
         var reminders = db.ReminderDispatches
-            .Where(x => x.AppointmentId == created.AppointmentId)
+            .Where(x => x.AppointmentId == created.AppointmentId
+                        && x.Kind == ReminderKind.Appointment)
             .ToList();
 
         Assert.Single(reminders, x => x.State == ReminderState.Cancelled);
@@ -518,8 +522,9 @@ public class AppointmentServiceTests
             .Where(x => x.AppointmentId == created.AppointmentId)
             .ToList();
 
-        Assert.Equal(2, reminders.Count);
+        Assert.Equal(3, reminders.Count);
         Assert.All(reminders, x => Assert.Equal(ReminderState.Pending, x.State));
+        Assert.Single(reminders, x => x.Kind == ReminderKind.Call && x.OffsetMinutes == 5);
     }
 
     [Fact]
@@ -544,12 +549,14 @@ public class AppointmentServiceTests
             .Where(x => x.AppointmentId == created.AppointmentId)
             .ToList();
 
-        Assert.Equal(2, reminders.Count(x => x.State == ReminderState.Pending));
+        Assert.Equal(3, reminders.Count(x => x.State == ReminderState.Pending));
         Assert.Single(reminders,
-            x => x.OffsetMinutes == 30 && x.State == ReminderState.Pending);
+            x => x.Kind == ReminderKind.Appointment && x.OffsetMinutes == 30 && x.State == ReminderState.Pending);
         Assert.Single(reminders,
-            x => x.OffsetMinutes == 60 && x.State == ReminderState.Pending);
-        Assert.Single(reminders, x => x.State == ReminderState.Cancelled);
+            x => x.Kind == ReminderKind.Appointment && x.OffsetMinutes == 60 && x.State == ReminderState.Pending);
+        Assert.Single(reminders,
+            x => x.Kind == ReminderKind.Call && x.OffsetMinutes == 5 && x.State == ReminderState.Pending);
+        Assert.Equal(2, reminders.Count(x => x.State == ReminderState.Cancelled));
     }
 
     [Fact]

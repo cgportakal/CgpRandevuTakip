@@ -17,7 +17,15 @@ public sealed record AppSettings(
     bool PushEnabled,
     string PushProvider,
     string PushTopic,
-    string DailyShareTime)
+    string DailyShareTime,
+    string PushToken = "",
+    string PushChatId = "",
+    bool QuietHoursEnabled = true,
+    string QuietHoursStart = "22:00",
+    string QuietHoursEnd = "07:00",
+    bool AutoStartEnabled = false,
+    string AutoStartMode = "login",
+    bool CloseToTray = true)
 {
     public static AppSettings CreateDefault(string defaultBackupDirectory) => new(
         AppTheme.Auto,
@@ -28,7 +36,15 @@ public sealed record AppSettings(
         PushEnabled: false,
         PushProvider: "ntfy",
         PushTopic: string.Empty,
-        DailyShareTime: "08:30");
+        DailyShareTime: "08:30",
+        PushToken: string.Empty,
+        PushChatId: string.Empty,
+        QuietHoursEnabled: true,
+        QuietHoursStart: "22:00",
+        QuietHoursEnd: "07:00",
+        AutoStartEnabled: false,
+        AutoStartMode: "login",
+        CloseToTray: true);
 }
 
 public static class SettingsKeys
@@ -43,4 +59,12 @@ public static class SettingsKeys
     public const string PushTopic = "app.push_topic";
     public const string DailyShareTime = "app.daily_share_time";
     public const string FirstRunCompleted = "app.first_run_completed";
+    public const string PushToken = "app.push_token";
+    public const string PushChatId = "app.push_chat_id";
+    public const string QuietHoursEnabled = "app.quiet_hours_enabled";
+    public const string QuietHoursStart = "app.quiet_hours_start";
+    public const string QuietHoursEnd = "app.quiet_hours_end";
+    public const string AutoStartEnabled = "app.auto_start_enabled";
+    public const string AutoStartMode = "app.auto_start_mode";
+    public const string CloseToTray = "app.close_to_tray";
 }

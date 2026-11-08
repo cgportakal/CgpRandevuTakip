@@ -110,6 +110,7 @@ public class AppDbContext : DbContext
         {
             entity.ToTable("ReminderDispatches");
             entity.HasKey(x => x.Id);
+            entity.Property(x => x.Kind).HasConversion<int>();
             entity.Property(x => x.State).HasConversion<int>();
             entity.Property(x => x.LastAction).HasConversion<int>();
             entity.Property(x => x.DedupKey).HasMaxLength(100).IsRequired();

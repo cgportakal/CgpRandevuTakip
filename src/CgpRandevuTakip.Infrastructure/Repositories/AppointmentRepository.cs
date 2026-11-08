@@ -144,6 +144,147 @@ public sealed class AppointmentRepository : IAppointmentRepository
             .ToListAsync();
     }
 
+    public async Task<IReadOnlyList<ReminderDispatch>> GetDueRemindersAsync(DateTime nowUtc, int batchSize)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        return await db.ReminderDispatches.AsNoTracking()
+            .Include(x => x.Appointment!)
+                .ThenInclude(a => a.Person)
+            .Include(x => x.Appointment!)
+                .ThenInclude(a => a.HostUser)
+            .Include(x => x.Appointment!)
+                .ThenInclude(a => a.Category)
+            .Where(x => x.State == ReminderState.Pending
+                        && x.DueAtUtc <= nowUtc
+                        && x.Appointment != null
+                        && !x.Appointment.IsDeleted
+                        && !x.Appointment.IsClosed
+                        && (x.Appointment.Status == AppointmentStatus.Scheduled
+                            || x.Appointment.Status == AppointmentStatus.Arrived))
+            .OrderBy(x => x.DueAtUtc)
+            .Take(batchSize)
+            .ToListAsync();
+    }
+
+    public async Task<IReadOnlyList<ReminderDispatch>> GetExpiredSentRemindersAsync(DateTime cutoffUtc)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        return await db.ReminderDispatches.AsNoTracking()
+            .Where(x => x.State == ReminderState.Sent
+                        && x.ActionAtUtc == null
+                        && x.WindowsNotifiedAtUtc != null
+                        && x.WindowsNotifiedAtUtc <= cutoffUtc)
+            .OrderBy(x => x.WindowsNotifiedAtUtc)
+            .ToListAsync();
+    }
+
+    public async Task<ReminderDispatch?> GetReminderAsync(string id)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        return await db.ReminderDispatches.AsNoTracking()
+            .Include(x => x.Appointment)
+            .FirstOrDefaultAsync(x => x.Id == id);
+    }
+
+    public async Task MarkWindowsNotifiedAsync(string id, DateTime nowUtc)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        await db.ReminderDispatches
+            .Where(x => x.Id == id && x.WindowsNotifiedAtUtc == null)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.WindowsNotifiedAtUtc, nowUtc));
+    }
+
+    public async Task MarkPushNotifiedAsync(string id, DateTime nowUtc)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        await db.ReminderDispatches
+            .Where(x => x.Id == id && x.PushNotifiedAtUtc == null)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.PushNotifiedAtUtc, nowUtc));
+    }
+
+    public async Task MarkSentAsync(string id)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        await db.ReminderDispatches
+            .Where(x => x.Id == id && x.State == ReminderState.Pending)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.State, ReminderState.Sent));
+    }
+
+    public async Task MarkMissedAsync(string id, DateTime nowUtc)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        await db.ReminderDispatches
+            .Where(x => x.Id == id && x.State == ReminderState.Pending)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.State, ReminderState.Missed)
+                .SetProperty(x => x.ActionAtUtc, nowUtc));
+    }
+
+    public async Task RequeueForRepeatAsync(string id, DateTime nowUtc)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        await db.ReminderDispatches
+            .Where(x => x.Id == id)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.State, ReminderState.Pending)
+                .SetProperty(x => x.DueAtUtc, nowUtc)
+                .SetProperty(x => x.WindowsNotifiedAtUtc, (DateTime?)null)
+                .SetProperty(x => x.PushNotifiedAtUtc, (DateTime?)null)
+                .SetProperty(x => x.RepeatCount, x => x.RepeatCount + 1));
+    }
+
+    public async Task RequeueForSnoozeAsync(string id, DateTime dueAtUtc, DateTime nowUtc, string? userId)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        await db.ReminderDispatches
+            .Where(x => x.Id == id)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.State, ReminderState.Pending)
+                .SetProperty(x => x.DueAtUtc, dueAtUtc)
+                .SetProperty(x => x.WindowsNotifiedAtUtc, (DateTime?)null)
+                .SetProperty(x => x.PushNotifiedAtUtc, (DateTime?)null)
+                .SetProperty(x => x.LastAction, ReminderAction.UnreachableSnooze)
+                .SetProperty(x => x.ActionAtUtc, nowUtc)
+                .SetProperty(x => x.ActionByUserId, userId)
+                .SetProperty(x => x.SnoozeCount, x => x.SnoozeCount + 1));
+    }
+
+    public async Task MarkActionAsync(
+        string id,
+        ReminderState state,
+        ReminderAction action,
+        DateTime nowUtc,
+        string? userId)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        await db.ReminderDispatches
+            .Where(x => x.Id == id)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.State, state)
+                .SetProperty(x => x.LastAction, action)
+                .SetProperty(x => x.ActionAtUtc, nowUtc)
+                .SetProperty(x => x.ActionByUserId, userId));
+    }
+
+    public async Task MarkUnansweredAsync(IReadOnlyList<string> ids)
+    {
+        if (ids.Count == 0)
+            return;
+
+        await using var db = await _factory.CreateDbContextAsync();
+        foreach (var chunk in ids.Chunk(400))
+        {
+            var batch = chunk.ToArray();
+            await db.ReminderDispatches
+                .Where(x => batch.Contains(x.Id))
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(x => x.State, ReminderState.Unanswered));
+        }
+    }
+
     public async Task<IReadOnlyList<Appointment>> GetDeletedAsync()
     {
         await using var db = await _factory.CreateDbContextAsync();
@@ -285,12 +426,13 @@ public sealed class AppointmentRepository : IAppointmentRepository
         {
             var cancelledByOffset = appointment.Reminders
                 .Where(x => x.State == ReminderState.Cancelled)
-                .GroupBy(x => x.OffsetMinutes);
+                .GroupBy(x => new { x.Kind, x.OffsetMinutes });
 
             foreach (var group in cancelledByOffset)
             {
                 var alreadyActive = appointment.Reminders.Any(x =>
-                    x.OffsetMinutes == group.Key
+                    x.Kind == group.Key.Kind
+                    && x.OffsetMinutes == group.Key.OffsetMinutes
                     && x.State != ReminderState.Cancelled);
 
                 if (alreadyActive)

@@ -15,6 +15,7 @@ public sealed class SettingsService : ISettingsService
     private readonly IAuditLogger _audit;
     private readonly ICurrentUser _currentUser;
     private readonly IAppEnvironment _environment;
+    private readonly ISecretProtector _secrets;
 
     private AppSettings? _cachedSettings;
 
@@ -22,12 +23,14 @@ public sealed class SettingsService : ISettingsService
         ISettingsRepository repository,
         IAuditLogger audit,
         ICurrentUser currentUser,
-        IAppEnvironment environment)
+        IAppEnvironment environment,
+        ISecretProtector secrets)
     {
         _repository = repository;
         _audit = audit;
         _currentUser = currentUser;
         _environment = environment;
+        _secrets = secrets;
     }
 
     public IReadOnlyList<int> AllowedReminderMinutes => ReminderValues;
@@ -51,7 +54,15 @@ public sealed class SettingsService : ISettingsService
             PushEnabled: ReadBool(values, SettingsKeys.PushEnabled, defaults.PushEnabled),
             PushProvider: NormalizeProvider(Read(values, SettingsKeys.PushProvider)),
             PushTopic: Read(values, SettingsKeys.PushTopic) ?? defaults.PushTopic,
-            DailyShareTime: ReadTime(values, defaults.DailyShareTime));
+            DailyShareTime: ReadTime(values, defaults.DailyShareTime),
+            PushToken: _secrets.Unprotect(Read(values, SettingsKeys.PushToken)) ?? defaults.PushToken,
+            PushChatId: _secrets.Unprotect(Read(values, SettingsKeys.PushChatId)) ?? defaults.PushChatId,
+            QuietHoursEnabled: ReadBool(values, SettingsKeys.QuietHoursEnabled, defaults.QuietHoursEnabled),
+            QuietHoursStart: ReadTime(values, defaults.QuietHoursStart),
+            QuietHoursEnd: ReadTime(values, defaults.QuietHoursEnd),
+            AutoStartEnabled: ReadBool(values, SettingsKeys.AutoStartEnabled, defaults.AutoStartEnabled),
+            AutoStartMode: NormalizeAutoStartMode(Read(values, SettingsKeys.AutoStartMode)),
+            CloseToTray: ReadBool(values, SettingsKeys.CloseToTray, defaults.CloseToTray));
 
         _cachedSettings = settings;
         return settings;
@@ -78,6 +89,7 @@ public sealed class SettingsService : ISettingsService
             return OperationResult.Fail("Günlük paylaşım saati SS:dd biçiminde olmalıdır.");
 
         var provider = NormalizeProvider(settings.PushProvider);
+        var autoStartMode = NormalizeAutoStartMode(settings.AutoStartMode);
         var previous = await GetAsync();
 
         var values = new Dictionary<string, string>(StringComparer.Ordinal)
@@ -90,7 +102,15 @@ public sealed class SettingsService : ISettingsService
             [SettingsKeys.PushEnabled] = settings.PushEnabled.ToString(),
             [SettingsKeys.PushProvider] = provider,
             [SettingsKeys.PushTopic] = settings.PushTopic?.Trim() ?? string.Empty,
-            [SettingsKeys.DailyShareTime] = settings.DailyShareTime
+            [SettingsKeys.DailyShareTime] = settings.DailyShareTime,
+            [SettingsKeys.PushToken] = _secrets.Protect(settings.PushToken?.Trim()) ?? string.Empty,
+            [SettingsKeys.PushChatId] = _secrets.Protect(settings.PushChatId?.Trim()) ?? string.Empty,
+            [SettingsKeys.QuietHoursEnabled] = settings.QuietHoursEnabled.ToString(),
+            [SettingsKeys.QuietHoursStart] = settings.QuietHoursStart,
+            [SettingsKeys.QuietHoursEnd] = settings.QuietHoursEnd,
+            [SettingsKeys.AutoStartEnabled] = settings.AutoStartEnabled.ToString(),
+            [SettingsKeys.AutoStartMode] = autoStartMode,
+            [SettingsKeys.CloseToTray] = settings.CloseToTray.ToString()
         };
 
         await _repository.SetManyAsync(values);
@@ -165,6 +185,9 @@ public sealed class SettingsService : ISettingsService
         var normalized = (provider ?? string.Empty).Trim().ToLowerInvariant();
         return PushProviders.Contains(normalized) ? normalized : "ntfy";
     }
+
+    private static string NormalizeAutoStartMode(string? mode)
+        => (mode ?? string.Empty).Trim().ToLowerInvariant() == "tray" ? "tray" : "login";
 
     private static string? NormalizeDirectory(string? directory)
         => string.IsNullOrWhiteSpace(directory) ? null : directory.Trim();

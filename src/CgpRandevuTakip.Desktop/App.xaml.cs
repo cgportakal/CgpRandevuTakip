@@ -7,6 +7,8 @@ using CgpRandevuTakip.Application.Appointments;
 using CgpRandevuTakip.Application.Auth;
 using CgpRandevuTakip.Application.Categories;
 using CgpRandevuTakip.Application.Hosts;
+using CgpRandevuTakip.Application.Notifications;
+using CgpRandevuTakip.Application.Reminders;
 using CgpRandevuTakip.Application.Settings;
 using CgpRandevuTakip.Application.Users;
 using CgpRandevuTakip.Desktop.Services;
@@ -27,6 +29,8 @@ public partial class App : System.Windows.Application
 {
     private IHost? _host;
     private Mutex? _singleInstanceMutex;
+    private TrayService? _tray;
+    private bool _runLoopActive;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -57,7 +61,14 @@ public partial class App : System.Windows.Application
             await InitializeDatabaseAsync();
             await _host.StartAsync();
 
-            await RunApplicationLoopAsync();
+            _tray = _host.Services.GetRequiredService<TrayService>();
+            _tray.Initialize();
+            _tray.OpenRequested += OnTrayOpenRequested;
+            _tray.ExitRequested += OnTrayExitRequested;
+
+            var startHidden = e.Args.Any(a => a.Equals("--tray", StringComparison.OrdinalIgnoreCase));
+            if (!startHidden)
+                await RunApplicationLoopAsync();
         }
         catch (Exception ex)
         {
@@ -73,6 +84,20 @@ public partial class App : System.Windows.Application
         }
     }
 
+    private void OnTrayOpenRequested(object? sender, EventArgs e)
+    {
+        if (_runLoopActive)
+        {
+            _tray?.ShowWindow();
+            return;
+        }
+
+        _ = RunApplicationLoopAsync();
+    }
+
+    private void OnTrayExitRequested(object? sender, EventArgs e)
+        => Shutdown();
+
     private static void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton(new SqliteDbContextFactory(AppPaths.DatabasePath));
@@ -83,6 +108,11 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IAppEnvironment, WindowsAppEnvironment>();
         services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
         services.AddSingleton<IAuditLogger, AuditLogger>();
+        services.AddSingleton<ISecretProtector, DpapiSecretProtector>();
+        services.AddSingleton<IPushNotifier, PushNotifier>();
+        services.AddSingleton<SessionStateService>();
+        services.AddSingleton<TrayService>();
+        services.AddSingleton<AutoStartService>();
 
         services.AddSingleton<IUserRepository, UserRepository>();
         services.AddSingleton<ICategoryRepository, CategoryRepository>();
@@ -100,6 +130,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IHostService, HostService>();
         services.AddSingleton<IAppointmentOutcomeService, AppointmentOutcomeService>();
         services.AddSingleton<IUserService, UserService>();
+        services.AddSingleton<IReminderService, ReminderService>();
 
         services.AddSingleton<ThemeService>();
         services.AddSingleton<IDialogService, DialogService>();
@@ -107,6 +138,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IAppointmentDialogService, AppointmentDialogService>();
         services.AddSingleton<IAppointmentOutcomeDialogService, AppointmentOutcomeDialogService>();
         services.AddHostedService<DeletedAppointmentCleanupService>();
+        services.AddHostedService<ReminderDispatcher>();
         services.AddTransient<SessionLockService>();
 
         services.AddTransient<LoginViewModel>();
@@ -157,41 +189,50 @@ public partial class App : System.Windows.Application
 
     private async Task RunApplicationLoopAsync()
     {
-        if (_host is null)
+        if (_host is null || _runLoopActive)
             return;
 
-        var auth = _host.Services.GetRequiredService<IAuthService>();
-
-        while (true)
+        _runLoopActive = true;
+        try
         {
-            if (await auth.IsFirstRunAsync())
+            var auth = _host.Services.GetRequiredService<IAuthService>();
+
+            while (true)
             {
-                var setup = _host.Services.GetRequiredService<SetupWindow>();
-                if (setup.ShowDialog() != true)
+                if (await auth.IsFirstRunAsync())
                 {
-                    Shutdown();
-                    return;
+                    var setup = _host.Services.GetRequiredService<SetupWindow>();
+                    if (setup.ShowDialog() != true)
+                    {
+                        Shutdown();
+                        return;
+                    }
                 }
-            }
-            else
-            {
-                var login = _host.Services.GetRequiredService<LoginWindow>();
-                if (login.ShowDialog() != true)
+                else
                 {
-                    Shutdown();
-                    return;
+                    var login = _host.Services.GetRequiredService<LoginWindow>();
+                    if (login.ShowDialog() != true)
+                    {
+                        Shutdown();
+                        return;
+                    }
                 }
+
+                var shell = _host.Services.GetRequiredService<MainWindow>();
+                MainWindow = shell;
+                _tray?.AttachWindow(shell);
+                shell.ShowDialog();
+
+                if (!shell.LogoutRequested)
+                    break;
             }
 
-            var shell = _host.Services.GetRequiredService<MainWindow>();
-            MainWindow = shell;
-            shell.ShowDialog();
-
-            if (!shell.LogoutRequested)
-                break;
+            Shutdown();
         }
-
-        Shutdown();
+        finally
+        {
+            _runLoopActive = false;
+        }
     }
 
     private bool AcquireSingleInstance()
@@ -240,6 +281,8 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _tray?.Dispose();
+
         if (_host is not null)
         {
             try

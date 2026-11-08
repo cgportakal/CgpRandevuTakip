@@ -33,6 +33,12 @@ public enum Attendance
     Cancelled = 3
 }
 
+public enum ReminderKind
+{
+    Appointment = 0,
+    Call = 1
+}
+
 public enum ReminderState
 {
     Pending = 0,

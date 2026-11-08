@@ -7,7 +7,9 @@ public class ReminderDispatch : EntityBase
 {
     public string AppointmentId { get; set; } = string.Empty;
 
-    /// <summary>Randevudan kaç dakika önce: 1440, 60 veya 30.</summary>
+    public ReminderKind Kind { get; set; } = ReminderKind.Appointment;
+
+    /// <summary>Randevudan kaç dakika önce: 1440, 60, 30 veya (arama için) 5.</summary>
     public int OffsetMinutes { get; set; }
 
     public DateTime DueAtUtc { get; set; }

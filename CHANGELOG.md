@@ -3,6 +3,26 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.5.0] — 2026-11-08 · Sprint 4
+
+### Eklendi
+- Hatırlatıcı motoru: zamanı gelen hatırlatıcılar 15 saniyede bir işlenir
+- Windows bildirimi (uygulama içi topmost toast) ve 4 seçenekli aksiyon penceresi
+- "Sırası gelen" arama hatırlatıcıları: 30 dk ve 5 dk önce
+- Push bildirimi: ntfy ve Telegram; varsayılan kapalı ve isimsiz
+- Tepsi simgesi ve "kapatınca tepside çalış"
+- Windows açılışında başlatma (giriş ekranı veya tepside gizli)
+- Sessiz saatler: kullanıcı seçimli, varsayılan 22:00–07:00
+- Sırların DPAPI ile şifreli saklanması
+- Hatırlatıcı aksiyonları için denetim kaydı
+
+### Değiştirildi
+- `ReminderDispatch` şemasına `Kind` (Appointment / Call) eklendi
+
+### Düzeltildi
+- Uygulama kapalıyken kaçırılan hatırlatıcılar açılışta telafi edilir; geçmiş randevular `Missed` olur
+- Aynı hatırlatıcının iki kez gönderilmesi kanal timestamp'leri ile engellenir
+
 ## [0.4.1] — 2026-11-08 · Sprint 3.5
 
 ### Eklendi

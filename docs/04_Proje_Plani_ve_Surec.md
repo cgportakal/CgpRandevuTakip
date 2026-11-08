@@ -57,16 +57,16 @@ Yarı zamanlı çalışmada 18-22 hafta öngörülür. Efor: ~95-115 adam-gün.
 | **2** | 2 hafta | Çekirdek kayıt ve günlük liste | Görüşme ekleme, günlük liste, tarih gezinme, arama | 21 | Tamamlandı (0.3.0) |
 | **3** | 2 hafta | Kaydın yaşam döngüsü | Detay, düzenleme, sonuç, durum geçişleri, sıradaki kişi, kullanıcı yönetimi, oturum kilidi | 18 | Tamamlandı (0.4.0) |
 | **3.5** | 1 gün | Stabilizasyon ve kapanış | CRUD doğrulama, silinenleri geri alma, 30 gün temizliği, host filtresi | 5 | Tamamlandı (0.4.1) |
-| **4** | 2 hafta | Hatırlatma vaadi | Reminder motoru, toast, aksiyon penceresi, push, telafi | 21 | Planlandı |
+| **4** | 2 hafta | Hatırlatma vaadi | Reminder motoru, toast, aksiyon penceresi, push, telafi, tepsi, sessiz saatler | 21 | Tamamlandı (0.5.0) |
 | **5** | 2 hafta | Günlük paylaşım | PNG render, pano, WhatsApp deep link, alıcı rehberi, zamanlayıcı | 21 | Planlandı |
 | **6** | 2 hafta | Veri güvenliği ve sürüm | Yedek/geri yükleme, denetim, kurulum, UAT, hata düzeltme | 21 | Planlandı |
 
 **Toplam:** ~138 SP (Sprint 3.5 dahil). Hız (velocity) ilk sprintte ölçülür; 18-22 SP/sprint
 varsayımı gerçekleşmezse kapsam değil **tarih** esnetilir (MVP sabit tutulur).
 
-> **Güncel durum (08.11.2026):** Sprint 0-3 ve Sprint 3.5 tamamlandı, sürüm **0.4.1**,
-> **146/146 test** geçiyor, derleme 0 uyarı / 0 hata. Sprint 3.5 sonuçları için
-> [docs/11_Sprint3_5_Raporu.md](11_Sprint3_5_Raporu.md).
+> **Güncel durum (08.11.2026):** Sprint 0-4 tamamlandı, sürüm **0.5.0**,
+> **164/164 test** geçiyor, derleme 0 uyarı / 0 hata. Sprint 4 sonuçları için
+> [docs/12_Sprint4_Raporu.md](12_Sprint4_Raporu.md).
 
 ### 2.1 Sprint 0 — ayrıntılı
 

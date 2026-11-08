@@ -188,11 +188,35 @@ public sealed class AppointmentService : IAppointmentService
             appointment.Reminders.Add(new ReminderDispatch
             {
                 AppointmentId = appointment.Id,
+                Kind = ReminderKind.Appointment,
                 OffsetMinutes = plan.OffsetMinutes,
                 DueAtUtc = plan.DueAtUtc,
                 State = ReminderState.Pending,
                 DedupKey = ReminderScheduleCalculator.BuildDedupKey(
                     appointment.Id,
+                    ReminderKind.Appointment,
+                    plan.OffsetMinutes,
+                    appointment.RowVersion)
+            });
+        }
+
+        // "Sırası gelen kişi" arama hatırlatıcıları: 30 dk ve 5 dk önce.
+        // 30 dk zaten randevu hatırlatıcısı olarak planlandıysa mükerrer bildirim önlenir.
+        foreach (var plan in ReminderScheduleCalculator.CalculateCallReminders(startsAtUtc, now))
+        {
+            if (plan.OffsetMinutes == 30 && input.ReminderOffsetsMinutes.Contains(30))
+                continue;
+
+            appointment.Reminders.Add(new ReminderDispatch
+            {
+                AppointmentId = appointment.Id,
+                Kind = ReminderKind.Call,
+                OffsetMinutes = plan.OffsetMinutes,
+                DueAtUtc = plan.DueAtUtc,
+                State = ReminderState.Pending,
+                DedupKey = ReminderScheduleCalculator.BuildDedupKey(
+                    appointment.Id,
+                    ReminderKind.Call,
                     plan.OffsetMinutes,
                     appointment.RowVersion)
             });
@@ -246,8 +270,15 @@ public sealed class AppointmentService : IAppointmentService
 
         var now = _clock.UtcNow;
         var existingReminders = await _appointments.GetRemindersAsync(id);
-        var blockedOffsets = existingReminders
-            .Where(x => AlreadyNotifiedStates.Contains(x.State))
+        var blockedAppointmentOffsets = existingReminders
+            .Where(x => x.Kind == ReminderKind.Appointment
+                        && AlreadyNotifiedStates.Contains(x.State))
+            .Select(x => x.OffsetMinutes)
+            .ToHashSet();
+
+        var blockedCallOffsets = existingReminders
+            .Where(x => x.Kind == ReminderKind.Call
+                        && AlreadyNotifiedStates.Contains(x.State))
             .Select(x => x.OffsetMinutes)
             .ToHashSet();
 
@@ -264,21 +295,42 @@ public sealed class AppointmentService : IAppointmentService
         appointment.UpdatedByUserId = _currentUser.UserId;
         appointment.RowVersion++;
 
-        var newReminders = ReminderScheduleCalculator
+        var newAppointmentReminders = ReminderScheduleCalculator
             .Calculate(startsAtUtc, input.ReminderOffsetsMinutes, now)
-            .Where(plan => !blockedOffsets.Contains(plan.OffsetMinutes))
+            .Where(plan => !blockedAppointmentOffsets.Contains(plan.OffsetMinutes))
             .Select(plan => new ReminderDispatch
             {
                 AppointmentId = appointment.Id,
+                Kind = ReminderKind.Appointment,
                 OffsetMinutes = plan.OffsetMinutes,
                 DueAtUtc = plan.DueAtUtc,
                 State = ReminderState.Pending,
                 DedupKey = ReminderScheduleCalculator.BuildDedupKey(
                     appointment.Id,
+                    ReminderKind.Appointment,
                     plan.OffsetMinutes,
                     appointment.RowVersion)
-            })
-            .ToList();
+            });
+
+        var newCallReminders = ReminderScheduleCalculator
+            .CalculateCallReminders(startsAtUtc, now)
+            .Where(plan => !blockedCallOffsets.Contains(plan.OffsetMinutes))
+            .Where(plan => plan.OffsetMinutes != 30 || !input.ReminderOffsetsMinutes.Contains(30))
+            .Select(plan => new ReminderDispatch
+            {
+                AppointmentId = appointment.Id,
+                Kind = ReminderKind.Call,
+                OffsetMinutes = plan.OffsetMinutes,
+                DueAtUtc = plan.DueAtUtc,
+                State = ReminderState.Pending,
+                DedupKey = ReminderScheduleCalculator.BuildDedupKey(
+                    appointment.Id,
+                    ReminderKind.Call,
+                    plan.OffsetMinutes,
+                    appointment.RowVersion)
+            });
+
+        var newReminders = newAppointmentReminders.Concat(newCallReminders).ToList();
 
         await _appointments.SaveAsync(
             appointment,
@@ -570,7 +622,7 @@ public sealed class AppointmentService : IAppointmentService
             appointment.StudentFirstName,
             appointment.StudentLastName,
             reminders
-                .Where(x => x.State == ReminderState.Pending)
+                .Where(x => x.Kind == ReminderKind.Appointment && x.State == ReminderState.Pending)
                 .Select(x => x.OffsetMinutes)
                 .Distinct()
                 .OrderByDescending(x => x)

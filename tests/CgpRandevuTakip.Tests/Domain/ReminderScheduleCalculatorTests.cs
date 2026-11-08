@@ -1,3 +1,4 @@
+using CgpRandevuTakip.Domain.Enums;
 using CgpRandevuTakip.Domain.Rules;
 using Xunit;
 
@@ -61,5 +62,37 @@ public class ReminderScheduleCalculatorTests
     public void BuildDedupKey_IsStable()
     {
         Assert.Equal("abc:30:1", ReminderScheduleCalculator.BuildDedupKey("abc", 30, 1));
+    }
+
+    [Fact]
+    public void BuildDedupKey_CallKind_IncludesMarker()
+    {
+        Assert.Equal(
+            "abc:call:5:1",
+            ReminderScheduleCalculator.BuildDedupKey("abc", ReminderKind.Call, 5, 1));
+        Assert.Equal(
+            "abc:30:1",
+            ReminderScheduleCalculator.BuildDedupKey("abc", ReminderKind.Appointment, 30, 1));
+    }
+
+    [Fact]
+    public void CalculateCallReminders_ReturnsThirtyAndFiveWhenFuture()
+    {
+        var start = Now.AddHours(2);
+
+        var plans = ReminderScheduleCalculator.CalculateCallReminders(start, Now);
+
+        Assert.Equal(new[] { 30, 5 }, plans.Select(p => p.OffsetMinutes).ToArray());
+        Assert.All(plans, p => Assert.True(p.DueAtUtc > Now));
+    }
+
+    [Fact]
+    public void CalculateCallReminders_SkipsPastOffsets()
+    {
+        var start = Now.AddMinutes(4);
+
+        var plans = ReminderScheduleCalculator.CalculateCallReminders(start, Now);
+
+        Assert.Empty(plans);
     }
 }

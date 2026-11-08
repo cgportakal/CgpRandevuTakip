@@ -5,8 +5,8 @@
 Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöneten, günlük listeyi
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
-> Durum: **Sprint 3.5 tamamlandı** — CRUD doğrulaması, silinen görüşmeleri geri alma, 30 günlük temizlik ve host filtresi hazır.
-> Sürüm: 0.4.1 · Tarih: 08.11.2026 · 146 test geçiyor
+> Durum: **Sprint 4 tamamlandı** — hatırlatıcı motoru, Windows bildirimi, aksiyon penceresi, push, tepsi ve sessiz saatler hazır.
+> Sürüm: 0.5.0 · Tarih: 08.11.2026 · 164 test geçiyor
 
 ## Neden bu proje?
 
@@ -30,6 +30,7 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 09 | [Sprint 2 Sonuç Raporu](docs/09_Sprint2_Raporu.md) | Görüşme CRUD, günlük liste, arama, host yönetimi, UI doğrulaması |
 | 10 | [Sprint 3 Sonuç Raporu](docs/10_Sprint3_Raporu.md) | Sonuç/durum geçişleri, tekrar randevu, kullanıcı yönetimi, oturum kilidi |
 | 11 | [Sprint 3.5 Sonuç Raporu](docs/11_Sprint3_5_Raporu.md) | CRUD doğrulaması, silinenleri geri alma, 30 gün temizliği, host filtresi |
+| 12 | [Sprint 4 Sonuç Raporu](docs/12_Sprint4_Raporu.md) | Hatırlatıcı motoru, bildirim, push, tepsi, sessiz saatler |
 
 ## Alınan temel kararlar
 
@@ -43,7 +44,7 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 
 1. Sprint 0-3 (tamamlandı): iskelet, giriş, tema, kategoriler, görüşme CRUD, günlük liste, detay, sonuç, kullanıcı yönetimi, oturum kilidi
 2. Sprint 3.5 (tamamlandı): CRUD doğrulaması, silinenleri geri alma, 30 gün temizliği, host filtresi
-3. Sprint 4: hatırlatıcı motoru + Windows/push bildirim + 4 kapatma aksiyonu
+3. Sprint 4 (tamamlandı): hatırlatıcı motoru + Windows/push bildirim + 4 kapatma aksiyonu + tepsi + sessiz saatler
 4. Sprint 5: WhatsApp paylaşımı (PNG + metin + günlük tetikleme) + alıcı rehberi
 5. Sprint 6: yerel yedekleme/geri yükleme, denetim kaydı, kurulum paketi, UAT
 6. Faz 2: Google Drive, raporlar, tekrarlayan görüşmeler, DB şifreleme

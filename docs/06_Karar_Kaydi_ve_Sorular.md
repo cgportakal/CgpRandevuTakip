@@ -49,6 +49,12 @@
 | D-39 | Silinen görüşmeler 30 gün soft delete olarak saklanır; yönetici "Silinenler" ekranından geri alabilir. Geri almada gelecekteki iptal edilmiş hatırlatıcılar yeniden etkinleştirilir. | Kalıcı silme, süresiz saklama | Yanlış silmeyi geri alma; BR-12 ile uyum | 08.11.2026 | Kabul |
 | D-40 | Günlük liste ve arama host filtresi içerir; host rolü yalnızca kendi kayıtlarıyla sınırlıdır. | Filtresiz liste | US-10 kabul kriteri ve operasyonel hız | 08.11.2026 | Kabul |
 | D-41 | 30 günü dolan silinmiş görüşmeler açılışta ve 6 saatlik aralıkla kalıcı silinir; denetim kaydı yazılır. | Manuel temizlik | Veri minimizasyonu ve disk temizliği | 08.11.2026 | Kabul |
+| D-42 | Hatırlatıcılar `Kind` (Appointment / Call) ile ayrıştırılır; "sırası gelen" 30/5 dk arama hatırlatıcısı ayrı kaydedilir. 30 dk randevu hatırlatıcısı varsa 30 dk arama bildirimi oluşturulmaz. | Tek tür hatırlatıcı | FR-REM-16 ve mükerrer bildirimi önleme | 08.11.2026 | Kabul |
+| D-43 | Bildirim motoru uygulama açılışında başlar; PII'li aksiyon penceresi yalnızca giriş sonrası ve kilitli değilken açılır. | Yalnızca giriş sonrası | Açılışta telafi; kilit ekranında PII gizliliği | 08.11.2026 | Kabul |
+| D-44 | Windows bildirimi uygulama içi topmost toast olarak gösterilir; OS Action Center entegrasyonu sonraki spike'ta. | OS toast | Ortam bağımsız çalışma ve güvenilirlik | 08.11.2026 | Kabul |
+| D-45 | Tekrar: toplam 3 gösterim; aksiyon alınmazsa `Unanswered`. "Ulaşılamadı" snooze 10 dk erteler ve otomatik tekrar sayılmaz. | Farklı tekrar sayıları | Ürün sahibi onayı | 08.11.2026 | Kabul |
+| D-46 | Sessiz saatler kullanıcı seçimli; varsayılan 22:00–07:00. Sessiz saatte push gönderilmez, Windows bildirimi sessizdir. | Sabit aralık, yalnızca push | Ürün sahibi onayı | 08.11.2026 | Kabul |
+| D-47 | Otomatik başlangıç kullanıcı seçimli; varsayılan "giriş ekranı açık". "Tepside gizli" modunda `--tray` ile başlar. | Sabit mod | Ürün sahibi onayı | 08.11.2026 | Kabul |
 
 ---
 
@@ -128,9 +134,10 @@ ilerlenir; cevap gelirse dokümanlar ve kod güncellenir.
 
 ## 5. Sonraki adım
 
-Sprint 0, Sprint 1, Sprint 2, Sprint 3 ve Sprint 3.5 tamamlandı. Sıradaki adım:
+Sprint 0, Sprint 1, Sprint 2, Sprint 3, Sprint 3.5 ve Sprint 4 tamamlandı. Sıradaki adım:
 
-1. Sprint 4: hatırlatıcı arka plan zamanlayıcısı, Windows toast + aksiyon penceresi, ntfy/Telegram push.
+1. Sprint 5: WhatsApp paylaşımı (PNG, pano, WhatsApp açma), alıcı rehberi, günlük gönderim saati.
+2. OS Action Center toast entegrasyonu ve gerçek WhatsApp yapıştırma doğrulaması.
 2. Kilit ekranında hassas bildirim içeriğinin gizlenmesi (BR-21, NFR-SEC-08).
 3. S-01'in gerçek WhatsApp yapıştırma doğrulaması ve sonucun `docs/08`'e işlenmesi.
 4. Açık sorulardan Q-03, Q-05, Q-10, Q-14, Q-15 ve Q-17 için ürün sahibi cevabı bekleniyor;

@@ -63,6 +63,12 @@ internal sealed class FixedClock : IClock
     public DateTime ToUtc(DateTime local) => local.AddHours(-3);
 }
 
+internal sealed class NoopSecretProtector : ISecretProtector
+{
+    public string? Protect(string? plainText) => plainText;
+    public string? Unprotect(string? cipherText) => cipherText;
+}
+
 internal sealed class RecordingAuditLogger : IAuditLogger
 {
     public List<AuditAction> Actions { get; } = new();

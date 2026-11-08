@@ -108,21 +108,62 @@
                             <ComboBox ItemsSource="{Binding PushProviderOptions}"
                                       SelectedItem="{Binding SelectedPushProvider, Mode=TwoWay}" />
 
-                            <TextBlock Text="Push konusu / topic" Style="{StaticResource LabelText}" Margin="0,14,0,6" />
-                            <TextBox Text="{Binding PushTopic, UpdateSourceTrigger=PropertyChanged}" />
+                            <StackPanel Visibility="{Binding IsTelegramProvider, Converter={StaticResource InverseBoolToVisibility}}">
+                                <TextBlock Text="Push konusu / topic" Style="{StaticResource LabelText}" Margin="0,14,0,6" />
+                                <TextBox Text="{Binding PushTopic, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Visibility="{Binding IsTelegramProvider, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="Bot token" Style="{StaticResource LabelText}" Margin="0,14,0,6" />
+                                <TextBox Text="{Binding PushToken, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="Sohbet kimliği (chat id)" Style="{StaticResource LabelText}" Margin="0,12,0,6" />
+                                <TextBox Text="{Binding PushChatId, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
 
                             <TextBlock Text="Push varsayılan olarak isimsizdir; bildirimde kişi adı gönderilmez."
                                        Style="{StaticResource MutedText}" Margin="0,8,0,0" />
 
-                            <Border Background="{DynamicResource AccentSoftBrush}"
-                                    CornerRadius="8"
-                                    Padding="10,8"
-                                    Margin="0,12,0,0">
-                                <TextBlock Text="Bildirim ve push gönderimi Sprint 4'te etkinleşecek. Bu bölümdeki değerler şimdiden kaydedilir."
-                                           Foreground="{DynamicResource AccentBrush}"
-                                           FontSize="11"
-                                           TextWrapping="Wrap" />
-                            </Border>
+                            <TextBlock Text="Sessiz saatler" Style="{StaticResource SectionTitle}" Margin="0,16,0,0" />
+                            <CheckBox Content="Sessiz saatler açık"
+                                      IsChecked="{Binding QuietHoursEnabled}"
+                                      Margin="0,0,0,10" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Başlangıç (SS:dd)" Style="{StaticResource LabelText}" />
+                                    <TextBox Text="{Binding QuietHoursStart, UpdateSourceTrigger=PropertyChanged}" MaxLength="5" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Bitiş (SS:dd)" Style="{StaticResource LabelText}" />
+                                    <TextBox Text="{Binding QuietHoursEnd, UpdateSourceTrigger=PropertyChanged}" MaxLength="5" />
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="Sessiz saatte push gönderilmez; Windows bildirimi sessiz gösterilir."
+                                       Style="{StaticResource MutedText}" Margin="0,8,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Uygulama -->
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,16"
+                            Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel>
+                            <TextBlock Text="Uygulama" Style="{StaticResource SectionTitle}" />
+
+                            <CheckBox Content="Windows açılışında başlat"
+                                      IsChecked="{Binding AutoStartEnabled}"
+                                      Margin="0,0,0,10" />
+                            <CheckBox Content="Kapatınca tepside çalış"
+                                      IsChecked="{Binding CloseToTray}"
+                                      Margin="0,0,0,12" />
+
+                            <TextBlock Text="Başlangıç modu" Style="{StaticResource LabelText}" />
+                            <ComboBox ItemsSource="{Binding AutoStartModeOptions}"
+                                      DisplayMemberPath="Label"
+                                      SelectedItem="{Binding SelectedAutoStartMode, Mode=TwoWay}" />
                         </StackPanel>
                     </Border>
 

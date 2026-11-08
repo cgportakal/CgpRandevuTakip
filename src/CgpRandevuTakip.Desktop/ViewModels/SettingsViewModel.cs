@@ -18,6 +18,8 @@ public sealed record ThemeOption(AppTheme Value, string Label);
 
 public sealed record ReminderOption(int Minutes, string Label);
 
+public sealed record AutoStartModeOption(string Value, string Label);
+
 public partial class SettingsViewModel : ObservableObject
 {
     private readonly ISettingsService _settings;
@@ -26,6 +28,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly ICurrentUser _currentUser;
     private readonly IDialogService _dialogs;
     private readonly ISpikeService _spike;
+    private readonly AutoStartService _autoStart;
     private readonly IServiceProvider _services;
 
     private bool _isLoading;
@@ -37,6 +40,7 @@ public partial class SettingsViewModel : ObservableObject
         ICurrentUser currentUser,
         IDialogService dialogs,
         ISpikeService spike,
+        AutoStartService autoStart,
         IServiceProvider services)
     {
         _settings = settings;
@@ -45,6 +49,7 @@ public partial class SettingsViewModel : ObservableObject
         _currentUser = currentUser;
         _dialogs = dialogs;
         _spike = spike;
+        _autoStart = autoStart;
         _services = services;
 
         ThemeOptions = new ObservableCollection<ThemeOption>
@@ -62,11 +67,18 @@ public partial class SettingsViewModel : ObservableObject
         };
 
         PushProviderOptions = new ObservableCollection<string> { "ntfy", "telegram" };
+
+        AutoStartModeOptions = new ObservableCollection<AutoStartModeOption>
+        {
+            new("login", "Giriş ekranı açık"),
+            new("tray", "Tepside gizli")
+        };
     }
 
     public ObservableCollection<ThemeOption> ThemeOptions { get; }
     public ObservableCollection<ReminderOption> ReminderOptions { get; }
     public ObservableCollection<string> PushProviderOptions { get; }
+    public ObservableCollection<AutoStartModeOption> AutoStartModeOptions { get; }
 
     [ObservableProperty]
     private ThemeOption? _selectedTheme;
@@ -93,6 +105,30 @@ public partial class SettingsViewModel : ObservableObject
     private string _pushTopic = string.Empty;
 
     [ObservableProperty]
+    private string _pushToken = string.Empty;
+
+    [ObservableProperty]
+    private string _pushChatId = string.Empty;
+
+    [ObservableProperty]
+    private bool _quietHoursEnabled = true;
+
+    [ObservableProperty]
+    private string _quietHoursStart = "22:00";
+
+    [ObservableProperty]
+    private string _quietHoursEnd = "07:00";
+
+    [ObservableProperty]
+    private bool _autoStartEnabled;
+
+    [ObservableProperty]
+    private AutoStartModeOption? _selectedAutoStartMode;
+
+    [ObservableProperty]
+    private bool _closeToTray = true;
+
+    [ObservableProperty]
     private string _dailyShareTime = "08:30";
 
     [ObservableProperty]
@@ -105,6 +141,8 @@ public partial class SettingsViewModel : ObservableObject
     private bool _isBusy;
 
     public bool IsAdmin => _currentUser.IsInRole(UserRole.Admin);
+
+    public bool IsTelegramProvider => SelectedPushProvider == "telegram";
 
     public string DatabasePath => _environment.DatabasePath;
 
@@ -130,7 +168,16 @@ public partial class SettingsViewModel : ObservableObject
             PushEnabled = settings.PushEnabled;
             SelectedPushProvider = settings.PushProvider;
             PushTopic = settings.PushTopic;
+            PushToken = settings.PushToken;
+            PushChatId = settings.PushChatId;
+            QuietHoursEnabled = settings.QuietHoursEnabled;
+            QuietHoursStart = settings.QuietHoursStart;
+            QuietHoursEnd = settings.QuietHoursEnd;
+            AutoStartEnabled = settings.AutoStartEnabled;
+            CloseToTray = settings.CloseToTray;
             DailyShareTime = settings.DailyShareTime;
+            SelectedAutoStartMode = AutoStartModeOptions.FirstOrDefault(x => x.Value == settings.AutoStartMode)
+                                    ?? AutoStartModeOptions[0];
             SelectedTheme = ThemeOptions.FirstOrDefault(x => x.Value == settings.Theme) ?? ThemeOptions[0];
             SelectedReminder = ReminderOptions.FirstOrDefault(x => x.Minutes == settings.DefaultReminderMinutes)
                                ?? ReminderOptions[0];
@@ -165,7 +212,15 @@ public partial class SettingsViewModel : ObservableObject
                 PushEnabled,
                 SelectedPushProvider,
                 PushTopic,
-                DailyShareTime);
+                DailyShareTime,
+                PushToken,
+                PushChatId,
+                QuietHoursEnabled,
+                QuietHoursStart,
+                QuietHoursEnd,
+                AutoStartEnabled,
+                SelectedAutoStartMode?.Value ?? "login",
+                CloseToTray);
 
             var result = await _settings.SaveAsync(settings);
             if (!result.Success)
@@ -175,6 +230,7 @@ public partial class SettingsViewModel : ObservableObject
             }
 
             _theme.Apply(settings.Theme);
+            _autoStart.SetEnabled(settings.AutoStartEnabled, settings.AutoStartMode);
 
             var institution = AppConstants.ResolveInstitutionName(settings.InstitutionName);
             InstitutionName = institution;
@@ -254,6 +310,9 @@ public partial class SettingsViewModel : ObservableObject
         {
             UseShellExecute = true
         });
+
+    partial void OnSelectedPushProviderChanged(string value)
+        => OnPropertyChanged(nameof(IsTelegramProvider));
 
     partial void OnSelectedThemeChanged(ThemeOption? value)
     {

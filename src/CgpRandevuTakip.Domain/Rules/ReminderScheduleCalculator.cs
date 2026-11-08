@@ -1,3 +1,5 @@
+using CgpRandevuTakip.Domain.Enums;
+
 namespace CgpRandevuTakip.Domain.Rules;
 
 public sealed record ReminderPlan(int OffsetMinutes, DateTime DueAtUtc);
@@ -43,6 +45,37 @@ public static class ReminderScheduleCalculator
             .OrderBy(due => due)
             .ToList();
 
+    /// <summary>
+    /// "Sırası gelen kişi" arama hatırlatıcılarını üretir: 30 dk ve 5 dk önce.
+    /// Randevu yakınsa geçmişe düşen aralıklar atlanır.
+    /// </summary>
+    public static IReadOnlyList<ReminderPlan> CalculateCallReminders(
+        DateTime startsAtUtc,
+        DateTime nowUtc)
+    {
+        var plans = new List<ReminderPlan>();
+
+        foreach (var offset in CallReminderOffsetsMinutes)
+        {
+            var dueAt = startsAtUtc.AddMinutes(-offset);
+            if (dueAt <= nowUtc)
+                continue;
+
+            plans.Add(new ReminderPlan(offset, dueAt));
+        }
+
+        return plans.OrderBy(p => p.DueAtUtc).ToList();
+    }
+
     public static string BuildDedupKey(string appointmentId, int offsetMinutes, int generation)
         => $"{appointmentId}:{offsetMinutes}:{generation}";
+
+    public static string BuildDedupKey(
+        string appointmentId,
+        ReminderKind kind,
+        int offsetMinutes,
+        int generation)
+        => kind == ReminderKind.Call
+            ? $"{appointmentId}:call:{offsetMinutes}:{generation}"
+            : BuildDedupKey(appointmentId, offsetMinutes, generation);
 }
