@@ -46,6 +46,9 @@
 | D-36 | "Tekrar randevu" kaynak kaydı şablon alır; tarih +7 gün, saat sonraki yarım saat önerilir; kaynak görüşme değiştirilmez | Kaynağı güncellemek, seri üretmek | Hızlı tekrar kayıt; yanlışlıkla geçmişi değiştirmeyi önler | 07.11.2026 | Kabul |
 | D-37 | Marka adı **CGP - Randevu Takip** olarak güncellendi; yedek öneki `CGP_RandevuTakip_Yedek_` olur | Teknik adı da değiştirmek (D-38) | Kullanıcıya görünen tüm marka metinleri CGP olmalı | 07.11.2026 | Kabul · D-38 ile teknik ad da CGP oldu |
 | D-38 | Teknik ad, çözüm/proje/klasör ve assembly adları `CgpRandevuTakip` olarak yeniden adlandırıldı; eski `%LocalAppData%` veri klasörü ilk açılışta tek seferlik yeni klasöre taşınır | Eski teknik adı korumak, veriyi taşımamak | Dosya ve teknik isimlendirmede tutarlılık; mevcut kullanıcı verisi korunur | 07.11.2026 | Kabul |
+| D-39 | Silinen görüşmeler 30 gün soft delete olarak saklanır; yönetici "Silinenler" ekranından geri alabilir. Geri almada gelecekteki iptal edilmiş hatırlatıcılar yeniden etkinleştirilir. | Kalıcı silme, süresiz saklama | Yanlış silmeyi geri alma; BR-12 ile uyum | 08.11.2026 | Kabul |
+| D-40 | Günlük liste ve arama host filtresi içerir; host rolü yalnızca kendi kayıtlarıyla sınırlıdır. | Filtresiz liste | US-10 kabul kriteri ve operasyonel hız | 08.11.2026 | Kabul |
+| D-41 | 30 günü dolan silinmiş görüşmeler açılışta ve 6 saatlik aralıkla kalıcı silinir; denetim kaydı yazılır. | Manuel temizlik | Veri minimizasyonu ve disk temizliği | 08.11.2026 | Kabul |
 
 ---
 
@@ -125,7 +128,7 @@ ilerlenir; cevap gelirse dokümanlar ve kod güncellenir.
 
 ## 5. Sonraki adım
 
-Sprint 0, Sprint 1, Sprint 2 ve Sprint 3 tamamlandı. Sıradaki adım:
+Sprint 0, Sprint 1, Sprint 2, Sprint 3 ve Sprint 3.5 tamamlandı. Sıradaki adım:
 
 1. Sprint 4: hatırlatıcı arka plan zamanlayıcısı, Windows toast + aksiyon penceresi, ntfy/Telegram push.
 2. Kilit ekranında hassas bildirim içeriğinin gizlenmesi (BR-21, NFR-SEC-08).

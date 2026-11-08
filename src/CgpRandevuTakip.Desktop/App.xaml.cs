@@ -54,9 +54,9 @@ public partial class App : System.Windows.Application
                 .ConfigureServices(ConfigureServices)
                 .Build();
 
+            await InitializeDatabaseAsync();
             await _host.StartAsync();
 
-            await InitializeDatabaseAsync();
             await RunApplicationLoopAsync();
         }
         catch (Exception ex)
@@ -106,6 +106,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<ISpikeService, SpikeService>();
         services.AddSingleton<IAppointmentDialogService, AppointmentDialogService>();
         services.AddSingleton<IAppointmentOutcomeDialogService, AppointmentOutcomeDialogService>();
+        services.AddHostedService<DeletedAppointmentCleanupService>();
         services.AddTransient<SessionLockService>();
 
         services.AddTransient<LoginViewModel>();
@@ -122,6 +123,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<HostsViewModel>();
         services.AddTransient<UsersViewModel>();
         services.AddTransient<LockViewModel>();
+        services.AddTransient<DeletedAppointmentsViewModel>();
 
         services.AddTransient<LoginWindow>();
         services.AddTransient<SetupWindow>();
@@ -137,6 +139,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<AppointmentDetailWindow>();
         services.AddTransient<AppointmentOutcomeWindow>();
         services.AddTransient<LockWindow>();
+        services.AddTransient<DeletedAppointmentsWindow>();
     }
 
     private async Task InitializeDatabaseAsync()

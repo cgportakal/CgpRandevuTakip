@@ -144,6 +144,18 @@ public sealed class AppointmentRepository : IAppointmentRepository
             .ToListAsync();
     }
 
+    public async Task<IReadOnlyList<Appointment>> GetDeletedAsync()
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        return await db.Appointments.AsNoTracking()
+            .Include(x => x.Person)
+            .Include(x => x.HostUser)
+            .Include(x => x.Category)
+            .Where(x => x.IsDeleted)
+            .OrderByDescending(x => x.DeletedAtUtc)
+            .ToListAsync();
+    }
+
     public async Task<IReadOnlyDictionary<string, int>> GetHostUsageCountsAsync()
     {
         await using var db = await _factory.CreateDbContextAsync();
@@ -229,17 +241,16 @@ public sealed class AppointmentRepository : IAppointmentRepository
         attachedAppointment.State = EntityState.Detached;
     }
 
-    public async Task SoftDeleteAsync(string id)
+    public async Task SoftDeleteAsync(string id, DateTime nowUtc)
     {
         await using var db = await _factory.CreateDbContextAsync();
         var appointment = await db.Appointments.FirstOrDefaultAsync(x => x.Id == id);
         if (appointment is null)
             return;
 
-        var now = DateTime.UtcNow;
         appointment.IsDeleted = true;
-        appointment.DeletedAtUtc = now;
-        appointment.UpdatedAtUtc = now;
+        appointment.DeletedAtUtc = nowUtc;
+        appointment.UpdatedAtUtc = nowUtc;
         appointment.RowVersion++;
 
         await db.ReminderDispatches
@@ -250,18 +261,80 @@ public sealed class AppointmentRepository : IAppointmentRepository
         await db.SaveChangesAsync();
     }
 
-    public async Task RestoreAsync(string id)
+    public async Task<bool> RestoreAsync(string id, DateTime nowUtc)
     {
         await using var db = await _factory.CreateDbContextAsync();
-        var appointment = await db.Appointments.FirstOrDefaultAsync(x => x.Id == id);
-        if (appointment is null)
-            return;
+        await using var transaction = await db.Database.BeginTransactionAsync();
+
+        var appointment = await db.Appointments
+            .Include(x => x.Reminders)
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+        if (appointment is null || !appointment.IsDeleted)
+            return false;
 
         appointment.IsDeleted = false;
         appointment.DeletedAtUtc = null;
-        appointment.UpdatedAtUtc = DateTime.UtcNow;
+        appointment.UpdatedAtUtc = nowUtc;
         appointment.RowVersion++;
+
+        // Silme sırasında iptal edilen hatırlatıcılar, randevu hâlâ gelecekteyse
+        // yeniden etkinleştirilir. Aynı aralık için eski nesil kayıtlar varsa yalnızca
+        // en son kayıt canlandırılır; böylece mükerrer hatırlatıcı oluşmaz.
+        if (appointment.IsActiveForReminders && appointment.StartsAtUtc > nowUtc)
+        {
+            var cancelledByOffset = appointment.Reminders
+                .Where(x => x.State == ReminderState.Cancelled)
+                .GroupBy(x => x.OffsetMinutes);
+
+            foreach (var group in cancelledByOffset)
+            {
+                var alreadyActive = appointment.Reminders.Any(x =>
+                    x.OffsetMinutes == group.Key
+                    && x.State != ReminderState.Cancelled);
+
+                if (alreadyActive)
+                    continue;
+
+                var latest = group
+                    .OrderByDescending(x => x.CreatedAtUtc)
+                    .First();
+
+                latest.State = ReminderState.Pending;
+            }
+        }
+
         await db.SaveChangesAsync();
+        await transaction.CommitAsync();
+        return true;
+    }
+
+    public async Task<IReadOnlyList<string>> PurgeDeletedBeforeAsync(DateTime cutoffUtc)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+
+        var ids = await db.Appointments.AsNoTracking()
+            .Where(x => x.IsDeleted
+                        && x.DeletedAtUtc != null
+                        && x.DeletedAtUtc < cutoffUtc)
+            .Select(x => x.Id)
+            .ToListAsync();
+
+        if (ids.Count == 0)
+            return ids;
+
+        await using var transaction = await db.Database.BeginTransactionAsync();
+        foreach (var chunk in ids.Chunk(400))
+        {
+            var batch = chunk.ToArray();
+            await db.Appointments
+                .Where(x => batch.Contains(x.Id))
+                .ExecuteDeleteAsync();
+        }
+
+        await transaction.CommitAsync();
+
+        return ids;
     }
 
     private static bool MatchesText(Appointment appointment, string term, string digits)

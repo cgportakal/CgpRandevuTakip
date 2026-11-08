@@ -11,11 +11,14 @@ public interface IAppointmentService
         string? categoryId,
         AppointmentStatus? status,
         DateTime? fromLocal,
-        DateTime? toLocal);
+        DateTime? toLocal,
+        string? hostUserId = null);
     Task<AppointmentDetailDto?> GetDetailAsync(string id);
     Task<AppointmentListItemDto?> GetNextAppointmentAsync();
+    Task<IReadOnlyList<DeletedAppointmentDto>> GetDeletedAsync();
     Task<AppointmentSaveResult> CreateAsync(AppointmentInput input);
     Task<AppointmentSaveResult> UpdateAsync(string id, AppointmentInput input);
     Task<OperationResult> DeleteAsync(string id);
     Task<OperationResult> RestoreAsync(string id);
+    Task<int> PurgeExpiredDeletedAsync(DateTime nowUtc);
 }

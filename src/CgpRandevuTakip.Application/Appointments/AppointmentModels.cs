@@ -91,6 +91,31 @@ public sealed record AppointmentListItemDto(
     };
 }
 
+public sealed record DeletedAppointmentDto(
+    string Id,
+    DateTime StartsAtLocal,
+    string PersonFullName,
+    string PhoneE164,
+    string HostName,
+    string CategoryName,
+    DateTime DeletedAtLocal)
+{
+    public const int RestoreWindowDays = 30;
+
+    public string DateLabel => StartsAtLocal.ToString("dd/MM/yyyy");
+
+    public string TimeLabel => StartsAtLocal.ToString("HH:mm");
+
+    public string DeletedAtText => DeletedAtLocal.ToString("dd/MM/yyyy HH:mm");
+
+    public int RemainingDays
+        => Math.Max(0, RestoreWindowDays - (DateTime.Today - DeletedAtLocal.Date).Days);
+
+    public string RemainingText => RemainingDays == 0
+        ? "Son gün"
+        : $"{RemainingDays} gün";
+}
+
 public sealed record AppointmentDetailDto(
     string Id,
     DateTime StartsAtLocal,

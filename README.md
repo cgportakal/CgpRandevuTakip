@@ -5,8 +5,8 @@
 Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöneten, günlük listeyi
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
-> Durum: **Sprint 3 tamamlandı** — görüşme sonucu, durum geçişleri, tekrar randevu, kullanıcı yönetimi ve 30 dk oturum kilidi hazır.
-> Sürüm: 0.4.0 · Tarih: 07.11.2026 · 140 test geçiyor
+> Durum: **Sprint 3.5 tamamlandı** — CRUD doğrulaması, silinen görüşmeleri geri alma, 30 günlük temizlik ve host filtresi hazır.
+> Sürüm: 0.4.1 · Tarih: 08.11.2026 · 146 test geçiyor
 
 ## Neden bu proje?
 
@@ -29,6 +29,7 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 08 | [Sprint 1 Sonuç Raporu](docs/08_Sprint1_Raporu.md) | Giriş, roller, tema, kategoriler, spike sonuçları, Sprint 2'ye devir |
 | 09 | [Sprint 2 Sonuç Raporu](docs/09_Sprint2_Raporu.md) | Görüşme CRUD, günlük liste, arama, host yönetimi, UI doğrulaması |
 | 10 | [Sprint 3 Sonuç Raporu](docs/10_Sprint3_Raporu.md) | Sonuç/durum geçişleri, tekrar randevu, kullanıcı yönetimi, oturum kilidi |
+| 11 | [Sprint 3.5 Sonuç Raporu](docs/11_Sprint3_5_Raporu.md) | CRUD doğrulaması, silinenleri geri alma, 30 gün temizliği, host filtresi |
 
 ## Alınan temel kararlar
 
@@ -41,10 +42,11 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 ## Önerilen geliştirme sırası
 
 1. Sprint 0-3 (tamamlandı): iskelet, giriş, tema, kategoriler, görüşme CRUD, günlük liste, detay, sonuç, kullanıcı yönetimi, oturum kilidi
-2. Sprint 4: hatırlatıcı motoru + Windows/push bildirim + 4 kapatma aksiyonu
-3. Sprint 5: WhatsApp paylaşımı (PNG + metin + günlük tetikleme) + alıcı rehberi
-4. Sprint 6: yerel yedekleme/geri yükleme, denetim kaydı, kurulum paketi, UAT
-5. Faz 2: Google Drive, raporlar, tekrarlayan görüşmeler, DB şifreleme
+2. Sprint 3.5 (tamamlandı): CRUD doğrulaması, silinenleri geri alma, 30 gün temizliği, host filtresi
+3. Sprint 4: hatırlatıcı motoru + Windows/push bildirim + 4 kapatma aksiyonu
+4. Sprint 5: WhatsApp paylaşımı (PNG + metin + günlük tetikleme) + alıcı rehberi
+5. Sprint 6: yerel yedekleme/geri yükleme, denetim kaydı, kurulum paketi, UAT
+6. Faz 2: Google Drive, raporlar, tekrarlayan görüşmeler, DB şifreleme
 
 ## Hızlı başlangıç (geliştirme)
 

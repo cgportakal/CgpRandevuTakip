@@ -113,6 +113,16 @@
 
                             <TextBlock Text="Push varsayılan olarak isimsizdir; bildirimde kişi adı gönderilmez."
                                        Style="{StaticResource MutedText}" Margin="0,8,0,0" />
+
+                            <Border Background="{DynamicResource AccentSoftBrush}"
+                                    CornerRadius="8"
+                                    Padding="10,8"
+                                    Margin="0,12,0,0">
+                                <TextBlock Text="Bildirim ve push gönderimi Sprint 4'te etkinleşecek. Bu bölümdeki değerler şimdiden kaydedilir."
+                                           Foreground="{DynamicResource AccentBrush}"
+                                           FontSize="11"
+                                           TextWrapping="Wrap" />
+                            </Border>
                         </StackPanel>
                     </Border>
 

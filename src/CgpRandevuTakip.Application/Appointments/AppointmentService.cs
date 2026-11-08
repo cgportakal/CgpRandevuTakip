@@ -14,6 +14,7 @@ public sealed class AppointmentService : IAppointmentService
     private const int MaxDurationMinutes = 240;
     private const int MaxNameLength = 100;
     private const int MaxDescriptionLength = 4000;
+    private const int DeletedRetentionDays = 30;
 
     private static readonly ReminderState[] AlreadyNotifiedStates =
     {
@@ -72,7 +73,8 @@ public sealed class AppointmentService : IAppointmentService
         string? categoryId,
         AppointmentStatus? status,
         DateTime? fromLocal,
-        DateTime? toLocal)
+        DateTime? toLocal,
+        string? hostUserId = null)
     {
         var term = searchText?.Trim();
         var hasTerm = !string.IsNullOrWhiteSpace(term);
@@ -86,12 +88,15 @@ public sealed class AppointmentService : IAppointmentService
             toUtc = _clock.ToUtc(DateTime.Today.AddDays(1));
         }
 
+        // Host rolü kendi kayıtlarıyla sınırlıdır; yönetici/sekreter filtre uygulayabilir.
+        var hostFilter = ScopedHostUserId() ?? NormalizeOptional(hostUserId);
+
         var rows = await _appointments.QueryAsync(new AppointmentQuery(
             fromUtc,
             toUtc,
             hasTerm ? term : null,
             string.IsNullOrWhiteSpace(categoryId) ? null : categoryId,
-            ScopedHostUserId(),
+            hostFilter,
             status));
 
         return rows.Select(ToListItem).ToList();
@@ -115,6 +120,15 @@ public sealed class AppointmentService : IAppointmentService
     {
         var next = await _appointments.GetNextAsync(_clock.UtcNow, ScopedHostUserId());
         return next is null ? null : ToListItem(next);
+    }
+
+    public async Task<IReadOnlyList<DeletedAppointmentDto>> GetDeletedAsync()
+    {
+        if (!_currentUser.IsInRole(UserRole.Admin))
+            return Array.Empty<DeletedAppointmentDto>();
+
+        var rows = await _appointments.GetDeletedAsync();
+        return rows.Select(ToDeletedDto).ToList();
     }
 
     public async Task<AppointmentSaveResult> CreateAsync(AppointmentInput input)
@@ -290,7 +304,7 @@ public sealed class AppointmentService : IAppointmentService
         if (appointment is null || appointment.IsDeleted)
             return OperationResult.Fail("Görüşme bulunamadı.");
 
-        await _appointments.SoftDeleteAsync(id);
+        await _appointments.SoftDeleteAsync(id, _clock.UtcNow);
         await _audit.LogAsync(
             AuditAction.AppointmentDeleted,
             _currentUser.UserId,
@@ -305,7 +319,22 @@ public sealed class AppointmentService : IAppointmentService
         if (!_currentUser.IsInRole(UserRole.Admin))
             return OperationResult.Fail("Geri alma yetkisi yalnızca yöneticidedir.");
 
-        await _appointments.RestoreAsync(id);
+        var appointment = await _appointments.GetByIdAsync(id);
+        if (appointment is null || !appointment.IsDeleted)
+            return OperationResult.Fail("Görüşme bulunamadı veya zaten aktif.");
+
+        var now = _clock.UtcNow;
+        if (appointment.DeletedAtUtc is { } deletedAt
+            && deletedAt < now.AddDays(-DeletedRetentionDays))
+        {
+            return OperationResult.Fail(
+                $"Geri alma süresi doldu. Silinen görüşmeler {DeletedRetentionDays} gün saklanır.");
+        }
+
+        var restored = await _appointments.RestoreAsync(id, now);
+        if (!restored)
+            return OperationResult.Fail("Görüşme geri alınamadı.");
+
         await _audit.LogAsync(
             AuditAction.AppointmentRestored,
             _currentUser.UserId,
@@ -313,6 +342,23 @@ public sealed class AppointmentService : IAppointmentService
             id);
 
         return OperationResult.Ok();
+    }
+
+    public async Task<int> PurgeExpiredDeletedAsync(DateTime nowUtc)
+    {
+        var ids = await _appointments.PurgeDeletedBeforeAsync(
+            nowUtc.AddDays(-DeletedRetentionDays));
+
+        foreach (var id in ids)
+        {
+            await _audit.LogAsync(
+                AuditAction.AppointmentPurged,
+                userId: null,
+                entityType: nameof(Appointment),
+                entityId: id);
+        }
+
+        return ids.Count;
     }
 
     private bool CanManageAppointments()
@@ -443,6 +489,21 @@ public sealed class AppointmentService : IAppointmentService
 
         await _persons.AddAsync(person);
         return person;
+    }
+
+    private DeletedAppointmentDto ToDeletedDto(Appointment appointment)
+    {
+        var startsAtLocal = _clock.ToLocal(appointment.StartsAtUtc);
+        var personName = $"{appointment.Person?.FirstName} {appointment.Person?.LastName}".Trim();
+
+        return new DeletedAppointmentDto(
+            appointment.Id,
+            startsAtLocal,
+            personName,
+            appointment.Person?.PhoneE164 ?? string.Empty,
+            appointment.HostUser?.DisplayName ?? string.Empty,
+            appointment.Category?.Name ?? string.Empty,
+            _clock.ToLocal(appointment.DeletedAtUtc ?? appointment.UpdatedAtUtc));
     }
 
     private AppointmentListItemDto ToListItem(Appointment appointment)

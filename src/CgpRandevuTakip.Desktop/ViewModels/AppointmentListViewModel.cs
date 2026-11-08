@@ -1,6 +1,7 @@
 using System.Windows.Threading;
 using CgpRandevuTakip.Application.Appointments;
 using CgpRandevuTakip.Application.Categories;
+using CgpRandevuTakip.Application.Hosts;
 using CgpRandevuTakip.Desktop.Common;
 using CgpRandevuTakip.Domain.Enums;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -12,10 +13,13 @@ public sealed record CategoryFilterOption(string? Id, string Label);
 
 public sealed record StatusFilterOption(AppointmentStatus? Value, string Label);
 
+public sealed record HostFilterOption(string? Id, string Label);
+
 public partial class AppointmentListViewModel : ObservableObject
 {
     private readonly IAppointmentService _appointments;
     private readonly ICategoryService _categories;
+    private readonly IHostService _hosts;
     private readonly Application.Abstractions.ICurrentUser _currentUser;
     private readonly Services.IDialogService _dialogs;
     private readonly Services.IAppointmentDialogService _appointmentDialogs;
@@ -27,12 +31,14 @@ public partial class AppointmentListViewModel : ObservableObject
     public AppointmentListViewModel(
         IAppointmentService appointments,
         ICategoryService categories,
+        IHostService hosts,
         Application.Abstractions.ICurrentUser currentUser,
         Services.IDialogService dialogs,
         Services.IAppointmentDialogService appointmentDialogs)
     {
         _appointments = appointments;
         _categories = categories;
+        _hosts = hosts;
         _currentUser = currentUser;
         _dialogs = dialogs;
         _appointmentDialogs = appointmentDialogs;
@@ -70,6 +76,8 @@ public partial class AppointmentListViewModel : ObservableObject
 
     public RangeObservableCollection<StatusFilterOption> StatusFilters { get; }
 
+    public RangeObservableCollection<HostFilterOption> HostFilters { get; } = new();
+
     [ObservableProperty]
     private DateTime _selectedDate = DateTime.Today;
 
@@ -81,6 +89,9 @@ public partial class AppointmentListViewModel : ObservableObject
 
     [ObservableProperty]
     private StatusFilterOption? _selectedStatusFilter;
+
+    [ObservableProperty]
+    private HostFilterOption? _selectedHostFilter;
 
     [ObservableProperty]
     private AppointmentListItemDto? _selectedAppointment;
@@ -125,9 +136,11 @@ public partial class AppointmentListViewModel : ObservableObject
 
     public bool CanDelete => _currentUser.IsInRole(UserRole.Admin);
 
-    public bool IsHostRole => _currentUser.IsInRole(UserRole.Host);
+    public bool CanFilterHosts => !_currentUser.IsInRole(UserRole.Host);
 
-    public string ShareHint => "Günlük liste paylaşımı Sprint 5'te etkinleşecek.";
+    public bool CanShareDailyList => false;
+
+    public bool IsHostRole => _currentUser.IsInRole(UserRole.Host);
 
     [RelayCommand]
     private async Task LoadAsync()
@@ -144,9 +157,10 @@ public partial class AppointmentListViewModel : ObservableObject
             var status = SelectedStatusFilter?.Value;
             var useSearch = IsSearchActive;
 
+            var hostUserId = SelectedHostFilter?.Id;
             var rows = useSearch
-                ? await _appointments.SearchAsync(SearchText, categoryId, status, null, null)
-                : await _appointments.SearchAsync(null, categoryId, status, SelectedDate, SelectedDate);
+                ? await _appointments.SearchAsync(SearchText, categoryId, status, null, null, hostUserId)
+                : await _appointments.SearchAsync(null, categoryId, status, SelectedDate, SelectedDate, hostUserId);
 
             Appointments.ReplaceWith(rows);
 
@@ -213,6 +227,7 @@ public partial class AppointmentListViewModel : ObservableObject
         SearchText = string.Empty;
         SelectedCategoryFilter = CategoryFilters[0];
         SelectedStatusFilter = StatusFilters[0];
+        SelectedHostFilter = HostFilters.Count > 0 ? HostFilters[0] : null;
         _suppressReload = false;
         await LoadAsync();
     }
@@ -265,32 +280,57 @@ public partial class AppointmentListViewModel : ObservableObject
         await LoadAsync();
     }
 
+    [RelayCommand(CanExecute = nameof(CanDelete))]
+    private async Task OpenDeletedAsync()
+    {
+        if (await _appointmentDialogs.ShowDeletedAsync())
+            await LoadAsync();
+    }
+
     [RelayCommand]
     private void ShareDailyList()
-        => _dialogs.Info(ShareHint, "Günlük liste paylaşımı");
+        => _dialogs.Info(
+            "Günlük liste paylaşımı Sprint 5'te etkinleşecek.",
+            "Günlük liste paylaşımı");
 
     private async Task EnsureFiltersAsync()
     {
         if (_filtersLoaded)
             return;
 
-        var selectedId = SelectedCategoryFilter?.Id;
-        var categories = await _categories.GetAllAsync();
+        var selectedCategoryId = SelectedCategoryFilter?.Id;
+        var selectedHostId = SelectedHostFilter?.Id;
 
-        var options = new List<CategoryFilterOption>(categories.Count + 1)
+        var categoriesTask = _categories.GetAllAsync();
+        var hostsTask = _hosts.GetSelectableHostsAsync();
+        await Task.WhenAll(categoriesTask, hostsTask);
+
+        var categories = await categoriesTask;
+        var categoryOptions = new List<CategoryFilterOption>(categories.Count + 1)
         {
             new(null, "Tüm kategoriler")
         };
 
-        options.AddRange(categories.Select(category => new CategoryFilterOption(
+        categoryOptions.AddRange(categories.Select(category => new CategoryFilterOption(
             category.Id,
             category.IsActive ? category.Name : $"{category.Name} (pasif)")));
 
-        CategoryFilters.ReplaceWith(options);
+        CategoryFilters.ReplaceWith(categoryOptions);
+
+        var hosts = await hostsTask;
+        var hostOptions = new List<HostFilterOption>(hosts.Count + 1)
+        {
+            new(null, "Tüm görüşmeciler")
+        };
+
+        hostOptions.AddRange(hosts.Select(host => new HostFilterOption(host.Id, host.DisplayName)));
+        HostFilters.ReplaceWith(hostOptions);
 
         _suppressReload = true;
-        SelectedCategoryFilter = CategoryFilters.FirstOrDefault(x => x.Id == selectedId)
+        SelectedCategoryFilter = CategoryFilters.FirstOrDefault(x => x.Id == selectedCategoryId)
                                  ?? CategoryFilters[0];
+        SelectedHostFilter = HostFilters.FirstOrDefault(x => x.Id == selectedHostId)
+                             ?? HostFilters[0];
         _suppressReload = false;
 
         _filtersLoaded = true;
@@ -323,6 +363,12 @@ public partial class AppointmentListViewModel : ObservableObject
     }
 
     partial void OnSelectedStatusFilterChanged(StatusFilterOption? value)
+    {
+        if (!_suppressReload)
+            _ = LoadAsync();
+    }
+
+    partial void OnSelectedHostFilterChanged(HostFilterOption? value)
     {
         if (!_suppressReload)
             _ = LoadAsync();

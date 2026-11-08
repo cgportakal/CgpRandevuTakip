@@ -73,27 +73,27 @@ ve Infrastructure'ı DI ile birleştirir.
 ### 2.1 Çözüm yapısı
 
 ```
-GorusmeTakip.sln
+CgpRandevuTakip.sln
 src/
-  GorusmeTakip.Domain/           # net8.0
+  CgpRandevuTakip.Domain/           # net8.0
     Entities/                    # Appointment, Person, Category, User, ...
     Enums/                       # AppointmentStatus, ReminderOffset, ...
     ValueObjects/                # PhoneNumber, DateRange
     Rules/                       # ReminderScheduleCalculator, BackupFileNameBuilder
     Common/                      # EntityBase, Result
-  GorusmeTakip.Application/      # net8.0
+  CgpRandevuTakip.Application/      # net8.0
     Abstractions/                # IAppDbContext, IClock, ICurrentUser, IHasher, ...
     Services/                    # AppointmentService, AuthService, ReminderService, ...
     Dtos/                        # AppointmentListItem, AppointmentDetail, ...
     Validation/                  # FluentValidation kuralları
-  GorusmeTakip.Infrastructure/   # net8.0
+  CgpRandevuTakip.Infrastructure/   # net8.0
     Persistence/                 # AppDbContext, Configurations, Migrations
     Security/                    # Pbkdf2PasswordHasher, DpapiSecretStore
     Backup/                      # ZipBackupService, SqliteSnapshot
     Notifications/               # NtfyNotifier, TelegramNotifier, ToastAdapter
     Sharing/                     # WhatsAppLauncher, ShareLog
     Time/                        # SystemClock
-  GorusmeTakip.Desktop/          # net8.0-windows, WPF
+  CgpRandevuTakip.Desktop/          # net8.0-windows, WPF
     App.xaml / App.xaml.cs       # Host, DI, tek örnek, tray
     Views/                       # Login, DayList, AppointmentForm, Details, Settings, ...
     ViewModels/
@@ -101,10 +101,10 @@ src/
     Services/                    # NavigationService, DialogService, ImageRenderer
     Themes/                      # Dark.xaml, Light.xaml, Auto
     Resources/                   # tr-TR.resx, ikonlar
-  GorusmeTakip.Tests/            # xUnit + FluentAssertions
+  CgpRandevuTakip.Tests/            # xUnit + FluentAssertions
     Unit/ Integration/ Ui/
 installer/
-  GorusmeTakip.iss               # Inno Setup
+  CgpRandevuTakip.iss               # Inno Setup
 docs/
 ```
 
@@ -329,7 +329,7 @@ CREATE INDEX IX_Audit_Created ON AuditLogs(CreatedAtUtc DESC);
 - Tüm tarihler **UTC** saklanır, kullanıcıya `Europe/Istanbul` ile gösterilir.
 - `IsDeleted` soft delete; 30 gün sonra arka plan işi kalıcı siler (ayar).
 - `AuditLogs` 2 yıl; sonra arşiv/anonimleştirme.
-- Veritabanı: `%LocalAppData%\GorusmeTakip\data.db`
+- Veritabanı: `%LocalAppData%\CgpRandevuTakip\data.db`
 - Ekler (Faz 2): `...\attachments\{appointmentId}\`
 
 ---
@@ -514,7 +514,7 @@ Body: "14:30 — Randevu yaklaşıyor"   // isim varsayılan kapalı
 - Global `DispatcherUnhandledException` + `AppDomain.UnhandledException` +
   `TaskScheduler.UnobservedTaskException` yakalanır.
 - Kullanıcıya: "Beklenmeyen bir hata oluştu. Günlük dosyası: …" + "Kopyala".
-- Günlük: `%LocalAppData%\GorusmeTakip\logs\app-YYYYMMDD.log`, 7 gün.
+- Günlük: `%LocalAppData%\CgpRandevuTakip\logs\app-YYYYMMDD.log`, 7 gün.
 - Kritik işlemler (yedek, geri yükleme, migration) ayrı `audit` ve `operations` logu.
 - Sağlık göstergesi: Ayarlar → Hakkında altında "Son yedek", "Son hata", "DB sürümü".
 
@@ -525,12 +525,12 @@ Body: "14:30 — Randevu yaklaşıyor"   // isim varsayılan kapalı
 | Konu | Karar |
 |------|-------|
 | Yayın | `dotnet publish -c Release -r win-x64 --self-contained true` |
-| Kurulum | Inno Setup, per-user, `%LocalAppData%\Programs\GorusmeTakip` |
+| Kurulum | Inno Setup, per-user, `%LocalAppData%\Programs\CgpRandevuTakip` |
 | Kısayol | Başlat menüsü + masaüstü (opsiyonel) |
 | Otomatik başlangıç | HKCU `Run` anahtarı, kurulumda onay |
-| Tek örnek | `Mutex("Global\\GorusmeTakip")`; ikinci çağrı mevcut pencereyi öne getirir |
-| Veri | `%LocalAppData%\GorusmeTakip` |
-| Yedek | Varsayılan `Belgeler\GorusmeTakip\Yedekler` |
+| Tek örnek | `Mutex("Global\\CgpRandevuTakip")`; ikinci çağrı mevcut pencereyi öne getirir |
+| Veri | `%LocalAppData%\CgpRandevuTakip` |
+| Yedek | Varsayılan `Belgeler\CgpRandevuTakip\Yedekler` |
 | Kaldırma | Veri klasörü korunur; "verileri de sil" onayı |
 | Sürüm | SemVer (`1.0.0`), Assembly + Hakkında ekranı |
 | Geri alma | Önceki sürüm kurulumu + restore-öncesi yedek |

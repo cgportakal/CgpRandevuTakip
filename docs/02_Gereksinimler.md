@@ -489,7 +489,7 @@ açılışta görebileyim, **böylece** görüşmeyi kaçırmayayım.
 |----|------------|
 | NFR-COMP-01 | Windows 11 x64; .NET 8 self-contained dağıtım. |
 | NFR-COMP-02 | Kurulum per-user, yönetici hakkı gerektirmez. |
-| NFR-COMP-03 | Veri `%LocalAppData%\GorusmeTakip`, yedek varsayılan `Belgeler\GorusmeTakip\Yedekler`. |
+| NFR-COMP-03 | Veri `%LocalAppData%\CgpRandevuTakip`, yedek varsayılan `Belgeler\CgpRandevuTakip\Yedekler`. |
 | NFR-COMP-04 | Kaldırma veriyi silmez; kullanıcıya sorulur. |
 | NFR-COMP-05 | Kurulum paketi dijital imza için hazır (sertifika sonra eklenebilir). |
 

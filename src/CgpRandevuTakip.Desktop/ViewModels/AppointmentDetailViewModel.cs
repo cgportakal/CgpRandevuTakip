@@ -122,7 +122,7 @@ public partial class AppointmentDetailViewModel : ObservableObject
             return;
 
         if (!_dialogs.Confirm(
-                $"{Detail.PersonFullName} · {Detail.DateLabel} {Detail.TimeRangeLabel}\n\nGörüşme silinsin mi?",
+                $"{Detail.PersonFullName} · {Detail.DateLabel} {Detail.TimeRangeLabel}\n\nGörüşme silinsin mi? 30 gün içinde yönetici tarafından geri alınabilir.",
                 "Görüşmeyi sil"))
             return;
 

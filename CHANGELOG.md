@@ -3,11 +3,21 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
-## [Yayınlanmamış]
+## [0.4.1] — 2026-11-08 · Sprint 3.5
 
 ### Eklendi
+- Silinen görüşmeler ekranı; yönetici 30 gün içindeki kayıtları görüp geri alabilir
+- Süresi dolan silinmiş görüşmeler için otomatik kalıcı temizlik (açılışta ve 6 saatte bir)
+- Günlük listede host filtresi
 - GitHub Actions CI: Windows üzerinde Release build ve testler; test sonuçları artifact olarak yüklenir
 - Dependabot ile NuGet ve GitHub Actions güncelleme takibi
+
+### Düzeltildi
+- Geri alınan randevunun iptal edilmiş gelecek hatırlatıcıları yeniden etkinleştirilir
+- Silme ve geri alma işlemleri `IClock` üzerinden tutarlı UTC zamanı kullanır
+- Görüşme detayındaki silme onayı 30 günlük geri alma penceresini belirtir
+- Henüz etkinleşmemiş günlük paylaşım düğmesi kullanıcıdan gizlendi
+- Bildirim ayarlarına Sprint 4 etkinleştirme notu eklendi
 
 ### Değiştirildi
 - NuGet bağımlılıkları güncellendi: EF Core 9.0.22, CommunityToolkit.Mvvm 8.4.2, Microsoft.Extensions.Hosting 10.0.14, xUnit 2.9.3

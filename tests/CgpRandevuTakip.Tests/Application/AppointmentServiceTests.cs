@@ -459,4 +459,150 @@ public class AppointmentServiceTests
         Assert.NotNull(next);
         Assert.Equal("KendiHost Veli", next!.PersonFullName);
     }
+
+    [Fact]
+    public async Task Search_FiltersByHost()
+    {
+        using var sut = await CreateAsync();
+
+        await sut.Service.CreateAsync(sut.Input(startsAtLocal: new DateTime(2026, 11, 8, 10, 0, 0)));
+        await sut.Service.CreateAsync(sut.Input(
+            firstName: "Zeynep",
+            phone: "0555 111 22 33",
+            startsAtLocal: new DateTime(2026, 11, 8, 11, 0, 0),
+            hostUserId: sut.OtherHost.Id));
+
+        var filtered = await sut.Service.SearchAsync(
+            null, null, null, new DateTime(2026, 11, 8), new DateTime(2026, 11, 8), sut.Host.Id);
+
+        Assert.Single(filtered);
+        Assert.Equal("Ali Veli", filtered[0].PersonFullName);
+        Assert.Equal(sut.Host.Id, filtered[0].HostUserId);
+    }
+
+    [Fact]
+    public async Task GetDeleted_ReturnsOnlyDeletedAppointmentsForAdmin()
+    {
+        using var sut = await CreateAsync();
+        var created = await sut.Service.CreateAsync(sut.Input());
+
+        sut.SignInAsRole(UserRole.Admin);
+        await sut.Service.DeleteAsync(created.AppointmentId!);
+
+        var deleted = await sut.Service.GetDeletedAsync();
+        Assert.Single(deleted);
+        Assert.Equal("Ali Veli", deleted[0].PersonFullName);
+        Assert.InRange(deleted[0].RemainingDays, 0, 30);
+
+        sut.SignInAsRole(UserRole.Secretary);
+        Assert.Empty(await sut.Service.GetDeletedAsync());
+    }
+
+    [Fact]
+    public async Task Restore_ReplansCancelledFutureReminders()
+    {
+        using var sut = await CreateAsync();
+        var created = await sut.Service.CreateAsync(sut.Input(offsets: new[] { 60, 30 }));
+
+        sut.SignInAsRole(UserRole.Admin);
+        await sut.Service.DeleteAsync(created.AppointmentId!);
+
+        var restored = await sut.Service.RestoreAsync(created.AppointmentId!);
+
+        Assert.True(restored.Success, restored.Error);
+        Assert.Contains(AuditAction.AppointmentRestored, sut.Audit.Actions);
+        Assert.Single(await sut.Service.GetDayAsync(new DateTime(2026, 11, 8)));
+
+        using var db = sut.Db.CreateContext();
+        var reminders = db.ReminderDispatches
+            .Where(x => x.AppointmentId == created.AppointmentId)
+            .ToList();
+
+        Assert.Equal(2, reminders.Count);
+        Assert.All(reminders, x => Assert.Equal(ReminderState.Pending, x.State));
+    }
+
+    [Fact]
+    public async Task Restore_ReactivatesOnlyLatestReminderPerOffset()
+    {
+        using var sut = await CreateAsync();
+        var created = await sut.Service.CreateAsync(sut.Input(offsets: new[] { 30 }));
+
+        var updated = await sut.Service.UpdateAsync(
+            created.AppointmentId!,
+            sut.Input(offsets: new[] { 60, 30 }));
+        Assert.True(updated.Success, updated.Error);
+
+        sut.SignInAsRole(UserRole.Admin);
+        await sut.Service.DeleteAsync(created.AppointmentId!);
+
+        var restored = await sut.Service.RestoreAsync(created.AppointmentId!);
+        Assert.True(restored.Success, restored.Error);
+
+        using var db = sut.Db.CreateContext();
+        var reminders = db.ReminderDispatches
+            .Where(x => x.AppointmentId == created.AppointmentId)
+            .ToList();
+
+        Assert.Equal(2, reminders.Count(x => x.State == ReminderState.Pending));
+        Assert.Single(reminders,
+            x => x.OffsetMinutes == 30 && x.State == ReminderState.Pending);
+        Assert.Single(reminders,
+            x => x.OffsetMinutes == 60 && x.State == ReminderState.Pending);
+        Assert.Single(reminders, x => x.State == ReminderState.Cancelled);
+    }
+
+    [Fact]
+    public async Task Restore_RejectsDeletionOlderThanThirtyDays()
+    {
+        using var sut = await CreateAsync();
+        var created = await sut.Service.CreateAsync(sut.Input());
+
+        sut.SignInAsRole(UserRole.Admin);
+        await sut.Service.DeleteAsync(created.AppointmentId!);
+
+        using (var db = sut.Db.CreateContext())
+        {
+            var appointment = db.Appointments.Single(x => x.Id == created.AppointmentId);
+            appointment.DeletedAtUtc = NowUtc.AddDays(-31);
+            db.SaveChanges();
+        }
+
+        var restored = await sut.Service.RestoreAsync(created.AppointmentId!);
+
+        Assert.False(restored.Success);
+        Assert.Contains("süresi doldu", restored.Error);
+    }
+
+    [Fact]
+    public async Task PurgeExpiredDeleted_RemovesOnlyOlderThanThirtyDays()
+    {
+        using var sut = await CreateAsync();
+        var old = await sut.Service.CreateAsync(sut.Input(offsets: new[] { 30 }));
+        var recent = await sut.Service.CreateAsync(sut.Input(
+            firstName: "Zeynep",
+            phone: "0555 111 22 33",
+            startsAtLocal: new DateTime(2026, 11, 8, 11, 0, 0)));
+
+        sut.SignInAsRole(UserRole.Admin);
+        await sut.Service.DeleteAsync(old.AppointmentId!);
+        await sut.Service.DeleteAsync(recent.AppointmentId!);
+
+        using (var db = sut.Db.CreateContext())
+        {
+            var appointment = db.Appointments.Single(x => x.Id == old.AppointmentId);
+            appointment.DeletedAtUtc = NowUtc.AddDays(-31);
+            db.SaveChanges();
+        }
+
+        var purged = await sut.Service.PurgeExpiredDeletedAsync(NowUtc);
+
+        Assert.Equal(1, purged);
+        Assert.Contains(AuditAction.AppointmentPurged, sut.Audit.Actions);
+        Assert.Single(await sut.Service.GetDeletedAsync());
+
+        using var verify = sut.Db.CreateContext();
+        Assert.Empty(verify.ReminderDispatches
+            .Where(x => x.AppointmentId == old.AppointmentId));
+    }
 }

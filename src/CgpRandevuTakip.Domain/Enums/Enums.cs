@@ -106,5 +106,6 @@ public enum AuditAction
     UserUpdated = 21,
     UserDeactivated = 22,
     SessionLocked = 23,
-    SessionUnlocked = 24
+    SessionUnlocked = 24,
+    AppointmentPurged = 25
 }

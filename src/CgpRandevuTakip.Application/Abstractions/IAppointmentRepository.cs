@@ -33,6 +33,7 @@ public interface IAppointmentRepository
         DateTime endsAtUtc,
         string? excludeAppointmentId);
     Task<IReadOnlyList<ReminderDispatch>> GetRemindersAsync(string appointmentId);
+    Task<IReadOnlyList<Appointment>> GetDeletedAsync();
     Task<IReadOnlyDictionary<string, int>> GetHostUsageCountsAsync();
     Task AddAsync(Appointment appointment);
     Task SaveAsync(
@@ -43,6 +44,7 @@ public interface IAppointmentRepository
         Appointment appointment,
         AppointmentOutcome outcome,
         bool cancelPendingReminders);
-    Task SoftDeleteAsync(string id);
-    Task RestoreAsync(string id);
+    Task SoftDeleteAsync(string id, DateTime nowUtc);
+    Task<bool> RestoreAsync(string id, DateTime nowUtc);
+    Task<IReadOnlyList<string>> PurgeDeletedBeforeAsync(DateTime cutoffUtc);
 }

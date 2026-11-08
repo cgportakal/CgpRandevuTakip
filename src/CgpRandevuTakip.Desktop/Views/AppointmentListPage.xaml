@@ -91,6 +91,13 @@
                               Width="160"
                               Margin="0,0,8,0"
                               AutomationProperties.Name="Kategori filtresi" />
+                    <ComboBox ItemsSource="{Binding HostFilters}"
+                              SelectedItem="{Binding SelectedHostFilter}"
+                              DisplayMemberPath="Label"
+                              Width="150"
+                              Margin="0,0,8,0"
+                              Visibility="{Binding CanFilterHosts, Converter={StaticResource BoolToVisibility}}"
+                              AutomationProperties.Name="Görüşmeci filtresi" />
                     <ComboBox ItemsSource="{Binding StatusFilters}"
                               SelectedItem="{Binding SelectedStatusFilter}"
                               DisplayMemberPath="Label"
@@ -126,7 +133,14 @@
                         Style="{StaticResource SubtleButton}"
                         Command="{Binding ShareDailyListCommand}"
                         Padding="14,7"
-                        Margin="0,0,8,0" />
+                        Margin="0,0,8,0"
+                        Visibility="{Binding CanShareDailyList, Converter={StaticResource BoolToVisibility}}" />
+                <Button Content="Silinenler"
+                        Style="{StaticResource GhostButton}"
+                        Command="{Binding OpenDeletedCommand}"
+                        Padding="14,7"
+                        Margin="0,0,8,0"
+                        Visibility="{Binding CanDelete, Converter={StaticResource BoolToVisibility}}" />
                 <Button Content="Sil"
                         Style="{StaticResource DangerButton}"
                         Command="{Binding DeleteSelectedCommand}"
@@ -287,9 +301,5 @@
             </Grid>
         </Border>
 
-        <TextBlock Grid.Row="4"
-                   Text="{Binding ShareHint}"
-                   Style="{StaticResource MutedText}"
-                   Margin="2,10,0,0" />
     </Grid>
 </UserControl>
