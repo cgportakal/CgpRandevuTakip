@@ -3,6 +3,11 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.5.3] — 2026-11-08
+
+### Düzeltildi
+- Sessiz saatlerde Windows Action Center toast sessiz ses ile gönderiliyor
+
 ## [0.5.2] — 2026-11-08 · Sprint 4.5 UAT
 
 ### Eklendi

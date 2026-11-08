@@ -1,4 +1,4 @@
-# CGP - Randevu Takip
+﻿# CGP - Randevu Takip
 
 [![CI](https://github.com/cgportakal/CgpRandevuTakip/actions/workflows/ci.yml/badge.svg)](https://github.com/cgportakal/CgpRandevuTakip/actions/workflows/ci.yml)
 
@@ -6,7 +6,7 @@ Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöne
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
 > Durum: **Sprint 4 + 4.5 UAT tamamlandı** — hatırlatıcı motoru, Windows Action Center toast, aksiyon penceresi, ntfy/Telegram push, tepsi ve sessiz saatler hazır.
-> Sürüm: 0.5.2 · Tarih: 08.11.2026 · 166 test geçiyor
+> Sürüm: 0.5.3 · Tarih: 08.11.2026 · 166 test geçiyor
 
 ## Neden bu proje?
 
@@ -88,3 +88,4 @@ dotnet run --project src/CgpRandevuTakip.Desktop
 | Kurum türü | Eğitim kurumu |
 | Yedek öneki | `CGP_RandevuTakip_Yedek_` |
 | Varsayılan tarih formatı | `gg/AA/yyyy` (ekran), `yyyy-AA-gg_SS-dd-ss` (dosya) |
+

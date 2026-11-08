@@ -9,14 +9,18 @@ namespace CgpRandevuTakip.Desktop.Services;
 /// </summary>
 public sealed class WindowsToastService
 {
-    public bool TryShow(string title, string body)
+    public bool TryShow(string title, string body, bool silent = false)
     {
         try
         {
-            var content = new ToastContentBuilder()
+            var builder = new ToastContentBuilder()
                 .AddText(title)
-                .AddText(body)
-                .GetToastContent();
+                .AddText(body);
+
+            if (silent)
+                builder.AddAudio(new ToastAudio { Silent = true });
+
+            var content = builder.GetToastContent();
 
             ToastNotificationManagerCompat.CreateToastNotifier()
                 .Show(new ToastNotification(content.GetXml()));

@@ -114,7 +114,7 @@ public sealed class ReminderDispatcher : BackgroundService
         // Windows kanalı.
         if (!context.WindowsNotified)
         {
-            await OnUiAsync(() => ShowToast(context));
+            await OnUiAsync(() => ShowToast(context, quiet));
             await _reminders.MarkWindowsNotifiedAsync(context.ReminderId, nowUtc);
         }
 
@@ -158,13 +158,13 @@ public sealed class ReminderDispatcher : BackgroundService
         await _reminders.MarkSentAsync(context.ReminderId);
     }
 
-    private void ShowToast(ReminderContextDto context)
+    private void ShowToast(ReminderContextDto context, bool silent)
     {
         var title = context.Kind == Domain.Enums.ReminderKind.Call
             ? "Sıradaki kişiyi arama zamanı"
             : "Sıradaki görüşme yaklaşıyor";
 
-        if (_windowsToast.TryShow(title, context.AnonymousBody))
+        if (_windowsToast.TryShow(title, context.AnonymousBody, silent))
             return;
 
         var window = new ReminderToastWindow(title, context.AnonymousBody);

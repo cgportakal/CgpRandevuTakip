@@ -1,7 +1,7 @@
-# 13 — Sprint 4.5 UAT ve Kapanış Raporu
+﻿# 13 — Sprint 4.5 UAT ve Kapanış Raporu
 
 **Sprint:** 4.5 · **Tarih:** 08.11.2026 · **Durum:** Tamamlandı
-**Sürüm:** 0.5.2
+**Sürüm:** 0.5.3
 
 ---
 
@@ -95,3 +95,4 @@ Yeni testler:
 1. WhatsApp PNG + pano + WhatsApp açma.
 2. Alıcı rehberi ve günlük gönderim saati.
 3. OS toast tıklama argümanlarıyla doğrudan aksiyon penceresi açma (opsiyonel iyileştirme).
+

@@ -1,4 +1,4 @@
-# 04 — Proje Planı, Süreç ve Test Stratejisi
+﻿# 04 — Proje Planı, Süreç ve Test Stratejisi
 
 **Sürüm:** 0.2 · **Tarih:** 07.11.2026
 **İlgili:** [Gereksinimler](02_Gereksinimler.md) · [Mimari](03_Mimari_ve_Veri_Modeli.md)
@@ -58,14 +58,14 @@ Yarı zamanlı çalışmada 18-22 hafta öngörülür. Efor: ~95-115 adam-gün.
 | **3** | 2 hafta | Kaydın yaşam döngüsü | Detay, düzenleme, sonuç, durum geçişleri, sıradaki kişi, kullanıcı yönetimi, oturum kilidi | 18 | Tamamlandı (0.4.0) |
 | **3.5** | 1 gün | Stabilizasyon ve kapanış | CRUD doğrulama, silinenleri geri alma, 30 gün temizliği, host filtresi | 5 | Tamamlandı (0.4.1) |
 | **4** | 2 hafta | Hatırlatma vaadi | Reminder motoru, toast, aksiyon penceresi, push, telafi, tepsi, sessiz saatler | 21 | Tamamlandı (0.5.0) |
-| **4.5** | 1-2 gün | UAT ve kapanış | Gerçek toast/push/tray/auto-start doğrulaması | 5 | Tamamlandı (0.5.2) |
+| **4.5** | 1-2 gün | UAT ve kapanış | Gerçek toast/push/tray/auto-start doğrulaması | 5 | Tamamlandı (0.5.3) |
 | **5** | 2 hafta | Günlük paylaşım | PNG render, pano, WhatsApp deep link, alıcı rehberi, zamanlayıcı | 21 | Planlandı |
 | **6** | 2 hafta | Veri güvenliği ve sürüm | Yedek/geri yükleme, denetim, kurulum, UAT, hata düzeltme | 21 | Planlandı |
 
 **Toplam:** ~138 SP (Sprint 3.5 dahil). Hız (velocity) ilk sprintte ölçülür; 18-22 SP/sprint
 varsayımı gerçekleşmezse kapsam değil **tarih** esnetilir (MVP sabit tutulur).
 
-> **Güncel durum (08.11.2026):** Sprint 0-4 ve 4.5 UAT tamamlandı, sürüm **0.5.2**,
+> **Güncel durum (08.11.2026):** Sprint 0-4 ve 4.5 UAT tamamlandı, sürüm **0.5.3**,
 > **166/166 test** geçiyor, derleme 0 uyarı / 0 hata. Sprint 4.5 sonuçları için
 > [docs/13_Sprint4_5_UAT_Raporu.md](13_Sprint4_5_UAT_Raporu.md).
 
@@ -342,3 +342,4 @@ sürüm notunda "geri dönüş yok" uyarısı verilir.
 
 > Bu 10 madde tamamlandığında **çalışan, giriş yapılabilen ve kayıt tutan** bir
 > uygulama olur; geri kalanı bu temelin üzerine inşa edilir.
+
