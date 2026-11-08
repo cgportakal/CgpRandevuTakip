@@ -5,6 +5,10 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 
 ## [Yayınlanmamış]
 
+### Eklendi
+- GitHub Actions CI: Windows üzerinde Release build ve testler; test sonuçları artifact olarak yüklenir
+- Dependabot ile NuGet ve GitHub Actions güncelleme takibi
+
 ### Değiştirildi
 - Teknik ad, çözüm/proje/klasör ve assembly adları `CgpRandevuTakip` oldu; yedek ve kullanıcıya görünen metinlerdeki marka CGP olarak kaldı
 - Kurum adı ayarlardan kaydedildiğinde üst çubuk ve kontrol paneli yeniden başlatmadan güncellenir; boşsa `CGP` gösterilir

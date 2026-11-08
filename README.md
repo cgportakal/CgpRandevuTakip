@@ -1,10 +1,12 @@
 # CGP - Randevu Takip
 
+[![CI](https://github.com/cgportakal/CgpRandevuTakip/actions/workflows/ci.yml/badge.svg)](https://github.com/cgportakal/CgpRandevuTakip/actions/workflows/ci.yml)
+
 Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöneten, günlük listeyi
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
 > Durum: **Sprint 3 tamamlandı** — görüşme sonucu, durum geçişleri, tekrar randevu, kullanıcı yönetimi ve 30 dk oturum kilidi hazır.
-> Sürüm: 0.4.0 · Tarih: 07.11.2026 · 135 test geçiyor
+> Sürüm: 0.4.0 · Tarih: 07.11.2026 · 140 test geçiyor
 
 ## Neden bu proje?
 
