@@ -33,7 +33,7 @@ public sealed class TrayService : IDisposable
 
         _notifyIcon = new NotifyIcon
         {
-            Icon = SystemIcons.Application,
+            Icon = LoadAppIcon(),
             Text = "CGP - Randevu Takip",
             ContextMenuStrip = menu,
             Visible = true
@@ -64,6 +64,27 @@ public sealed class TrayService : IDisposable
         _notifyIcon.BalloonTipTitle = title;
         _notifyIcon.BalloonTipText = text;
         _notifyIcon.ShowBalloonTip(3000);
+    }
+
+    private static Icon LoadAppIcon()
+    {
+        try
+        {
+            var resource = System.Windows.Application.GetResourceStream(
+                new Uri("pack://application:,,,/Assets/CGPRandevuTakip.ico"));
+
+            if (resource?.Stream is { } stream)
+            {
+                using (stream)
+                    return new Icon(stream);
+            }
+        }
+        catch
+        {
+            // Kaynak bulunamazsa sistem ikonuna düş.
+        }
+
+        return SystemIcons.Application;
     }
 
     public void RequestExit()

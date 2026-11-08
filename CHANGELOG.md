@@ -3,6 +3,11 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.5.1] — 2026-11-08
+
+### Eklendi
+- Uygulama, pencere ve tepsi simgesi olarak `CGPRandevuTakip.ico` kullanılıyor
+
 ## [0.5.0] — 2026-11-08 · Sprint 4
 
 ### Eklendi
