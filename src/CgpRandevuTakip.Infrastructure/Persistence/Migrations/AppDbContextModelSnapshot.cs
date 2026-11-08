@@ -420,6 +420,10 @@ namespace CgpRandevuTakip.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Email")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("FailedLoginCount")
                         .HasColumnType("INTEGER");
 
@@ -442,8 +446,35 @@ namespace CgpRandevuTakip.Infrastructure.Persistence.Migrations
                     b.Property<int>("PasswordIterations")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("PasswordResetAttempts")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PasswordResetCodeHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PasswordResetCodeIterations")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PasswordResetCodeSalt")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PasswordResetExpiresAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PasswordResetRequestedAtUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("PasswordSalt")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("RememberTokenExpiresAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RememberTokenHash")
+                        .HasMaxLength(64)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Role")
@@ -455,6 +486,11 @@ namespace CgpRandevuTakip.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("RememberTokenHash");
 
                     b.HasIndex("Username")
                         .IsUnique();

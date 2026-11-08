@@ -1,4 +1,5 @@
 using CgpRandevuTakip.Application.Auth;
+using CgpRandevuTakip.Desktop.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -7,10 +8,14 @@ namespace CgpRandevuTakip.Desktop.ViewModels;
 public partial class LoginViewModel : ObservableObject
 {
     private readonly IAuthService _auth;
+    private readonly IRememberedLoginStore _remembered;
 
-    public LoginViewModel(IAuthService auth)
+    public LoginViewModel(
+        IAuthService auth,
+        IRememberedLoginStore remembered)
     {
         _auth = auth;
+        _remembered = remembered;
     }
 
     [ObservableProperty]
@@ -25,7 +30,12 @@ public partial class LoginViewModel : ObservableObject
     [ObservableProperty]
     private bool _isBusy;
 
+    [ObservableProperty]
+    private bool _rememberMe;
+
     public event EventHandler? LoginSucceeded;
+
+    public event EventHandler? ForgotPasswordRequested;
 
     public string ProductName => "CGP - Randevu Takip";
 
@@ -59,6 +69,17 @@ public partial class LoginViewModel : ObservableObject
                 return;
             }
 
+            if (RememberMe)
+            {
+                var token = await _auth.CreateRememberTokenAsync();
+                if (!string.IsNullOrWhiteSpace(token))
+                    _remembered.Save(token);
+            }
+            else
+            {
+                _remembered.Clear();
+            }
+
             Password = string.Empty;
             LoginSucceeded?.Invoke(this, EventArgs.Empty);
         }
@@ -71,6 +92,10 @@ public partial class LoginViewModel : ObservableObject
             IsBusy = false;
         }
     }
+
+    [RelayCommand]
+    private void ForgotPassword()
+        => ForgotPasswordRequested?.Invoke(this, EventArgs.Empty);
 
     private bool CanLogin() => !IsBusy;
 

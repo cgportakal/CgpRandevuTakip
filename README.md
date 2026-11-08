@@ -5,8 +5,8 @@
 Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöneten, günlük listeyi
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
-> Durum: **Sprint 4 + 4.5 UAT tamamlandı** — hatırlatıcı motoru, Windows Action Center toast, aksiyon penceresi, ntfy/Telegram push, tepsi ve sessiz saatler hazır.
-> Sürüm: 0.5.3 · Tarih: 08.11.2026 · 166 test geçiyor
+> Durum: **Sprint 4 + 4.5 UAT tamamlandı** — hatırlatıcı motoru, Windows Action Center toast, aksiyon penceresi, ntfy/Telegram push, tepsi, sessiz saatler, "beni hatırla" ve e-posta ile şifre sıfırlama hazır.
+> Sürüm: 0.5.4 · Tarih: 09.11.2026 · 173 test geçiyor
 
 ## Neden bu proje?
 
@@ -33,6 +33,7 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 12 | [Sprint 4 Sonuç Raporu](docs/12_Sprint4_Raporu.md) | Hatırlatıcı motoru, bildirim, push, tepsi, sessiz saatler |
 | 13 | [Sprint 4.5 UAT Raporu](docs/13_Sprint4_5_UAT_Raporu.md) | Gerçek toast/push/tray/auto-start doğrulaması |
 | 14 | [Push Kurulum Rehberi](docs/14_Push_Kurulum_Rehberi.md) | ntfy ve Telegram kurulumu, test |
+| 15 | [E-posta ile Şifre Sıfırlama](docs/15_Email_Sifre_Sifirlama_Rehberi.md) | SMTP ayarları, beni hatırla, kurtarma akışı |
 
 ## Alınan temel kararlar
 

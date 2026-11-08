@@ -10,7 +10,8 @@ public sealed record UserDto(
     bool IsActive,
     bool IsLoginEnabled,
     DateTime? LastLoginAtLocal,
-    DateTime CreatedAtLocal)
+    DateTime CreatedAtLocal,
+    string? Email = null)
 {
     public string RoleText => Role switch
     {
@@ -34,13 +35,15 @@ public sealed record UserCreateInput(
     UserRole Role,
     bool IsLoginEnabled,
     string? Password,
-    string? ConfirmPassword);
+    string? ConfirmPassword,
+    string? Email = null);
 
 public sealed record UserUpdateInput(
     string DisplayName,
     UserRole Role,
     bool IsActive,
-    bool IsLoginEnabled);
+    bool IsLoginEnabled,
+    string? Email = null);
 
 public sealed record UserResetPasswordInput(
     string Password,

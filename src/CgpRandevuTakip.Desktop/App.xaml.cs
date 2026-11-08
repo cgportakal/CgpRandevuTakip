@@ -145,6 +145,9 @@ public partial class App : System.Windows.Application
         services.AddSingleton<ICurrentUser>(sp => sp.GetRequiredService<CurrentUser>());
 
         services.AddSingleton<IAuthService, AuthService>();
+        services.AddSingleton<IEmailSender, SmtpEmailSender>();
+        services.AddSingleton<IPasswordResetService, PasswordResetService>();
+        services.AddSingleton<IRememberedLoginStore, RememberedLoginStore>();
         services.AddSingleton<ICategoryService, CategoryService>();
         services.AddSingleton<ISettingsService, SettingsService>();
         services.AddSingleton<IAppointmentService, AppointmentService>();
@@ -163,6 +166,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<SessionLockService>();
 
         services.AddTransient<LoginViewModel>();
+        services.AddTransient<ForgotPasswordViewModel>();
         services.AddTransient<SetupViewModel>();
         services.AddTransient<ChangePasswordViewModel>();
         services.AddTransient<ShellViewModel>();
@@ -179,6 +183,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<DeletedAppointmentsViewModel>();
 
         services.AddTransient<LoginWindow>();
+        services.AddTransient<ForgotPasswordWindow>();
         services.AddTransient<SetupWindow>();
         services.AddTransient<ChangePasswordWindow>();
         services.AddTransient<MainWindow>();
@@ -231,11 +236,22 @@ public partial class App : System.Windows.Application
                 }
                 else
                 {
-                    var login = _host.Services.GetRequiredService<LoginWindow>();
-                    if (login.ShowDialog() != true)
+                    var remembered = _host.Services.GetRequiredService<IRememberedLoginStore>();
+                    var token = remembered.Load();
+                    LoginResult? rememberedLogin = token is null
+                        ? null
+                        : await auth.LoginWithRememberTokenAsync(token);
+
+                    if (rememberedLogin?.Success != true)
                     {
-                        Shutdown();
-                        return;
+                        remembered.Clear();
+
+                        var login = _host.Services.GetRequiredService<LoginWindow>();
+                        if (login.ShowDialog() != true)
+                        {
+                            Shutdown();
+                            return;
+                        }
                     }
                 }
 
@@ -247,6 +263,9 @@ public partial class App : System.Windows.Application
                 shell.Closed += (_, _) => closed.TrySetResult();
                 shell.Show();
                 await closed.Task;
+
+                if (shell.LogoutRequested)
+                    _host.Services.GetRequiredService<IRememberedLoginStore>().Clear();
 
                 if (!shell.LogoutRequested)
                     break;

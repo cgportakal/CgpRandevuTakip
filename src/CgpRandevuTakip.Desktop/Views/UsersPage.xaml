@@ -108,6 +108,10 @@
                             <TextBox Text="{Binding DisplayName, UpdateSourceTrigger=PropertyChanged}" MaxLength="100"
                                      AutomationProperties.Name="Kullanıcı ad soyad" />
 
+                            <TextBlock Text="E-posta (şifre sıfırlama için)" Style="{StaticResource LabelText}" Margin="0,14,0,6" />
+                            <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" MaxLength="200"
+                                     AutomationProperties.Name="Kullanıcı e-posta" />
+
                             <TextBlock Text="Kullanıcı adı" Style="{StaticResource LabelText}" Margin="0,14,0,6" />
                             <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
                                      MaxLength="32"

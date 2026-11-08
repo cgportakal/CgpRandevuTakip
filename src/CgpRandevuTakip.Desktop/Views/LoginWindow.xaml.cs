@@ -2,26 +2,31 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using CgpRandevuTakip.Desktop.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CgpRandevuTakip.Desktop.Views;
 
 public partial class LoginWindow : Window
 {
     private readonly LoginViewModel _viewModel;
+    private readonly IServiceProvider _services;
 
-    public LoginWindow(LoginViewModel viewModel)
+    public LoginWindow(LoginViewModel viewModel, IServiceProvider services)
     {
         InitializeComponent();
         _viewModel = viewModel;
+        _services = services;
         DataContext = viewModel;
 
         viewModel.LoginSucceeded += OnLoginSucceeded;
+        viewModel.ForgotPasswordRequested += OnForgotPasswordRequested;
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
         Loaded += (_, _) => UsernameBox.Focus();
         Closed += (_, _) =>
         {
             viewModel.LoginSucceeded -= OnLoginSucceeded;
+            viewModel.ForgotPasswordRequested -= OnForgotPasswordRequested;
             viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         };
     }
@@ -29,6 +34,13 @@ public partial class LoginWindow : Window
     private void OnLoginSucceeded(object? sender, EventArgs e)
     {
         DialogResult = true;
+    }
+
+    private void OnForgotPasswordRequested(object? sender, EventArgs e)
+    {
+        var window = _services.GetRequiredService<ForgotPasswordWindow>();
+        window.Owner = this;
+        window.ShowDialog();
     }
 
     private void OnPasswordChanged(object sender, RoutedEventArgs e)

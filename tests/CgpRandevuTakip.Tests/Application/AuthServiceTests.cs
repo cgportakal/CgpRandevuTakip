@@ -56,6 +56,49 @@ public class AuthServiceTests
     }
 
     [Fact]
+    public async Task RememberToken_LogsInWithoutPassword()
+    {
+        var (service, currentUser, _, _, db) = CreateSut();
+        using (db)
+        {
+            await service.CreateFirstAdminAsync(ValidSetup());
+            var token = await service.CreateRememberTokenAsync();
+            Assert.False(string.IsNullOrWhiteSpace(token));
+
+            currentUser.SignOut();
+            Assert.False(currentUser.IsAuthenticated);
+
+            var result = await service.LoginWithRememberTokenAsync(token!);
+
+            Assert.True(result.Success, result.Error);
+            Assert.True(currentUser.IsAuthenticated);
+            Assert.Equal("ayse.yilmaz", currentUser.Username);
+        }
+    }
+
+    [Fact]
+    public async Task RememberToken_IsInvalidatedByPasswordChange()
+    {
+        var (service, currentUser, _, _, db) = CreateSut();
+        using (db)
+        {
+            await service.CreateFirstAdminAsync(ValidSetup());
+            var token = await service.CreateRememberTokenAsync();
+            Assert.NotNull(token);
+
+            var changed = await service.ChangePasswordAsync(
+                "GizliSifre123", "YeniSifre123", "YeniSifre123");
+            Assert.True(changed.Success, changed.Error);
+
+            currentUser.SignOut();
+            var result = await service.LoginWithRememberTokenAsync(token!);
+
+            Assert.False(result.Success);
+            Assert.False(currentUser.IsAuthenticated);
+        }
+    }
+
+    [Fact]
     public async Task CreateFirstAdmin_WhenAlreadyExists_ReturnsFailure()
     {
         var (service, _, _, _, db) = CreateSut();

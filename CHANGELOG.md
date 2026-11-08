@@ -3,6 +3,19 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.5.4] — 2026-11-09 · Kimlik ve kurtarma
+
+### Eklendi
+- "Beni hatırla": 30 gün geçerli, DPAPI korumalı oturum token'ı ile otomatik giriş
+- Kullanıcı e-posta adresi alanı (şifre sıfırlama için)
+- SMTP ayarları ve "Test e-postası gönder"
+- "Şifremi unuttum": e-posta ile 6 haneli kod, 15 dk geçerlilik, 5 deneme sınırı
+- Yönetici şifre sıfırlama fallback'i korunuyor
+- `Sprint4_6_AuthRecovery` migration
+
+### Not
+- E-posta ile sıfırlama için yöneticinin SMTP ayarlarını ve kullanıcı e-postalarını bir kez tanımlaması gerekir.
+
 ## [Yayınlanmamış]
 
 ### Eklendi

@@ -177,6 +177,65 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- E-posta / SMTP -->
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,16"
+                            Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel>
+                            <TextBlock Text="E-posta (şifre sıfırlama)" Style="{StaticResource SectionTitle}" />
+                            <TextBlock Text="Kullanıcıların e-posta ile şifre sıfırlayabilmesi için SMTP ayarları."
+                                       Style="{StaticResource MutedText}" Margin="0,-6,0,12" />
+
+                            <TextBlock Text="SMTP sunucusu" Style="{StaticResource LabelText}" />
+                            <TextBox Text="{Binding SmtpHost, UpdateSourceTrigger=PropertyChanged}"
+                                     AutomationProperties.Name="SMTP sunucusu" />
+
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Port" Style="{StaticResource LabelText}" />
+                                    <TextBox Text="{Binding SmtpPort, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.Name="SMTP portu" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" VerticalAlignment="Bottom">
+                                    <CheckBox Content="SSL/TLS kullan"
+                                              IsChecked="{Binding SmtpUseSsl}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Text="Kullanıcı adı" Style="{StaticResource LabelText}" Margin="0,12,0,6" />
+                            <TextBox Text="{Binding SmtpUsername, UpdateSourceTrigger=PropertyChanged}"
+                                     AutomationProperties.Name="SMTP kullanıcı adı" />
+
+                            <TextBlock Text="Şifre" Style="{StaticResource LabelText}" Margin="0,12,0,6" />
+                            <TextBox Text="{Binding SmtpPassword, UpdateSourceTrigger=PropertyChanged}"
+                                     AutomationProperties.Name="SMTP şifresi" />
+
+                            <TextBlock Text="Gönderen adresi" Style="{StaticResource LabelText}" Margin="0,12,0,6" />
+                            <TextBox Text="{Binding SmtpFromAddress, UpdateSourceTrigger=PropertyChanged}"
+                                     AutomationProperties.Name="SMTP gönderen adresi" />
+
+                            <TextBlock Text="Gönderen adı" Style="{StaticResource LabelText}" Margin="0,12,0,6" />
+                            <TextBox Text="{Binding SmtpFromName, UpdateSourceTrigger=PropertyChanged}"
+                                     AutomationProperties.Name="SMTP gönderen adı" />
+
+                            <TextBlock Text="Test alıcısı (boşsa gönderen adresi)" Style="{StaticResource LabelText}" Margin="0,12,0,6" />
+                            <TextBox Text="{Binding TestEmailAddress, UpdateSourceTrigger=PropertyChanged}"
+                                     AutomationProperties.Name="SMTP test alıcısı" />
+
+                            <Button Content="Test e-postası gönder"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding TestEmailCommand}"
+                                    HorizontalAlignment="Left"
+                                    Margin="0,12,0,0" />
+                            <TextBlock Text="Önce ayarları kaydedin; test kayıtlı SMTP değerlerini kullanır."
+                                       Style="{StaticResource MutedText}" Margin="0,8,0,0" />
+                        </StackPanel>
+                    </Border>
+
                     <!-- Yedekleme -->
                     <Border Style="{StaticResource Card}"
                             Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibility}}">

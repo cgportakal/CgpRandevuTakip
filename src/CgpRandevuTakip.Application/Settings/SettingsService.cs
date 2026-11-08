@@ -2,6 +2,7 @@ using System.Globalization;
 using CgpRandevuTakip.Application.Abstractions;
 using CgpRandevuTakip.Application.Common;
 using CgpRandevuTakip.Application.Settings;
+using CgpRandevuTakip.Application.Users;
 using CgpRandevuTakip.Domain.Enums;
 
 namespace CgpRandevuTakip.Application.Settings;
@@ -62,7 +63,14 @@ public sealed class SettingsService : ISettingsService
             QuietHoursEnd: ReadTime(values, SettingsKeys.QuietHoursEnd, defaults.QuietHoursEnd),
             AutoStartEnabled: ReadBool(values, SettingsKeys.AutoStartEnabled, defaults.AutoStartEnabled),
             AutoStartMode: NormalizeAutoStartMode(Read(values, SettingsKeys.AutoStartMode)),
-            CloseToTray: ReadBool(values, SettingsKeys.CloseToTray, defaults.CloseToTray));
+            CloseToTray: ReadBool(values, SettingsKeys.CloseToTray, defaults.CloseToTray),
+            SmtpHost: Read(values, SettingsKeys.SmtpHost) ?? defaults.SmtpHost,
+            SmtpPort: ReadInt(values, SettingsKeys.SmtpPort, defaults.SmtpPort),
+            SmtpUseSsl: ReadBool(values, SettingsKeys.SmtpUseSsl, defaults.SmtpUseSsl),
+            SmtpUsername: Read(values, SettingsKeys.SmtpUsername) ?? defaults.SmtpUsername,
+            SmtpPassword: _secrets.Unprotect(Read(values, SettingsKeys.SmtpPassword)) ?? defaults.SmtpPassword,
+            SmtpFromAddress: Read(values, SettingsKeys.SmtpFromAddress) ?? defaults.SmtpFromAddress,
+            SmtpFromName: Read(values, SettingsKeys.SmtpFromName) ?? defaults.SmtpFromName);
 
         _cachedSettings = settings;
         return settings;
@@ -94,6 +102,21 @@ public sealed class SettingsService : ISettingsService
             return OperationResult.Fail("Sessiz saatler SS:dd biçiminde olmalıdır.");
         }
 
+        if (settings.SmtpPort is < 1 or > 65535)
+            return OperationResult.Fail("SMTP portu 1–65535 arasında olmalıdır.");
+
+        if (!string.IsNullOrWhiteSpace(settings.SmtpFromAddress)
+            && !EmailAddressPolicy.TryNormalize(settings.SmtpFromAddress, out _))
+        {
+            return OperationResult.Fail("SMTP gönderen adresi geçerli değil.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(settings.SmtpHost)
+            && string.IsNullOrWhiteSpace(settings.SmtpFromAddress))
+        {
+            return OperationResult.Fail("SMTP kullanırken gönderen adresi zorunludur.");
+        }
+
         var provider = NormalizeProvider(settings.PushProvider);
         var autoStartMode = NormalizeAutoStartMode(settings.AutoStartMode);
         var previous = await GetAsync();
@@ -116,7 +139,14 @@ public sealed class SettingsService : ISettingsService
             [SettingsKeys.QuietHoursEnd] = settings.QuietHoursEnd,
             [SettingsKeys.AutoStartEnabled] = settings.AutoStartEnabled.ToString(),
             [SettingsKeys.AutoStartMode] = autoStartMode,
-            [SettingsKeys.CloseToTray] = settings.CloseToTray.ToString()
+            [SettingsKeys.CloseToTray] = settings.CloseToTray.ToString(),
+            [SettingsKeys.SmtpHost] = settings.SmtpHost?.Trim() ?? string.Empty,
+            [SettingsKeys.SmtpPort] = settings.SmtpPort.ToString(CultureInfo.InvariantCulture),
+            [SettingsKeys.SmtpUseSsl] = settings.SmtpUseSsl.ToString(),
+            [SettingsKeys.SmtpUsername] = settings.SmtpUsername?.Trim() ?? string.Empty,
+            [SettingsKeys.SmtpPassword] = _secrets.Protect(settings.SmtpPassword) ?? string.Empty,
+            [SettingsKeys.SmtpFromAddress] = settings.SmtpFromAddress?.Trim() ?? string.Empty,
+            [SettingsKeys.SmtpFromName] = settings.SmtpFromName?.Trim() ?? string.Empty
         };
 
         await _repository.SetManyAsync(values);
@@ -162,6 +192,15 @@ public sealed class SettingsService : ISettingsService
         string key,
         bool fallback)
         => values.TryGetValue(key, out var value) && bool.TryParse(value, out var parsed)
+            ? parsed
+            : fallback;
+
+    private static int ReadInt(
+        IReadOnlyDictionary<string, string> values,
+        string key,
+        int fallback)
+        => values.TryGetValue(key, out var value)
+           && int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)
             ? parsed
             : fallback;
 

@@ -58,6 +58,9 @@
 | D-48 | Windows bildirimleri `Microsoft.Toolkit.Uwp.Notifications` ile Action Center'a gönderilir; başarısız olursa uygulama içi topmost toast'a düşülür. | Yalnızca uygulama içi | Gerçek Windows bildirimi + güvenli yedek | 08.11.2026 | Kabul |
 | D-49 | İkinci açılış named event ile mevcut örneğe "göster" sinyali gönderir; yeni süreç sessizce kapanır. | Yalnızca mesaj göstermek | Tek örnek ve hızlı geri dönüş | 08.11.2026 | Kabul |
 | D-50 | Push kurulumu kullanıcı tarafından yapılır; ntfy topic veya Telegram bot token/chat id ayarlara girilir. Token/chat id DPAPI ile saklanır. | Uygulama içi hesap | Kurulum basitliği ve sır koruma | 08.11.2026 | Kabul |
+| D-51 | "Beni hatırla" parola saklamaz; 30 günlük rastgele oturum token'ı DPAPI ile yerel dosyada tutulur, DB'de yalnızca SHA-256 özeti bulunur. | Parolayı şifreli saklamak | Daha düşük risk, iptal edilebilir oturum | 09.11.2026 | Kabul |
+| D-52 | Şifre sıfırlama kullanıcı e-postasına gönderilen 6 haneli kodla yapılır; kod 15 dk geçerli, 5 deneme sınırlı, 1 dk yeniden gönderme bekleme süresi vardır. | Yönetici sıfırlaması, bağlantı | Yöneticiye ihtiyaç duymadan kurtarma | 09.11.2026 | Kabul |
+| D-53 | Kullanıcı e-postası ve SMTP ayarları yönetici tarafından bir kez tanımlanır; SMTP parolası DPAPI ile saklanır. Sorun çözülemezse yönetici şifre sıfırlama fallback'i kullanılır. | Yalnızca yönetici sıfırlaması | Self-servis + güvenli fallback | 09.11.2026 | Kabul |
 
 ---
 

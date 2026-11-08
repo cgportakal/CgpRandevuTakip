@@ -48,6 +48,20 @@ public sealed class UserRepository : IUserRepository
             .FirstOrDefaultAsync(x => x.Username == username);
     }
 
+    public async Task<User?> FindByEmailAsync(string email)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        return await db.Users.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Email != null && x.Email == email);
+    }
+
+    public async Task<User?> FindByRememberTokenHashAsync(string tokenHash)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        return await db.Users.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.RememberTokenHash == tokenHash);
+    }
+
     public async Task<User?> GetByIdAsync(string id)
     {
         await using var db = await _factory.CreateDbContextAsync();

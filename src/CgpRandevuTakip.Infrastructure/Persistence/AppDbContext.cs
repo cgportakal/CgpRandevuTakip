@@ -32,10 +32,16 @@ public class AppDbContext : DbContext
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Username).HasMaxLength(32).IsRequired();
             entity.Property(x => x.DisplayName).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.Email).HasMaxLength(200);
             entity.Property(x => x.PasswordHash).IsRequired();
             entity.Property(x => x.PasswordSalt).IsRequired();
+            entity.Property(x => x.RememberTokenHash).HasMaxLength(64);
+            entity.Property(x => x.PasswordResetCodeHash).HasMaxLength(128);
+            entity.Property(x => x.PasswordResetCodeSalt).HasMaxLength(128);
             entity.Property(x => x.Role).HasConversion<int>();
             entity.HasIndex(x => x.Username).IsUnique();
+            entity.HasIndex(x => x.Email).IsUnique();
+            entity.HasIndex(x => x.RememberTokenHash);
         });
 
         modelBuilder.Entity<Person>(entity =>

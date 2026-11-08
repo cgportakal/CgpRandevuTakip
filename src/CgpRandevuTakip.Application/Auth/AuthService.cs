@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using CgpRandevuTakip.Application.Abstractions;
 using CgpRandevuTakip.Application.Common;
 using CgpRandevuTakip.Domain.Entities;
@@ -12,6 +14,7 @@ public sealed class AuthService : IAuthService
 {
     public const int MaxFailedAttempts = 5;
     public const int LockoutMinutes = 15;
+    private const int RememberTokenDays = 30;
 
     private readonly IUserRepository _users;
     private readonly IPasswordHasher _hasher;
@@ -151,9 +154,76 @@ public sealed class AuthService : IAuthService
         return LoginResult.Ok(session);
     }
 
+    public async Task<string?> CreateRememberTokenAsync()
+    {
+        if (_currentUser.UserId is null)
+            return null;
+
+        var user = await _users.GetByIdAsync(_currentUser.UserId);
+        if (user is null || !user.IsActive || !user.IsLoginEnabled)
+            return null;
+
+        var token = CreateToken();
+        user.RememberTokenHash = HashToken(token);
+        user.RememberTokenExpiresAtUtc = _clock.UtcNow.AddDays(RememberTokenDays);
+        await _users.SaveAsync(user);
+
+        return token;
+    }
+
+    public async Task<LoginResult> LoginWithRememberTokenAsync(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            return LoginResult.Fail("Oturum bilgisi geçersiz.");
+
+        var hash = HashToken(token.Trim());
+        var user = await _users.FindByRememberTokenHashAsync(hash);
+        if (user is null)
+            return LoginResult.Fail("Oturum bilgisi geçersiz.");
+
+        var now = _clock.UtcNow;
+        if (!user.IsActive
+            || !user.IsLoginEnabled
+            || user.RememberTokenExpiresAtUtc is null
+            || user.RememberTokenExpiresAtUtc <= now)
+        {
+            user.RememberTokenHash = null;
+            user.RememberTokenExpiresAtUtc = null;
+            await _users.SaveAsync(user);
+            return LoginResult.Fail("Oturum süresi doldu. Lütfen giriş yapın.");
+        }
+
+        user.FailedLoginCount = 0;
+        user.LockoutUntilUtc = null;
+        user.LastLoginAtUtc = now;
+        user.RememberTokenExpiresAtUtc = now.AddDays(RememberTokenDays);
+        await _users.SaveAsync(user);
+
+        var session = ToSession(user);
+        _currentUser.SignIn(session);
+        await _audit.LogAsync(AuditAction.LoginSucceeded, user.Id);
+
+        return LoginResult.Ok(session);
+    }
+
+    public async Task ClearRememberTokenAsync()
+    {
+        if (_currentUser.UserId is null)
+            return;
+
+        var user = await _users.GetByIdAsync(_currentUser.UserId);
+        if (user is null)
+            return;
+
+        user.RememberTokenHash = null;
+        user.RememberTokenExpiresAtUtc = null;
+        await _users.SaveAsync(user);
+    }
+
     public async Task<OperationResult> LogoutAsync()
     {
         var userId = _currentUser.UserId;
+        await ClearRememberTokenAsync();
         _currentUser.SignOut();
 
         if (userId is not null)
@@ -191,6 +261,8 @@ public sealed class AuthService : IAuthService
         user.PasswordHash = hash.Hash;
         user.PasswordSalt = hash.Salt;
         user.PasswordIterations = hash.Iterations;
+        user.RememberTokenHash = null;
+        user.RememberTokenExpiresAtUtc = null;
         await _users.SaveAsync(user);
 
         await _audit.LogAsync(AuditAction.PasswordChanged, user.Id, nameof(User), user.Id);
@@ -205,6 +277,16 @@ public sealed class AuthService : IAuthService
 
         return Math.Max(1, (int)Math.Ceiling((user.LockoutUntilUtc.Value - nowUtc).TotalMinutes));
     }
+
+    private static string CreateToken()
+        => Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
+            .Replace('+', '-')
+            .Replace('/', '_')
+            .TrimEnd('=');
+
+    private static string HashToken(string token)
+        => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)))
+            .ToLowerInvariant();
 
     private static UserSession ToSession(User user)
         => new(user.Id, user.Username, user.DisplayName, user.Role);

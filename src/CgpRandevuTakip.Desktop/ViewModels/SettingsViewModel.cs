@@ -31,6 +31,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly ISpikeService _spike;
     private readonly AutoStartService _autoStart;
     private readonly IPushNotifier _push;
+    private readonly IEmailSender _email;
     private readonly WindowsToastService _windowsToast;
     private readonly IServiceProvider _services;
 
@@ -45,6 +46,7 @@ public partial class SettingsViewModel : ObservableObject
         ISpikeService spike,
         AutoStartService autoStart,
         IPushNotifier push,
+        IEmailSender email,
         WindowsToastService windowsToast,
         IServiceProvider services)
     {
@@ -56,6 +58,7 @@ public partial class SettingsViewModel : ObservableObject
         _spike = spike;
         _autoStart = autoStart;
         _push = push;
+        _email = email;
         _windowsToast = windowsToast;
         _services = services;
 
@@ -127,6 +130,30 @@ public partial class SettingsViewModel : ObservableObject
     private string _quietHoursEnd = "07:00";
 
     [ObservableProperty]
+    private string _smtpHost = string.Empty;
+
+    [ObservableProperty]
+    private string _smtpPort = "587";
+
+    [ObservableProperty]
+    private bool _smtpUseSsl = true;
+
+    [ObservableProperty]
+    private string _smtpUsername = string.Empty;
+
+    [ObservableProperty]
+    private string _smtpPassword = string.Empty;
+
+    [ObservableProperty]
+    private string _smtpFromAddress = string.Empty;
+
+    [ObservableProperty]
+    private string _smtpFromName = "CGP - Randevu Takip";
+
+    [ObservableProperty]
+    private string _testEmailAddress = string.Empty;
+
+    [ObservableProperty]
     private bool _autoStartEnabled;
 
     [ObservableProperty]
@@ -180,6 +207,13 @@ public partial class SettingsViewModel : ObservableObject
             QuietHoursEnabled = settings.QuietHoursEnabled;
             QuietHoursStart = settings.QuietHoursStart;
             QuietHoursEnd = settings.QuietHoursEnd;
+            SmtpHost = settings.SmtpHost;
+            SmtpPort = settings.SmtpPort.ToString();
+            SmtpUseSsl = settings.SmtpUseSsl;
+            SmtpUsername = settings.SmtpUsername;
+            SmtpPassword = settings.SmtpPassword;
+            SmtpFromAddress = settings.SmtpFromAddress;
+            SmtpFromName = settings.SmtpFromName;
             AutoStartEnabled = settings.AutoStartEnabled;
             CloseToTray = settings.CloseToTray;
             DailyShareTime = settings.DailyShareTime;
@@ -227,7 +261,14 @@ public partial class SettingsViewModel : ObservableObject
                 QuietHoursEnd,
                 AutoStartEnabled,
                 SelectedAutoStartMode?.Value ?? "login",
-                CloseToTray);
+                CloseToTray,
+                SmtpHost,
+                int.TryParse(SmtpPort, out var smtpPort) ? smtpPort : 587,
+                SmtpUseSsl,
+                SmtpUsername,
+                SmtpPassword,
+                SmtpFromAddress,
+                SmtpFromName);
 
             var result = await _settings.SaveAsync(settings);
             if (!result.Success)
@@ -336,6 +377,41 @@ public partial class SettingsViewModel : ObservableObject
         catch (Exception ex)
         {
             ErrorMessage = $"Test bildirimi gönderilemedi: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task TestEmailAsync()
+    {
+        ErrorMessage = null;
+        StatusMessage = null;
+
+        var recipient = string.IsNullOrWhiteSpace(TestEmailAddress)
+            ? SmtpFromAddress
+            : TestEmailAddress;
+
+        if (string.IsNullOrWhiteSpace(recipient))
+        {
+            ErrorMessage = "Test için alıcı e-posta adresi girin.";
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            var sent = await _email.SendAsync(
+                recipient.Trim(),
+                "CGP - Randevu Takip test e-postası",
+                "Bu bir test e-postasıdır. SMTP ayarları çalışıyor.");
+
+            if (sent.Success)
+                StatusMessage = "Test e-postası gönderildi.";
+            else
+                ErrorMessage = sent.Error;
         }
         finally
         {

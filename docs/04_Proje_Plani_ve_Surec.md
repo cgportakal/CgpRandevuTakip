@@ -59,14 +59,15 @@ Yarı zamanlı çalışmada 18-22 hafta öngörülür. Efor: ~95-115 adam-gün.
 | **3.5** | 1 gün | Stabilizasyon ve kapanış | CRUD doğrulama, silinenleri geri alma, 30 gün temizliği, host filtresi | 5 | Tamamlandı (0.4.1) |
 | **4** | 2 hafta | Hatırlatma vaadi | Reminder motoru, toast, aksiyon penceresi, push, telafi, tepsi, sessiz saatler | 21 | Tamamlandı (0.5.0) |
 | **4.5** | 1-2 gün | UAT ve kapanış | Gerçek toast/push/tray/auto-start doğrulaması | 5 | Tamamlandı (0.5.3) |
+| **4.6** | 1 gün | Kimlik ve kurtarma | Beni hatırla, e-posta ile şifre sıfırlama | 8 | Tamamlandı (0.5.4) |
 | **5** | 2 hafta | Günlük paylaşım | PNG render, pano, WhatsApp deep link, alıcı rehberi, zamanlayıcı | 21 | Planlandı |
 | **6** | 2 hafta | Veri güvenliği ve sürüm | Yedek/geri yükleme, denetim, kurulum, UAT, hata düzeltme | 21 | Planlandı |
 
 **Toplam:** ~138 SP (Sprint 3.5 dahil). Hız (velocity) ilk sprintte ölçülür; 18-22 SP/sprint
 varsayımı gerçekleşmezse kapsam değil **tarih** esnetilir (MVP sabit tutulur).
 
-> **Güncel durum (08.11.2026):** Sprint 0-4 ve 4.5 UAT tamamlandı, sürüm **0.5.3**,
-> **166/166 test** geçiyor, derleme 0 uyarı / 0 hata. Sprint 4.5 sonuçları için
+> **Güncel durum (09.11.2026):** Sprint 0-4, 4.5 UAT ve 4.6 kimlik/kurtarma tamamlandı, sürüm **0.5.4**,
+> **173/173 test** geçiyor, derleme 0 uyarı / 0 hata. Sprint 4.5 sonuçları için
 > [docs/13_Sprint4_5_UAT_Raporu.md](13_Sprint4_5_UAT_Raporu.md).
 
 ### 2.1 Sprint 0 — ayrıntılı

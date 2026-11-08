@@ -68,6 +68,12 @@ public sealed class UserService : IUserService
         if (await _users.FindByUsernameAsync(username) is not null)
             return OperationResult.Fail("Bu kullanıcı adı zaten kullanılıyor.");
 
+        var emailValidation = await ValidateEmailAsync(input.Email, userId: null);
+        if (emailValidation.Error is not null)
+            return OperationResult.Fail(emailValidation.Error);
+
+        var email = emailValidation.Email;
+
         string passwordHash;
         string passwordSalt;
         var iterations = 1;
@@ -96,6 +102,7 @@ public sealed class UserService : IUserService
         {
             Username = username,
             DisplayName = displayName,
+            Email = email,
             PasswordHash = passwordHash,
             PasswordSalt = passwordSalt,
             PasswordIterations = iterations,
@@ -134,6 +141,12 @@ public sealed class UserService : IUserService
         if (input.Role != UserRole.Host && !input.IsLoginEnabled)
             return OperationResult.Fail("Yönetici ve sekreter giriş yapabilmelidir.");
 
+        var emailValidation = await ValidateEmailAsync(input.Email, user.Id);
+        if (emailValidation.Error is not null)
+            return OperationResult.Fail(emailValidation.Error);
+
+        var email = emailValidation.Email;
+
         if (user.Id == _currentUser.UserId && !input.IsActive)
             return OperationResult.Fail("Kendi hesabınızı pasifleştiremezsiniz.");
 
@@ -160,9 +173,15 @@ public sealed class UserService : IUserService
         var deactivating = user.IsActive && !input.IsActive;
 
         user.DisplayName = displayName;
+        user.Email = email;
         user.Role = input.Role;
         user.IsActive = input.IsActive;
         user.IsLoginEnabled = input.IsLoginEnabled;
+        if (!input.IsActive || !input.IsLoginEnabled)
+        {
+            user.RememberTokenHash = null;
+            user.RememberTokenExpiresAtUtc = null;
+        }
         await _users.SaveAsync(user);
 
         await _audit.LogAsync(
@@ -198,6 +217,12 @@ public sealed class UserService : IUserService
         user.PasswordIterations = hash.Iterations;
         user.FailedLoginCount = 0;
         user.LockoutUntilUtc = null;
+        user.RememberTokenHash = null;
+        user.RememberTokenExpiresAtUtc = null;
+        user.PasswordResetCodeHash = null;
+        user.PasswordResetCodeSalt = null;
+        user.PasswordResetCodeIterations = 0;
+        user.PasswordResetExpiresAtUtc = null;
         await _users.SaveAsync(user);
 
         await _audit.LogAsync(
@@ -225,6 +250,23 @@ public sealed class UserService : IUserService
         return null;
     }
 
+    private async Task<(string? Error, string? Email)> ValidateEmailAsync(
+        string? email,
+        string? userId)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return (null, null);
+
+        if (!EmailAddressPolicy.TryNormalize(email, out var value))
+            return ("E-posta adresi geçerli değil.", null);
+
+        var existing = await _users.FindByEmailAsync(value);
+        if (existing is not null && existing.Id != userId)
+            return ("Bu e-posta adresi başka bir kullanıcıda kayıtlı.", null);
+
+        return (null, value);
+    }
+
     private UserDto ToDto(User user)
         => new(
             user.Id,
@@ -236,5 +278,6 @@ public sealed class UserService : IUserService
             user.LastLoginAtUtc is null
                 ? null
                 : _clock.ToLocal(user.LastLoginAtUtc.Value),
-            _clock.ToLocal(user.CreatedAtUtc));
+            _clock.ToLocal(user.CreatedAtUtc),
+            user.Email);
 }

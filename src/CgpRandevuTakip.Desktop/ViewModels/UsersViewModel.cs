@@ -52,6 +52,9 @@ public partial class UsersViewModel : ObservableObject
     private string _username = string.Empty;
 
     [ObservableProperty]
+    private string _email = string.Empty;
+
+    [ObservableProperty]
     private RoleOption? _selectedRole;
 
     [ObservableProperty]
@@ -121,6 +124,7 @@ public partial class UsersViewModel : ObservableObject
         IsEditing = false;
         DisplayName = string.Empty;
         Username = string.Empty;
+        Email = string.Empty;
         SelectedRole = RoleOptions.First(x => x.Value == UserRole.Host);
         IsActive = true;
         IsLoginEnabled = true;
@@ -142,6 +146,7 @@ public partial class UsersViewModel : ObservableObject
         IsEditing = true;
         DisplayName = SelectedUser.DisplayName;
         Username = SelectedUser.Username;
+        Email = SelectedUser.Email ?? string.Empty;
         SelectedRole = RoleOptions.FirstOrDefault(x => x.Value == SelectedUser.Role) ?? RoleOptions[2];
         IsActive = SelectedUser.IsActive;
         IsLoginEnabled = SelectedUser.IsLoginEnabled;
@@ -167,14 +172,15 @@ public partial class UsersViewModel : ObservableObject
             var result = IsEditing && SelectedUser is not null
                 ? await _users.UpdateAsync(
                     SelectedUser.Id,
-                    new UserUpdateInput(DisplayName, role, IsActive, IsLoginEnabled))
+                    new UserUpdateInput(DisplayName, role, IsActive, IsLoginEnabled, Email))
                 : await _users.CreateAsync(new UserCreateInput(
                     Username,
                     DisplayName,
                     role,
                     IsLoginEnabled,
                     Password,
-                    ConfirmPassword));
+                    ConfirmPassword,
+                    Email));
 
             if (!result.Success)
             {
@@ -234,7 +240,8 @@ public partial class UsersViewModel : ObservableObject
                 SelectedUser.DisplayName,
                 SelectedUser.Role,
                 target,
-                SelectedUser.IsLoginEnabled));
+                SelectedUser.IsLoginEnabled,
+                SelectedUser.Email));
 
         if (!result.Success)
         {

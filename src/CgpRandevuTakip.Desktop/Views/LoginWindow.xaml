@@ -113,11 +113,16 @@
                                TextWrapping="Wrap" />
                 </Border>
 
+                <CheckBox Content="Beni hatırla (30 gün)"
+                          IsChecked="{Binding RememberMe}"
+                          Margin="0,14,0,0"
+                          AutomationProperties.Name="Beni hatırla" />
+
                 <Button Content="Giriş yap"
                         Style="{StaticResource PrimaryButton}"
                         Command="{Binding LoginCommand}"
                         IsDefault="True"
-                        Margin="0,24,0,0"
+                        Margin="0,18,0,0"
                         Height="44" />
 
                 <TextBlock Text="Giriş yapılıyor..."
@@ -126,11 +131,11 @@
                            Margin="0,12,0,0"
                            Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
 
-                <TextBlock Text="Şifrenizi unuttuysanız yöneticinizle iletişime geçin."
-                           Style="{StaticResource MutedText}"
-                           HorizontalAlignment="Center"
-                           TextAlignment="Center"
-                           Margin="0,26,0,0" />
+                <Button Content="Şifremi unuttum"
+                        Style="{StaticResource GhostButton}"
+                        Command="{Binding ForgotPasswordCommand}"
+                        HorizontalAlignment="Center"
+                        Margin="0,18,0,0" />
 
                 <Border Style="{StaticResource Divider}" Margin="0,30" />
 

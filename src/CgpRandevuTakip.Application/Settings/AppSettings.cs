@@ -25,7 +25,14 @@ public sealed record AppSettings(
     string QuietHoursEnd = "07:00",
     bool AutoStartEnabled = false,
     string AutoStartMode = "login",
-    bool CloseToTray = true)
+    bool CloseToTray = true,
+    string SmtpHost = "",
+    int SmtpPort = 587,
+    bool SmtpUseSsl = true,
+    string SmtpUsername = "",
+    string SmtpPassword = "",
+    string SmtpFromAddress = "",
+    string SmtpFromName = "CGP - Randevu Takip")
 {
     public static AppSettings CreateDefault(string defaultBackupDirectory) => new(
         AppTheme.Auto,
@@ -44,7 +51,14 @@ public sealed record AppSettings(
         QuietHoursEnd: "07:00",
         AutoStartEnabled: false,
         AutoStartMode: "login",
-        CloseToTray: true);
+        CloseToTray: true,
+        SmtpHost: string.Empty,
+        SmtpPort: 587,
+        SmtpUseSsl: true,
+        SmtpUsername: string.Empty,
+        SmtpPassword: string.Empty,
+        SmtpFromAddress: string.Empty,
+        SmtpFromName: "CGP - Randevu Takip");
 }
 
 public static class SettingsKeys
@@ -67,4 +81,11 @@ public static class SettingsKeys
     public const string AutoStartEnabled = "app.auto_start_enabled";
     public const string AutoStartMode = "app.auto_start_mode";
     public const string CloseToTray = "app.close_to_tray";
+    public const string SmtpHost = "app.smtp_host";
+    public const string SmtpPort = "app.smtp_port";
+    public const string SmtpUseSsl = "app.smtp_use_ssl";
+    public const string SmtpUsername = "app.smtp_username";
+    public const string SmtpPassword = "app.smtp_password";
+    public const string SmtpFromAddress = "app.smtp_from_address";
+    public const string SmtpFromName = "app.smtp_from_name";
 }

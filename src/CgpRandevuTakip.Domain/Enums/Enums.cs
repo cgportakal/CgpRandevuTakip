@@ -113,5 +113,9 @@ public enum AuditAction
     UserDeactivated = 22,
     SessionLocked = 23,
     SessionUnlocked = 24,
-    AppointmentPurged = 25
+    AppointmentPurged = 25,
+    PasswordResetRequested = 26,
+    PasswordResetCompleted = 27,
+    PasswordResetFailed = 28,
+    RememberLoginUsed = 29
 }
