@@ -334,7 +334,7 @@ public class AppointmentServiceTests
             .Where(x => x.AppointmentId == created.AppointmentId)
             .ToList();
 
-        Assert.Single(reminders.Where(x => x.State == ReminderState.Cancelled));
+        Assert.Single(reminders, x => x.State == ReminderState.Cancelled);
         var pending = reminders.Where(x => x.State == ReminderState.Pending).ToList();
         Assert.Equal(2, pending.Count);
         Assert.All(pending, x => Assert.Equal(

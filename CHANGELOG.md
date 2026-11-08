@@ -10,6 +10,7 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 - Dependabot ile NuGet ve GitHub Actions güncelleme takibi
 
 ### Değiştirildi
+- NuGet bağımlılıkları güncellendi: EF Core 9.0.22, CommunityToolkit.Mvvm 8.4.2, Microsoft.Extensions.Hosting 10.0.14, xUnit 2.9.3
 - Teknik ad, çözüm/proje/klasör ve assembly adları `CgpRandevuTakip` oldu; yedek ve kullanıcıya görünen metinlerdeki marka CGP olarak kaldı
 - Kurum adı ayarlardan kaydedildiğinde üst çubuk ve kontrol paneli yeniden başlatmadan güncellenir; boşsa `CGP` gösterilir
 - Eski yerel veri klasörü ilk açılışta yeni `CgpRandevuTakip` klasörüne tek seferlik taşınır; mevcut veritabanı ve kullanıcılar korunur
