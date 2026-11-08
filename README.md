@@ -67,10 +67,22 @@ dotnet run --project src/CgpRandevuTakip.Desktop
 - Eski sürümden gelen veri ilk açılışta otomatik olarak yeni veri klasörüne taşınır.
 - Migration eklemek için: `dotnet ef migrations add <Ad> --project src/CgpRandevuTakip.Infrastructure --startup-project src/CgpRandevuTakip.Desktop --output-dir Persistence/Migrations`
 - İlk açılışta yönetici hesabı kurulum sihirbazıyla oluşturulur.
+
+### Tek tıkla çalıştırma
+
+Kök klasördeki dosyalara çift tıklayabilirsin:
+
+- **`Calistir-Debug.cmd`**: Debug derlemesi yapar, açık uygulamayı kapatır ve uygulamayı başlatır.
+- **`Derle.cmd`**: Release derlemesi yapar, testleri çalıştırır ve sonucu gösterir.
+
 - Sprint 0 sonuçları: [docs/07_Sprint0_Raporu.md](docs/07_Sprint0_Raporu.md)
 - Sprint 1 sonuçları: [docs/08_Sprint1_Raporu.md](docs/08_Sprint1_Raporu.md)
 - Sprint 2 sonuçları: [docs/09_Sprint2_Raporu.md](docs/09_Sprint2_Raporu.md)
 - Sprint 3 sonuçları: [docs/10_Sprint3_Raporu.md](docs/10_Sprint3_Raporu.md)
+- Sprint 3.5 sonuçları: [docs/11_Sprint3_5_Raporu.md](docs/11_Sprint3_5_Raporu.md)
+- Sprint 4 sonuçları: [docs/12_Sprint4_Raporu.md](docs/12_Sprint4_Raporu.md)
+- Sprint 4.5 UAT: [docs/13_Sprint4_5_UAT_Raporu.md](docs/13_Sprint4_5_UAT_Raporu.md)
+- Push kurulumu: [docs/14_Push_Kurulum_Rehberi.md](docs/14_Push_Kurulum_Rehberi.md)
 
 ## Alınan ürün kararları
 

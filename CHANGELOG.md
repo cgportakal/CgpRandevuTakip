@@ -3,6 +3,12 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [Yayınlanmamış]
+
+### Eklendi
+- `Calistir-Debug.cmd`: tek tıkla Debug derleme + uygulamayı başlatma
+- `Derle.cmd`: tek tıkla Release derleme + test çalıştırma
+
 ## [0.5.3] — 2026-11-08
 
 ### Düzeltildi
