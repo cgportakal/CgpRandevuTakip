@@ -3,6 +3,20 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.5.2] — 2026-11-08 · Sprint 4.5 UAT
+
+### Eklendi
+- Windows Action Center toast entegrasyonu; başarısız olursa uygulama içi toast'a düşer
+- Ayarlarda "Test bildirimi gönder" (ntfy/Telegram) ve "Windows toast testi"
+- Push kurulum rehberi
+
+### Düzeltildi
+- Sessiz saat başlangıç/bitiş değerleri doğru ayar anahtarlarından okunuyor
+- "Kapatınca tepside çalış" ayarı anında uygulanıyor
+- İkinci açılış mevcut pencereyi öne getiriyor; yeni süreç sessizce kapanıyor
+- Ana pencere modal olmayan `Show()` ile yönetiliyor; tepsiye küçültme güvenilir
+- Hatırlatıcı aksiyonları `IClock` kullanıyor
+
 ## [0.5.1] — 2026-11-08
 
 ### Eklendi

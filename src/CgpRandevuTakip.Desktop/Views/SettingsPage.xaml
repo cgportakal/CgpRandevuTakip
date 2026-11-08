@@ -106,22 +106,32 @@
 
                             <TextBlock Text="Push sağlayıcısı" Style="{StaticResource LabelText}" />
                             <ComboBox ItemsSource="{Binding PushProviderOptions}"
-                                      SelectedItem="{Binding SelectedPushProvider, Mode=TwoWay}" />
+                                      SelectedItem="{Binding SelectedPushProvider, Mode=TwoWay}"
+                                      AutomationProperties.Name="Push sağlayıcısı" />
 
                             <StackPanel Visibility="{Binding IsTelegramProvider, Converter={StaticResource InverseBoolToVisibility}}">
                                 <TextBlock Text="Push konusu / topic" Style="{StaticResource LabelText}" Margin="0,14,0,6" />
-                                <TextBox Text="{Binding PushTopic, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding PushTopic, UpdateSourceTrigger=PropertyChanged}"
+                                         AutomationProperties.Name="Push konusu" />
                             </StackPanel>
 
                             <StackPanel Visibility="{Binding IsTelegramProvider, Converter={StaticResource BoolToVisibility}}">
                                 <TextBlock Text="Bot token" Style="{StaticResource LabelText}" Margin="0,14,0,6" />
-                                <TextBox Text="{Binding PushToken, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding PushToken, UpdateSourceTrigger=PropertyChanged}"
+                                         AutomationProperties.Name="Telegram bot token" />
                                 <TextBlock Text="Sohbet kimliği (chat id)" Style="{StaticResource LabelText}" Margin="0,12,0,6" />
-                                <TextBox Text="{Binding PushChatId, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding PushChatId, UpdateSourceTrigger=PropertyChanged}"
+                                         AutomationProperties.Name="Telegram chat id" />
                             </StackPanel>
 
                             <TextBlock Text="Push varsayılan olarak isimsizdir; bildirimde kişi adı gönderilmez."
                                        Style="{StaticResource MutedText}" Margin="0,8,0,0" />
+
+                            <Button Content="Test bildirimi gönder"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding TestPushCommand}"
+                                    HorizontalAlignment="Left"
+                                    Margin="0,12,0,0" />
 
                             <TextBlock Text="Sessiz saatler" Style="{StaticResource SectionTitle}" Margin="0,16,0,0" />
                             <CheckBox Content="Sessiz saatler açık"
@@ -227,6 +237,11 @@
                             <Button Content="S-02 · Toast önizleme"
                                     Style="{StaticResource SecondaryButton}"
                                     Command="{Binding ShowToastPreviewCommand}"
+                                    HorizontalAlignment="Stretch"
+                                    Margin="0,0,0,8" />
+                            <Button Content="Windows toast testi"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding TestWindowsToastCommand}"
                                     HorizontalAlignment="Stretch"
                                     Margin="0,0,0,8" />
                             <Button Content="Veri klasörünü aç"

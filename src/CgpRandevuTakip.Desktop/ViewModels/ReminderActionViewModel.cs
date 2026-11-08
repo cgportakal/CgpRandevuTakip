@@ -1,3 +1,4 @@
+using CgpRandevuTakip.Application.Abstractions;
 using CgpRandevuTakip.Application.Reminders;
 using CgpRandevuTakip.Domain.Enums;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -8,13 +9,16 @@ namespace CgpRandevuTakip.Desktop.ViewModels;
 public partial class ReminderActionViewModel : ObservableObject
 {
     private readonly IReminderService _reminders;
+    private readonly IClock _clock;
     private readonly ReminderContextDto _context;
 
     public ReminderActionViewModel(
         IReminderService reminders,
+        IClock clock,
         ReminderContextDto context)
     {
         _reminders = reminders;
+        _clock = clock;
         _context = context;
 
         PersonFullName = context.PersonFullName;
@@ -67,7 +71,7 @@ public partial class ReminderActionViewModel : ObservableObject
         ErrorMessage = null;
         try
         {
-            var result = await _reminders.ApplyActionAsync(_context.ReminderId, action, DateTime.UtcNow);
+            var result = await _reminders.ApplyActionAsync(_context.ReminderId, action, _clock.UtcNow);
             if (!result.Success)
             {
                 ErrorMessage = result.Error;

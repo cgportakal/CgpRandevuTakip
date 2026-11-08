@@ -54,12 +54,12 @@ public sealed class SettingsService : ISettingsService
             PushEnabled: ReadBool(values, SettingsKeys.PushEnabled, defaults.PushEnabled),
             PushProvider: NormalizeProvider(Read(values, SettingsKeys.PushProvider)),
             PushTopic: Read(values, SettingsKeys.PushTopic) ?? defaults.PushTopic,
-            DailyShareTime: ReadTime(values, defaults.DailyShareTime),
+            DailyShareTime: ReadTime(values, SettingsKeys.DailyShareTime, defaults.DailyShareTime),
             PushToken: _secrets.Unprotect(Read(values, SettingsKeys.PushToken)) ?? defaults.PushToken,
             PushChatId: _secrets.Unprotect(Read(values, SettingsKeys.PushChatId)) ?? defaults.PushChatId,
             QuietHoursEnabled: ReadBool(values, SettingsKeys.QuietHoursEnabled, defaults.QuietHoursEnabled),
-            QuietHoursStart: ReadTime(values, defaults.QuietHoursStart),
-            QuietHoursEnd: ReadTime(values, defaults.QuietHoursEnd),
+            QuietHoursStart: ReadTime(values, SettingsKeys.QuietHoursStart, defaults.QuietHoursStart),
+            QuietHoursEnd: ReadTime(values, SettingsKeys.QuietHoursEnd, defaults.QuietHoursEnd),
             AutoStartEnabled: ReadBool(values, SettingsKeys.AutoStartEnabled, defaults.AutoStartEnabled),
             AutoStartMode: NormalizeAutoStartMode(Read(values, SettingsKeys.AutoStartMode)),
             CloseToTray: ReadBool(values, SettingsKeys.CloseToTray, defaults.CloseToTray));
@@ -87,6 +87,12 @@ public sealed class SettingsService : ISettingsService
 
         if (!TimeSpan.TryParseExact(settings.DailyShareTime, @"hh\:mm", CultureInfo.InvariantCulture, out _))
             return OperationResult.Fail("Günlük paylaşım saati SS:dd biçiminde olmalıdır.");
+
+        if (!TimeSpan.TryParseExact(settings.QuietHoursStart, @"hh\:mm", CultureInfo.InvariantCulture, out _)
+            || !TimeSpan.TryParseExact(settings.QuietHoursEnd, @"hh\:mm", CultureInfo.InvariantCulture, out _))
+        {
+            return OperationResult.Fail("Sessiz saatler SS:dd biçiminde olmalıdır.");
+        }
 
         var provider = NormalizeProvider(settings.PushProvider);
         var autoStartMode = NormalizeAutoStartMode(settings.AutoStartMode);
@@ -166,9 +172,12 @@ public sealed class SettingsService : ISettingsService
             ? parsed
             : fallback;
 
-    private static string ReadTime(IReadOnlyDictionary<string, string> values, string fallback)
+    private static string ReadTime(
+        IReadOnlyDictionary<string, string> values,
+        string key,
+        string fallback)
     {
-        var value = Read(values, SettingsKeys.DailyShareTime);
+        var value = Read(values, key);
         return value is not null
                && TimeSpan.TryParseExact(value, @"hh\:mm", CultureInfo.InvariantCulture, out _)
             ? value

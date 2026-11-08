@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using CgpRandevuTakip.Application.Abstractions;
+using CgpRandevuTakip.Application.Notifications;
 using CgpRandevuTakip.Application.Settings;
 using CgpRandevuTakip.Desktop.Messages;
 using CgpRandevuTakip.Desktop.Services;
@@ -29,6 +30,8 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IDialogService _dialogs;
     private readonly ISpikeService _spike;
     private readonly AutoStartService _autoStart;
+    private readonly IPushNotifier _push;
+    private readonly WindowsToastService _windowsToast;
     private readonly IServiceProvider _services;
 
     private bool _isLoading;
@@ -41,6 +44,8 @@ public partial class SettingsViewModel : ObservableObject
         IDialogService dialogs,
         ISpikeService spike,
         AutoStartService autoStart,
+        IPushNotifier push,
+        WindowsToastService windowsToast,
         IServiceProvider services)
     {
         _settings = settings;
@@ -50,6 +55,8 @@ public partial class SettingsViewModel : ObservableObject
         _dialogs = dialogs;
         _spike = spike;
         _autoStart = autoStart;
+        _push = push;
+        _windowsToast = windowsToast;
         _services = services;
 
         ThemeOptions = new ObservableCollection<ThemeOption>
@@ -231,6 +238,7 @@ public partial class SettingsViewModel : ObservableObject
 
             _theme.Apply(settings.Theme);
             _autoStart.SetEnabled(settings.AutoStartEnabled, settings.AutoStartMode);
+            WeakReferenceMessenger.Default.Send(new SettingsChangedMessage(settings.CloseToTray));
 
             var institution = AppConstants.ResolveInstitutionName(settings.InstitutionName);
             InstitutionName = institution;
@@ -296,6 +304,58 @@ public partial class SettingsViewModel : ObservableObject
             else
                 _dialogs.Error(open.Message, "S-01 · WhatsApp açılamadı");
         }
+    }
+
+    [RelayCommand]
+    private async Task TestPushAsync()
+    {
+        ErrorMessage = null;
+        StatusMessage = null;
+        IsBusy = true;
+
+        try
+        {
+            var sent = await _push.SendAsync(new PushRequest(
+                SelectedPushProvider,
+                PushTopic,
+                PushToken,
+                PushChatId,
+                "CGP Test",
+                $"Test bildirimi · {DateTime.Now:HH:mm}"));
+
+            if (sent)
+            {
+                StatusMessage = "Test bildirimi gönderildi.";
+                return;
+            }
+
+            ErrorMessage = SelectedPushProvider == "telegram"
+                ? "Telegram testi başarısız. Bot token, sayısal chat id ve bota /start gönderildiğinden emin olun."
+                : "ntfy testi başarısız. Topic adını ve internet bağlantısını kontrol edin.";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Test bildirimi gönderilemedi: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private void TestWindowsToast()
+    {
+        var shown = _windowsToast.TryShow(
+            "CGP Test",
+            $"Windows toast testi · {DateTime.Now:HH:mm}");
+
+        if (shown)
+            _dialogs.Info("Windows toast gönderildi. Bildirim merkezini kontrol edin.", "Toast testi");
+        else
+            _dialogs.Error(
+                "Windows toast gönderilemedi. Uygulama içi bildirim kullanılmaya devam eder.",
+                "Toast testi");
     }
 
     [RelayCommand]

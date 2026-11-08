@@ -22,6 +22,7 @@ using CgpRandevuTakip.Infrastructure.Time;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Toolkit.Uwp.Notifications;
 
 namespace CgpRandevuTakip.Desktop;
 
@@ -29,6 +30,8 @@ public partial class App : System.Windows.Application
 {
     private IHost? _host;
     private Mutex? _singleInstanceMutex;
+    private EventWaitHandle? _showEvent;
+    private CancellationTokenSource? _showListenerCts;
     private TrayService? _tray;
     private bool _runLoopActive;
 
@@ -40,12 +43,7 @@ public partial class App : System.Windows.Application
 
         if (!AcquireSingleInstance())
         {
-            MessageBox.Show(
-                "CGP - Randevu Takip zaten çalışıyor. Açık pencereyi kullanın.",
-                "CGP - Randevu Takip",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-
+            // Mevcut örneğe "göster" sinyali gönderildi; yeni süreç sessizce kapanır.
             Shutdown();
             return;
         }
@@ -65,6 +63,7 @@ public partial class App : System.Windows.Application
             _tray.Initialize();
             _tray.OpenRequested += OnTrayOpenRequested;
             _tray.ExitRequested += OnTrayExitRequested;
+            ToastNotificationManagerCompat.OnActivated += OnToastActivated;
 
             var startHidden = e.Args.Any(a => a.Equals("--tray", StringComparison.OrdinalIgnoreCase));
             if (!startHidden)
@@ -88,15 +87,36 @@ public partial class App : System.Windows.Application
     {
         if (_runLoopActive)
         {
-            _tray?.ShowWindow();
+            ShowExistingWindow();
             return;
         }
 
         _ = RunApplicationLoopAsync();
     }
 
+    private void ShowExistingWindow()
+    {
+        var window = Windows
+            .OfType<Window>()
+            .FirstOrDefault(w => w.IsVisible);
+
+        if (window is not null)
+        {
+            if (window.WindowState == WindowState.Minimized)
+                window.WindowState = WindowState.Normal;
+
+            window.Activate();
+            return;
+        }
+
+        _tray?.ShowWindow();
+    }
+
     private void OnTrayExitRequested(object? sender, EventArgs e)
         => Shutdown();
+
+    private void OnToastActivated(ToastNotificationActivatedEventArgsCompat e)
+        => Dispatcher.Invoke(() => OnTrayOpenRequested(null, EventArgs.Empty));
 
     private static void ConfigureServices(IServiceCollection services)
     {
@@ -110,6 +130,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IAuditLogger, AuditLogger>();
         services.AddSingleton<ISecretProtector, DpapiSecretProtector>();
         services.AddSingleton<IPushNotifier, PushNotifier>();
+        services.AddSingleton<WindowsToastService>();
         services.AddSingleton<SessionStateService>();
         services.AddSingleton<TrayService>();
         services.AddSingleton<AutoStartService>();
@@ -221,7 +242,11 @@ public partial class App : System.Windows.Application
                 var shell = _host.Services.GetRequiredService<MainWindow>();
                 MainWindow = shell;
                 _tray?.AttachWindow(shell);
-                shell.ShowDialog();
+
+                var closed = new TaskCompletionSource();
+                shell.Closed += (_, _) => closed.TrySetResult();
+                shell.Show();
+                await closed.Task;
 
                 if (!shell.LogoutRequested)
                     break;
@@ -243,11 +268,54 @@ public partial class App : System.Windows.Application
             createdNew: out var createdNew);
 
         if (createdNew)
+        {
+            _showEvent = new EventWaitHandle(
+                initialState: false,
+                mode: EventResetMode.AutoReset,
+                name: @"Local\CgpRandevuTakip.Show",
+                createdNew: out _);
+
+            StartShowListener();
             return true;
+        }
+
+        try
+        {
+            if (EventWaitHandle.TryOpenExisting(@"Local\CgpRandevuTakip.Show", out var showEvent))
+            {
+                showEvent.Set();
+                showEvent.Dispose();
+            }
+        }
+        catch
+        {
+            // Diğer örnek sinyali alamazsa kullanıcıya mesaj gösterilir.
+        }
 
         _singleInstanceMutex.Dispose();
         _singleInstanceMutex = null;
         return false;
+    }
+
+    private void StartShowListener()
+    {
+        if (_showEvent is null)
+            return;
+
+        var showEvent = _showEvent;
+        _showListenerCts = new CancellationTokenSource();
+        var token = _showListenerCts.Token;
+
+        _ = Task.Run(() =>
+        {
+            while (!token.IsCancellationRequested)
+            {
+                if (!showEvent.WaitOne(500))
+                    continue;
+
+                Dispatcher.Invoke(() => OnTrayOpenRequested(null, EventArgs.Empty));
+            }
+        }, token);
     }
 
     private static void ConfigureUiCulture()
@@ -281,6 +349,11 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        ToastNotificationManagerCompat.OnActivated -= OnToastActivated;
+        _showListenerCts?.Cancel();
+        _showEvent?.Set();
+        _showEvent?.Dispose();
+        _showListenerCts?.Dispose();
         _tray?.Dispose();
 
         if (_host is not null)

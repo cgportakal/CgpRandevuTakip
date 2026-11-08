@@ -92,7 +92,7 @@ Yeni test dosyaları:
 
 | Konu | Gerekçe | Hedef |
 |------|---------|-------|
-| OS Action Center toast (paketli bildirim) | Ortam spike'ı gerekir; uygulama içi topmost yedek çalışıyor | Sprint 5 öncesi spike |
+| OS Action Center toast (paketli bildirim) | **0.5.2'de çözüldü**; başarısız olursa uygulama içi topmost yedek çalışır | Tamamlandı |
 | Telegram push manuel doğrulaması | Gerçek bot/token gerekir | UAT |
 | Sessiz saatte biriken bildirimlerin toplu özeti | Kapsam genişletme | Faz 2 |
 | Tepsi simgesi markalı ikon | Şimdilik sistem ikonu | Sonraki sprint |

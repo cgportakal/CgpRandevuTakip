@@ -1,9 +1,11 @@
 using System.ComponentModel;
 using System.Windows;
 using CgpRandevuTakip.Application.Settings;
+using CgpRandevuTakip.Desktop.Messages;
 using CgpRandevuTakip.Desktop.Services;
 using CgpRandevuTakip.Desktop.ViewModels;
 using CgpRandevuTakip.Desktop.Views;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CgpRandevuTakip.Desktop;
@@ -17,7 +19,7 @@ public partial class MainWindow : Window
     private readonly ISettingsService _settings;
     private readonly IServiceProvider _services;
     private bool _lockDialogOpen;
-    private bool _closeToTray;
+    private bool _closeToTray = true;
 
     public MainWindow(
         ShellViewModel viewModel,
@@ -38,6 +40,10 @@ public partial class MainWindow : Window
 
         viewModel.LogoutRequested += OnLogoutRequested;
         _sessionLock.LockRequested += OnLockRequested;
+        WeakReferenceMessenger.Default.Register<SettingsChangedMessage>(
+            this,
+            static (recipient, message) =>
+                ((MainWindow)recipient)._closeToTray = message.CloseToTray);
         Loaded += OnLoaded;
         Closing += OnClosing;
     }
@@ -116,6 +122,7 @@ public partial class MainWindow : Window
     {
         _viewModel.LogoutRequested -= OnLogoutRequested;
         _sessionLock.LockRequested -= OnLockRequested;
+        WeakReferenceMessenger.Default.UnregisterAll(this);
         _sessionLock.Stop();
         _sessionLock.Dispose();
         _viewModel.Dispose();

@@ -28,6 +28,7 @@ public sealed class ReminderDispatcher : BackgroundService
     private readonly SessionStateService _session;
     private readonly IClock _clock;
     private readonly IPushNotifier _push;
+    private readonly WindowsToastService _windowsToast;
 
     private readonly ConcurrentDictionary<string, ReminderActionWindow> _openWindows = new();
 
@@ -37,7 +38,8 @@ public sealed class ReminderDispatcher : BackgroundService
         ICurrentUser currentUser,
         SessionStateService session,
         IClock clock,
-        IPushNotifier push)
+        IPushNotifier push,
+        WindowsToastService windowsToast)
     {
         _reminders = reminders;
         _settings = settings;
@@ -45,6 +47,7 @@ public sealed class ReminderDispatcher : BackgroundService
         _session = session;
         _clock = clock;
         _push = push;
+        _windowsToast = windowsToast;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -141,7 +144,7 @@ public sealed class ReminderDispatcher : BackgroundService
 
         await OnUiAsync(() =>
         {
-            var viewModel = new ReminderActionViewModel(_reminders, context);
+            var viewModel = new ReminderActionViewModel(_reminders, _clock, context);
             var window = new ReminderActionWindow(viewModel)
             {
                 Owner = System.Windows.Application.Current?.MainWindow
@@ -155,11 +158,14 @@ public sealed class ReminderDispatcher : BackgroundService
         await _reminders.MarkSentAsync(context.ReminderId);
     }
 
-    private static void ShowToast(ReminderContextDto context)
+    private void ShowToast(ReminderContextDto context)
     {
         var title = context.Kind == Domain.Enums.ReminderKind.Call
             ? "Sıradaki kişiyi arama zamanı"
             : "Sıradaki görüşme yaklaşıyor";
+
+        if (_windowsToast.TryShow(title, context.AnonymousBody))
+            return;
 
         var window = new ReminderToastWindow(title, context.AnonymousBody);
         window.ShowNotification();

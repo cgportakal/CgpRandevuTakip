@@ -43,6 +43,12 @@ public class SettingsServiceTests
             Assert.False(settings.PushEnabled);
             Assert.Equal("ntfy", settings.PushProvider);
             Assert.Equal("08:30", settings.DailyShareTime);
+            Assert.True(settings.QuietHoursEnabled);
+            Assert.Equal("22:00", settings.QuietHoursStart);
+            Assert.Equal("07:00", settings.QuietHoursEnd);
+            Assert.False(settings.AutoStartEnabled);
+            Assert.Equal("login", settings.AutoStartMode);
+            Assert.True(settings.CloseToTray);
         }
     }
 
@@ -76,6 +82,53 @@ public class SettingsServiceTests
             Assert.Equal("cgp-randevu", saved.PushTopic);
             Assert.Equal("09:15", saved.DailyShareTime);
             Assert.Contains(AuditAction.ThemeChanged, audit.Actions);
+        }
+    }
+
+    [Fact]
+    public async Task Save_PersistsQuietHoursAndAppBehavior()
+    {
+        var (service, _, _, environment, db) = CreateSut();
+        using (db)
+        {
+            var update = AppSettings.CreateDefault(environment.DefaultBackupDirectory) with
+            {
+                QuietHoursEnabled = true,
+                QuietHoursStart = "23:15",
+                QuietHoursEnd = "06:45",
+                AutoStartEnabled = true,
+                AutoStartMode = "tray",
+                CloseToTray = false
+            };
+
+            var result = await service.SaveAsync(update);
+            Assert.True(result.Success, result.Error);
+
+            var saved = await service.GetAsync();
+            Assert.True(saved.QuietHoursEnabled);
+            Assert.Equal("23:15", saved.QuietHoursStart);
+            Assert.Equal("06:45", saved.QuietHoursEnd);
+            Assert.True(saved.AutoStartEnabled);
+            Assert.Equal("tray", saved.AutoStartMode);
+            Assert.False(saved.CloseToTray);
+        }
+    }
+
+    [Fact]
+    public async Task Save_InvalidQuietHours_Fails()
+    {
+        var (service, _, _, environment, db) = CreateSut();
+        using (db)
+        {
+            var update = AppSettings.CreateDefault(environment.DefaultBackupDirectory) with
+            {
+                QuietHoursStart = "25:00"
+            };
+
+            var result = await service.SaveAsync(update);
+
+            Assert.False(result.Success);
+            Assert.Contains("Sessiz saatler", result.Error);
         }
     }
 

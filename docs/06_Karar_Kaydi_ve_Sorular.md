@@ -55,6 +55,9 @@
 | D-45 | Tekrar: toplam 3 gösterim; aksiyon alınmazsa `Unanswered`. "Ulaşılamadı" snooze 10 dk erteler ve otomatik tekrar sayılmaz. | Farklı tekrar sayıları | Ürün sahibi onayı | 08.11.2026 | Kabul |
 | D-46 | Sessiz saatler kullanıcı seçimli; varsayılan 22:00–07:00. Sessiz saatte push gönderilmez, Windows bildirimi sessizdir. | Sabit aralık, yalnızca push | Ürün sahibi onayı | 08.11.2026 | Kabul |
 | D-47 | Otomatik başlangıç kullanıcı seçimli; varsayılan "giriş ekranı açık". "Tepside gizli" modunda `--tray` ile başlar. | Sabit mod | Ürün sahibi onayı | 08.11.2026 | Kabul |
+| D-48 | Windows bildirimleri `Microsoft.Toolkit.Uwp.Notifications` ile Action Center'a gönderilir; başarısız olursa uygulama içi topmost toast'a düşülür. | Yalnızca uygulama içi | Gerçek Windows bildirimi + güvenli yedek | 08.11.2026 | Kabul |
+| D-49 | İkinci açılış named event ile mevcut örneğe "göster" sinyali gönderir; yeni süreç sessizce kapanır. | Yalnızca mesaj göstermek | Tek örnek ve hızlı geri dönüş | 08.11.2026 | Kabul |
+| D-50 | Push kurulumu kullanıcı tarafından yapılır; ntfy topic veya Telegram bot token/chat id ayarlara girilir. Token/chat id DPAPI ile saklanır. | Uygulama içi hesap | Kurulum basitliği ve sır koruma | 08.11.2026 | Kabul |
 
 ---
 
