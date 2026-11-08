@@ -1,0 +1,221 @@
+<UserControl x:Class="CgpRandevuTakip.Desktop.Views.SettingsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Loaded="OnLoaded">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+            <Grid Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel>
+                    <TextBlock Text="Tercihler" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Text="Tema anında uygulanır. Diğer ayarlar yalnızca yönetici tarafından değiştirilebilir."
+                               Style="{StaticResource MutedText}" Margin="0,4,0,0" />
+                </StackPanel>
+
+                <Button Grid.Column="1"
+                        Content="Ayarları kaydet"
+                        Style="{StaticResource PrimaryButton}"
+                        Command="{Binding SaveCommand}"
+                        VerticalAlignment="Center"
+                        Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibility}}" />
+            </Grid>
+
+            <Border Background="{DynamicResource SuccessSoftBrush}"
+                    BorderBrush="{DynamicResource SuccessBrush}"
+                    BorderThickness="1"
+                    CornerRadius="9"
+                    Padding="12,10"
+                    Margin="0,0,0,14"
+                    Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibility}}">
+                <TextBlock Text="{Binding StatusMessage}"
+                           Foreground="{DynamicResource SuccessBrush}"
+                           FontSize="12"
+                           TextWrapping="Wrap" />
+            </Border>
+
+            <Border Background="{DynamicResource DangerSoftBrush}"
+                    BorderBrush="{DynamicResource DangerBrush}"
+                    BorderThickness="1"
+                    CornerRadius="9"
+                    Padding="12,10"
+                    Margin="0,0,0,14"
+                    Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}">
+                <TextBlock Text="{Binding ErrorMessage}"
+                           Foreground="{DynamicResource DangerBrush}"
+                           FontSize="12"
+                           TextWrapping="Wrap" />
+            </Border>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="18" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <!-- Görünüm -->
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="Görünüm ve genel" Style="{StaticResource SectionTitle}" />
+
+                            <TextBlock Text="Tema" Style="{StaticResource LabelText}" />
+                            <ComboBox ItemsSource="{Binding ThemeOptions}"
+                                      DisplayMemberPath="Label"
+                                      SelectedItem="{Binding SelectedTheme, Mode=TwoWay}" />
+                            <TextBlock Text="Otomatik seçeneği Windows kişiselleştirme ayarını izler."
+                                       Style="{StaticResource MutedText}" Margin="0,5,0,0" />
+
+                            <TextBlock Text="Kurum adı (paylaşım başlığı)" Style="{StaticResource LabelText}" Margin="0,16,0,6" />
+                            <TextBox Text="{Binding InstitutionName, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding IsAdmin}"
+                                     MaxLength="120"
+                                     AutomationProperties.Name="Kurum adı" />
+                            <TextBlock Text="Üst çubukta, kontrol panelinde ve günlük liste görselinde görünür."
+                                       Style="{StaticResource MutedText}" Margin="0,5,0,0" />
+
+                            <TextBlock Text="Varsayılan hatırlatıcı" Style="{StaticResource LabelText}" Margin="0,16,0,6" />
+                            <ComboBox ItemsSource="{Binding ReminderOptions}"
+                                      DisplayMemberPath="Label"
+                                      SelectedItem="{Binding SelectedReminder, Mode=TwoWay}"
+                                      IsEnabled="{Binding IsAdmin}" />
+
+                            <TextBlock Text="Günlük paylaşım saati (SS:dd)" Style="{StaticResource LabelText}" Margin="0,16,0,6" />
+                            <TextBox Text="{Binding DailyShareTime, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding IsAdmin}"
+                                     MaxLength="5" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Bildirimler -->
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,16"
+                            Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel>
+                            <TextBlock Text="Bildirimler" Style="{StaticResource SectionTitle}" />
+
+                            <CheckBox Content="Windows bildirimleri açık"
+                                      IsChecked="{Binding NotificationsEnabled}"
+                                      Margin="0,0,0,10" />
+                            <CheckBox Content="Telefon push bildirimi açık"
+                                      IsChecked="{Binding PushEnabled}"
+                                      Margin="0,0,0,12" />
+
+                            <TextBlock Text="Push sağlayıcısı" Style="{StaticResource LabelText}" />
+                            <ComboBox ItemsSource="{Binding PushProviderOptions}"
+                                      SelectedItem="{Binding SelectedPushProvider, Mode=TwoWay}" />
+
+                            <TextBlock Text="Push konusu / topic" Style="{StaticResource LabelText}" Margin="0,14,0,6" />
+                            <TextBox Text="{Binding PushTopic, UpdateSourceTrigger=PropertyChanged}" />
+
+                            <TextBlock Text="Push varsayılan olarak isimsizdir; bildirimde kişi adı gönderilmez."
+                                       Style="{StaticResource MutedText}" Margin="0,8,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Yedekleme -->
+                    <Border Style="{StaticResource Card}"
+                            Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel>
+                            <TextBlock Text="Yedekleme" Style="{StaticResource SectionTitle}" />
+
+                            <TextBlock Text="Yedek klasörü" Style="{StaticResource LabelText}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding BackupDirectory, UpdateSourceTrigger=PropertyChanged}" />
+                                <Button Grid.Column="1"
+                                        Content="Gözat"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding BrowseBackupDirectoryCommand}"
+                                        Margin="8,0,0,0" />
+                            </Grid>
+                            <TextBlock Text="Kaydederken klasörün yazılabilirliği test edilir."
+                                       Style="{StaticResource MutedText}" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2">
+                    <!-- Hesap -->
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="Hesap" Style="{StaticResource SectionTitle}" />
+                            <TextBlock Text="Parolanızı değiştirmek için mevcut şifrenizi doğrulamanız gerekir."
+                                       Style="{StaticResource MutedText}" Margin="0,0,0,14" />
+                            <Button Content="Şifre değiştir"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding ChangePasswordCommand}"
+                                    HorizontalAlignment="Left" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Tanılama -->
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,16"
+                            Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel>
+                            <TextBlock Text="Tanılama · S-01 / S-02" Style="{StaticResource SectionTitle}" />
+                            <TextBlock Text="Spike araçları gerçek WhatsApp ve Windows bildirim ortamını doğrulamak için kullanılır."
+                                       Style="{StaticResource MutedText}" Margin="0,0,0,14" />
+
+                            <Button Content="S-01 · Liste görselini panoya kopyala"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding PrepareDailyListCommand}"
+                                    HorizontalAlignment="Stretch"
+                                    Margin="0,0,0,8" />
+                            <Button Content="S-02 · Hatırlatıcı aksiyon penceresi"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding ShowReminderPreviewCommand}"
+                                    HorizontalAlignment="Stretch"
+                                    Margin="0,0,0,8" />
+                            <Button Content="S-02 · Toast önizleme"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding ShowToastPreviewCommand}"
+                                    HorizontalAlignment="Stretch"
+                                    Margin="0,0,0,8" />
+                            <Button Content="Veri klasörünü aç"
+                                    Style="{StaticResource GhostButton}"
+                                    Command="{Binding OpenDataFolderCommand}"
+                                    HorizontalAlignment="Left" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Hakkında -->
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="Hakkında" Style="{StaticResource SectionTitle}" />
+
+                            <TextBlock Text="{Binding ProductName}" FontSize="16" FontWeight="Bold" />
+                            <TextBlock Text="{Binding VersionText}" Style="{StaticResource MutedText}" Margin="0,3,0,0" />
+                            <TextBlock Text="{Binding Copyright}" Style="{StaticResource MutedText}" Margin="0,2,0,0" />
+
+                            <Border Style="{StaticResource Divider}" Margin="0,16" />
+
+                            <TextBlock Text="VERİTABANI" Style="{StaticResource LabelText}" Margin="0,0,0,2" />
+                            <TextBlock Text="{Binding DatabasePath}"
+                                       FontFamily="Consolas"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+
+                            <TextBlock Text="GÜNLÜKLER" Style="{StaticResource LabelText}" Margin="0,12,0,2" />
+                            <TextBlock Text="{Binding LogsDirectory}"
+                                       FontFamily="Consolas"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+
+                            <TextBlock Text="Kişisel veriler bu bilgisayarda tutulur. Yedekleri yalnızca bu bilgisayarda bırakmayın."
+                                       Style="{StaticResource MutedText}" Margin="0,14,0,0" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

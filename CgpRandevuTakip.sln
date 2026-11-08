@@ -1,0 +1,57 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{961CF460-B2AB-4A24-9894-46DDC577C3CF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CgpRandevuTakip.Domain", "src\CgpRandevuTakip.Domain\CgpRandevuTakip.Domain.csproj", "{457EC006-E8DE-42B1-9E6A-EA966587F0CB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CgpRandevuTakip.Application", "src\CgpRandevuTakip.Application\CgpRandevuTakip.Application.csproj", "{292CA8FE-1DC9-4DA3-8CAC-5BF1627BF97E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CgpRandevuTakip.Infrastructure", "src\CgpRandevuTakip.Infrastructure\CgpRandevuTakip.Infrastructure.csproj", "{FD58373A-2AA9-400A-8E9B-A9A8FCCE7A8D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CgpRandevuTakip.Desktop", "src\CgpRandevuTakip.Desktop\CgpRandevuTakip.Desktop.csproj", "{7FD6EC62-59D9-417B-954C-767DB6E09BA0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{02C255BB-C17D-403A-9333-159280927FB1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CgpRandevuTakip.Tests", "tests\CgpRandevuTakip.Tests\CgpRandevuTakip.Tests.csproj", "{7EF1A048-412E-40F4-9CEF-A27D1256E15D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{457EC006-E8DE-42B1-9E6A-EA966587F0CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{457EC006-E8DE-42B1-9E6A-EA966587F0CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{457EC006-E8DE-42B1-9E6A-EA966587F0CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{457EC006-E8DE-42B1-9E6A-EA966587F0CB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{292CA8FE-1DC9-4DA3-8CAC-5BF1627BF97E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{292CA8FE-1DC9-4DA3-8CAC-5BF1627BF97E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{292CA8FE-1DC9-4DA3-8CAC-5BF1627BF97E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{292CA8FE-1DC9-4DA3-8CAC-5BF1627BF97E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD58373A-2AA9-400A-8E9B-A9A8FCCE7A8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD58373A-2AA9-400A-8E9B-A9A8FCCE7A8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD58373A-2AA9-400A-8E9B-A9A8FCCE7A8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD58373A-2AA9-400A-8E9B-A9A8FCCE7A8D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7FD6EC62-59D9-417B-954C-767DB6E09BA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7FD6EC62-59D9-417B-954C-767DB6E09BA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7FD6EC62-59D9-417B-954C-767DB6E09BA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7FD6EC62-59D9-417B-954C-767DB6E09BA0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7EF1A048-412E-40F4-9CEF-A27D1256E15D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7EF1A048-412E-40F4-9CEF-A27D1256E15D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7EF1A048-412E-40F4-9CEF-A27D1256E15D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7EF1A048-412E-40F4-9CEF-A27D1256E15D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{457EC006-E8DE-42B1-9E6A-EA966587F0CB} = {961CF460-B2AB-4A24-9894-46DDC577C3CF}
+		{292CA8FE-1DC9-4DA3-8CAC-5BF1627BF97E} = {961CF460-B2AB-4A24-9894-46DDC577C3CF}
+		{FD58373A-2AA9-400A-8E9B-A9A8FCCE7A8D} = {961CF460-B2AB-4A24-9894-46DDC577C3CF}
+		{7FD6EC62-59D9-417B-954C-767DB6E09BA0} = {961CF460-B2AB-4A24-9894-46DDC577C3CF}
+		{7EF1A048-412E-40F4-9CEF-A27D1256E15D} = {02C255BB-C17D-403A-9333-159280927FB1}
+	EndGlobalSection
+EndGlobal

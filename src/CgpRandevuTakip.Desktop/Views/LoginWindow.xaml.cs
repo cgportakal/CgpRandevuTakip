@@ -1,0 +1,60 @@
+using System.ComponentModel;
+using System.Windows;
+using System.Windows.Input;
+using CgpRandevuTakip.Desktop.ViewModels;
+
+namespace CgpRandevuTakip.Desktop.Views;
+
+public partial class LoginWindow : Window
+{
+    private readonly LoginViewModel _viewModel;
+
+    public LoginWindow(LoginViewModel viewModel)
+    {
+        InitializeComponent();
+        _viewModel = viewModel;
+        DataContext = viewModel;
+
+        viewModel.LoginSucceeded += OnLoginSucceeded;
+        viewModel.PropertyChanged += OnViewModelPropertyChanged;
+
+        Loaded += (_, _) => UsernameBox.Focus();
+        Closed += (_, _) =>
+        {
+            viewModel.LoginSucceeded -= OnLoginSucceeded;
+            viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        };
+    }
+
+    private void OnLoginSucceeded(object? sender, EventArgs e)
+    {
+        DialogResult = true;
+    }
+
+    private void OnPasswordChanged(object sender, RoutedEventArgs e)
+    {
+        _viewModel.Password = PasswordBox.Password;
+    }
+
+    private void OnPasswordKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter)
+            return;
+
+        if (PasswordBox.Password.Length > 0)
+            _viewModel.Password = PasswordBox.Password;
+
+        if (_viewModel.LoginCommand.CanExecute(null))
+            _viewModel.LoginCommand.Execute(null);
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(LoginViewModel.Password)
+            && string.IsNullOrEmpty(_viewModel.Password)
+            && PasswordBox.Password.Length > 0)
+        {
+            PasswordBox.Clear();
+        }
+    }
+}

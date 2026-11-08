@@ -1,0 +1,164 @@
+<Window x:Class="CgpRandevuTakip.Desktop.Views.SetupWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="İlk kurulum · CGP - Randevu Takip"
+        Height="760" Width="1100"
+        MinHeight="700" MinWidth="980"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0.88*" />
+            <ColumnDefinition Width="1.12*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="{DynamicResource BrandGradientBrush}">
+            <Grid>
+                <Ellipse Width="460" Height="460" Fill="#1FFFFFFF"
+                         HorizontalAlignment="Left" VerticalAlignment="Top"
+                         Margin="-160,-170,0,0" />
+
+                <StackPanel Margin="54,52,46,42">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="42" Height="42" CornerRadius="12" Background="#33FFFFFF">
+                            <TextBlock Text="C" FontSize="21" FontWeight="Bold"
+                                       Foreground="White"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="CGP" Foreground="White" FontSize="17" FontWeight="Bold" />
+                            <TextBlock Text="Randevu Takip" Foreground="#D9FFFFFF" FontSize="11" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <TextBlock Text="İlk kurulum"
+                               Foreground="White"
+                               FontSize="34"
+                               FontWeight="Bold"
+                               Margin="0,68,0,0" />
+                    <TextBlock Text="Yönetici hesabını oluşturun; varsayılan şifre yoktur."
+                               Foreground="#E6FFFFFF"
+                               FontSize="14"
+                               LineHeight="23"
+                               TextWrapping="Wrap"
+                               Margin="0,14,0,0" />
+
+                    <StackPanel Margin="0,42,0,0">
+                        <Grid Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="34" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Width="26" Height="26" CornerRadius="8" Background="#33FFFFFF">
+                                <TextBlock Text="1" Foreground="White" FontSize="12" FontWeight="Bold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Yönetici hesabı" Foreground="White" FontSize="13" FontWeight="SemiBold" />
+                                <TextBlock Text="Kurumun ilk yetkili kullanıcısı" Foreground="#CCFFFFFF"
+                                           FontSize="11" Margin="0,3,0,0" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="34" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Width="26" Height="26" CornerRadius="8" Background="#33FFFFFF">
+                                <TextBlock Text="2" Foreground="White" FontSize="12" FontWeight="Bold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Kategoriler" Foreground="White" FontSize="13" FontWeight="SemiBold" />
+                                <TextBlock Text="Eğitim kurumu örnek konuları hazır gelir" Foreground="#CCFFFFFF"
+                                           FontSize="11" Margin="0,3,0,0" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="34" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Width="26" Height="26" CornerRadius="8" Background="#33FFFFFF">
+                                <TextBlock Text="3" Foreground="White" FontSize="12" FontWeight="Bold"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Tema ve ayarlar" Foreground="White" FontSize="13" FontWeight="SemiBold" />
+                                <TextBlock Text="Koyu, açık veya Windows teması" Foreground="#CCFFFFFF"
+                                           FontSize="11" Margin="0,3,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+
+                    <Border Background="#1FFFFFFF" CornerRadius="12" Padding="16" Margin="0,46,0,0">
+                        <TextBlock Text="KVKK notu: Kişisel veriler bu bilgisayarda tutulur. Parolanız yalnızca PBKDF2-SHA256 ile özetlenerek saklanır."
+                                   Foreground="#F2FFFFFF" FontSize="11" LineHeight="18" TextWrapping="Wrap" />
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Width="390" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,40">
+                <TextBlock Text="Yönetici hesabı oluştur" Style="{StaticResource PageTitle}" />
+                <TextBlock Text="Bu hesap tüm ayarlara, kullanıcı yönetimine ve kategorilere erişebilir."
+                           Style="{StaticResource PageSubtitle}"
+                           Margin="0,6,0,28" />
+
+                <TextBlock Text="Kullanıcı adı" Style="{StaticResource LabelText}" />
+                <TextBox x:Name="UsernameBox"
+                         Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBlock Text="En az 3 karakter; harf, rakam, nokta, tire veya alt çizgi."
+                           Style="{StaticResource MutedText}" Margin="0,5,0,0" />
+
+                <TextBlock Text="Ad soyad" Style="{StaticResource LabelText}" Margin="0,16,0,6" />
+                <TextBox Text="{Binding DisplayName, UpdateSourceTrigger=PropertyChanged}" />
+
+                <TextBlock Text="Şifre" Style="{StaticResource LabelText}" Margin="0,16,0,6" />
+                <PasswordBox x:Name="PasswordBox" PasswordChanged="OnPasswordChanged" />
+                <TextBlock Text="En az 8 karakter, en az bir harf ve bir rakam."
+                           Style="{StaticResource MutedText}" Margin="0,5,0,0" />
+
+                <TextBlock Text="Şifre (tekrar)" Style="{StaticResource LabelText}" Margin="0,16,0,6" />
+                <PasswordBox x:Name="ConfirmPasswordBox" PasswordChanged="OnConfirmPasswordChanged" />
+
+                <Border Background="{DynamicResource DangerSoftBrush}"
+                        BorderBrush="{DynamicResource DangerBrush}"
+                        BorderThickness="1"
+                        CornerRadius="9"
+                        Padding="12,10"
+                        Margin="0,18,0,0"
+                        Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}">
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="{DynamicResource DangerBrush}"
+                               FontSize="12"
+                               TextWrapping="Wrap" />
+                </Border>
+
+                <Button Content="Yönetici hesabını oluştur"
+                        Style="{StaticResource PrimaryButton}"
+                        Command="{Binding CreateCommand}"
+                        IsDefault="True"
+                        Margin="0,24,0,0"
+                        Height="44" />
+
+                <TextBlock Text="Hesap oluşturuluyor..."
+                           Style="{StaticResource MutedText}"
+                           HorizontalAlignment="Center"
+                           Margin="0,12,0,0"
+                           Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+
+                <Border Style="{StaticResource Divider}" Margin="0,28" />
+
+                <TextBlock Text="Kurulumu tamamladıktan sonra uygulama açılır; kullanıcı adınız ve şifrenizle oturum açabilirsiniz."
+                           Style="{StaticResource MutedText}"
+                           TextAlignment="Center" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

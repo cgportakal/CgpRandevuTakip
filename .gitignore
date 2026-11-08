@@ -1,0 +1,40 @@
+# .NET / Visual Studio
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vscode/
+.idea/
+
+# Yayın çıktıları
+publish/
+out/
+artifacts/
+
+# Yerel veritabanı ve yedekler (asla commit edilmez)
+*.db
+*.db-shm
+*.db-wal
+*.zip
+Yedekler/
+logs/
+*.log
+
+# Test ve kapsam
+TestResults/
+coverage/
+*.coverage
+*.trx
+
+# İşletim sistemi
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Sırlar
+*.pfx
+secrets.json
+appsettings.*.local.json

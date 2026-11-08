@@ -1,0 +1,191 @@
+<UserControl x:Class="CgpRandevuTakip.Desktop.Views.CategoriesPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Loaded="OnLoaded">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel>
+                <TextBlock Text="Görüşme konuları" FontSize="16" FontWeight="SemiBold" />
+                <TextBlock Text="Kategori adı benzersizdir. Kullanımda olan kategori silinemez, pasifleştirilebilir."
+                           Style="{StaticResource MutedText}" Margin="0,4,0,0" />
+            </StackPanel>
+
+            <WrapPanel Grid.Column="1" VerticalAlignment="Center"
+                       Visibility="{Binding CanManage, Converter={StaticResource BoolToVisibility}}">
+                <Button Content="Yeni kategori"
+                        Style="{StaticResource PrimaryButton}"
+                        Command="{Binding NewCategoryCommand}"
+                        Margin="0,0,8,0" />
+                <Button Content="Düzenle"
+                        Style="{StaticResource SecondaryButton}"
+                        Command="{Binding EditCategoryCommand}"
+                        Margin="0,0,8,0" />
+                <Button Content="Yukarı"
+                        Style="{StaticResource SecondaryButton}"
+                        Command="{Binding MoveUpCommand}"
+                        Margin="0,0,8,0" />
+                <Button Content="Aşağı"
+                        Style="{StaticResource SecondaryButton}"
+                        Command="{Binding MoveDownCommand}"
+                        Margin="0,0,8,0" />
+                <Button Content="{Binding ToggleActiveLabel}"
+                        Style="{StaticResource SecondaryButton}"
+                        Command="{Binding ToggleActiveCommand}"
+                        Margin="0,0,8,0" />
+                <Button Content="Sil"
+                        Style="{StaticResource DangerButton}"
+                        Command="{Binding DeleteCommand}" />
+            </WrapPanel>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="18" />
+                <ColumnDefinition Width="360" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource Card}" Padding="0" ClipToBounds="True">
+                <DataGrid ItemsSource="{Binding Categories}"
+                          SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
+                          BorderThickness="0"
+                          Background="Transparent"
+                          AlternatingRowBackground="Transparent">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="RENK" Width="58">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Width="14" Height="14" CornerRadius="7"
+                                            Background="{Binding ColorHex, Converter={StaticResource HexToBrush}}"
+                                            HorizontalAlignment="Left" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTextColumn Header="KATEGORİ ADI" Binding="{Binding Name}" Width="*" />
+
+                        <DataGridTextColumn Header="KULLANIM" Binding="{Binding UsageCount}" Width="90" />
+
+                        <DataGridTemplateColumn Header="DURUM" Width="96">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="6" Padding="9,3" HorizontalAlignment="Left">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                        <Setter Property="Background" Value="{DynamicResource DangerSoftBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock FontSize="11" FontWeight="SemiBold">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="Aktif" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                            <Setter Property="Text" Value="Pasif" />
+                                                            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTextColumn Header="SIRA" Binding="{Binding SortOrder}" Width="62" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource Card}" VerticalAlignment="Top">
+                <StackPanel>
+                    <TextBlock Text="{Binding EditorTitle}" Style="{StaticResource SectionTitle}" />
+                    <TextBlock Text="{Binding SelectedSummary}" Style="{StaticResource MutedText}"
+                               Margin="0,-6,0,16" />
+
+                    <StackPanel Visibility="{Binding CanManage, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="Kategori adı" Style="{StaticResource LabelText}" />
+                        <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" MaxLength="50" />
+
+                        <TextBlock Text="Renk" Style="{StaticResource LabelText}" Margin="0,14,0,6" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="44" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Text="{Binding ColorHex, UpdateSourceTrigger=PropertyChanged}" MaxLength="7" />
+                            <Border Grid.Column="1" Width="34" Height="34" CornerRadius="9"
+                                    Background="{Binding ColorHex, Converter={StaticResource HexToBrush}}"
+                                    HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" />
+                        </Grid>
+                        <TextBlock Text="Örnek: #2E7D5B"
+                                   Style="{StaticResource MutedText}" Margin="0,5,0,0" />
+
+                        <CheckBox Content="Yeni kayıtlarda seçilebilir (aktif)"
+                                  IsChecked="{Binding IsActive}"
+                                  Margin="0,16,0,0" />
+
+                        <Border Background="{DynamicResource DangerSoftBrush}"
+                                BorderBrush="{DynamicResource DangerBrush}"
+                                BorderThickness="1"
+                                CornerRadius="9"
+                                Padding="12,10"
+                                Margin="0,16,0,0"
+                                Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}">
+                            <TextBlock Text="{Binding ErrorMessage}"
+                                       Foreground="{DynamicResource DangerBrush}"
+                                       FontSize="12"
+                                       TextWrapping="Wrap" />
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                            <Button Content="Kaydet"
+                                    Style="{StaticResource PrimaryButton}"
+                                    Command="{Binding SaveCommand}"
+                                    Margin="0,0,8,0" />
+                            <Button Content="Vazgeç"
+                                    Style="{StaticResource GhostButton}"
+                                    Command="{Binding NewCategoryCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Border Background="{DynamicResource AccentSoftBrush}"
+                            CornerRadius="10"
+                            Padding="14"
+                            Visibility="{Binding CanManage, Converter={StaticResource InverseBoolToVisibility}}">
+                        <TextBlock Text="Kategorileri yalnızca yönetici düzenleyebilir. Mevcut kategorileri görüntüleyebilirsiniz."
+                                   FontSize="12"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource AccentBrush}" />
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <TextBlock Grid.Row="2"
+                   Text="{Binding StatusMessage}"
+                   Foreground="{DynamicResource SuccessBrush}"
+                   FontSize="12"
+                   Margin="2,12,0,0"
+                   Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibility}}" />
+    </Grid>
+</UserControl>

@@ -1,0 +1,38 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Yumuşak yeşil palet: düşük doygunluk, yüksek okunabilirlik. -->
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F1F6F2" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="SurfaceAltBrush" Color="#F6FAF7" />
+    <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#E7F2EB" />
+    <SolidColorBrush x:Key="BorderBrush" Color="#DCE8E0" />
+    <SolidColorBrush x:Key="BorderStrongBrush" Color="#C3D6CA" />
+
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#12211A" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#33463C" />
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#5D7166" />
+
+    <SolidColorBrush x:Key="AccentBrush" Color="#2E7D5B" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#256A4C" />
+    <SolidColorBrush x:Key="AccentSoftBrush" Color="#E2F1E8" />
+    <SolidColorBrush x:Key="ButtonTextBrush" Color="#FFFFFF" />
+
+    <SolidColorBrush x:Key="DangerBrush" Color="#B4433B" />
+    <SolidColorBrush x:Key="DangerSoftBrush" Color="#F8E7E4" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="#2E7D5B" />
+    <SolidColorBrush x:Key="SuccessSoftBrush" Color="#E2F1E8" />
+    <SolidColorBrush x:Key="WarningBrush" Color="#9A6B1C" />
+    <SolidColorBrush x:Key="WarningSoftBrush" Color="#F8EFDC" />
+
+    <SolidColorBrush x:Key="NavBackgroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="NavSelectedBrush" Color="#E2F1E8" />
+    <SolidColorBrush x:Key="InputBackgroundBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="InputBorderBrush" Color="#C3D6CA" />
+
+    <LinearGradientBrush x:Key="BrandGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Offset="0" Color="#2F7D5D" />
+        <GradientStop Offset="0.55" Color="#276A4D" />
+        <GradientStop Offset="1" Color="#1F5740" />
+    </LinearGradientBrush>
+</ResourceDictionary>
