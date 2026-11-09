@@ -10,6 +10,8 @@ public interface IAppointmentDialogService
     Task<bool> ShowDetailAsync(string appointmentId);
     Task<bool> ShowRepeatAsync(string sourceAppointmentId, DateTime initialDate);
     Task<bool> ShowDeletedAsync();
+    Task ShowShareDailyListAsync(DateTime date);
+    Task ShowRecipientsAsync();
 }
 
 public sealed class AppointmentDialogService : IAppointmentDialogService
@@ -43,6 +45,22 @@ public sealed class AppointmentDialogService : IAppointmentDialogService
         window.Owner = Owner;
         await window.InitializeRepeatAsync(sourceAppointmentId, initialDate);
         return window.ShowDialog() == true;
+    }
+
+    public async Task ShowShareDailyListAsync(DateTime date)
+    {
+        var window = _services.GetRequiredService<ShareDailyListWindow>();
+        window.Owner = Owner;
+        await window.InitializeAsync(date);
+        window.ShowDialog();
+    }
+
+    public Task ShowRecipientsAsync()
+    {
+        var window = _services.GetRequiredService<RecipientsWindow>();
+        window.Owner = Owner;
+        window.ShowDialog();
+        return Task.CompletedTask;
     }
 
     public async Task<bool> ShowDeletedAsync()

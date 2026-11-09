@@ -8,6 +8,7 @@ using CgpRandevuTakip.Application.Auth;
 using CgpRandevuTakip.Application.Categories;
 using CgpRandevuTakip.Application.Hosts;
 using CgpRandevuTakip.Application.Notifications;
+using CgpRandevuTakip.Application.Recipients;
 using CgpRandevuTakip.Application.Reminders;
 using CgpRandevuTakip.Application.Settings;
 using CgpRandevuTakip.Application.Users;
@@ -140,6 +141,8 @@ public partial class App : System.Windows.Application
         services.AddSingleton<ISettingsRepository, SettingsRepository>();
         services.AddSingleton<IAppointmentRepository, AppointmentRepository>();
         services.AddSingleton<IPersonRepository, PersonRepository>();
+        services.AddSingleton<IRecipientRepository, RecipientRepository>();
+        services.AddSingleton<IShareLogRepository, ShareLogRepository>();
 
         services.AddSingleton<CurrentUser>();
         services.AddSingleton<ICurrentUser>(sp => sp.GetRequiredService<CurrentUser>());
@@ -154,6 +157,8 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IHostService, HostService>();
         services.AddSingleton<IAppointmentOutcomeService, AppointmentOutcomeService>();
         services.AddSingleton<IUserService, UserService>();
+        services.AddSingleton<IRecipientService, RecipientService>();
+        services.AddSingleton<IDailyShareService, DailyShareService>();
         services.AddSingleton<IReminderService, ReminderService>();
 
         services.AddSingleton<ThemeService>();
@@ -163,6 +168,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IAppointmentOutcomeDialogService, AppointmentOutcomeDialogService>();
         services.AddHostedService<DeletedAppointmentCleanupService>();
         services.AddHostedService<ReminderDispatcher>();
+        services.AddHostedService<DailyShareScheduler>();
         services.AddTransient<SessionLockService>();
 
         services.AddTransient<LoginViewModel>();
@@ -181,6 +187,8 @@ public partial class App : System.Windows.Application
         services.AddTransient<UsersViewModel>();
         services.AddTransient<LockViewModel>();
         services.AddTransient<DeletedAppointmentsViewModel>();
+        services.AddTransient<ShareDailyListViewModel>();
+        services.AddTransient<RecipientsViewModel>();
 
         services.AddTransient<LoginWindow>();
         services.AddTransient<ForgotPasswordWindow>();
@@ -198,6 +206,8 @@ public partial class App : System.Windows.Application
         services.AddTransient<AppointmentOutcomeWindow>();
         services.AddTransient<LockWindow>();
         services.AddTransient<DeletedAppointmentsWindow>();
+        services.AddTransient<ShareDailyListWindow>();
+        services.AddTransient<RecipientsWindow>();
     }
 
     private async Task InitializeDatabaseAsync()

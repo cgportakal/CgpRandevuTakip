@@ -10,17 +10,20 @@ public partial class AppointmentDetailViewModel : ObservableObject
 {
     private readonly IAppointmentService _appointments;
     private readonly IAppointmentOutcomeDialogService _outcomeDialogs;
+    private readonly IDailyShareService _share;
     private readonly Application.Abstractions.ICurrentUser _currentUser;
     private readonly IDialogService _dialogs;
 
     public AppointmentDetailViewModel(
         IAppointmentService appointments,
         IAppointmentOutcomeDialogService outcomeDialogs,
+        IDailyShareService share,
         Application.Abstractions.ICurrentUser currentUser,
         IDialogService dialogs)
     {
         _appointments = appointments;
         _outcomeDialogs = outcomeDialogs;
+        _share = share;
         _currentUser = currentUser;
         _dialogs = dialogs;
     }
@@ -43,6 +46,8 @@ public partial class AppointmentDetailViewModel : ObservableObject
     public bool CanEnterOutcome => Detail is not null && _currentUser.IsAuthenticated;
 
     public bool CanRepeat => CanEdit && Detail?.Outcome?.WillRepeat == true;
+
+    public bool CanShare => Detail is not null;
 
     public string OutcomeTitle => Detail?.Outcome is null
         ? "Henüz sonuç girilmedi"
@@ -112,6 +117,17 @@ public partial class AppointmentDetailViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanRepeat))]
     private void Repeat() => RepeatRequested?.Invoke(this, EventArgs.Empty);
 
+    [RelayCommand(CanExecute = nameof(CanShare))]
+    private async Task ShareAsync()
+    {
+        if (Detail is null)
+            return;
+
+        var result = await _share.ShareAppointmentAsync(Detail.Id);
+        if (!result.Success)
+            _dialogs.Error(result.Error ?? "Paylaşım açılamadı.", "WhatsApp");
+    }
+
     [RelayCommand(CanExecute = nameof(CanEdit))]
     private void Edit() => EditRequested?.Invoke(this, EventArgs.Empty);
 
@@ -147,10 +163,12 @@ public partial class AppointmentDetailViewModel : ObservableObject
         OnPropertyChanged(nameof(StudentText));
         OnPropertyChanged(nameof(CanEnterOutcome));
         OnPropertyChanged(nameof(CanRepeat));
+        OnPropertyChanged(nameof(CanShare));
         OnPropertyChanged(nameof(OutcomeTitle));
         OnPropertyChanged(nameof(OutcomeClosedText));
         EnterOutcomeCommand.NotifyCanExecuteChanged();
         RepeatCommand.NotifyCanExecuteChanged();
+        ShareCommand.NotifyCanExecuteChanged();
         EditCommand.NotifyCanExecuteChanged();
     }
 

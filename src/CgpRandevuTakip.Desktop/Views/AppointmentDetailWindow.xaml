@@ -241,6 +241,11 @@
                         Command="{Binding RepeatCommand}"
                         Margin="0,0,8,0"
                         Visibility="{Binding CanRepeat, Converter={StaticResource BoolToVisibility}}" />
+                <Button Content="WhatsApp'tan gönder"
+                        Style="{StaticResource SubtleButton}"
+                        Command="{Binding ShareCommand}"
+                        Margin="0,0,8,0"
+                        Visibility="{Binding CanShare, Converter={StaticResource BoolToVisibility}}" />
                 <Button Content="Düzenle"
                         Style="{StaticResource SecondaryButton}"
                         Command="{Binding EditCommand}"

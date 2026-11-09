@@ -5,8 +5,8 @@
 Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöneten, günlük listeyi
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
-> Durum: **Sprint 4 + 4.5 UAT tamamlandı** — hatırlatıcı motoru, Windows Action Center toast, aksiyon penceresi, ntfy/Telegram push, tepsi, sessiz saatler, "beni hatırla" ve e-posta ile şifre sıfırlama hazır.
-> Sürüm: 0.5.4 · Tarih: 09.11.2026 · 173 test geçiyor
+> Durum: **Sprint 4 + 4.5 UAT + Sprint 5 tamamlandı** — hatırlatıcılar, Windows toast/push, tepsi, "beni hatırla", e-posta ile şifre sıfırlama, günlük liste PNG'si, WhatsApp paylaşımı ve alıcı rehberi hazır.
+> Sürüm: 0.6.0 · Tarih: 09.11.2026 · 177 test geçiyor
 
 ## Neden bu proje?
 
@@ -34,6 +34,7 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 13 | [Sprint 4.5 UAT Raporu](docs/13_Sprint4_5_UAT_Raporu.md) | Gerçek toast/push/tray/auto-start doğrulaması |
 | 14 | [Push Kurulum Rehberi](docs/14_Push_Kurulum_Rehberi.md) | ntfy ve Telegram kurulumu, test |
 | 15 | [E-posta ile Şifre Sıfırlama](docs/15_Email_Sifre_Sifirlama_Rehberi.md) | SMTP ayarları, beni hatırla, kurtarma akışı |
+| 16 | [Sprint 5 Sonuç Raporu](docs/16_Sprint5_Raporu.md) | PNG, WhatsApp, alıcı rehberi, günlük tetikleme |
 
 ## Alınan temel kararlar
 
@@ -48,7 +49,7 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 1. Sprint 0-3 (tamamlandı): iskelet, giriş, tema, kategoriler, görüşme CRUD, günlük liste, detay, sonuç, kullanıcı yönetimi, oturum kilidi
 2. Sprint 3.5 (tamamlandı): CRUD doğrulaması, silinenleri geri alma, 30 gün temizliği, host filtresi
 3. Sprint 4 (tamamlandı): hatırlatıcı motoru + Windows/push bildirim + 4 kapatma aksiyonu + tepsi + sessiz saatler
-4. Sprint 5: WhatsApp paylaşımı (PNG + metin + günlük tetikleme) + alıcı rehberi
+4. Sprint 5 (tamamlandı): WhatsApp paylaşımı (PNG + metin + günlük tetikleme) + alıcı rehberi
 5. Sprint 6: yerel yedekleme/geri yükleme, denetim kaydı, kurulum paketi, UAT
 6. Faz 2: Google Drive, raporlar, tekrarlayan görüşmeler, DB şifreleme
 

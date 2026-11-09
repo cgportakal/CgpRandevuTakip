@@ -61,6 +61,9 @@
 | D-51 | "Beni hatırla" parola saklamaz; 30 günlük rastgele oturum token'ı DPAPI ile yerel dosyada tutulur, DB'de yalnızca SHA-256 özeti bulunur. | Parolayı şifreli saklamak | Daha düşük risk, iptal edilebilir oturum | 09.11.2026 | Kabul |
 | D-52 | Şifre sıfırlama kullanıcı e-postasına gönderilen 6 haneli kodla yapılır; kod 15 dk geçerli, 5 deneme sınırlı, 1 dk yeniden gönderme bekleme süresi vardır. | Yönetici sıfırlaması, bağlantı | Yöneticiye ihtiyaç duymadan kurtarma | 09.11.2026 | Kabul |
 | D-53 | Kullanıcı e-postası ve SMTP ayarları yönetici tarafından bir kez tanımlanır; SMTP parolası DPAPI ile saklanır. Sorun çözülemezse yönetici şifre sıfırlama fallback'i kullanılır. | Yalnızca yönetici sıfırlaması | Self-servis + güvenli fallback | 09.11.2026 | Kabul |
+| D-54 | Günlük liste PNG'si gerçek randevu satırlarından 2x çözünürlükte üretilir; buton, imleç ve uygulama chrome'u yer almaz. | Ekran görüntüsü | PII sızıntısı ve tekrarlanabilirlik | 09.11.2026 | Kabul |
+| D-55 | WhatsApp paylaşımı yarı otomatiktir: görsel panoya kopyalanır, `whatsapp://send?text=...` açılır; otomatik gönderim yapılmaz. | Cloud API | Ban riski ve kullanıcı onayı | 09.11.2026 | Kabul |
+| D-56 | Alıcı rehberi yalnızca yönetici/sekreter tarafından yönetilir; geçmiş paylaşımlar alıcı silinse bile logda korunur. | Serbest silme | İzlenebilirlik | 09.11.2026 | Kabul |
 
 ---
 

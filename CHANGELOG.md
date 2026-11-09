@@ -3,6 +3,17 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.6.0] — 2026-11-09 · Sprint 5
+
+### Eklendi
+- Günlük liste PNG'si gerçek randevu verilerinden, 2x çözünürlükte üretiliyor
+- Paylaşım penceresi: görsel önizleme, düzenlenebilir mesaj, alıcı seçimi
+- Panoya kopyalama ve `whatsapp://send?text=...` ile WhatsApp'ı açma
+- Alıcı rehberi: ekleme, düzenleme, pasifleştirme
+- Görüşme detayından WhatsApp metni paylaşımı
+- Günlük paylaşım saati hatırlatıcısı ve kaçırılan paylaşım uyarısı
+- `WhatsAppShareLog` kaydı
+
 ## [0.5.4] — 2026-11-09 · Kimlik ve kurtarma
 
 ### Eklendi

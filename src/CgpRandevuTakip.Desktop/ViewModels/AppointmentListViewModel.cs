@@ -138,7 +138,7 @@ public partial class AppointmentListViewModel : ObservableObject
 
     public bool CanFilterHosts => !_currentUser.IsInRole(UserRole.Host);
 
-    public bool CanShareDailyList => false;
+    public bool CanShareDailyList => _currentUser.IsInRole(UserRole.Admin, UserRole.Secretary);
 
     public bool IsHostRole => _currentUser.IsInRole(UserRole.Host);
 
@@ -287,11 +287,9 @@ public partial class AppointmentListViewModel : ObservableObject
             await LoadAsync();
     }
 
-    [RelayCommand]
-    private void ShareDailyList()
-        => _dialogs.Info(
-            "Günlük liste paylaşımı Sprint 5'te etkinleşecek.",
-            "Günlük liste paylaşımı");
+    [RelayCommand(CanExecute = nameof(CanShareDailyList))]
+    private async Task ShareDailyListAsync()
+        => await _appointmentDialogs.ShowShareDailyListAsync(SelectedDate);
 
     private async Task EnsureFiltersAsync()
     {
