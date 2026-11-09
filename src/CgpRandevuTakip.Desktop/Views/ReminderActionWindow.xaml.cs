@@ -20,8 +20,8 @@ public partial class ReminderActionWindow : Window
 
     private void OnActionTaken(object? sender, EventArgs e)
     {
+        // Pencere ShowDialog ile değil Show ile açılabiliyor; DialogResult atanamaz.
         _allowClose = true;
-        DialogResult = true;
         Close();
     }
 

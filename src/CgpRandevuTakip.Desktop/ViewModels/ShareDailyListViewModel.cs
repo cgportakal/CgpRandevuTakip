@@ -63,6 +63,9 @@ public partial class ShareDailyListViewModel : ObservableObject
     private string _message = string.Empty;
 
     [ObservableProperty]
+    private string _summaryText = string.Empty;
+
+    [ObservableProperty]
     private int _rowCount;
 
     [ObservableProperty]
@@ -100,6 +103,7 @@ public partial class ShareDailyListViewModel : ObservableObject
             _preview = await _share.BuildAsync(date);
             PreviewImage = _preview.Image;
             Message = _preview.Message;
+            SummaryText = _preview.Summary;
             RowCount = _preview.Rows.Count;
 
             var recipients = await _recipients.GetActiveAsync();

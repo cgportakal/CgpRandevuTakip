@@ -20,7 +20,8 @@ public sealed record DailySharePreview(
     IReadOnlyList<AppointmentListItemDto> Rows,
     BitmapSource Image,
     string ImagePath,
-    string Message);
+    string Message,
+    string Summary);
 
 public interface IDailyShareService
 {
@@ -69,9 +70,34 @@ public sealed class DailyShareService : IDailyShareService
         ListImageRenderer.SavePng(bitmap, path);
 
         var institution = Domain.Common.AppConstants.ResolveInstitutionName(settings.InstitutionName);
-        var message = $"{institution} · {date:dd/MM/yyyy} günlük görüşme listesi ({rows.Count} görüşme)";
+        var completed = rows.Count(x => x.Status == AppointmentStatus.Completed);
+        var noShow = rows.Count(x => x.Status == AppointmentStatus.NoShow);
+        var summary = $"{rows.Count} görüşme · {completed} tamamlandı · {noShow} gelmedi";
 
-        return new DailySharePreview(date, institution, rows, bitmap, path, message);
+        var lines = new List<string>
+        {
+            $"{institution} · {date:dd/MM/yyyy} günlük görüşme listesi ({rows.Count} görüşme)"
+        };
+
+        if (rows.Count == 0)
+        {
+            lines.Add("Bu tarihte görüşme yok.");
+        }
+        else
+        {
+            foreach (var row in rows)
+            {
+                lines.Add(
+                    $"{row.TimeLabel} · {row.PersonFullName} · Görüşmeci: {row.HostName} · {row.CategoryName} · {row.MethodText} · {row.StatusText}");
+            }
+
+            lines.Add(string.Empty);
+            lines.Add($"Özet: {summary}");
+        }
+
+        var message = string.Join(Environment.NewLine, lines);
+
+        return new DailySharePreview(date, institution, rows, bitmap, path, message, summary);
     }
 
     public async Task<OperationResult> PrepareAndOpenAsync(

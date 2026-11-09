@@ -178,26 +178,15 @@
                           ItemsSource="{Binding Appointments}"
                           SelectedItem="{Binding SelectedAppointment, Mode=TwoWay}"
                           MouseDoubleClick="OnRowDoubleClick"
+                          CanUserSortColumns="True"
                           BorderThickness="0"
                           Background="Transparent"
                           AlternatingRowBackground="Transparent">
                     <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="SAAT" Width="92">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding TimeLabel}"
-                                                   FontWeight="SemiBold"
-                                                   FontSize="14" />
-                                        <TextBlock Text="{Binding EndTimeLabel}"
-                                                   Style="{StaticResource MutedText}"
-                                                   FontSize="11" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="GÖRÜŞMECİ" Binding="{Binding HostName}"
+                                            SortMemberPath="HostName" Width="165" />
 
-                        <DataGridTemplateColumn Header="KİŞİ" Width="*">
+                        <DataGridTemplateColumn Header="KİŞİ" Width="*" SortMemberPath="PersonFullName">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel VerticalAlignment="Center">
@@ -212,7 +201,22 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Header="KONU" Width="170">
+                        <DataGridTemplateColumn Header="SAAT" Width="92" SortMemberPath="StartsAtLocal">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding TimeLabel}"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="14" />
+                                        <TextBlock Text="{Binding EndTimeLabel}"
+                                                   Style="{StaticResource MutedText}"
+                                                   FontSize="11" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="KONU" Width="170" SortMemberPath="CategoryName">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -227,11 +231,10 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="GÖRÜŞMECİ" Binding="{Binding HostName}" Width="140" />
+                        <DataGridTextColumn Header="YÖNTEM" Binding="{Binding MethodText}"
+                                            SortMemberPath="MethodText" Width="100" />
 
-                        <DataGridTextColumn Header="YÖNTEM" Binding="{Binding MethodText}" Width="100" />
-
-                        <DataGridTemplateColumn Header="DURUM" Width="130">
+                        <DataGridTemplateColumn Header="DURUM" Width="130" SortMemberPath="StatusText">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">

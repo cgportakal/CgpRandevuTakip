@@ -3,6 +3,17 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.6.2] — 2026-11-10 · Manuel hata düzeltmeleri 2
+
+### Düzeltildi
+- Saat seçenekleri 06:00–20:45 aralığına çekildi
+- Günlük liste sütun sırası: Görüşmeci, Kişi, Saat, Konu, Yöntem, Durum; sütun sıralaması açık
+- Görüşmeciler/Kategoriler/Kullanıcılar listelerinde tüm sütunlar sıralanabilir
+- Ziyaretçi iptal aksiyonu pencereyi kapatmıyordu; `Show()` ile açılan pencerede `DialogResult` hatası giderildi
+- Günlük paylaşım mesajına görüşme detayları ve özet eklendi
+- Ayarlar ekranındaki iki sütunun yüksekliği dengelendi
+- "Beni hatırla" çıkış sonrası kullanıcı adı/şifreyi giriş formuna geri dolduruyor
+
 ## [0.6.1] — 2026-11-09 · Manuel hata düzeltmeleri
 
 ### Düzeltildi

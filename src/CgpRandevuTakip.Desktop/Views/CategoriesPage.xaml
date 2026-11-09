@@ -59,11 +59,12 @@
             <Border Grid.Column="0" Style="{StaticResource Card}" Padding="0" ClipToBounds="True">
                 <DataGrid ItemsSource="{Binding Categories}"
                           SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
+                          CanUserSortColumns="True"
                           BorderThickness="0"
                           Background="Transparent"
                           AlternatingRowBackground="Transparent">
                     <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="RENK" Width="58">
+                        <DataGridTemplateColumn Header="RENK" Width="58" SortMemberPath="ColorHex">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border Width="14" Height="14" CornerRadius="7"
@@ -77,7 +78,7 @@
 
                         <DataGridTextColumn Header="KULLANIM" Binding="{Binding UsageCount}" Width="90" />
 
-                        <DataGridTemplateColumn Header="DURUM" Width="96">
+                        <DataGridTemplateColumn Header="DURUM" Width="96" SortMemberPath="IsActive">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border CornerRadius="6" Padding="9,3" HorizontalAlignment="Left">

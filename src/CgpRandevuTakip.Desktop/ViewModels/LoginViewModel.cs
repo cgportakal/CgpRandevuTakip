@@ -16,6 +16,14 @@ public partial class LoginViewModel : ObservableObject
     {
         _auth = auth;
         _remembered = remembered;
+
+        var credentials = _remembered.LoadCredentials();
+        if (credentials is { } saved)
+        {
+            Username = saved.Username;
+            Password = saved.Password;
+            RememberMe = true;
+        }
     }
 
     [ObservableProperty]
@@ -74,6 +82,8 @@ public partial class LoginViewModel : ObservableObject
                 var token = await _auth.CreateRememberTokenAsync();
                 if (!string.IsNullOrWhiteSpace(token))
                     _remembered.Save(token);
+
+                _remembered.SaveCredentials(Username, Password);
             }
             else
             {

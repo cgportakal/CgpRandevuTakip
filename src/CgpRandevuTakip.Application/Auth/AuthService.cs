@@ -223,7 +223,8 @@ public sealed class AuthService : IAuthService
     public async Task<OperationResult> LogoutAsync()
     {
         var userId = _currentUser.UserId;
-        await ClearRememberTokenAsync();
+        // "Beni hatırla" token'ı çıkışta korunur; giriş ekranı kimlik bilgilerini
+        // yeniden doldurur. Parola değişimi/sıfırlama token'ı ayrıca geçersiz kılar.
         _currentUser.SignOut();
 
         if (userId is not null)

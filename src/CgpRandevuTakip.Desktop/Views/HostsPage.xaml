@@ -48,13 +48,14 @@
             <Border Grid.Column="0" Style="{StaticResource Card}" Padding="0" ClipToBounds="True">
                 <DataGrid ItemsSource="{Binding Hosts}"
                           SelectedItem="{Binding SelectedHost, Mode=TwoWay}"
+                          CanUserSortColumns="True"
                           BorderThickness="0"
                           Background="Transparent"
                           AlternatingRowBackground="Transparent">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="AD SOYAD" Binding="{Binding DisplayName}" Width="*" MinWidth="150" />
 
-                        <DataGridTemplateColumn Header="ROL" Width="84">
+                        <DataGridTemplateColumn Header="ROL" Width="84" SortMemberPath="Role">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock VerticalAlignment="Center">
@@ -81,7 +82,7 @@
 
                         <DataGridTextColumn Header="GÖRÜŞME" Binding="{Binding AppointmentCount}" Width="68" />
 
-                        <DataGridTemplateColumn Header="GİRİŞ" Width="64">
+                        <DataGridTemplateColumn Header="GİRİŞ" Width="64" SortMemberPath="IsLoginEnabled">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border CornerRadius="6" Padding="9,3" HorizontalAlignment="Left">
@@ -114,7 +115,7 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Header="DURUM" Width="70">
+                        <DataGridTemplateColumn Header="DURUM" Width="70" SortMemberPath="IsActive">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border CornerRadius="6" Padding="9,3" HorizontalAlignment="Left">

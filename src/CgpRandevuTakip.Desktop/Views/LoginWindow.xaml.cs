@@ -18,6 +18,9 @@ public partial class LoginWindow : Window
         _services = services;
         DataContext = viewModel;
 
+        if (!string.IsNullOrEmpty(viewModel.Password))
+            PasswordBox.Password = viewModel.Password;
+
         viewModel.LoginSucceeded += OnLoginSucceeded;
         viewModel.ForgotPasswordRequested += OnForgotPasswordRequested;
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
@@ -62,11 +65,17 @@ public partial class LoginWindow : Window
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(LoginViewModel.Password)
-            && string.IsNullOrEmpty(_viewModel.Password)
-            && PasswordBox.Password.Length > 0)
+        if (e.PropertyName != nameof(LoginViewModel.Password))
+            return;
+
+        if (string.IsNullOrEmpty(_viewModel.Password))
         {
-            PasswordBox.Clear();
+            if (PasswordBox.Password.Length > 0)
+                PasswordBox.Clear();
+        }
+        else if (PasswordBox.Password != _viewModel.Password)
+        {
+            PasswordBox.Password = _viewModel.Password;
         }
     }
 }

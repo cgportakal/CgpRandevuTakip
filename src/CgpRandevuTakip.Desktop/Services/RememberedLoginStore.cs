@@ -9,6 +9,10 @@ public interface IRememberedLoginStore
     string? Load();
     void Save(string token);
     void Clear();
+
+    (string Username, string Password)? LoadCredentials();
+    void SaveCredentials(string username, string password);
+    void ClearCredentials();
 }
 
 /// <summary>
@@ -19,6 +23,7 @@ public sealed class RememberedLoginStore : IRememberedLoginStore
 {
     private readonly ISecretProtector _protector;
     private readonly string _path = Path.Combine(AppPaths.Root, "remember.dat");
+    private readonly string _credentialsPath = Path.Combine(AppPaths.Root, "remember.cred");
 
     public RememberedLoginStore(ISecretProtector protector)
     {
@@ -60,10 +65,52 @@ public sealed class RememberedLoginStore : IRememberedLoginStore
 
     public void Clear()
     {
+        ClearFile(_path);
+        ClearFile(_credentialsPath);
+    }
+
+    public (string Username, string Password)? LoadCredentials()
+    {
         try
         {
-            if (File.Exists(_path))
-                File.Delete(_path);
+            if (!File.Exists(_credentialsPath))
+                return null;
+
+            var lines = File.ReadAllLines(_credentialsPath);
+            if (lines.Length < 2 || string.IsNullOrWhiteSpace(lines[0]))
+                return null;
+
+            var password = _protector.Unprotect(lines[1]) ?? string.Empty;
+            return (lines[0].Trim(), password);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public void SaveCredentials(string username, string password)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(_credentialsPath)!);
+            var protectedPassword = _protector.Protect(password) ?? string.Empty;
+            File.WriteAllLines(_credentialsPath, new[] { username, protectedPassword });
+        }
+        catch
+        {
+            // Hatırlama başarısız olsa bile giriş akışı devam eder.
+        }
+    }
+
+    public void ClearCredentials() => ClearFile(_credentialsPath);
+
+    private static void ClearFile(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+                File.Delete(path);
         }
         catch
         {

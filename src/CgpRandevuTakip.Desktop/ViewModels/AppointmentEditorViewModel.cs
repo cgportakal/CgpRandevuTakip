@@ -66,8 +66,9 @@ public partial class AppointmentEditorViewModel : ObservableObject
         _selectedMethod = Methods[0];
         _selectedDuration = Durations.First(x => x.Minutes == 60);
 
+        // 06:00–20:45 arası 15 dakikalık seçenekler.
         TimeOptions = new ObservableCollection<string>(
-            Enumerable.Range(0, 96)
+            Enumerable.Range(24, 60)
                 .Select(i => TimeSpan.FromMinutes(i * 15).ToString(@"hh\:mm", CultureInfo.InvariantCulture)));
 
         ReminderHourOptions = new ObservableCollection<int>(Enumerable.Range(0, 169));
@@ -180,9 +181,7 @@ public partial class AppointmentEditorViewModel : ObservableObject
 
         if (!IsEdit)
         {
-            Date = initialDate.Date;
-            TimeText = NextHalfHour().ToString(@"hh\:mm", CultureInfo.InvariantCulture);
-            EnsureTimeOption(TimeText);
+            ApplyDefaultStart(initialDate);
 
             ReminderOneDay = _defaultReminderMinutes == 1440;
             ReminderOneHour = _defaultReminderMinutes == 60;
@@ -275,9 +274,7 @@ public partial class AppointmentEditorViewModel : ObservableObject
         FirstName = source.PersonFirstName;
         LastName = source.PersonLastName;
         Phone = source.PhoneE164;
-        Date = initialDate.Date;
-        TimeText = NextHalfHour().ToString(@"hh\:mm", CultureInfo.InvariantCulture);
-        EnsureTimeOption(TimeText);
+        ApplyDefaultStart(initialDate);
         SelectedDuration = Durations.FirstOrDefault(x => x.Minutes == source.DurationMinutes)
                            ?? Durations.First(x => x.Minutes == 60);
         SelectedHost = Hosts.FirstOrDefault(x => x.Id == source.HostUserId) ?? Hosts.FirstOrDefault();
@@ -490,11 +487,34 @@ public partial class AppointmentEditorViewModel : ObservableObject
         TimeOptions.Add(time);
     }
 
-    private static DateTime NextHalfHour()
+    private void ApplyDefaultStart(DateTime initialDate)
     {
+        var start = DefaultStart(initialDate);
+        Date = start.Date;
+        TimeText = start.ToString("HH:mm", CultureInfo.InvariantCulture);
+        EnsureTimeOption(TimeText);
+    }
+
+    private static DateTime DefaultStart(DateTime initialDate)
+    {
+        var today = DateTime.Today;
+        if (initialDate.Date != today)
+            return initialDate.Date.AddHours(9);
+
         var now = DateTime.Now;
-        var addMinutes = now.Minute < 30 ? 30 - now.Minute : 60 - now.Minute;
-        return new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0).AddMinutes(addMinutes);
+        if (now.TimeOfDay < TimeSpan.FromHours(6))
+            return today.AddHours(6);
+
+        if (now.TimeOfDay >= TimeSpan.FromHours(20.75))
+            return today.AddDays(1).AddHours(6);
+
+        var minutes = (int)Math.Ceiling(now.TimeOfDay.TotalMinutes / 15.0) * 15;
+        if (minutes < 360)
+            minutes = 360;
+        if (minutes > 1245)
+            return today.AddDays(1).AddHours(6);
+
+        return today.AddMinutes(minutes);
     }
 
     private static bool TryParseTime(string? text, out TimeSpan time)

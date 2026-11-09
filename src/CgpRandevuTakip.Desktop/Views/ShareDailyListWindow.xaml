@@ -80,8 +80,14 @@
                     <TextBox Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}"
                              AcceptsReturn="True"
                              TextWrapping="Wrap"
-                             MinHeight="90"
-                             VerticalContentAlignment="Top" />
+                             MinHeight="150"
+                             VerticalContentAlignment="Top"
+                             AutomationProperties.Name="Paylaşım mesajı" />
+
+                    <TextBlock Text="{Binding SummaryText}"
+                               Style="{StaticResource MutedText}"
+                               FontWeight="SemiBold"
+                               Margin="0,8,0,0" />
 
                     <TextBlock Text="Görsel panoya kopyalanır; WhatsApp açılır. Görseli sohbete Ctrl+V ile yapıştırın."
                                Style="{StaticResource MutedText}"

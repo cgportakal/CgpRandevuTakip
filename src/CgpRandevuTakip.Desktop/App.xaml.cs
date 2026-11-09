@@ -274,9 +274,6 @@ public partial class App : System.Windows.Application
                 shell.Show();
                 await closed.Task;
 
-                if (shell.LogoutRequested)
-                    _host.Services.GetRequiredService<IRememberedLoginStore>().Clear();
-
                 if (!shell.LogoutRequested)
                     break;
             }
