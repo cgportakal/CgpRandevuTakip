@@ -3,6 +3,21 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.7.0] — 2026-11-10 · Toplu işlemler
+
+### Eklendi
+- Günlük listede her satırın başında seçim kutusu; başlıktan tümünü seçme
+- Seçili görüşmeleri toplu silme (yönetici) ve toplu taşıma (yönetici/sekretör)
+- Toplu taşımada "saatleri koru" veya "tümünü aynı saate taşı" seçenekleri; çakışmada onay
+- Görüşmeci rolünde toplu seçim sütunu gizlenir
+
+### Değişti
+- Yeni görüşmede varsayılan tarih/saat: bugün + 1 saat (15 dk dilime yuvarlanır, 06:00–20:45 sınırlarına uyar)
+- Yeni görüşmede veya saat değiştirilerek geçmişe alınan görüşmede "geçmiş tarih" uyarısı
+
+### Test
+- 187/187 test
+
 ## [0.6.4] — 2026-11-10
 
 ### Düzeltildi

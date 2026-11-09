@@ -640,4 +640,85 @@ public class AppointmentServiceTests
         Assert.Empty(verify.ReminderDispatches
             .Where(x => x.AppointmentId == old.AppointmentId));
     }
+
+    [Fact]
+    public async Task DeleteMany_RequiresAdminAndSoftDeletesAll()
+    {
+        using var sut = await CreateAsync();
+        var first = await sut.Service.CreateAsync(
+            sut.Input(startsAtLocal: new DateTime(2026, 11, 8, 10, 0, 0)));
+        var second = await sut.Service.CreateAsync(
+            sut.Input(firstName: "Zeynep", phone: "0555 111 22 33",
+                startsAtLocal: new DateTime(2026, 11, 8, 11, 0, 0)));
+
+        var denied = await sut.Service.DeleteManyAsync(
+            new[] { first.AppointmentId!, second.AppointmentId! });
+        Assert.Equal(0, denied.Deleted);
+        Assert.NotNull(denied.Error);
+
+        sut.SignInAsRole(UserRole.Admin);
+        var result = await sut.Service.DeleteManyAsync(
+            new[] { first.AppointmentId!, second.AppointmentId! });
+
+        Assert.Equal(2, result.Deleted);
+        Assert.Empty(result.FailedIds);
+        Assert.Empty(await sut.Service.GetDayAsync(new DateTime(2026, 11, 8)));
+        Assert.Contains(AuditAction.AppointmentDeleted, sut.Audit.Actions);
+    }
+
+    [Fact]
+    public async Task MoveMany_KeepsEachTimeAndMovesToNewDate()
+    {
+        using var sut = await CreateAsync();
+        var first = await sut.Service.CreateAsync(
+            sut.Input(startsAtLocal: new DateTime(2026, 11, 8, 10, 0, 0)));
+        var second = await sut.Service.CreateAsync(
+            sut.Input(firstName: "Zeynep", phone: "0555 111 22 33",
+                startsAtLocal: new DateTime(2026, 11, 8, 14, 30, 0)));
+
+        var result = await sut.Service.MoveManyAsync(
+            new[] { first.AppointmentId!, second.AppointmentId! },
+            new DateTime(2026, 11, 12),
+            newTime: null);
+
+        Assert.Equal(2, result.Moved);
+        Assert.Empty(result.ConflictingIds);
+        Assert.Empty(result.FailedIds);
+
+        var movedDay = await sut.Service.GetDayAsync(new DateTime(2026, 11, 12));
+        Assert.Equal(2, movedDay.Count);
+        Assert.Contains(movedDay, x => x.TimeLabel == "10:00");
+        Assert.Contains(movedDay, x => x.TimeLabel == "14:30");
+        Assert.Empty(await sut.Service.GetDayAsync(new DateTime(2026, 11, 8)));
+    }
+
+    [Fact]
+    public async Task MoveMany_ReportsConflictAndForcesWhenConfirmed()
+    {
+        using var sut = await CreateAsync();
+        await sut.Service.CreateAsync(
+            sut.Input(startsAtLocal: new DateTime(2026, 11, 12, 10, 0, 0)));
+        var toMove = await sut.Service.CreateAsync(
+            sut.Input(firstName: "Zeynep", phone: "0555 111 22 33",
+                startsAtLocal: new DateTime(2026, 11, 8, 14, 30, 0)));
+
+        var blocked = await sut.Service.MoveManyAsync(
+            new[] { toMove.AppointmentId! },
+            new DateTime(2026, 11, 12),
+            TimeSpan.FromHours(10));
+
+        Assert.Equal(0, blocked.Moved);
+        Assert.Single(blocked.ConflictingIds);
+        Assert.NotEmpty(blocked.Conflicts);
+
+        var forced = await sut.Service.MoveManyAsync(
+            blocked.ConflictingIds,
+            new DateTime(2026, 11, 12),
+            TimeSpan.FromHours(10),
+            ignoreConflicts: true);
+
+        Assert.Equal(1, forced.Moved);
+        var movedDay = await sut.Service.GetDayAsync(new DateTime(2026, 11, 12));
+        Assert.Equal(2, movedDay.Count);
+    }
 }

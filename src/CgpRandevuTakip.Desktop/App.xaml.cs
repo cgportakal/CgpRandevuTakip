@@ -189,6 +189,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<DeletedAppointmentsViewModel>();
         services.AddTransient<ShareDailyListViewModel>();
         services.AddTransient<RecipientsViewModel>();
+        services.AddTransient<BulkMoveViewModel>();
 
         services.AddTransient<LoginWindow>();
         services.AddTransient<ForgotPasswordWindow>();
@@ -208,6 +209,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<DeletedAppointmentsWindow>();
         services.AddTransient<ShareDailyListWindow>();
         services.AddTransient<RecipientsWindow>();
+        services.AddTransient<BulkMoveWindow>();
     }
 
     private async Task InitializeDatabaseAsync()

@@ -366,6 +366,111 @@ public sealed class AppointmentService : IAppointmentService
         return OperationResult.Ok();
     }
 
+    public async Task<BulkDeleteResult> DeleteManyAsync(IReadOnlyList<string> ids)
+    {
+        if (!_currentUser.IsInRole(UserRole.Admin))
+            return new BulkDeleteResult(0, ids?.ToList() ?? new List<string>(),
+                "Görüşme silme yetkisi yalnızca yöneticidedir.");
+
+        var distinctIds = ids?
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .ToList() ?? new List<string>();
+
+        if (distinctIds.Count == 0)
+            return new BulkDeleteResult(0, Array.Empty<string>(), "Silinecek görüşme seçilmedi.");
+
+        var deleted = 0;
+        var failed = new List<string>();
+        foreach (var id in distinctIds)
+        {
+            var result = await DeleteAsync(id);
+            if (result.Success)
+                deleted++;
+            else
+                failed.Add(id);
+        }
+
+        return new BulkDeleteResult(deleted, failed);
+    }
+
+    public async Task<BulkMoveResult> MoveManyAsync(
+        IReadOnlyList<string> ids,
+        DateTime newDate,
+        TimeSpan? newTime,
+        bool ignoreConflicts = false)
+    {
+        if (!CanManageAppointments())
+            return new BulkMoveResult(
+                0,
+                Array.Empty<string>(),
+                Array.Empty<AppointmentConflictDto>(),
+                ids?.ToList() ?? new List<string>(),
+                "Görüşme taşıma yetkiniz yok.");
+
+        var distinctIds = ids?
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .ToList() ?? new List<string>();
+
+        if (distinctIds.Count == 0)
+            return new BulkMoveResult(
+                0,
+                Array.Empty<string>(),
+                Array.Empty<AppointmentConflictDto>(),
+                Array.Empty<string>(),
+                "Taşınacak görüşme seçilmedi.");
+
+        var moved = 0;
+        var conflictingIds = new List<string>();
+        var conflicts = new List<AppointmentConflictDto>();
+        var failed = new List<string>();
+
+        foreach (var id in distinctIds)
+        {
+            var detail = await GetDetailAsync(id);
+            if (detail is null)
+            {
+                failed.Add(id);
+                continue;
+            }
+
+            // Saat korunuyorsa her görüşme kendi saatinde yeni güne taşınır.
+            var startLocal = newDate.Date + (newTime ?? detail.StartsAtLocal.TimeOfDay);
+            var input = new AppointmentInput(
+                detail.PersonFirstName,
+                detail.PersonLastName,
+                detail.PhoneE164,
+                startLocal,
+                detail.DurationMinutes,
+                detail.HostUserId,
+                detail.CategoryId,
+                detail.Method,
+                detail.Description,
+                detail.StudentFirstName,
+                detail.StudentLastName,
+                detail.ReminderOffsetsMinutes,
+                ignoreConflicts);
+
+            var result = await UpdateAsync(id, input);
+            if (result.Success)
+            {
+                moved++;
+            }
+            else if (result.Conflicts is { Count: > 0 })
+            {
+                conflictingIds.Add(id);
+                conflicts.AddRange(result.Conflicts);
+            }
+            else
+            {
+                failed.Add(id);
+            }
+        }
+
+        return new BulkMoveResult(moved, conflictingIds, conflicts, failed);
+    }
+
     public async Task<OperationResult> RestoreAsync(string id)
     {
         if (!_currentUser.IsInRole(UserRole.Admin))

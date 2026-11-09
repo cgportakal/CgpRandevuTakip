@@ -1,3 +1,4 @@
+using CgpRandevuTakip.Desktop.ViewModels;
 using CgpRandevuTakip.Desktop.Views;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,6 +13,12 @@ public interface IAppointmentDialogService
     Task<bool> ShowDeletedAsync();
     Task ShowShareDailyListAsync(DateTime date);
     Task ShowRecipientsAsync();
+
+    /// <summary>Toplu taşıma penceresini açar; vazgeçilirse null döner.</summary>
+    Task<BulkMoveSelection?> ShowBulkMoveAsync(
+        int count,
+        DateTime initialDate,
+        IReadOnlyList<DateTime> startsAtLocal);
 }
 
 public sealed class AppointmentDialogService : IAppointmentDialogService
@@ -53,6 +60,18 @@ public sealed class AppointmentDialogService : IAppointmentDialogService
         window.Owner = Owner;
         await window.InitializeAsync(date);
         window.ShowDialog();
+    }
+
+    public Task<BulkMoveSelection?> ShowBulkMoveAsync(
+        int count,
+        DateTime initialDate,
+        IReadOnlyList<DateTime> startsAtLocal)
+    {
+        var window = _services.GetRequiredService<BulkMoveWindow>();
+        window.Owner = Owner;
+        window.Initialize(count, initialDate, startsAtLocal);
+        var result = window.ShowDialog() == true ? window.Selection : null;
+        return Task.FromResult(result);
     }
 
     public Task ShowRecipientsAsync()

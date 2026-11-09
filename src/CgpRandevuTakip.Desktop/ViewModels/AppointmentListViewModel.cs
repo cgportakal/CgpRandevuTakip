@@ -26,6 +26,9 @@ public partial class AppointmentListViewModel : ObservableObject
     private readonly Services.IDialogService _dialogs;
     private readonly Services.IAppointmentDialogService _appointmentDialogs;
     private readonly DispatcherTimer _searchTimer;
+    private readonly List<AppointmentRowViewModel> _selectedRows = new();
+    private bool _isAllSelected;
+    private bool _applyingSelectAll;
 
     private bool _filtersLoaded;
     private bool _suppressReload;
@@ -77,7 +80,7 @@ public partial class AppointmentListViewModel : ObservableObject
                 ((AppointmentListViewModel)recipient).ApplyDate(message.Date));
     }
 
-    public RangeObservableCollection<AppointmentListItemDto> Appointments { get; } = new();
+    public RangeObservableCollection<AppointmentRowViewModel> Appointments { get; } = new();
 
     public RangeObservableCollection<CategoryFilterOption> CategoryFilters { get; }
 
@@ -101,7 +104,7 @@ public partial class AppointmentListViewModel : ObservableObject
     private HostFilterOption? _selectedHostFilter;
 
     [ObservableProperty]
-    private AppointmentListItemDto? _selectedAppointment;
+    private AppointmentRowViewModel? _selectedAppointment;
 
     [ObservableProperty]
     private bool _isBusy;
@@ -135,6 +138,20 @@ public partial class AppointmentListViewModel : ObservableObject
         }
     }
 
+    public int SelectedCount => _selectedRows.Count;
+
+    public bool HasSelectedRows => SelectedCount > 0;
+
+    /// <summary>Başlıktaki "tümünü seç" kutusunun durumu.</summary>
+    public bool IsAllSelected => _isAllSelected;
+
+    /// <summary>Başlıktaki seçim kutusundan çağrılır.</summary>
+    public void SetSelectAll(bool select) => ApplySelectAll(select);
+
+    public string SelectionText => SelectedCount == 1
+        ? "1 görüşme seçildi"
+        : $"{SelectedCount} görüşme seçildi";
+
     public bool IsSearchActive => !string.IsNullOrWhiteSpace(SearchText);
 
     public string DateLabel => SelectedDate.ToString("dd/MM/yyyy dddd");
@@ -142,6 +159,9 @@ public partial class AppointmentListViewModel : ObservableObject
     public bool CanCreate => _currentUser.IsInRole(UserRole.Admin, UserRole.Secretary);
 
     public bool CanDelete => _currentUser.IsInRole(UserRole.Admin);
+
+    /// <summary>Toplu seçim yalnızca silme veya taşıma yetkisi olanlarda gösterilir.</summary>
+    public bool CanBulkSelect => CanCreate || CanDelete;
 
     public bool CanFilterHosts => !_currentUser.IsInRole(UserRole.Host);
 
@@ -169,7 +189,19 @@ public partial class AppointmentListViewModel : ObservableObject
                 ? await _appointments.SearchAsync(SearchText, categoryId, status, null, null, hostUserId)
                 : await _appointments.SearchAsync(null, categoryId, status, SelectedDate, SelectedDate, hostUserId);
 
-            Appointments.ReplaceWith(rows);
+            foreach (var oldRow in Appointments)
+                oldRow.SelectionChanged -= OnRowSelectionChanged;
+
+            _selectedRows.Clear();
+            var viewRows = rows.Select(row =>
+            {
+                var viewRow = new AppointmentRowViewModel(row);
+                viewRow.SelectionChanged += OnRowSelectionChanged;
+                return viewRow;
+            }).ToList();
+
+            Appointments.ReplaceWith(viewRows);
+            NotifySelectionChanged();
 
             HasAppointments = rows.Count > 0;
             EmptyMessage = useSearch
@@ -190,10 +222,11 @@ public partial class AppointmentListViewModel : ObservableObject
 
             NextAppointment = await _appointments.GetNextAppointmentAsync();
 
-            if (SelectedAppointment is not null
-                && Appointments.All(x => x.Id != SelectedAppointment.Id))
+            // Yenilemeden sonra seçili satırı yeni örnekle eşleştir.
+            if (SelectedAppointment is not null)
             {
-                SelectedAppointment = null;
+                var selectedId = SelectedAppointment.Id;
+                SelectedAppointment = Appointments.FirstOrDefault(x => x.Id == selectedId);
             }
         }
         catch (Exception ex)
@@ -246,7 +279,7 @@ public partial class AppointmentListViewModel : ObservableObject
             await LoadAsync();
     }
 
-    [RelayCommand(CanExecute = nameof(HasSelection))]
+    [RelayCommand(CanExecute = nameof(HasRowSelection))]
     private async Task OpenDetailAsync()
     {
         if (SelectedAppointment is null)
@@ -266,26 +299,106 @@ public partial class AppointmentListViewModel : ObservableObject
             await LoadAsync();
     }
 
-    [RelayCommand(CanExecute = nameof(HasSelection))]
+    [RelayCommand(CanExecute = nameof(CanDeleteSelected))]
     private async Task DeleteSelectedAsync()
     {
-        if (SelectedAppointment is null)
+        var targets = GetTargetRows();
+        if (targets.Count == 0)
             return;
 
-        if (!_dialogs.Confirm(
-                $"{SelectedAppointment.PersonFullName} · {SelectedAppointment.DateLabel} {SelectedAppointment.TimeLabel}\n\nGörüşme silinsin mi? 30 gün içinde yönetici tarafından geri alınabilir.",
-                "Görüşmeyi sil"))
+        var message = targets.Count == 1
+            ? $"{targets[0].PersonFullName} · {targets[0].DateLabel} {targets[0].TimeLabel}\n\nGörüşme silinsin mi? 30 gün içinde yönetici tarafından geri alınabilir."
+            : $"{targets.Count} görüşme silinsin mi?\n\nSeçilen görüşmeler 30 gün içinde yönetici tarafından geri alınabilir.";
+
+        if (!_dialogs.Confirm(message, targets.Count == 1 ? "Görüşmeyi sil" : "Görüşmeleri sil"))
             return;
 
-        var result = await _appointments.DeleteAsync(SelectedAppointment.Id);
-        if (!result.Success)
+        if (targets.Count == 1)
         {
-            _dialogs.Error(result.Error ?? "Görüşme silinemedi.", "Görüşme silinemedi");
-            return;
+            var single = await _appointments.DeleteAsync(targets[0].Id);
+            if (!single.Success)
+            {
+                _dialogs.Error(single.Error ?? "Görüşme silinemedi.", "Görüşme silinemedi");
+                return;
+            }
+        }
+        else
+        {
+            var bulk = await _appointments.DeleteManyAsync(targets.Select(x => x.Id).ToList());
+            if (bulk.Error is not null)
+            {
+                _dialogs.Error(bulk.Error, "Görüşmeler silinemedi");
+                return;
+            }
+
+            if (bulk.FailedIds.Count > 0)
+                _dialogs.Info(
+                    $"{bulk.Deleted} görüşme silindi. {bulk.FailedIds.Count} görüşme silinemedi.",
+                    "Toplu silme");
         }
 
         await LoadAsync();
     }
+
+    [RelayCommand(CanExecute = nameof(CanMoveSelected))]
+    private async Task MoveSelectedAsync()
+    {
+        var targets = GetTargetRows();
+        if (targets.Count == 0)
+            return;
+
+        var request = await _appointmentDialogs.ShowBulkMoveAsync(
+            targets.Count,
+            SelectedDate.AddDays(1),
+            targets.Select(x => x.StartsAtLocal).ToList());
+
+        if (request is null)
+            return;
+
+        var ids = targets.Select(x => x.Id).ToList();
+        var result = await _appointments.MoveManyAsync(ids, request.NewDate, request.NewTime);
+        if (result.Error is not null)
+        {
+            _dialogs.Error(result.Error, "Toplu taşıma");
+            return;
+        }
+
+        if (result.HasConflicts)
+        {
+            var preview = string.Join(
+                Environment.NewLine,
+                result.Conflicts
+                    .Take(4)
+                    .Select(x => $"• {x.StartsAtLocal:dd/MM HH:mm} · {x.PersonName}"));
+
+            if (result.Conflicts.Count > 4)
+                preview += $"{Environment.NewLine}… ve {result.Conflicts.Count - 4} çakışma daha";
+
+            var force = _dialogs.Confirm(
+                $"{result.ConflictingIds.Count} görüşmede çakışma var:{Environment.NewLine}{Environment.NewLine}{preview}{Environment.NewLine}{Environment.NewLine}Yine de taşınsın mı?",
+                "Çakışan görüşmeler");
+
+            if (force)
+            {
+                result = await _appointments.MoveManyAsync(
+                    result.ConflictingIds,
+                    request.NewDate,
+                    request.NewTime,
+                    ignoreConflicts: true);
+            }
+        }
+
+        var skipped = result.ConflictingIds.Count + result.FailedIds.Count;
+        var summary = skipped == 0
+            ? $"{result.Moved} görüşme {request.NewDate:dd/MM/yyyy} tarihine taşındı."
+            : $"{result.Moved} görüşme taşındı. {skipped} görüşme taşınamadı.";
+
+        _dialogs.Info(summary, "Toplu taşıma");
+        await LoadAsync();
+    }
+
+    [RelayCommand]
+    private void ClearSelection() => ApplySelectAll(false);
 
     [RelayCommand(CanExecute = nameof(CanDelete))]
     private async Task OpenDeletedAsync()
@@ -341,8 +454,75 @@ public partial class AppointmentListViewModel : ObservableObject
         _filtersLoaded = true;
     }
 
-    private bool HasSelection()
+    private bool HasRowSelection()
         => SelectedAppointment is not null && !IsBusy;
+
+    private bool CanDeleteSelected()
+        => CanDelete && !IsBusy && (SelectedCount > 0 || SelectedAppointment is not null);
+
+    private bool CanMoveSelected()
+        => CanCreate && !IsBusy && (SelectedCount > 0 || SelectedAppointment is not null);
+
+    /// <summary>Seçim kutuları doluysa onları, değilse odaklanmış satırı hedefler.</summary>
+    private List<AppointmentRowViewModel> GetTargetRows()
+    {
+        if (_selectedRows.Count > 0)
+            return _selectedRows.ToList();
+
+        return SelectedAppointment is null
+            ? new List<AppointmentRowViewModel>()
+            : new List<AppointmentRowViewModel> { SelectedAppointment };
+    }
+
+    private void OnRowSelectionChanged(object? sender, EventArgs e)
+    {
+        if (sender is AppointmentRowViewModel row)
+        {
+            if (row.IsSelected)
+            {
+                if (!_selectedRows.Contains(row))
+                    _selectedRows.Add(row);
+            }
+            else
+            {
+                _selectedRows.Remove(row);
+            }
+        }
+
+        NotifySelectionChanged();
+    }
+
+    private void ApplySelectAll(bool select)
+    {
+        _applyingSelectAll = true;
+        try
+        {
+            foreach (var row in Appointments)
+                row.IsSelected = select;
+        }
+        finally
+        {
+            _applyingSelectAll = false;
+        }
+
+        NotifySelectionChanged();
+    }
+
+    private void NotifySelectionChanged()
+    {
+        var allSelected = Appointments.Count > 0 && SelectedCount == Appointments.Count;
+        if (!_applyingSelectAll && _isAllSelected != allSelected)
+        {
+            _isAllSelected = allSelected;
+            OnPropertyChanged(nameof(IsAllSelected));
+        }
+
+        OnPropertyChanged(nameof(SelectedCount));
+        OnPropertyChanged(nameof(HasSelectedRows));
+        OnPropertyChanged(nameof(SelectionText));
+        DeleteSelectedCommand.NotifyCanExecuteChanged();
+        MoveSelectedCommand.NotifyCanExecuteChanged();
+    }
 
     private void ApplyDate(DateTime date)
     {
@@ -387,10 +567,11 @@ public partial class AppointmentListViewModel : ObservableObject
             _ = LoadAsync();
     }
 
-    partial void OnSelectedAppointmentChanged(AppointmentListItemDto? value)
+    partial void OnSelectedAppointmentChanged(AppointmentRowViewModel? value)
     {
         OpenDetailCommand.NotifyCanExecuteChanged();
         DeleteSelectedCommand.NotifyCanExecuteChanged();
+        MoveSelectedCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnNextAppointmentChanged(AppointmentListItemDto? value)
@@ -404,5 +585,6 @@ public partial class AppointmentListViewModel : ObservableObject
     {
         OpenDetailCommand.NotifyCanExecuteChanged();
         DeleteSelectedCommand.NotifyCanExecuteChanged();
+        MoveSelectedCommand.NotifyCanExecuteChanged();
     }
 }

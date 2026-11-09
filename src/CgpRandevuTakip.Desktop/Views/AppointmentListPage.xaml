@@ -109,10 +109,26 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <TextBlock Text="{Binding SummaryText}"
-                       Style="{StaticResource MutedText}"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center" />
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="{Binding SummaryText}"
+                           Style="{StaticResource MutedText}"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           Visibility="{Binding HasSelectedRows, Converter={StaticResource InverseBoolToVisibility}}" />
+
+                <TextBlock Text="{Binding SelectionText}"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource AccentBrush}"
+                           VerticalAlignment="Center"
+                           Visibility="{Binding HasSelectedRows, Converter={StaticResource BoolToVisibility}}" />
+
+                <Button Content="Seçimi temizle"
+                        Style="{StaticResource GhostButton}"
+                        Command="{Binding ClearSelectionCommand}"
+                        Padding="10,5"
+                        Margin="12,0,0,0"
+                        Visibility="{Binding HasSelectedRows, Converter={StaticResource BoolToVisibility}}" />
+            </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal">
                 <Button Content="Detay"
@@ -132,10 +148,18 @@
                         Padding="14,7"
                         Margin="0,0,8,0"
                         Visibility="{Binding CanDelete, Converter={StaticResource BoolToVisibility}}" />
+                <Button Content="Taşı"
+                        Style="{StaticResource SubtleButton}"
+                        Command="{Binding MoveSelectedCommand}"
+                        Padding="14,7"
+                        Margin="0,0,8,0"
+                        ToolTip="Seçili görüşmeleri başka bir tarihe taşı"
+                        Visibility="{Binding CanCreate, Converter={StaticResource BoolToVisibility}}" />
                 <Button Content="Sil"
                         Style="{StaticResource DangerButton}"
                         Command="{Binding DeleteSelectedCommand}"
                         Padding="14,7"
+                        ToolTip="Seçili görüşmeleri sil"
                         Visibility="{Binding CanDelete, Converter={StaticResource BoolToVisibility}}" />
             </StackPanel>
         </Grid>
@@ -182,6 +206,27 @@
                           BorderThickness="0"
                           Background="Transparent">
                     <DataGrid.Columns>
+                        <DataGridTemplateColumn x:Name="SelectionColumn" Width="40" CanUserSort="False">
+                            <DataGridTemplateColumn.Header>
+                                <CheckBox x:Name="SelectAllCheckBox"
+                                          Checked="OnSelectAllChanged"
+                                          Unchecked="OnSelectAllChanged"
+                                          Style="{StaticResource GridSelectCheckBox}"
+                                          ToolTip="Tümünü seç / seçimi kaldır"
+                                          AutomationProperties.Name="Tümünü seç" />
+                            </DataGridTemplateColumn.Header>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              Style="{StaticResource GridSelectCheckBox}"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              ToolTip="Görüşmeyi seç"
+                                              AutomationProperties.Name="Görüşmeyi seç" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
                         <DataGridTextColumn Header="GÖRÜŞMECİ" Binding="{Binding HostName}"
                                             SortMemberPath="HostName" Width="165" />
 

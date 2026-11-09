@@ -66,8 +66,8 @@ Yarı zamanlı çalışmada 18-22 hafta öngörülür. Efor: ~95-115 adam-gün.
 **Toplam:** ~138 SP (Sprint 3.5 dahil). Hız (velocity) ilk sprintte ölçülür; 18-22 SP/sprint
 varsayımı gerçekleşmezse kapsam değil **tarih** esnetilir (MVP sabit tutulur).
 
-> **Güncel durum (10.11.2026):** Sprint 0-5, 4.5 UAT, 4.6 kimlik/kurtarma ve manuel düzeltmeler tamamlandı, sürüm **0.6.4**,
-> **179/179 test** geçiyor, derleme 0 uyarı / 0 hata. Sprint 5 sonuçları için
+> **Güncel durum (10.11.2026):** Sprint 0-5, 4.5 UAT, 4.6 kimlik/kurtarma, manuel düzeltmeler ve toplu işlemler tamamlandı,
+> sürüm **0.7.0**, **187/187 test** geçiyor, derleme 0 uyarı / 0 hata. Sprint 5 sonuçları için
 > [docs/16_Sprint5_Raporu.md](16_Sprint5_Raporu.md).
 
 ### 2.1 Sprint 0 — ayrıntılı

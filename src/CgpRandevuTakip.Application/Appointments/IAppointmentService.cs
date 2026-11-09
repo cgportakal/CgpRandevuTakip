@@ -19,6 +19,12 @@ public interface IAppointmentService
     Task<AppointmentSaveResult> CreateAsync(AppointmentInput input);
     Task<AppointmentSaveResult> UpdateAsync(string id, AppointmentInput input);
     Task<OperationResult> DeleteAsync(string id);
+    Task<BulkDeleteResult> DeleteManyAsync(IReadOnlyList<string> ids);
+    Task<BulkMoveResult> MoveManyAsync(
+        IReadOnlyList<string> ids,
+        DateTime newDate,
+        TimeSpan? newTime,
+        bool ignoreConflicts = false);
     Task<OperationResult> RestoreAsync(string id);
     Task<int> PurgeExpiredDeletedAsync(DateTime nowUtc);
 }

@@ -91,6 +91,26 @@ public sealed record AppointmentListItemDto(
     };
 }
 
+/// <summary>
+/// Toplu taşıma sonucu. Çakışan görüşmeler taşınmaz; kullanıcı onaylarsa yalnızca
+/// <see cref="ConflictingIds"/> ile tekrar çağrılır.
+/// </summary>
+public sealed record BulkMoveResult(
+    int Moved,
+    IReadOnlyList<string> ConflictingIds,
+    IReadOnlyList<AppointmentConflictDto> Conflicts,
+    IReadOnlyList<string> FailedIds,
+    string? Error = null)
+{
+    public bool HasConflicts => Conflicts.Count > 0;
+}
+
+/// <summary>Toplu silme sonucu.</summary>
+public sealed record BulkDeleteResult(
+    int Deleted,
+    IReadOnlyList<string> FailedIds,
+    string? Error = null);
+
 public sealed record DeletedAppointmentDto(
     string Id,
     DateTime StartsAtLocal,

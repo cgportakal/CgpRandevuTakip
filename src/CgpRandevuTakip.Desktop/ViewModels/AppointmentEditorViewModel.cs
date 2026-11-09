@@ -6,6 +6,7 @@ using CgpRandevuTakip.Application.Hosts;
 using CgpRandevuTakip.Application.Settings;
 using CgpRandevuTakip.Desktop.Common;
 using CgpRandevuTakip.Domain.Enums;
+using CgpRandevuTakip.Domain.Rules;
 using CgpRandevuTakip.Desktop.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -28,6 +29,7 @@ public partial class AppointmentEditorViewModel : ObservableObject
     private string? _appointmentId;
     private bool _isClosedAppointment;
     private bool _closedWarningConfirmed;
+    private DateTime? _originalStartsAtLocal;
     private int _defaultReminderMinutes = 30;
 
     public AppointmentEditorViewModel(
@@ -200,6 +202,7 @@ public partial class AppointmentEditorViewModel : ObservableObject
         }
 
         _isClosedAppointment = detail.IsClosed;
+        _originalStartsAtLocal = detail.StartsAtLocal;
         FirstName = detail.PersonFirstName;
         LastName = detail.PersonLastName;
         Phone = detail.PhoneE164;
@@ -379,6 +382,20 @@ public partial class AppointmentEditorViewModel : ObservableObject
             return;
         }
 
+        var startsAtLocal = Date.Value.Date.Add(time);
+
+        // Geçmiş tarih/saat uyarısı: yeni görüşmede her zaman, düzenlemede yalnızca
+        // saat değiştirilip geçmişe alındığında sorulur.
+        var timeChangedToPast = !IsEdit || startsAtLocal != _originalStartsAtLocal;
+        if (startsAtLocal < DateTime.Now && timeChangedToPast)
+        {
+            var proceed = _dialogs.Confirm(
+                $"Seçilen tarih ve saat geçmişte: {startsAtLocal:dd/MM/yyyy HH:mm}.{Environment.NewLine}{Environment.NewLine}Yine de kaydedilsin mi?",
+                "Geçmiş tarih");
+            if (!proceed)
+                return;
+        }
+
         if (_isClosedAppointment && !_closedWarningConfirmed)
         {
             var proceed = _dialogs.Confirm(
@@ -414,7 +431,7 @@ public partial class AppointmentEditorViewModel : ObservableObject
             FirstName,
             LastName,
             Phone,
-            Date.Value.Date.Add(time),
+            startsAtLocal,
             SelectedDuration?.Minutes ?? 60,
             SelectedHost?.Id ?? string.Empty,
             SelectedCategory?.Id ?? string.Empty,
@@ -497,24 +514,15 @@ public partial class AppointmentEditorViewModel : ObservableObject
 
     private static DateTime DefaultStart(DateTime initialDate)
     {
-        var today = DateTime.Today;
-        if (initialDate.Date != today)
-            return initialDate.Date.AddHours(9);
+        // Yeni görüşme: şimdiki saatten 1 saat sonrası (15 dk dilime yuvarlanır).
+        var start = AppointmentDefaults.NextStart(DateTime.Now);
 
-        var now = DateTime.Now;
-        if (now.TimeOfDay < TimeSpan.FromHours(6))
-            return today.AddHours(6);
+        // Kullanıcı ileri bir tarihi görüntülüyorsa tarih korunur, saat yine 1 saat sonrasıdır.
+        if (initialDate.Date > start.Date)
+            return initialDate.Date + start.TimeOfDay;
 
-        if (now.TimeOfDay >= TimeSpan.FromHours(20.75))
-            return today.AddDays(1).AddHours(6);
-
-        var minutes = (int)Math.Ceiling(now.TimeOfDay.TotalMinutes / 15.0) * 15;
-        if (minutes < 360)
-            minutes = 360;
-        if (minutes > 1245)
-            return today.AddDays(1).AddHours(6);
-
-        return today.AddMinutes(minutes);
+        // Bugün veya geçmiş bir tarih görüntüleniyorsa hedef her zaman bugündür.
+        return start;
     }
 
     private static bool TryParseTime(string? text, out TimeSpan time)
