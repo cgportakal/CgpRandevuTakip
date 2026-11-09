@@ -6,7 +6,7 @@ Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöne
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
 > Durum: **Sprint 4 + 4.5 UAT + Sprint 5 tamamlandı** — hatırlatıcılar, Windows toast/push, tepsi, "beni hatırla", e-posta ile şifre sıfırlama, günlük liste PNG'si, WhatsApp paylaşımı ve alıcı rehberi hazır.
-> Sürüm: 0.6.3 · Tarih: 10.11.2026 · 179 test geçiyor
+> Sürüm: 0.6.4 · Tarih: 10.11.2026 · 179 test geçiyor
 
 ## Neden bu proje?
 

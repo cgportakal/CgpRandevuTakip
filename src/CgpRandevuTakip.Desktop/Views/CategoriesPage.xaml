@@ -61,8 +61,7 @@
                           SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
                           CanUserSortColumns="True"
                           BorderThickness="0"
-                          Background="Transparent"
-                          AlternatingRowBackground="Transparent">
+                          Background="Transparent">
                     <DataGrid.Columns>
                         <DataGridTemplateColumn Header="RENK" Width="58" SortMemberPath="ColorHex">
                             <DataGridTemplateColumn.CellTemplate>

@@ -3,6 +3,12 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.6.4] — 2026-11-10
+
+### Düzeltildi
+- Liste satırlarında fare üzerine gelindiğinde tüm satırlarda (1., 2., 3. …) hover rengi görünüyor;
+  DataGrid seviyesindeki `RowBackground`/`AlternatingRowBackground` ayarları kaldırıldı
+
 ## [0.6.3] — 2026-11-10
 
 ### Düzeltildi

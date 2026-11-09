@@ -49,8 +49,7 @@
                           SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
                           CanUserSortColumns="True"
                           BorderThickness="0"
-                          Background="Transparent"
-                          AlternatingRowBackground="Transparent">
+                          Background="Transparent">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="AD SOYAD" Binding="{Binding DisplayName}" Width="*" MinWidth="150" />
                         <DataGridTextColumn Header="KULLANICI ADI" Binding="{Binding Username}" Width="130" />

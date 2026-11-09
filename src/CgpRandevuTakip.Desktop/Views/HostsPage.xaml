@@ -50,8 +50,7 @@
                           SelectedItem="{Binding SelectedHost, Mode=TwoWay}"
                           CanUserSortColumns="True"
                           BorderThickness="0"
-                          Background="Transparent"
-                          AlternatingRowBackground="Transparent">
+                          Background="Transparent">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="AD SOYAD" Binding="{Binding DisplayName}" Width="*" MinWidth="150" />
 

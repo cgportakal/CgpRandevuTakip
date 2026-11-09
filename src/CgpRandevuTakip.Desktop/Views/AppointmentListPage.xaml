@@ -180,8 +180,7 @@
                           MouseDoubleClick="OnRowDoubleClick"
                           CanUserSortColumns="True"
                           BorderThickness="0"
-                          Background="Transparent"
-                          AlternatingRowBackground="Transparent">
+                          Background="Transparent">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="GÖRÜŞMECİ" Binding="{Binding HostName}"
                                             SortMemberPath="HostName" Width="165" />

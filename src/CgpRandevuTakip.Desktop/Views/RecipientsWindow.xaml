@@ -53,7 +53,6 @@
                           SelectedItem="{Binding SelectedRecipient, Mode=TwoWay}"
                           BorderThickness="0"
                           Background="Transparent"
-                          AlternatingRowBackground="Transparent"
                           IsReadOnly="True"
                           AutoGenerateColumns="False">
                     <DataGrid.Columns>
