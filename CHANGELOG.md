@@ -3,6 +3,21 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.6.1] — 2026-11-09 · Manuel hata düzeltmeleri
+
+### Düzeltildi
+- Liste satırlarında hover/seçim görünürlüğü güçlendirildi; sütun başlıkları hizalandı
+- Pasif kategoriler yeni görüşme ekranında görünmüyor; düzenlemede mevcut pasif kategori korunuyor
+- Görüşme düzenlemede kategori değişikliği artık kaydediliyor (navigation/FK çakışması giderildi)
+- Saat alanı serbest metin yerine 15 dakikalık seçim listesi oldu
+- Yeni görüşme varsayılan süresi 1 saat oldu
+- Özel hatırlatıcı: saat/dakika seçimi ve 1 dk–7 gün aralığı
+- Üst çubuktaki tarih bugünün listesini açar; marka/kurum adı kullanıcı alanına gider
+- Günlük listedeki tarih alanı takvim seçicisi oldu
+- "Host" kullanıcı metinleri "Görüşmeci" olarak değiştirildi
+- Tanılama ekranındaki sahte S-01/S-02 butonları gerçek paylaşım/toast araçlarıyla değiştirildi
+- Ziyaretçi iptali servis testi ve aksiyon akışı doğrulandı
+
 ## [0.6.0] — 2026-11-09 · Sprint 5
 
 ### Eklendi

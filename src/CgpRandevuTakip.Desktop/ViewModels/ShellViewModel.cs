@@ -126,6 +126,17 @@ public partial class ShellViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    private void OpenTodayAppointments()
+    {
+        NavigateTo("appointments");
+        WeakReferenceMessenger.Default.Send(new OpenDateMessage(DateTime.Today));
+    }
+
+    [RelayCommand]
+    private void OpenUserArea()
+        => NavigateTo(ShowUsersNav ? "users" : "settings");
+
+    [RelayCommand]
     private async Task LogoutAsync()
     {
         await _auth.LogoutAsync();

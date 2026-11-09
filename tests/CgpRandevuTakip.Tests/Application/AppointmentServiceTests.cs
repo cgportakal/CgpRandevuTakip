@@ -503,6 +503,34 @@ public class AppointmentServiceTests
     }
 
     [Fact]
+    public async Task Update_ChangesCategoryAndListReflectsIt()
+    {
+        using var sut = await CreateAsync();
+
+        Category otherCategory;
+        using (var db = sut.Db.CreateContext())
+        {
+            otherCategory = new Category { Name = "Öğrenci Görüşmesi", ColorHex = "#7C3AED" };
+            db.Categories.Add(otherCategory);
+            db.SaveChanges();
+        }
+
+        var created = await sut.Service.CreateAsync(sut.Input());
+        Assert.True(created.Success, created.Error);
+
+        var updated = await sut.Service.UpdateAsync(
+            created.AppointmentId!,
+            sut.Input(categoryId: otherCategory.Id));
+        Assert.True(updated.Success, updated.Error);
+
+        var detail = await sut.Service.GetDetailAsync(created.AppointmentId!);
+        Assert.Equal("Öğrenci Görüşmesi", detail!.CategoryName);
+
+        var day = await sut.Service.GetDayAsync(new DateTime(2026, 11, 8));
+        Assert.Equal("Öğrenci Görüşmesi", day.Single().CategoryName);
+    }
+
+    [Fact]
     public async Task Restore_ReplansCancelledFutureReminders()
     {
         using var sut = await CreateAsync();

@@ -93,13 +93,16 @@ public sealed class DailyShareService : IDailyShareService
 
         try
         {
-            if (!TryCopyImage(preview.Image))
+            if (!TryCopyImage(preview.Image, preview.ImagePath))
             {
                 log.Result = ShareResult.Failed;
                 await _logs.AddAsync(log);
                 return OperationResult.Fail(
                     "Görsel panoya kopyalanamadı. Uygulama açıkken tekrar deneyin.");
             }
+
+            // WhatsApp açılmadan önce panonun oturmasını bekle.
+            await Task.Delay(250);
 
             if (!openWhatsApp)
             {
@@ -203,7 +206,7 @@ public sealed class DailyShareService : IDailyShareService
         {
             $"{detail.PersonFullName}",
             $"{detail.DateLabel} · {detail.TimeRangeLabel}",
-            $"Host: {detail.HostName}",
+            $"Görüşmeci: {detail.HostName}",
             $"Kategori: {detail.CategoryName}",
             $"Yöntem: {detail.MethodText}"
         };
@@ -217,13 +220,26 @@ public sealed class DailyShareService : IDailyShareService
         return string.Join(Environment.NewLine, lines);
     }
 
-    private static bool TryCopyImage(BitmapSource bitmap)
+    private static bool TryCopyImage(BitmapSource bitmap, string imagePath)
     {
         for (var attempt = 0; attempt < 5; attempt++)
         {
             try
             {
-                Clipboard.SetImage(bitmap);
+                var data = new DataObject();
+
+                // Windows/WhatsApp uyumluluğu için birden fazla format birlikte verilir.
+                data.SetImage(bitmap);
+                data.SetData(DataFormats.FileDrop, new[] { imagePath });
+
+                var pngStream = new MemoryStream();
+                var encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(bitmap));
+                encoder.Save(pngStream);
+                pngStream.Position = 0;
+                data.SetData("PNG", pngStream, autoConvert: false);
+
+                Clipboard.SetDataObject(data, copy: true);
                 return true;
             }
             catch

@@ -485,9 +485,10 @@ public sealed class AppointmentService : IAppointmentService
             return ValidationResult.Fail($"Öğrenci soyadı en fazla {MaxNameLength} karakter olabilir.");
 
         var offsets = input.ReminderOffsetsMinutes ?? Array.Empty<int>();
-        var invalidOffset = offsets.FirstOrDefault(x => !ReminderScheduleCalculator.AllowedOffsetsMinutes.Contains(x));
+        var invalidOffset = offsets.FirstOrDefault(x => !ReminderScheduleCalculator.IsAllowedOffset(x));
         if (invalidOffset != 0)
-            return ValidationResult.Fail("Desteklenmeyen hatırlatıcı aralığı seçildi.");
+            return ValidationResult.Fail(
+                $"Hatırlatıcı aralığı 1–{ReminderScheduleCalculator.MaxOffsetMinutes} dakika arasında olmalıdır.");
 
         return ValidationResult.Ok(firstName, lastName, phoneE164, input.HostUserId, input.CategoryId);
     }

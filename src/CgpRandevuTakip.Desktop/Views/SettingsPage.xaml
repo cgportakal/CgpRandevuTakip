@@ -279,23 +279,13 @@
                     <Border Style="{StaticResource Card}" Margin="0,0,0,16"
                             Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibility}}">
                         <StackPanel>
-                            <TextBlock Text="Tanılama · S-01 / S-02" Style="{StaticResource SectionTitle}" />
-                            <TextBlock Text="Spike araçları gerçek WhatsApp ve Windows bildirim ortamını doğrulamak için kullanılır."
+                            <TextBlock Text="Araçlar" Style="{StaticResource SectionTitle}" />
+                            <TextBlock Text="Günlük paylaşım ve bildirim testleri."
                                        Style="{StaticResource MutedText}" Margin="0,0,0,14" />
 
-                            <Button Content="S-01 · Liste görselini panoya kopyala"
+                            <Button Content="Bugünün listesini paylaş"
                                     Style="{StaticResource SecondaryButton}"
-                                    Command="{Binding PrepareDailyListCommand}"
-                                    HorizontalAlignment="Stretch"
-                                    Margin="0,0,0,8" />
-                            <Button Content="S-02 · Hatırlatıcı aksiyon penceresi"
-                                    Style="{StaticResource SecondaryButton}"
-                                    Command="{Binding ShowReminderPreviewCommand}"
-                                    HorizontalAlignment="Stretch"
-                                    Margin="0,0,0,8" />
-                            <Button Content="S-02 · Toast önizleme"
-                                    Style="{StaticResource SecondaryButton}"
-                                    Command="{Binding ShowToastPreviewCommand}"
+                                    Command="{Binding OpenDailyShareCommand}"
                                     HorizontalAlignment="Stretch"
                                     Margin="0,0,0,8" />
                             <Button Content="Windows toast testi"

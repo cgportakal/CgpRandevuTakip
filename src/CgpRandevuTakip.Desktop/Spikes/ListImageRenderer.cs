@@ -176,7 +176,7 @@ public static class ListImageRenderer
 
         AddCell(grid, 0, "SAAT", 11, "#5D7166", FontWeights.SemiBold);
         AddCell(grid, 1, "AD SOYAD", 11, "#5D7166", FontWeights.SemiBold);
-        AddCell(grid, 2, "HOST", 11, "#5D7166", FontWeights.SemiBold);
+        AddCell(grid, 2, "GÖRÜŞMECİ", 11, "#5D7166", FontWeights.SemiBold);
         AddCell(grid, 3, "KATEGORİ", 11, "#5D7166", FontWeights.SemiBold);
         AddCell(grid, 4, "YÖNTEM", 11, "#5D7166", FontWeights.SemiBold);
         AddCell(grid, 5, "DURUM", 11, "#5D7166", FontWeights.SemiBold);

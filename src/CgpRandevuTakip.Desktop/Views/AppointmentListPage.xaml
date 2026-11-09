@@ -28,20 +28,11 @@
                             Margin="0,0,8,0"
                             ToolTip="Önceki gün"
                             AutomationProperties.Name="Önceki gün" />
-                    <Border Background="{DynamicResource SurfaceBrush}"
-                            BorderBrush="{DynamicResource BorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="9"
-                            Padding="16,8"
-                            MinWidth="190">
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <TextBlock Text="📅" Margin="0,0,8,0" FontSize="13" />
-                            <TextBlock Text="{Binding DateLabel}"
-                                       FontWeight="SemiBold"
-                                       FontSize="13"
-                                       VerticalAlignment="Center" />
-                        </StackPanel>
-                    </Border>
+                    <DatePicker SelectedDate="{Binding SelectedDate}"
+                                Width="190"
+                                MinHeight="38"
+                                AutomationProperties.Name="Tarih seç"
+                                ToolTip="Listelenecek tarihi seç" />
                     <Button Content="▶"
                             Style="{StaticResource SecondaryButton}"
                             Command="{Binding NextDayCommand}"
@@ -72,9 +63,9 @@
                     <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                              MinHeight="38"
                              Padding="14,8"
-                             ToolTip="Ad, telefon, kategori veya host ara"
+                             ToolTip="Ad, telefon, kategori veya görüşmeci ara"
                              AutomationProperties.Name="Görüşme ara" />
-                    <TextBlock Text="🔍  Ad, telefon, kategori veya host ara"
+                    <TextBlock Text="🔍  Ad, telefon, kategori veya görüşmeci ara"
                                Style="{StaticResource MutedText}"
                                TextWrapping="NoWrap"
                                TextTrimming="CharacterEllipsis"
@@ -236,7 +227,7 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="HOST" Binding="{Binding HostName}" Width="140" />
+                        <DataGridTextColumn Header="GÖRÜŞMECİ" Binding="{Binding HostName}" Width="140" />
 
                         <DataGridTextColumn Header="YÖNTEM" Binding="{Binding MethodText}" Width="100" />
 

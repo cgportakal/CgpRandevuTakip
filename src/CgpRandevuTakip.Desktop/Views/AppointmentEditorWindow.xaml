@@ -18,7 +18,7 @@
 
         <StackPanel Grid.Row="0" Margin="0,0,0,16">
             <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" FontSize="22" />
-            <TextBlock Text="Ad, soyad, telefon, tarih/saat, host ve kategori zorunludur."
+            <TextBlock Text="Ad, soyad, telefon, tarih/saat, görüşmeci ve kategori zorunludur."
                        Style="{StaticResource PageSubtitle}" />
         </StackPanel>
 
@@ -69,8 +69,10 @@
 
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="Saat *" Style="{StaticResource LabelText}" />
-                                    <TextBox Text="{Binding TimeText, UpdateSourceTrigger=PropertyChanged}" MaxLength="5"
-                                             AutomationProperties.Name="Saat" />
+                                    <ComboBox ItemsSource="{Binding TimeOptions}"
+                                              SelectedItem="{Binding TimeText, Mode=TwoWay}"
+                                              IsTextSearchEnabled="True"
+                                              AutomationProperties.Name="Saat" />
                                 </StackPanel>
                             </Grid>
 
@@ -80,11 +82,11 @@
                                       DisplayMemberPath="Label"
                                       AutomationProperties.Name="Süre" />
 
-                            <TextBlock Text="Görüşülecek kişi (host) *" Style="{StaticResource LabelText}" Margin="0,12,0,6" />
+                            <TextBlock Text="Görüşmeci *" Style="{StaticResource LabelText}" Margin="0,12,0,6" />
                             <ComboBox ItemsSource="{Binding Hosts}"
                                       SelectedItem="{Binding SelectedHost}"
                                       DisplayMemberPath="DisplayName"
-                                      AutomationProperties.Name="Host" />
+                                      AutomationProperties.Name="Görüşmeci" />
 
                             <TextBlock Text="Kategori *" Style="{StaticResource LabelText}" Margin="0,12,0,6" />
                             <ComboBox ItemsSource="{Binding Categories}"
@@ -134,7 +136,28 @@
 
                             <CheckBox Content="1 gün önce" IsChecked="{Binding ReminderOneDay}" Margin="0,0,0,10" />
                             <CheckBox Content="1 saat önce" IsChecked="{Binding ReminderOneHour}" Margin="0,0,0,10" />
-                            <CheckBox Content="30 dakika önce (varsayılan)" IsChecked="{Binding ReminderThirtyMinutes}" />
+                            <CheckBox Content="30 dakika önce (varsayılan)" IsChecked="{Binding ReminderThirtyMinutes}" Margin="0,0,0,10" />
+
+                            <CheckBox Content="Özel hatırlatıcı" IsChecked="{Binding ReminderCustom}" Margin="0,0,0,8" />
+                            <Grid IsEnabled="{Binding ReminderCustom}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Saat önce" Style="{StaticResource MutedText}" />
+                                    <ComboBox ItemsSource="{Binding ReminderHourOptions}"
+                                              SelectedItem="{Binding ReminderCustomHours}"
+                                              AutomationProperties.Name="Özel hatırlatıcı saat" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Dakika önce" Style="{StaticResource MutedText}" />
+                                    <ComboBox ItemsSource="{Binding ReminderMinuteOptions}"
+                                              SelectedItem="{Binding ReminderCustomMinutes}"
+                                              AutomationProperties.Name="Özel hatırlatıcı dakika" />
+                                </StackPanel>
+                            </Grid>
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource Card}" Margin="0,16,0,0"

@@ -3,9 +3,11 @@ using CgpRandevuTakip.Application.Appointments;
 using CgpRandevuTakip.Application.Categories;
 using CgpRandevuTakip.Application.Hosts;
 using CgpRandevuTakip.Desktop.Common;
+using CgpRandevuTakip.Desktop.Messages;
 using CgpRandevuTakip.Domain.Enums;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace CgpRandevuTakip.Desktop.ViewModels;
 
@@ -68,6 +70,11 @@ public partial class AppointmentListViewModel : ObservableObject
             _searchTimer.Stop();
             await LoadAsync();
         };
+
+        WeakReferenceMessenger.Default.Register<OpenDateMessage>(
+            this,
+            static (recipient, message) =>
+                ((AppointmentListViewModel)recipient).ApplyDate(message.Date));
     }
 
     public RangeObservableCollection<AppointmentListItemDto> Appointments { get; } = new();
@@ -336,6 +343,14 @@ public partial class AppointmentListViewModel : ObservableObject
 
     private bool HasSelection()
         => SelectedAppointment is not null && !IsBusy;
+
+    private void ApplyDate(DateTime date)
+    {
+        _suppressReload = true;
+        SelectedDate = date.Date;
+        _suppressReload = false;
+        _ = LoadAsync();
+    }
 
     partial void OnSelectedDateChanged(DateTime value)
     {

@@ -31,7 +31,7 @@
                 <StackPanel>
                     <TextBlock Text="Örnek Veli" FontSize="15" FontWeight="SemiBold" />
                     <TextBlock Text="Veli Görüşmesi · Yüz yüze" Style="{StaticResource MutedText}" Margin="0,4,0,0" />
-                    <TextBlock Text="Host: Ayşe Yılmaz" Style="{StaticResource MutedText}" Margin="0,2,0,0" />
+                    <TextBlock Text="Görüşmeci: Ayşe Yılmaz" Style="{StaticResource MutedText}" Margin="0,2,0,0" />
                     <TextBlock Text="Telefon: 05** *** ** 67" Style="{StaticResource MutedText}" Margin="0,2,0,0" />
                 </StackPanel>
 
@@ -62,9 +62,9 @@
                     Tag="Sadece kapatıldı (önizleme)"
                     Click="OnActionClick" />
             <Button Grid.Row="0" Grid.Column="2"
-                    Content="Host'a bilgi ver"
+                    Content="Görüşmeciye bilgi ver"
                     Style="{StaticResource SubtleButton}"
-                    Tag="Host'a bilgi verildi (önizleme)"
+                    Tag="Görüşmeciye bilgi verildi (önizleme)"
                     Click="OnActionClick" />
             <Button Grid.Row="2" Grid.Column="0"
                     Content="Ulaşılamadı · 10 dk ertele"

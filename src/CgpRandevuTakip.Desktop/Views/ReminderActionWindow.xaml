@@ -30,7 +30,7 @@
                     <TextBlock Text="{Binding PersonFullName}" FontSize="15" FontWeight="SemiBold" />
                     <TextBlock Text="{Binding CategoryName}" Style="{StaticResource MutedText}" Margin="0,4,0,0" />
                     <TextBlock Text="{Binding MethodText}" Style="{StaticResource MutedText}" Margin="0,2,0,0" />
-                    <TextBlock Text="{Binding HostName, StringFormat=Host: {0}}" Style="{StaticResource MutedText}" Margin="0,2,0,0" />
+                    <TextBlock Text="{Binding HostName, StringFormat=Görüşmeci: {0}}" Style="{StaticResource MutedText}" Margin="0,2,0,0" />
                     <TextBlock Text="{Binding PhoneE164, StringFormat=Telefon: {0}}" Style="{StaticResource MutedText}" Margin="0,2,0,0" />
                 </StackPanel>
 
@@ -60,7 +60,7 @@
                     Style="{StaticResource SecondaryButton}"
                     Command="{Binding DismissCommand}" />
             <Button Grid.Row="0" Grid.Column="2"
-                    Content="Host'a bilgi ver"
+                    Content="Görüşmeciye bilgi ver"
                     Style="{StaticResource SubtleButton}"
                     Command="{Binding InformedCommand}" />
             <Button Grid.Row="2" Grid.Column="0"

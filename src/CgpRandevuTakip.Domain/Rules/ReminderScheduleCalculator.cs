@@ -9,7 +9,12 @@ public sealed record ReminderPlan(int OffsetMinutes, DateTime DueAtUtc);
 /// </summary>
 public static class ReminderScheduleCalculator
 {
+    public const int MaxOffsetMinutes = 10080; // 7 gün
+
     public static readonly IReadOnlyList<int> AllowedOffsetsMinutes = new[] { 1440, 60, 30 };
+
+    public static bool IsAllowedOffset(int offsetMinutes)
+        => offsetMinutes is >= 1 and <= MaxOffsetMinutes;
 
     /// <summary>Sıradaki kişi araması için bildirimler: randevudan 30 dk ve 5 dk önce.</summary>
     public static readonly IReadOnlyList<int> CallReminderOffsetsMinutes = new[] { 30, 5 };
@@ -23,11 +28,11 @@ public static class ReminderScheduleCalculator
 
         foreach (var offset in offsetsMinutes.Distinct())
         {
-            if (!AllowedOffsetsMinutes.Contains(offset))
+            if (!IsAllowedOffset(offset))
                 throw new ArgumentOutOfRangeException(
                     nameof(offsetsMinutes),
                     offset,
-                    "Desteklenmeyen hatırlatıcı aralığı. Yalnızca 1440, 60 ve 30 dakika kullanılabilir.");
+                    $"Hatırlatıcı aralığı 1–{MaxOffsetMinutes} dakika arasında olmalıdır.");
 
             var dueAt = startsAtUtc.AddMinutes(-offset);
             if (dueAt <= nowUtc)

@@ -28,7 +28,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IAppEnvironment _environment;
     private readonly ICurrentUser _currentUser;
     private readonly IDialogService _dialogs;
-    private readonly ISpikeService _spike;
+    private readonly IAppointmentDialogService _shareDialogs;
     private readonly AutoStartService _autoStart;
     private readonly IPushNotifier _push;
     private readonly IEmailSender _email;
@@ -43,7 +43,7 @@ public partial class SettingsViewModel : ObservableObject
         IAppEnvironment environment,
         ICurrentUser currentUser,
         IDialogService dialogs,
-        ISpikeService spike,
+        IAppointmentDialogService shareDialogs,
         AutoStartService autoStart,
         IPushNotifier push,
         IEmailSender email,
@@ -55,7 +55,7 @@ public partial class SettingsViewModel : ObservableObject
         _environment = environment;
         _currentUser = currentUser;
         _dialogs = dialogs;
-        _spike = spike;
+        _shareDialogs = shareDialogs;
         _autoStart = autoStart;
         _push = push;
         _email = email;
@@ -321,31 +321,8 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task PrepareDailyListAsync()
-    {
-        ErrorMessage = null;
-        StatusMessage = null;
-
-        var result = await _spike.PrepareDailyListImageAsync();
-        if (!result.Success)
-        {
-            ErrorMessage = result.Message;
-            return;
-        }
-
-        StatusMessage = result.Message;
-
-        if (_dialogs.Confirm(
-                "Günlük liste görseli panoya kopyalandı.\n\nWhatsApp şimdi açılsın mı? Açıldıktan sonra sohbete yapıştırın (Ctrl+V).",
-                "S-01 · WhatsApp panosu"))
-        {
-            var open = _spike.OpenWhatsApp();
-            if (open.Success)
-                _dialogs.Info(open.Message, "S-01 · WhatsApp");
-            else
-                _dialogs.Error(open.Message, "S-01 · WhatsApp açılamadı");
-        }
-    }
+    private async Task OpenDailyShareAsync()
+        => await _shareDialogs.ShowShareDailyListAsync(DateTime.Today);
 
     [RelayCommand]
     private async Task TestPushAsync()
@@ -433,12 +410,6 @@ public partial class SettingsViewModel : ObservableObject
                 "Windows toast gönderilemedi. Uygulama içi bildirim kullanılmaya devam eder.",
                 "Toast testi");
     }
-
-    [RelayCommand]
-    private void ShowReminderPreview() => _spike.ShowReminderPreview();
-
-    [RelayCommand]
-    private void ShowToastPreview() => _spike.ShowToastPreview();
 
     [RelayCommand]
     private void OpenDataFolder()

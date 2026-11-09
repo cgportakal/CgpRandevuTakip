@@ -64,12 +64,25 @@ public partial class AppointmentEditorViewModel : ObservableObject
         };
 
         _selectedMethod = Methods[0];
-        _selectedDuration = Durations.First(x => x.Minutes == 30);
+        _selectedDuration = Durations.First(x => x.Minutes == 60);
+
+        TimeOptions = new ObservableCollection<string>(
+            Enumerable.Range(0, 96)
+                .Select(i => TimeSpan.FromMinutes(i * 15).ToString(@"hh\:mm", CultureInfo.InvariantCulture)));
+
+        ReminderHourOptions = new ObservableCollection<int>(Enumerable.Range(0, 169));
+        ReminderMinuteOptions = new ObservableCollection<int>(Enumerable.Range(0, 60));
     }
 
     public RangeObservableCollection<CategoryDto> Categories { get; } = new();
 
     public RangeObservableCollection<HostDto> Hosts { get; } = new();
+
+    public ObservableCollection<string> TimeOptions { get; }
+
+    public ObservableCollection<int> ReminderHourOptions { get; }
+
+    public ObservableCollection<int> ReminderMinuteOptions { get; }
 
     public ObservableCollection<MethodOption> Methods { get; }
 
@@ -127,6 +140,15 @@ public partial class AppointmentEditorViewModel : ObservableObject
     private bool _reminderThirtyMinutes = true;
 
     [ObservableProperty]
+    private bool _reminderCustom;
+
+    [ObservableProperty]
+    private int _reminderCustomHours = 1;
+
+    [ObservableProperty]
+    private int _reminderCustomMinutes = 30;
+
+    [ObservableProperty]
     private string? _errorMessage;
 
     [ObservableProperty]
@@ -160,6 +182,7 @@ public partial class AppointmentEditorViewModel : ObservableObject
         {
             Date = initialDate.Date;
             TimeText = NextHalfHour().ToString(@"hh\:mm", CultureInfo.InvariantCulture);
+            EnsureTimeOption(TimeText);
 
             ReminderOneDay = _defaultReminderMinutes == 1440;
             ReminderOneHour = _defaultReminderMinutes == 60;
@@ -183,6 +206,7 @@ public partial class AppointmentEditorViewModel : ObservableObject
         Phone = detail.PhoneE164;
         Date = detail.StartsAtLocal.Date;
         TimeText = detail.StartsAtLocal.ToString("HH:mm", CultureInfo.InvariantCulture);
+        EnsureTimeOption(TimeText);
         SelectedDuration = Durations.FirstOrDefault(x => x.Minutes == detail.DurationMinutes);
         if (SelectedDuration is null)
         {
@@ -193,6 +217,18 @@ public partial class AppointmentEditorViewModel : ObservableObject
         }
         SelectedHost = Hosts.FirstOrDefault(x => x.Id == detail.HostUserId);
         SelectedCategory = Categories.FirstOrDefault(x => x.Id == detail.CategoryId);
+        if (SelectedCategory is null)
+        {
+            SelectedCategory = new CategoryDto(
+                detail.CategoryId,
+                detail.CategoryName,
+                detail.CategoryColorHex,
+                0,
+                IsActive: false,
+                0);
+            Categories.Add(SelectedCategory);
+        }
+
         SelectedMethod = Methods.FirstOrDefault(x => x.Value == detail.Method) ?? Methods[0];
         Description = detail.Description ?? string.Empty;
         StudentFirstName = detail.StudentFirstName ?? string.Empty;
@@ -201,6 +237,15 @@ public partial class AppointmentEditorViewModel : ObservableObject
         ReminderOneDay = detail.ReminderOffsetsMinutes.Contains(1440);
         ReminderOneHour = detail.ReminderOffsetsMinutes.Contains(60);
         ReminderThirtyMinutes = detail.ReminderOffsetsMinutes.Contains(30);
+
+        var customOffset = detail.ReminderOffsetsMinutes
+            .FirstOrDefault(x => x is not 30 and not 60 and not 1440);
+        if (customOffset > 0)
+        {
+            ReminderCustom = true;
+            ReminderCustomHours = customOffset / 60;
+            ReminderCustomMinutes = customOffset % 60;
+        }
 
         var inactiveSelected = SelectedCategory is { IsActive: false };
         if (inactiveSelected)
@@ -232,11 +277,23 @@ public partial class AppointmentEditorViewModel : ObservableObject
         Phone = source.PhoneE164;
         Date = initialDate.Date;
         TimeText = NextHalfHour().ToString(@"hh\:mm", CultureInfo.InvariantCulture);
+        EnsureTimeOption(TimeText);
         SelectedDuration = Durations.FirstOrDefault(x => x.Minutes == source.DurationMinutes)
-                           ?? Durations.First(x => x.Minutes == 30);
+                           ?? Durations.First(x => x.Minutes == 60);
         SelectedHost = Hosts.FirstOrDefault(x => x.Id == source.HostUserId) ?? Hosts.FirstOrDefault();
-        SelectedCategory = Categories.FirstOrDefault(x => x.Id == source.CategoryId)
-                           ?? Categories.FirstOrDefault(x => x.IsActive);
+        SelectedCategory = Categories.FirstOrDefault(x => x.Id == source.CategoryId);
+        if (SelectedCategory is null)
+        {
+            SelectedCategory = new CategoryDto(
+                source.CategoryId,
+                source.CategoryName,
+                source.CategoryColorHex,
+                0,
+                IsActive: false,
+                0);
+            Categories.Add(SelectedCategory);
+        }
+
         SelectedMethod = Methods.FirstOrDefault(x => x.Value == source.Method) ?? Methods[0];
         Description = source.Description ?? string.Empty;
         StudentFirstName = source.StudentFirstName ?? string.Empty;
@@ -245,6 +302,15 @@ public partial class AppointmentEditorViewModel : ObservableObject
         ReminderOneDay = source.ReminderOffsetsMinutes.Contains(1440);
         ReminderOneHour = source.ReminderOffsetsMinutes.Contains(60);
         ReminderThirtyMinutes = source.ReminderOffsetsMinutes.Contains(30);
+
+        var customOffset = source.ReminderOffsetsMinutes
+            .FirstOrDefault(x => x is not 30 and not 60 and not 1440);
+        if (customOffset > 0)
+        {
+            ReminderCustom = true;
+            ReminderCustomHours = customOffset / 60;
+            ReminderCustomMinutes = customOffset % 60;
+        }
 
         if (SelectedCategory is { IsActive: false })
             WarningMessage = "Önceki görüşmenin kategorisi pasif. Kaydetmek için aktif bir kategori seçin.";
@@ -281,7 +347,12 @@ public partial class AppointmentEditorViewModel : ObservableObject
         await Task.WhenAll(settingsTask, categoriesTask, hostsTask);
 
         _defaultReminderMinutes = (await settingsTask).DefaultReminderMinutes;
-        Categories.ReplaceWith(await categoriesTask);
+
+        // Yeni görüşmede yalnızca aktif kategoriler seçilebilir.
+        // Düzenlemede mevcut pasif kategori, kayıt bozulmasın diye ayrıca eklenir.
+        var categories = await categoriesTask;
+        Categories.ReplaceWith(categories.Where(x => x.IsActive));
+
         Hosts.ReplaceWith(await hostsTask);
     }
 
@@ -330,12 +401,24 @@ public partial class AppointmentEditorViewModel : ObservableObject
         if (ReminderThirtyMinutes)
             offsets.Add(30);
 
+        if (ReminderCustom)
+        {
+            var customOffset = (ReminderCustomHours * 60) + ReminderCustomMinutes;
+            if (customOffset is < 1 or > 10080)
+            {
+                ErrorMessage = "Özel hatırlatıcı 1 dakika ile 7 gün arasında olmalıdır.";
+                return;
+            }
+
+            offsets.Add(customOffset);
+        }
+
         var input = new AppointmentInput(
             FirstName,
             LastName,
             Phone,
             Date.Value.Date.Add(time),
-            SelectedDuration?.Minutes ?? 30,
+            SelectedDuration?.Minutes ?? 60,
             SelectedHost?.Id ?? string.Empty,
             SelectedCategory?.Id ?? string.Empty,
             SelectedMethod?.Value ?? AppointmentMethod.FaceToFace,
@@ -399,11 +482,19 @@ public partial class AppointmentEditorViewModel : ObservableObject
            || !string.IsNullOrWhiteSpace(StudentFirstName)
            || !string.IsNullOrWhiteSpace(StudentLastName);
 
+    private void EnsureTimeOption(string time)
+    {
+        if (string.IsNullOrWhiteSpace(time) || TimeOptions.Contains(time))
+            return;
+
+        TimeOptions.Add(time);
+    }
+
     private static DateTime NextHalfHour()
     {
-        var now = DateTime.Now.AddMinutes(30);
-        var rounded = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0);
-        return now.Minute < 30 ? rounded.AddMinutes(30) : rounded.AddHours(1);
+        var now = DateTime.Now;
+        var addMinutes = now.Minute < 30 ? 30 - now.Minute : 60 - now.Minute;
+        return new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0).AddMinutes(addMinutes);
     }
 
     private static bool TryParseTime(string? text, out TimeSpan time)

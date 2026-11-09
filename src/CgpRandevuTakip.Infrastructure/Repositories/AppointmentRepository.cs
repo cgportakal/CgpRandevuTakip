@@ -331,6 +331,12 @@ public sealed class AppointmentRepository : IAppointmentRepository
                     .SetProperty(x => x.State, ReminderState.Cancelled));
         }
 
+        // AsNoTracking ile gelen eski navigation'lar, FK değişikliğini geri ezebilir.
+        appointment.Person = null;
+        appointment.HostUser = null;
+        appointment.Category = null;
+        appointment.Outcome = null;
+
         var attached = db.Appointments.Attach(appointment);
         attached.State = EntityState.Modified;
 

@@ -45,7 +45,21 @@ public class ReminderScheduleCalculatorTests
     public void Calculate_InvalidOffset_Throws()
     {
         Assert.Throws<ArgumentOutOfRangeException>(
-            () => ReminderScheduleCalculator.Calculate(Now.AddDays(1), new[] { 15 }, Now));
+            () => ReminderScheduleCalculator.Calculate(
+                Now.AddDays(10), new[] { ReminderScheduleCalculator.MaxOffsetMinutes + 1 }, Now));
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => ReminderScheduleCalculator.Calculate(Now.AddDays(1), new[] { 0 }, Now));
+    }
+
+    [Fact]
+    public void Calculate_CustomOffset_IsSupported()
+    {
+        var start = Now.AddDays(2);
+
+        var plans = ReminderScheduleCalculator.Calculate(start, new[] { 15 }, Now);
+
+        var plan = Assert.Single(plans);
+        Assert.Equal(15, plan.OffsetMinutes);
     }
 
     [Fact]
