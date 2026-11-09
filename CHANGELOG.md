@@ -3,6 +3,11 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.6.3] — 2026-11-10
+
+### Düzeltildi
+- "Beni hatırla" yalnızca uygulama açılışında otomatik giriş yapıyor; çıkış sonrası giriş formu gösteriliyor ve önceden dolduruluyor
+
 ## [0.6.2] — 2026-11-10 · Manuel hata düzeltmeleri 2
 
 ### Düzeltildi

@@ -232,6 +232,7 @@ public partial class App : System.Windows.Application
         try
         {
             var auth = _host.Services.GetRequiredService<IAuthService>();
+            var allowRememberedLogin = true;
 
             while (true)
             {
@@ -247,15 +248,25 @@ public partial class App : System.Windows.Application
                 else
                 {
                     var remembered = _host.Services.GetRequiredService<IRememberedLoginStore>();
-                    var token = remembered.Load();
-                    LoginResult? rememberedLogin = token is null
-                        ? null
-                        : await auth.LoginWithRememberTokenAsync(token);
+                    LoginResult? rememberedLogin = null;
+
+                    // Otomatik giriş yalnızca uygulama açılışında yapılır.
+                    // Kullanıcı çıkış yaptıysa giriş formu (önceden doldurulmuş) gösterilir.
+                    if (allowRememberedLogin)
+                    {
+                        var token = remembered.Load();
+                        rememberedLogin = token is null
+                            ? null
+                            : await auth.LoginWithRememberTokenAsync(token);
+
+                        if (token is not null && rememberedLogin?.Success != true)
+                            remembered.Clear();
+                    }
+
+                    allowRememberedLogin = false;
 
                     if (rememberedLogin?.Success != true)
                     {
-                        remembered.Clear();
-
                         var login = _host.Services.GetRequiredService<LoginWindow>();
                         if (login.ShowDialog() != true)
                         {
