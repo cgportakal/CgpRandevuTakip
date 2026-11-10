@@ -139,6 +139,19 @@
 
                         <RadioButton Style="{StaticResource NavButton}"
                                      GroupName="MainNav"
+                                     AutomationProperties.Name="Denetim Kaydı"
+                                     Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibility}}"
+                                     IsChecked="{Binding IsAuditSelected}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📋" Width="24" FontSize="14"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" />
+                                <TextBlock Text="Denetim Kaydı"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" />
+                            </StackPanel>
+                        </RadioButton>
+
+                        <RadioButton Style="{StaticResource NavButton}"
+                                     GroupName="MainNav"
                                      AutomationProperties.Name="Ayarlar"
                                      IsChecked="{Binding IsSettingsSelected}">
                             <StackPanel Orientation="Horizontal">

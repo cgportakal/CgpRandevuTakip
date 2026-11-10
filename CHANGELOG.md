@@ -3,6 +3,18 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.9.0] — 2026-11-10 · Sprint 6C: denetim kaydı ekranı
+
+### Eklendi
+- Yöneticiye özel, salt-okunur **Denetim Kaydı** sayfası
+- Kullanıcı, işlem ve tarih aralığı filtreleri
+- Sayfalama (25/50/100 kayıt), toplam kayıt ve sayfa özeti
+- İşlem adlarının Türkçe karşılıkları; teknik detay için tooltip
+- Denetim kaydı arayüzden değiştirilemez veya silinemez
+
+### Yetki
+- Denetim kayıtlarını yalnızca yönetici görüntüleyebilir; menü diğer rollerde gizlenir ve servis yetkiyi ayrıca doğrular.
+
 ## [0.8.0] — 2026-11-10 · Sprint 6A/6B: yedekleme ve geri yükleme
 
 ### Eklendi

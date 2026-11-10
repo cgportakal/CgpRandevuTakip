@@ -4,6 +4,7 @@ using System.Threading;
 using System.Windows;
 using CgpRandevuTakip.Application.Abstractions;
 using CgpRandevuTakip.Application.Appointments;
+using CgpRandevuTakip.Application.AuditLogs;
 using CgpRandevuTakip.Application.Auth;
 using CgpRandevuTakip.Application.Backups;
 using CgpRandevuTakip.Application.Categories;
@@ -131,6 +132,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IAppEnvironment, WindowsAppEnvironment>();
         services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
         services.AddSingleton<IAuditLogger, AuditLogger>();
+        services.AddSingleton<IAuditLogRepository, AuditLogRepository>();
         services.AddSingleton<ISecretProtector, DpapiSecretProtector>();
         services.AddSingleton<IPushNotifier, PushNotifier>();
         services.AddSingleton<WindowsToastService>();
@@ -163,6 +165,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IDailyShareService, DailyShareService>();
         services.AddSingleton<IReminderService, ReminderService>();
         services.AddSingleton<IBackupService, BackupService>();
+        services.AddSingleton<IAuditLogService, AuditLogService>();
 
         services.AddSingleton<ThemeService>();
         services.AddSingleton<IDialogService, DialogService>();
@@ -195,6 +198,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<RecipientsViewModel>();
         services.AddTransient<BulkMoveViewModel>();
         services.AddTransient<BackupsViewModel>();
+        services.AddTransient<AuditLogViewModel>();
 
         services.AddTransient<LoginWindow>();
         services.AddTransient<ForgotPasswordWindow>();
@@ -216,6 +220,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<RecipientsWindow>();
         services.AddTransient<BulkMoveWindow>();
         services.AddTransient<BackupsPage>();
+        services.AddTransient<AuditLogPage>();
     }
 
     private async Task InitializeDatabaseAsync()

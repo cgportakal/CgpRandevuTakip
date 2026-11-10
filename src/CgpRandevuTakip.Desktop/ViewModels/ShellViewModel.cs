@@ -71,6 +71,9 @@ public partial class ShellViewModel : ObservableObject, IDisposable
     private bool _isBackupsSelected;
 
     [ObservableProperty]
+    private bool _isAuditSelected;
+
+    [ObservableProperty]
     private string _institutionName = AppConstants.DefaultInstitutionName;
 
     public string UserDisplayName => _currentUser.DisplayName;
@@ -154,6 +157,9 @@ public partial class ShellViewModel : ObservableObject, IDisposable
         if (key == "users" && !ShowUsersNav)
             key = "appointments";
 
+        if (key == "audit" && !IsAdmin)
+            key = "appointments";
+
         _suppressNavigation = true;
         IsAppointmentsSelected = key == "appointments";
         IsHostsSelected = key == "hosts";
@@ -162,6 +168,7 @@ public partial class ShellViewModel : ObservableObject, IDisposable
         IsUsersSelected = key == "users";
         IsSettingsSelected = key == "settings";
         IsBackupsSelected = key == "backups";
+        IsAuditSelected = key == "audit";
         _suppressNavigation = false;
 
         CurrentPage = key switch
@@ -171,6 +178,7 @@ public partial class ShellViewModel : ObservableObject, IDisposable
             "users" => _services.GetRequiredService<UsersPage>(),
             "settings" => _services.GetRequiredService<SettingsPage>(),
             "backups" => _services.GetRequiredService<BackupsPage>(),
+            "audit" => _services.GetRequiredService<AuditLogPage>(),
             "dashboard" => _services.GetRequiredService<DashboardPage>(),
             _ => _services.GetRequiredService<AppointmentListPage>()
         };
@@ -182,6 +190,7 @@ public partial class ShellViewModel : ObservableObject, IDisposable
             "users" => ("Kullanıcılar", "Roller, giriş izinleri ve şifre yönetimi"),
             "settings" => ("Ayarlar", "Tema, bildirim, yedekleme ve tanılama"),
             "backups" => ("Yedekleme", "Yedek alın, doğrulayın ve geri yükleyin"),
+            "audit" => ("Denetim Kaydı", "Kim, ne zaman, hangi işlemi yaptı?"),
             "dashboard" => ("Kontrol Paneli", "Sistem durumu ve yapılandırma özeti"),
             _ => ("Günlük Liste", "Randevular, arama ve günlük akış")
         };
@@ -227,6 +236,12 @@ public partial class ShellViewModel : ObservableObject, IDisposable
     {
         if (value && !_suppressNavigation)
             NavigateTo("backups");
+    }
+
+    partial void OnIsAuditSelectedChanged(bool value)
+    {
+        if (value && !_suppressNavigation)
+            NavigateTo("audit");
     }
 
     public void Dispose()

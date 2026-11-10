@@ -5,7 +5,7 @@ public static class AppConstants
 {
     public const string ProductName = "CGP - Randevu Takip";
     public const string ProductCode = "CGP_RandevuTakip";
-    public const string Version = "0.8.0";
+    public const string Version = "0.9.0";
     public const int SchemaVersion = 1;
     public const string DefaultTheme = "Auto";
     public const string Copyright = "Tüm hakları saklıdır.";

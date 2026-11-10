@@ -69,6 +69,6 @@ Hata durumunda mevcut veri korunur ve kullanıcıya anlaşılır mesaj gösteril
 
 ## 6. Sıradaki işler
 
-1. Denetim kaydı görüntüleme ekranı (6C).
+1. ~~Denetim kaydı görüntüleme ekranı (6C)~~ — 0.9.0'da tamamlandı; [docs/18](18_Sprint6C_Raporu.md).
 2. Kurulum paketi (6D), UAT ve 1.0.0.
 3. Yedek şifreleme / Google Drive (Faz 2, Q-14/Q-15).
