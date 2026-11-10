@@ -43,6 +43,7 @@ public partial class App : System.Windows.Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         ConfigureUiCulture();
+        AppPaths.Initialize(e.Args);
         base.OnStartup(e);
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
@@ -315,11 +316,25 @@ public partial class App : System.Windows.Application
         }
     }
 
+    private static string GetInstanceKey()
+    {
+        if (!AppPaths.IsPortable)
+            return "Default";
+
+        var hash = Convert.ToHexString(
+            System.Security.Cryptography.SHA256.HashData(
+                System.Text.Encoding.UTF8.GetBytes(AppPaths.Root)));
+
+        return "Portable-" + hash[..16];
+    }
+
     private bool AcquireSingleInstance()
     {
+        var instanceKey = GetInstanceKey();
+
         _singleInstanceMutex = new Mutex(
             initiallyOwned: true,
-            name: @"Local\CgpRandevuTakip.SingleInstance",
+            name: $@"Local\CgpRandevuTakip.SingleInstance.{instanceKey}",
             createdNew: out var createdNew);
 
         if (createdNew)
@@ -327,7 +342,7 @@ public partial class App : System.Windows.Application
             _showEvent = new EventWaitHandle(
                 initialState: false,
                 mode: EventResetMode.AutoReset,
-                name: @"Local\CgpRandevuTakip.Show",
+                name: $@"Local\CgpRandevuTakip.Show.{instanceKey}",
                 createdNew: out _);
 
             StartShowListener();
@@ -336,7 +351,7 @@ public partial class App : System.Windows.Application
 
         try
         {
-            if (EventWaitHandle.TryOpenExisting(@"Local\CgpRandevuTakip.Show", out var showEvent))
+            if (EventWaitHandle.TryOpenExisting($@"Local\CgpRandevuTakip.Show.{instanceKey}", out var showEvent))
             {
                 showEvent.Set();
                 showEvent.Dispose();

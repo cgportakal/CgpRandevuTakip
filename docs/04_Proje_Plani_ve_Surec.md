@@ -68,7 +68,7 @@ varsayımı gerçekleşmezse kapsam değil **tarih** esnetilir (MVP sabit tutulu
 
 > **Güncel durum (10.11.2026):** Sprint 0-5, 4.5 UAT, 4.6 kimlik/kurtarma, manuel düzeltmeler, toplu işlemler,
 > Sprint 6A/6B/6C ve Faz 2 özellikleri (şifreli yedek, Google Drive, Excel/CSV/PDF/yazdırma, BitLocker göstergesi)
-> tamamlandı. Sürüm **1.0.0**, **221/221 test** geçiyor, derleme 0 uyarı / 0 hata. Taşınabilir ZIP ve per-user Setup EXE üretildi; kurulum/kaldırma test edildi. UAT için [docs/19_UAT_Raporu.md](19_UAT_Raporu.md). Sprint 5 için
+> tamamlandı. Sürüm **1.1.0**, **221/221 test** geçiyor, derleme 0 uyarı / 0 hata. Taşınabilir mod eklendi; kullanım için [docs/20_Portable_Kullanim.md](20_Portable_Kullanim.md). Taşınabilir ZIP ve per-user Setup EXE üretildi; kurulum/kaldırma test edildi. UAT için [docs/19_UAT_Raporu.md](19_UAT_Raporu.md). Sprint 5 için
 > [docs/16_Sprint5_Raporu.md](16_Sprint5_Raporu.md), 6A/6B için
 > [docs/17_Sprint6A_6B_Raporu.md](17_Sprint6A_6B_Raporu.md), 6C için
 > [docs/18_Sprint6C_Raporu.md](18_Sprint6C_Raporu.md).

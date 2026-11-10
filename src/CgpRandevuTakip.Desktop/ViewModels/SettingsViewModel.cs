@@ -9,6 +9,7 @@ using CgpRandevuTakip.Desktop.Messages;
 using CgpRandevuTakip.Desktop.Services;
 using CgpRandevuTakip.Domain.Common;
 using CgpRandevuTakip.Domain.Enums;
+using CgpRandevuTakip.Infrastructure.Persistence;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -230,6 +231,10 @@ public partial class SettingsViewModel : ObservableObject
 
     public bool IsAdmin => _currentUser.IsInRole(UserRole.Admin);
 
+    public bool IsPortable => AppPaths.IsPortable;
+
+    public string DataRootText => AppPaths.Root;
+
     public bool IsTelegramProvider => SelectedPushProvider == "telegram";
 
     public string DatabasePath => _environment.DatabasePath;
@@ -268,7 +273,7 @@ public partial class SettingsViewModel : ObservableObject
             SmtpPassword = settings.SmtpPassword;
             SmtpFromAddress = settings.SmtpFromAddress;
             SmtpFromName = settings.SmtpFromName;
-            AutoStartEnabled = settings.AutoStartEnabled;
+            AutoStartEnabled = AppPaths.IsPortable ? false : settings.AutoStartEnabled;
             CloseToTray = settings.CloseToTray;
             DailyShareTime = settings.DailyShareTime;
             WorkHoursStart = settings.WorkHoursStart;

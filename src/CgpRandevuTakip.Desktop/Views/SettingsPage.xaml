@@ -202,15 +202,23 @@
 
                             <CheckBox Content="Windows açılışında başlat"
                                       IsChecked="{Binding AutoStartEnabled}"
-                                      Margin="0,0,0,10" />
+                                      Margin="0,0,0,10"
+                                      Visibility="{Binding IsPortable, Converter={StaticResource InverseBoolToVisibility}}" />
                             <CheckBox Content="Kapatınca tepside çalış"
                                       IsChecked="{Binding CloseToTray}"
                                       Margin="0,0,0,12" />
 
-                            <TextBlock Text="Başlangıç modu" Style="{StaticResource LabelText}" />
-                            <ComboBox ItemsSource="{Binding AutoStartModeOptions}"
-                                      DisplayMemberPath="Label"
-                                      SelectedItem="{Binding SelectedAutoStartMode, Mode=TwoWay}" />
+                            <StackPanel Visibility="{Binding IsPortable, Converter={StaticResource InverseBoolToVisibility}}">
+                                <TextBlock Text="Başlangıç modu" Style="{StaticResource LabelText}" />
+                                <ComboBox ItemsSource="{Binding AutoStartModeOptions}"
+                                          DisplayMemberPath="Label"
+                                          SelectedItem="{Binding SelectedAutoStartMode, Mode=TwoWay}" />
+                            </StackPanel>
+
+                            <TextBlock Text="Taşınabilir mod: otomatik başlatma kullanılmaz; veriler EXE yanındaki CGP-Data klasöründe tutulur."
+                                       Style="{StaticResource MutedText}"
+                                       TextWrapping="Wrap"
+                                       Visibility="{Binding IsPortable, Converter={StaticResource BoolToVisibility}}" />
                         </StackPanel>
                     </Border>
 
@@ -422,7 +430,14 @@
                                     HorizontalAlignment="Left"
                                     Margin="0,6,0,14" />
 
-                            <TextBlock Text="VERİTABANI" Style="{StaticResource LabelText}" Margin="0,0,0,2" />
+                            <TextBlock Text="VERİ KLASÖRÜ" Style="{StaticResource LabelText}" Margin="0,0,0,2" />
+                            <TextBlock Text="{Binding DataRootText}"
+                                       FontFamily="Consolas"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+
+                            <TextBlock Text="VERİTABANI" Style="{StaticResource LabelText}" Margin="0,12,0,2" />
                             <TextBlock Text="{Binding DatabasePath}"
                                        FontFamily="Consolas"
                                        FontSize="11"

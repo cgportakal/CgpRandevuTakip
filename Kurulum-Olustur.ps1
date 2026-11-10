@@ -1,5 +1,5 @@
 param(
-    [string]$Version = "1.0.0"
+    [string]$Version = "1.1.0"
 )
 
 $ErrorActionPreference = "Stop"
@@ -24,7 +24,21 @@ dotnet publish $project -c Release -r win-x64 --self-contained true -p:PublishSi
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish başarısız." }
 
 Write-Host "[CGP] Taşınabilir ZIP oluşturuluyor..."
+$portableFlag = Join-Path $publish "portable.flag"
+$portableReadme = Join-Path $publish "PORTABLE-BENIOKU.txt"
+New-Item -ItemType File -Force -Path $portableFlag | Out-Null
+@"
+CGP - Randevu Takip · Taşınabilir Sürüm
+
+- CgpRandevuTakip.Desktop.exe dosyasını çalıştırın.
+- Veriler, bu klasördeki CGP-Data altında tutulur.
+- Başka bir klasöre/bilgisayara taşırken CGP-Data klasörünü de kopyalayın.
+- Bu modda otomatik başlatma (Windows açılışı) kullanılmaz.
+- Yedekler CGP-Data\Yedekler altında oluşturulur.
+"@ | Set-Content -Path $portableReadme -Encoding UTF8
 Compress-Archive -Path (Join-Path $publish "*") -DestinationPath $zip -CompressionLevel Optimal
+Remove-Item $portableFlag -Force -ErrorAction SilentlyContinue
+Remove-Item $portableReadme -Force -ErrorAction SilentlyContinue
 
 $isccCandidates = @(
     "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",

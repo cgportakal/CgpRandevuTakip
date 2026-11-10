@@ -3,6 +3,18 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [1.1.0] — 2026-11-10 · Taşınabilir mod
+
+### Eklendi
+- **Taşınabilir mod:** `portable.flag` veya `--portable` ile veriler EXE yanındaki `CGP-Data` klasöründe tutulur.
+- `CGP-Data` içinde veritabanı, loglar, geçici dosyalar ve yedekler (`Yedekler`) bulunur.
+- Taşınabilir modda otomatik başlatma (HKCU Run) devre dışıdır.
+- Taşınabilir ve normal kurulum aynı anda çalışabilir (ayrı tek örnek kilidi).
+- Taşınabilir ZIP içinde `portable.flag` ve `PORTABLE-BENIOKU.txt` bulunur.
+
+### Not
+- Klasör yazılamıyorsa uygulama güvenli biçimde kullanıcı profiline döner.
+
 ## [1.0.0] — 2026-11-10 · MVP sürümü
 
 ### Eklendi

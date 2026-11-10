@@ -1,3 +1,4 @@
+using CgpRandevuTakip.Infrastructure.Persistence;
 using Microsoft.Win32;
 
 namespace CgpRandevuTakip.Desktop.Services;
@@ -13,12 +14,19 @@ public sealed class AutoStartService
 
     public bool IsEnabled()
     {
+        if (AppPaths.IsPortable)
+            return false;
+
         using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath);
         return key?.GetValue(ValueName) is string value && value.Length > 0;
     }
 
     public void SetEnabled(bool enabled, string startMode)
     {
+        // Taşınabilir modda kayıt defterine yazılmaz; uygulama taşındığında kayıt bozulmasın.
+        if (AppPaths.IsPortable)
+            return;
+
         using var key = Registry.CurrentUser.CreateSubKey(RunKeyPath);
 
         if (!enabled)
