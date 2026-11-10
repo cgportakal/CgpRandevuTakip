@@ -13,7 +13,7 @@
 | `dist\CGP-RandevuTakip-1.0.0-portable.zip` | ✔ Üretildi (~92 MB) |
 | `installer\CGP-RandevuTakip.iss` per-user kurulum betiği | ✔ Hazır |
 | `Kurulum-Olustur.cmd` | ✔ Çalışıyor |
-| Kurulum EXE'si | ⚠ Bu makinede Inno Setup 6 yok; kurulunca aynı betikle üretilir |
+| `dist\CGP-RandevuTakip-1.0.0-Setup.exe` | ✔ Üretildi ve test edildi (kurulum → çalıştırma → kaldırma) |
 
 Kurulum özellikleri: per-user (`PrivilegesRequired=lowest`), yönetici hakkı istemez, masaüstü kısayolu opsiyonel, kullanıcı verisi kaldırmada silinmez.
 
@@ -52,9 +52,9 @@ Kurulum özellikleri: per-user (`PrivilegesRequired=lowest`), yönetici hakkı i
 - **%150 DPI:** bu ortamda sistem ölçeği değiştirilmeden görsel kontrol yapılmadı.
 - **24 saat açık kalma / bellek:** ayrı dayanıklılık testi gerekir.
 - **1000 kayıt performansı:** üretim verisiyle ölçülmeli.
-- **Kurulum EXE'si:** Inno Setup 6 kurulduktan sonra `Kurulum-Olustur.cmd` ile üretilmeli.
+- **Kurulum EXE'si:** Inno Setup 6 kuruldu; `dist\CGP-RandevuTakip-1.0.0-Setup.exe` üretildi. Sessiz kurulum, uygulama açılışı ve sessiz kaldırma test edildi.
 
 ## 5. Go/No-Go
 
-- Çekirdek MVP ve veri güvenliği senaryoları **Go**.
-- Google Drive gerçek testi ve kurulum EXE'si için **koşullu Go**.
+- Çekirdek MVP, veri güvenliği ve kurulum paketi **Go**.
+- Google Drive gerçek uçtan uca testi için **koşullu Go** (OAuth istemci bilgileri bekleniyor).

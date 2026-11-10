@@ -18,7 +18,7 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 
 ### Not
 - Google Drive gerçek uçtan uca testi, kullanıcı OAuth istemci bilgilerini girdiğinde yapılacak.
-- Kurulum EXE'si için Inno Setup 6 gerekir; yoksa taşınabilir ZIP kullanılabilir.
+- `dist\CGP-RandevuTakip-1.0.0-Setup.exe` üretildi; sessiz kurulum, çalıştırma ve kaldırma test edildi.
 
 ## [0.10.0] — 2026-11-10 · Şifreli yedek, Drive, dışa aktarma
 

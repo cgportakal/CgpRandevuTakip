@@ -61,14 +61,14 @@ Yarı zamanlı çalışmada 18-22 hafta öngörülür. Efor: ~95-115 adam-gün.
 | **4.5** | 1-2 gün | UAT ve kapanış | Gerçek toast/push/tray/auto-start doğrulaması | 5 | Tamamlandı (0.5.3) |
 | **4.6** | 1 gün | Kimlik ve kurtarma | Beni hatırla, e-posta ile şifre sıfırlama | 8 | Tamamlandı (0.5.4) |
 | **5** | 2 hafta | Günlük paylaşım | PNG render, pano, WhatsApp deep link, alıcı rehberi, zamanlayıcı | 21 | Tamamlandı (0.6.0) |
-| **6** | 2 hafta | Veri güvenliği ve sürüm | Yedek/geri yükleme, denetim, kurulum, UAT, hata düzeltme | 21 | Tamamlandı (1.0.0; kurulum EXE'si için Inno bekliyor) |
+| **6** | 2 hafta | Veri güvenliği ve sürüm | Yedek/geri yükleme, denetim, kurulum, UAT, hata düzeltme | 21 | Tamamlandı (1.0.0) |
 
 **Toplam:** ~138 SP (Sprint 3.5 dahil). Hız (velocity) ilk sprintte ölçülür; 18-22 SP/sprint
 varsayımı gerçekleşmezse kapsam değil **tarih** esnetilir (MVP sabit tutulur).
 
 > **Güncel durum (10.11.2026):** Sprint 0-5, 4.5 UAT, 4.6 kimlik/kurtarma, manuel düzeltmeler, toplu işlemler,
 > Sprint 6A/6B/6C ve Faz 2 özellikleri (şifreli yedek, Google Drive, Excel/CSV/PDF/yazdırma, BitLocker göstergesi)
-> tamamlandı. Sürüm **1.0.0**, **221/221 test** geçiyor, derleme 0 uyarı / 0 hata. Taşınabilir ZIP ve per-user kurulum betiği hazır; kurulum EXE'si için Inno Setup 6 gerekir. UAT için [docs/19_UAT_Raporu.md](19_UAT_Raporu.md). Sprint 5 için
+> tamamlandı. Sürüm **1.0.0**, **221/221 test** geçiyor, derleme 0 uyarı / 0 hata. Taşınabilir ZIP ve per-user Setup EXE üretildi; kurulum/kaldırma test edildi. UAT için [docs/19_UAT_Raporu.md](19_UAT_Raporu.md). Sprint 5 için
 > [docs/16_Sprint5_Raporu.md](16_Sprint5_Raporu.md), 6A/6B için
 > [docs/17_Sprint6A_6B_Raporu.md](17_Sprint6A_6B_Raporu.md), 6C için
 > [docs/18_Sprint6C_Raporu.md](18_Sprint6C_Raporu.md).

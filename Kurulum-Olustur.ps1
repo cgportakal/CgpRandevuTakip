@@ -10,6 +10,10 @@ $publish = Join-Path $dist "CGP-RandevuTakip-$Version-win-x64"
 $zip = Join-Path $dist "CGP-RandevuTakip-$Version-portable.zip"
 $iss = Join-Path $PSScriptRoot "CGP-RandevuTakip.iss"
 
+Write-Host "[CGP] Çalışan uygulama kapatılıyor..."
+Get-Process CgpRandevuTakip.Desktop -ErrorAction SilentlyContinue | Stop-Process -Force
+Start-Sleep -Milliseconds 800
+
 Write-Host "[CGP] Temizleniyor: $publish"
 if (Test-Path $publish) { Remove-Item $publish -Recurse -Force }
 if (Test-Path $zip) { Remove-Item $zip -Force }
@@ -31,8 +35,14 @@ $isccCandidates = @(
 $iscc = $isccCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 if ($iscc) {
     Write-Host "[CGP] Kurulum EXE'si oluşturuluyor: $iscc"
-    & $iscc $iss
-    if ($LASTEXITCODE -ne 0) { throw "Inno Setup derlemesi başarısız." }
+    Push-Location $root
+    try {
+        & $iscc "installer\CGP-RandevuTakip.iss"
+        if ($LASTEXITCODE -ne 0) { throw "Inno Setup derlemesi başarısız." }
+    }
+    finally {
+        Pop-Location
+    }
 } else {
     Write-Warning "Inno Setup 6 bulunamadı. Kurulum EXE'si oluşturulmadı; taşınabilir ZIP kullanılabilir."
     Write-Host "Kurulum için: https://jrsoftware.org/isdl.php adresinden Inno Setup 6 kurun ve bu betiği yeniden çalıştırın."
