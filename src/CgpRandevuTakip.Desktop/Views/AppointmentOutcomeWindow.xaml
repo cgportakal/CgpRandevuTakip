@@ -48,6 +48,34 @@
                     </StackPanel>
                 </Border>
 
+                <Border Style="{StaticResource Card}" Margin="0,16,0,0"
+                        Visibility="{Binding ShowPostponeFields, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="Yeni tarih ve saat" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Text="Erteleme için gelecekte bir tarih/saat seçin. Kaydederken onay istenir."
+                                   Style="{StaticResource MutedText}" Margin="0,-6,0,12" TextWrapping="Wrap" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Tarih *" Style="{StaticResource LabelText}" />
+                                <DatePicker SelectedDate="{Binding PostponeDate}"
+                                            AutomationProperties.Name="Erteleme tarihi" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Saat *" Style="{StaticResource LabelText}" />
+                                <ComboBox ItemsSource="{Binding TimeOptions}"
+                                          SelectedItem="{Binding PostponeTimeText, Mode=TwoWay}"
+                                          IsTextSearchEnabled="True"
+                                          AutomationProperties.Name="Erteleme saati" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
                 <Border Style="{StaticResource Card}" Margin="0,16,0,0">
                     <StackPanel>
                         <TextBlock Text="Görüşmenin değerlendirmesi" Style="{StaticResource SectionTitle}" />

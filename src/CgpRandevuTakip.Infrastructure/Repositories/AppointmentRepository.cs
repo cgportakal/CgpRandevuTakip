@@ -408,6 +408,77 @@ public sealed class AppointmentRepository : IAppointmentRepository
         await db.SaveChangesAsync();
     }
 
+    public async Task<int> AnonymizeBeforeAsync(DateTime cutoffUtc, DateTime nowUtc)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+
+        var appointments = await db.Appointments
+            .Include(x => x.Person)
+            .Where(x => x.StartsAtUtc < cutoffUtc)
+            .ToListAsync();
+
+        if (appointments.Count == 0)
+            return 0;
+
+        var personIds = appointments.Select(x => x.PersonId).Distinct().ToList();
+        var recentPersonIds = await db.Appointments
+            .Where(x => personIds.Contains(x.PersonId) && x.StartsAtUtc >= cutoffUtc)
+            .Select(x => x.PersonId)
+            .Distinct()
+            .ToListAsync();
+
+        var recent = recentPersonIds.ToHashSet(StringComparer.Ordinal);
+        var changed = 0;
+
+        foreach (var appointment in appointments)
+        {
+            var appointmentChanged = false;
+            if (!string.IsNullOrWhiteSpace(appointment.Description))
+            {
+                appointment.Description = null;
+                appointmentChanged = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(appointment.StudentFirstName))
+            {
+                appointment.StudentFirstName = null;
+                appointmentChanged = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(appointment.StudentLastName))
+            {
+                appointment.StudentLastName = null;
+                appointmentChanged = true;
+            }
+
+            if (!recent.Contains(appointment.PersonId)
+                && appointment.Person is not null
+                && appointment.Person.FirstName != "Anonim")
+            {
+                appointment.Person.FirstName = "Anonim";
+                appointment.Person.LastName = "Kişi";
+                appointment.Person.PhoneE164 = "+900000000000";
+                appointment.Person.Email = null;
+                appointment.Person.Organization = null;
+                appointment.Person.Notes = null;
+                appointmentChanged = true;
+            }
+
+            if (!appointmentChanged)
+                continue;
+
+            appointment.UpdatedAtUtc = nowUtc;
+            appointment.UpdatedByUserId = null;
+            appointment.RowVersion++;
+            changed++;
+        }
+
+        if (changed > 0)
+            await db.SaveChangesAsync();
+
+        return changed;
+    }
+
     public async Task<bool> RestoreAsync(string id, DateTime nowUtc)
     {
         await using var db = await _factory.CreateDbContextAsync();

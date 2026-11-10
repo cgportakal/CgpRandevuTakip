@@ -518,6 +518,24 @@ public sealed class AppointmentService : IAppointmentService
         return ids.Count;
     }
 
+    public async Task<int> AnonymizeOldAppointmentsAsync(int retentionYears = 2)
+    {
+        var years = Math.Clamp(retentionYears, 1, 10);
+        var now = _clock.UtcNow;
+        var changed = await _appointments.AnonymizeBeforeAsync(now.AddYears(-years), now);
+
+        if (changed > 0)
+        {
+            await _audit.LogAsync(
+                AuditAction.AppointmentAnonymized,
+                userId: null,
+                entityType: nameof(Appointment),
+                detailsJson: JsonSerializer.Serialize(new { changed, retentionYears = years }));
+        }
+
+        return changed;
+    }
+
     private bool CanManageAppointments()
         => _currentUser.IsInRole(UserRole.Admin, UserRole.Secretary);
 

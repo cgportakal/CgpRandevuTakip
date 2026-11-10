@@ -19,7 +19,7 @@ public sealed class ReminderDispatcher : BackgroundService
 {
     private static readonly TimeSpan TickInterval = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan RepeatDelay = TimeSpan.FromMinutes(10);
-    private const int MaxRepeats = 2; // toplam 3 gösterim
+    private const int MaxRepeats = 3; // ilk gösterim + 3 tekrar = toplam 4
     private const int BatchSize = 50;
 
     private readonly IReminderService _reminders;
@@ -29,8 +29,10 @@ public sealed class ReminderDispatcher : BackgroundService
     private readonly IClock _clock;
     private readonly IPushNotifier _push;
     private readonly WindowsToastService _windowsToast;
+    private readonly IDialogService _dialogs;
 
     private readonly ConcurrentDictionary<string, ReminderActionWindow> _openWindows = new();
+    private readonly ConcurrentDictionary<string, ReminderContextDto> _recentContexts = new();
 
     public ReminderDispatcher(
         IReminderService reminders,
@@ -39,7 +41,8 @@ public sealed class ReminderDispatcher : BackgroundService
         SessionStateService session,
         IClock clock,
         IPushNotifier push,
-        WindowsToastService windowsToast)
+        WindowsToastService windowsToast,
+        IDialogService dialogs)
     {
         _reminders = reminders;
         _settings = settings;
@@ -48,6 +51,7 @@ public sealed class ReminderDispatcher : BackgroundService
         _clock = clock;
         _push = push;
         _windowsToast = windowsToast;
+        _dialogs = dialogs;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -111,6 +115,8 @@ public sealed class ReminderDispatcher : BackgroundService
             return;
         }
 
+        _recentContexts[context.ReminderId] = context;
+
         // Windows kanalı.
         if (!context.WindowsNotified)
         {
@@ -129,7 +135,7 @@ public sealed class ReminderDispatcher : BackgroundService
                 context.Kind == Domain.Enums.ReminderKind.Call
                     ? "Sıradaki kişiyi arama zamanı"
                     : "Sıradaki görüşme yaklaşıyor",
-                context.AnonymousBody));
+                context.NotificationBody));
 
             if (sent)
                 await _reminders.MarkPushNotifiedAsync(context.ReminderId, nowUtc);
@@ -142,9 +148,39 @@ public sealed class ReminderDispatcher : BackgroundService
         if (_openWindows.ContainsKey(context.ReminderId))
             return;
 
+        await ShowActionWindowAsync(context);
+
+        await _reminders.MarkSentAsync(context.ReminderId);
+    }
+
+    /// <summary>Toast tıklamasında ilgili hatırlatıcı penceresini açar.</summary>
+    public async Task<bool> ActivateAsync(string reminderId)
+    {
+        if (_openWindows.TryGetValue(reminderId, out var openWindow))
+        {
+            await OnUiAsync(() =>
+            {
+                if (openWindow.IsVisible)
+                    openWindow.Activate();
+            });
+            return true;
+        }
+
+        if (!_recentContexts.TryGetValue(reminderId, out var context))
+            return false;
+
+        if (!_currentUser.IsAuthenticated || _session.IsLocked)
+            return false;
+
+        await ShowActionWindowAsync(context);
+        return true;
+    }
+
+    private async Task ShowActionWindowAsync(ReminderContextDto context)
+    {
         await OnUiAsync(() =>
         {
-            var viewModel = new ReminderActionViewModel(_reminders, _clock, context);
+            var viewModel = new ReminderActionViewModel(_reminders, _clock, _dialogs, context);
             var window = new ReminderActionWindow(viewModel)
             {
                 Owner = System.Windows.Application.Current?.MainWindow
@@ -154,8 +190,6 @@ public sealed class ReminderDispatcher : BackgroundService
             window.Closed += (_, _) => _openWindows.TryRemove(context.ReminderId, out _);
             window.Show();
         });
-
-        await _reminders.MarkSentAsync(context.ReminderId);
     }
 
     private void ShowToast(ReminderContextDto context, bool silent)
@@ -164,10 +198,10 @@ public sealed class ReminderDispatcher : BackgroundService
             ? "Sıradaki kişiyi arama zamanı"
             : "Sıradaki görüşme yaklaşıyor";
 
-        if (_windowsToast.TryShow(title, context.AnonymousBody, silent))
+        if (_windowsToast.TryShow(title, context.NotificationBody, silent, context.ReminderId))
             return;
 
-        var window = new ReminderToastWindow(title, context.AnonymousBody);
+        var window = new ReminderToastWindow(title, context.NotificationBody);
         window.ShowNotification();
     }
 

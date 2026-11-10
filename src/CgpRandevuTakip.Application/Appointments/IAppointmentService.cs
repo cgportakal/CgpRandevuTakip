@@ -27,4 +27,5 @@ public interface IAppointmentService
         bool ignoreConflicts = false);
     Task<OperationResult> RestoreAsync(string id);
     Task<int> PurgeExpiredDeletedAsync(DateTime nowUtc);
+    Task<int> AnonymizeOldAppointmentsAsync(int retentionYears = 2);
 }

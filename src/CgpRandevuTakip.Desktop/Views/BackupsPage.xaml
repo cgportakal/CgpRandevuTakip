@@ -86,6 +86,8 @@
                                             SortMemberPath="CreatedAtLocal" Width="150" />
                         <DataGridTextColumn Header="BOYUT" Binding="{Binding SizeText}"
                                             SortMemberPath="SizeBytes" Width="100" />
+                        <DataGridTextColumn Header="KAYNAK" Binding="{Binding SourceText}"
+                                            SortMemberPath="Source" Width="110" />
                         <DataGridTextColumn Header="ŞİFRE" Binding="{Binding EncryptionText}"
                                             SortMemberPath="IsEncrypted" Width="90" />
                         <DataGridTextColumn Header="DOĞRULAMA" Binding="{Binding VerificationText}"

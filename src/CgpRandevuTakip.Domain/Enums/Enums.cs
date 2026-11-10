@@ -117,5 +117,6 @@ public enum AuditAction
     PasswordResetRequested = 26,
     PasswordResetCompleted = 27,
     PasswordResetFailed = 28,
-    RememberLoginUsed = 29
+    RememberLoginUsed = 29,
+    AppointmentAnonymized = 30
 }

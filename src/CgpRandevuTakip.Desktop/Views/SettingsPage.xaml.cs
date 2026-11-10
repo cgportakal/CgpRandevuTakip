@@ -25,7 +25,6 @@ public partial class SettingsPage : UserControl
             {
                 BackupPasswordBox.Password = viewModel.BackupPassword;
                 BackupPasswordConfirmBox.Password = viewModel.BackupPasswordConfirm;
-                GoogleClientSecretBox.Password = viewModel.GoogleClientSecret;
             }
             finally
             {
@@ -50,11 +49,4 @@ public partial class SettingsPage : UserControl
         viewModel.BackupPasswordConfirm = BackupPasswordConfirmBox.Password;
     }
 
-    private void OnGoogleClientSecretChanged(object sender, RoutedEventArgs e)
-    {
-        if (_syncingPassword || DataContext is not SettingsViewModel viewModel)
-            return;
-
-        viewModel.GoogleClientSecret = GoogleClientSecretBox.Password;
-    }
 }

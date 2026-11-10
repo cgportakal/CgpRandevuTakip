@@ -279,34 +279,34 @@
 
                             <Border Style="{StaticResource Divider}" />
 
-                            <CheckBox Content="Google Drive'a yedekle (şifreli yedekler)"
+                            <CheckBox Content="Google Drive klasörüne yedekle (Drive for Desktop)"
                                       IsChecked="{Binding GoogleDriveEnabled}"
                                       Margin="0,0,0,8"
                                       AutomationProperties.Name="Google Drive yedekleme" />
-                            <TextBlock Text="Google istemci kimliği" Style="{StaticResource LabelText}" />
-                            <TextBox Text="{Binding GoogleClientId, UpdateSourceTrigger=PropertyChanged}"
-                                     AutomationProperties.Name="Google istemci kimliği" />
-                            <TextBlock Text="Google istemci gizli anahtarı" Style="{StaticResource LabelText}" Margin="0,8,0,6" />
-                            <PasswordBox x:Name="GoogleClientSecretBox"
-                                         PasswordChanged="OnGoogleClientSecretChanged"
-                                         AutomationProperties.Name="Google istemci gizli anahtarı" />
-                            <TextBlock Text="Drive klasörü" Style="{StaticResource LabelText}" Margin="0,8,0,6" />
-                            <TextBox Text="{Binding GoogleFolderName, UpdateSourceTrigger=PropertyChanged}"
-                                     AutomationProperties.Name="Google Drive klasörü" />
-
-                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                                <Button Content="Bağlan"
+                            <TextBlock Text="Senkronize Drive klasörü" Style="{StaticResource LabelText}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding GoogleDriveFolder, UpdateSourceTrigger=PropertyChanged}"
+                                         AutomationProperties.Name="Google Drive klasörü" />
+                                <Button Grid.Column="1"
+                                        Content="Bul"
                                         Style="{StaticResource SecondaryButton}"
-                                        Command="{Binding ConnectGoogleDriveCommand}"
-                                        Margin="0,0,8,0" />
-                                <Button Content="Bağlantıyı kes"
+                                        Command="{Binding DetectGoogleDriveFolderCommand}"
+                                        Margin="8,0,0,0" />
+                                <Button Grid.Column="2"
+                                        Content="Gözat"
                                         Style="{StaticResource GhostButton}"
-                                        Command="{Binding DisconnectGoogleDriveCommand}" />
-                            </StackPanel>
+                                        Command="{Binding BrowseGoogleDriveFolderCommand}"
+                                        Margin="8,0,0,0" />
+                            </Grid>
+                            <TextBlock Text="Google Drive for Desktop kurulu ve senkronize olmalıdır. Yedekler seçilen klasöre kopyalanır; Drive uygulaması buluta yükler. Şifreleme açık olmalıdır."
+                                       Style="{StaticResource MutedText}" Margin="0,6,0,0" TextWrapping="Wrap" />
                             <TextBlock Text="{Binding GoogleDriveStatus}"
                                        Style="{StaticResource MutedText}" Margin="0,8,0,0" />
-                            <TextBlock Text="Google Cloud'da Masaüstü uygulaması türünde OAuth istemcisi oluşturup kimlik bilgilerini buraya girin. Yalnızca drive.file kapsamı kullanılır."
-                                       Style="{StaticResource MutedText}" Margin="0,4,0,0" TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -381,6 +381,27 @@
                                     Margin="0,12,0,0" />
                             <TextBlock Text="Önce ayarları kaydedin; test kayıtlı SMTP değerlerini kullanır."
                                        Style="{StaticResource MutedText}" Margin="0,8,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Güncelleme -->
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,16"
+                            Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel>
+                            <TextBlock Text="Güncelleme" Style="{StaticResource SectionTitle}" />
+                            <TextBlock Text="{Binding UpdateStatusText}"
+                                       Style="{StaticResource MutedText}"
+                                       TextWrapping="Wrap" />
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <Button Content="Kontrol et"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding CheckUpdatesCommand}"
+                                        Margin="0,0,8,0" />
+                                <Button Content="Güncelle"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Command="{Binding InstallUpdateCommand}"
+                                        Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVisibility}}" />
+                            </StackPanel>
                         </StackPanel>
                     </Border>
 

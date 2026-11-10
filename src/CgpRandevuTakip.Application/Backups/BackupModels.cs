@@ -16,7 +16,8 @@ public sealed record BackupInfo(
     DateTime CreatedAtLocal,
     long SizeBytes,
     bool IsVerified,
-    string Sha256)
+    string Sha256,
+    string Source = "Yerel")
 {
     public string SizeText => SizeBytes switch
     {
@@ -33,6 +34,10 @@ public sealed record BackupInfo(
         => Path.EndsWith(".cgpbak", StringComparison.OrdinalIgnoreCase);
 
     public string EncryptionText => IsEncrypted ? "Şifreli" : "Şifresiz";
+
+    public bool IsDrive => string.Equals(Source, "Google Drive", StringComparison.OrdinalIgnoreCase);
+
+    public string SourceText => IsDrive ? "Google Drive" : "Yerel";
 }
 
 public sealed record BackupManifest(

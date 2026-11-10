@@ -5,6 +5,7 @@ using CgpRandevuTakip.Application.Hosts;
 using CgpRandevuTakip.Application.Settings;
 using CgpRandevuTakip.Desktop.Common;
 using CgpRandevuTakip.Desktop.Messages;
+using CgpRandevuTakip.Desktop.Services;
 using CgpRandevuTakip.Domain.Common;
 using CgpRandevuTakip.Domain.Enums;
 using Microsoft.Win32;
@@ -29,6 +30,7 @@ public partial class AppointmentListViewModel : ObservableObject
     private readonly Services.IDialogService _dialogs;
     private readonly Services.IAppointmentDialogService _appointmentDialogs;
     private readonly Services.IAppointmentExportService _exports;
+    private readonly Services.IExcelImportService _excelImport;
     private readonly ISettingsService _settings;
     private readonly DispatcherTimer _searchTimer;
     private readonly List<AppointmentRowViewModel> _selectedRows = new();
@@ -46,6 +48,7 @@ public partial class AppointmentListViewModel : ObservableObject
         Services.IDialogService dialogs,
         Services.IAppointmentDialogService appointmentDialogs,
         Services.IAppointmentExportService exports,
+        Services.IExcelImportService excelImport,
         ISettingsService settings)
     {
         _appointments = appointments;
@@ -55,6 +58,7 @@ public partial class AppointmentListViewModel : ObservableObject
         _dialogs = dialogs;
         _appointmentDialogs = appointmentDialogs;
         _exports = exports;
+        _excelImport = excelImport;
         _settings = settings;
 
         CategoryFilters = new RangeObservableCollection<CategoryFilterOption>
@@ -465,6 +469,118 @@ public partial class AppointmentListViewModel : ObservableObject
         {
             _dialogs.Error($"Yazdırılamadı: {ex.Message}", "Yazdır");
         }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanExport))]
+    private async Task ImportExcelAsync()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "Excel dosyasından görüşme içe aktar",
+            Filter = "Excel çalışma kitabı (*.xlsx)|*.xlsx",
+            CheckFileExists = true
+        };
+
+        if (dialog.ShowDialog() != true)
+            return;
+
+        ExcelImportResult result;
+        try
+        {
+            result = await _excelImport.ReadAsync(dialog.FileName);
+        }
+        catch (Exception ex)
+        {
+            _dialogs.Error($"Excel okunamadı: {ex.Message}", "İçe aktarma");
+            return;
+        }
+
+        if (result.Rows.Count == 0)
+        {
+            var errors = string.Join(
+                Environment.NewLine,
+                result.Errors.Take(10).Select(x => $"Satır {x.LineNumber}: {x.Message}"));
+
+            _dialogs.Error(
+                result.Errors.Count == 0
+                    ? "Dosyada aktarılabilir satır bulunamadı."
+                    : $"Geçerli satır yok.{Environment.NewLine}{Environment.NewLine}{errors}",
+                "İçe aktarma");
+            return;
+        }
+
+        var errorPreview = result.Errors.Count == 0
+            ? string.Empty
+            : $"{Environment.NewLine}{Environment.NewLine}Hatalı satırlar:{Environment.NewLine}" +
+              string.Join(Environment.NewLine, result.Errors.Take(8).Select(x => $"Satır {x.LineNumber}: {x.Message}"));
+
+        if (!_dialogs.Confirm(
+                $"{result.Rows.Count} geçerli satır, {result.Errors.Count} hatalı satır bulundu.{errorPreview}" +
+                $"{Environment.NewLine}{Environment.NewLine}Geçerli satırlar içe aktarılsın mı?",
+                "Excel içe aktarma"))
+            return;
+
+        var imported = 0;
+        var failed = new List<string>();
+
+        foreach (var row in result.Rows)
+        {
+            try
+            {
+                var saved = await _appointments.CreateAsync(row.Input);
+                if (saved.Success)
+                {
+                    imported++;
+                }
+                else
+                {
+                    failed.Add($"Satır {row.LineNumber}: {saved.Error}");
+                }
+            }
+            catch (Exception ex)
+            {
+                failed.Add($"Satır {row.LineNumber}: {ex.Message}");
+            }
+        }
+
+        var failureText = failed.Count == 0
+            ? string.Empty
+            : $"{Environment.NewLine}{Environment.NewLine}" +
+              string.Join(Environment.NewLine, failed.Take(10));
+
+        _dialogs.Info(
+            $"{imported} görüşme içe aktarıldı. {failed.Count} satır aktarılamadı.{failureText}",
+            "Excel içe aktarma");
+
+        await LoadAsync();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanExport))]
+    private async Task DownloadImportTemplateAsync()
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = "Excel içe aktarma şablonu",
+            Filter = "Excel çalışma kitabı (*.xlsx)|*.xlsx",
+            DefaultExt = ".xlsx",
+            AddExtension = true,
+            FileName = "CGP_Gorusme_Ice_Aktarma_Sablonu.xlsx"
+        };
+
+        if (dialog.ShowDialog() != true)
+            return;
+
+        try
+        {
+            _excelImport.CreateTemplate(dialog.FileName);
+            _dialogs.Info($"Şablon kaydedildi:{Environment.NewLine}{dialog.FileName}", "Şablon");
+        }
+        catch (Exception ex)
+        {
+            _dialogs.Error($"Şablon oluşturulamadı: {ex.Message}", "Şablon");
+        }
+
+        await Task.CompletedTask;
     }
 
     private async Task ExportFileAsync(

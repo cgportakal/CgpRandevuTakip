@@ -3,6 +3,32 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [1.2.0] — 2026-11-11 · Kararlar ve yeni özellikler
+
+### Eklendi
+- **Excel’den içe aktarma:** `.xlsx` şablonu, görüşmeci/kategori eşleme, doğrulama, hatalı satır raporu ve toplu ekleme. Dışa aktar menüsünden şablon indirilebilir.
+- **2 yıl saklama politikası:** 2 yıldan eski görüşmeler günlük olarak anonimleştirilir; kişi adı/telefonu, açıklama ve öğrenci bilgileri temizlenir. Eski kişinin daha yeni görüşmesi varsa kişi korunur.
+- **Google Drive for Desktop:** OAuth yerine senkronize Drive klasörü. Yedekler klasöre kopyalanır; yedek listesinde Drive dosyaları görünür ve geri yükleme için indirilir.
+- **Otomatik güncelleme:** Public GitHub Releases kontrolü; kurulu sürümde sessiz Setup, taşınabilir sürümde ZIP ile yerinde güncelleme. Ayarlar’dan manuel kontrol.
+- **Toast tıklaması:** Bildirime tıklanınca ilgili hatırlatıcı aksiyon penceresi açılır.
+- **WhatsApp iptal bilgisi:** Ziyaretçi iptalinde kişiye WhatsApp mesajı hazırlanır (pano + WhatsApp aç).
+- **Erteleme:** Sonuç ekranında “Ertelendi” seçilince yeni tarih/saat zorunlu, onay istenir ve hatırlatıcılar yeniden planlanır.
+- **Bildirimlerde kişi adı:** Windows toast ve push bildirimlerinde kişi adı gösterilir (ürün sahibi onayı).
+- **Hatırlatıcı tekrarı:** İlk gösterim + 3 tekrar (toplam 4), 10’ar dakika arayla.
+- **Excel/CSV/PDF/yazdırma** önceki sürümden korunur.
+
+### Değişti
+- **Q19:** Ağ sürücüsü özelliği eklenmedi.
+- **Q23:** İptal eden kişiye WhatsApp bilgilendirmesi eklendi.
+- **Q24:** Excel içe aktarma eklendi.
+- GitHub deposu **public** yapıldı (otomatik güncelleme için).
+
+### Test
+- 233/233 otomatik test.
+- Excel ayrıştırma gerçek veritabanı host/kategori adlarıyla doğrulandı.
+- Google Drive klasör kopyalama/listeleme/indirme testleri.
+- Setup ve taşınabilir paketler.
+
 ## [1.1.2] — 2026-11-11 · Dışa aktar menüsü teması
 
 ### Düzeltildi

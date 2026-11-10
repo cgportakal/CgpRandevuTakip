@@ -1,4 +1,7 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
+using CgpRandevuTakip.Desktop.Services;
+using CgpRandevuTakip.Domain.Rules;
 using CgpRandevuTakip.Application.Appointments;
 using CgpRandevuTakip.Domain.Enums;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -12,15 +15,24 @@ public partial class AppointmentOutcomeViewModel : ObservableObject
 {
     private readonly IAppointmentService _appointments;
     private readonly IAppointmentOutcomeService _outcomes;
+    private readonly IDialogService _dialogs;
 
     private string _appointmentId = string.Empty;
 
     public AppointmentOutcomeViewModel(
         IAppointmentService appointments,
-        IAppointmentOutcomeService outcomes)
+        IAppointmentOutcomeService outcomes,
+        IDialogService dialogs)
     {
         _appointments = appointments;
         _outcomes = outcomes;
+        _dialogs = dialogs;
+
+        TimeOptions = new ObservableCollection<string>(
+            AppointmentDefaults.BuildTimeOptions(
+                AppointmentDefaults.DefaultDayStart,
+                AppointmentDefaults.DefaultDayEnd,
+                allowOutOfHours: false));
 
         AttendanceOptions = new ObservableCollection<AttendanceOption>
         {
@@ -34,6 +46,17 @@ public partial class AppointmentOutcomeViewModel : ObservableObject
     }
 
     public ObservableCollection<AttendanceOption> AttendanceOptions { get; }
+
+    public ObservableCollection<string> TimeOptions { get; }
+
+    [ObservableProperty]
+    private DateTime? _postponeDate = DateTime.Today.AddDays(1);
+
+    [ObservableProperty]
+    private string _postponeTimeText = "09:00";
+
+    public bool ShowPostponeFields
+        => SelectedAttendance?.Value == Attendance.Postponed;
 
     [ObservableProperty]
     private string _appointmentSummary = string.Empty;
@@ -90,6 +113,11 @@ public partial class AppointmentOutcomeViewModel : ObservableObject
             AppointmentSummary =
                 $"{detail.PersonFullName} · {detail.DateLabel} {detail.TimeRangeLabel} · {detail.HostName}";
 
+            PostponeDate = detail.StartsAtLocal.Date;
+            PostponeTimeText = detail.StartsAtLocal.ToString("HH:mm", CultureInfo.InvariantCulture);
+            if (!TimeOptions.Contains(PostponeTimeText))
+                TimeOptions.Add(PostponeTimeText);
+
             var outcome = detail.Outcome;
             SelectedAttendance = AttendanceOptions.FirstOrDefault(x =>
                                     x.Value == (outcome?.Attendance ?? DefaultAttendance(detail.Status)))
@@ -121,6 +149,34 @@ public partial class AppointmentOutcomeViewModel : ObservableObject
             return;
         }
 
+        DateTime? postponeStart = null;
+        if (SelectedAttendance.Value == Attendance.Postponed)
+        {
+            if (PostponeDate is null)
+            {
+                ErrorMessage = "Ertelenen görüşme için yeni tarih seçilmelidir.";
+                return;
+            }
+
+            if (!TimeSpan.TryParseExact(PostponeTimeText, @"hh\:mm", CultureInfo.InvariantCulture, out var time))
+            {
+                ErrorMessage = "Yeni saat SS:dd biçiminde olmalıdır.";
+                return;
+            }
+
+            postponeStart = PostponeDate.Value.Date + time;
+            if (postponeStart < DateTime.Now)
+            {
+                ErrorMessage = "Geçmiş bir tarih/saat seçildi. Gelecek bir zaman seçin.";
+                return;
+            }
+
+            if (!_dialogs.Confirm(
+                    $"Görüşme {postponeStart:dd/MM/yyyy HH:mm} tarihine ertelenecek. Onaylıyor musunuz?",
+                    "Erteleme onayı"))
+                return;
+        }
+
         IsBusy = true;
         try
         {
@@ -137,6 +193,43 @@ public partial class AppointmentOutcomeViewModel : ObservableObject
             {
                 ErrorMessage = result.Error ?? "Sonuç kaydedilemedi.";
                 return;
+            }
+
+            if (postponeStart is not null)
+            {
+                var moved = await _appointments.MoveManyAsync(
+                    new[] { _appointmentId },
+                    postponeStart.Value.Date,
+                    postponeStart.Value.TimeOfDay);
+
+                if (moved.Error is not null)
+                {
+                    ErrorMessage = $"Sonuç kaydedildi ancak tarih güncellenemedi: {moved.Error}";
+                    return;
+                }
+
+                if (moved.HasConflicts)
+                {
+                    if (!_dialogs.Confirm(
+                            "Yeni tarihte çakışan bir görüşme var. Yine de ertelensin mi?",
+                            "Çakışan görüşme"))
+                    {
+                        ErrorMessage = "Sonuç kaydedildi; tarih değiştirilmedi.";
+                        return;
+                    }
+
+                    moved = await _appointments.MoveManyAsync(
+                        moved.ConflictingIds,
+                        postponeStart.Value.Date,
+                        postponeStart.Value.TimeOfDay,
+                        ignoreConflicts: true);
+                }
+
+                if (moved.Moved == 0)
+                {
+                    ErrorMessage = "Sonuç kaydedildi ancak görüşme taşınamadı.";
+                    return;
+                }
             }
 
             Saved?.Invoke(this, EventArgs.Empty);
@@ -165,6 +258,7 @@ public partial class AppointmentOutcomeViewModel : ObservableObject
 
         OnPropertyChanged(nameof(IsClosedEditable));
         OnPropertyChanged(nameof(ClosedHint));
+        OnPropertyChanged(nameof(ShowPostponeFields));
     }
 
     partial void OnIsBusyChanged(bool value) => SaveCommand.NotifyCanExecuteChanged();

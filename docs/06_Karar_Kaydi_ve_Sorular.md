@@ -81,19 +81,19 @@ ilerlenir; cevap gelirse dokümanlar ve kod güncellenir.
 | Q-03 | Kurum adı (paylaşım başlığında) | Görsel ve mesaj | **BEK Okulları** varsayılan; Ayarlar'dan değiştirilebilir | Kapandı |
 | Q-04 | Görüşme süresi ve iki randevu arası tampon? | Çakışma, takvim | **30 dk** (onaylandı), tampon yok | Kapandı |
 | Q-05 | Görüşmeler mesai dışına taşar mı? | Sessiz saat, gece bildirimi | Çalışma saatleri **06:00–20:45** varsayılan; Ayarlar'dan değiştirilebilir. "Mesai dışı görüşme" izni ayrı açılır/kapanır; bildirimler sessiz saatlere uyar. | Kapandı |
-| Q-06 | Aynı kişiye aynı gün birden çok görüşme olur mu? | Listeleme, çakışma | Evet, izin ver | Bekliyor |
+| Q-06 | Aynı kişiye aynı gün birden çok görüşme olur mu? | Listeleme, çakışma | Evet, izin ver | Kapandı |
 
 ### 2.2 WhatsApp ve bildirim
 
 | ID | Soru | Önerilen varsayılan | Durum |
 |----|------|---------------------|-------|
-| Q-07 | Günlük liste kaç alıcıya gidiyor, isimleri? | Ayarlardan yönetilir; MVP'de boş rehber | Bekliyor |
-| Q-08 | Gönderim saati kaç? | 08:30 | Bekliyor |
+| Q-07 | Günlük liste kaç alıcıya gidiyor, isimleri? | Ayarlardan yönetilir; onaylandı | Kapandı |
+| Q-08 | Gönderim saati kaç? | 08:30; Ayarlar'dan değiştirilebilir | Kapandı |
 | Q-09 | WhatsApp Desktop mı, Web mi kullanılıyor? | **Desktop + test telefonu var** (onaylandı) | Kapandı |
 | Q-10 | Push için ntfy mi Telegram mı? | **İkisi de desteklenir**; Ayarlar'dan seçilen sağlayıcı kullanılır | Kapandı |
-| Q-11 | Bildirimde kişi adı görünsün mü? | Hayır (KVKK) | Bekliyor |
+| Q-11 | Bildirimde kişi adı görünsün mü? | **Evet**, kişi adı gösterilir (ürün sahibi onayı) | Kapandı |
 | Q-12 | "Sırası gelen" bildirimi ne zaman? | 30 dk + 5 dk önce (onaylandı) | Kapandı |
-| Q-13 | Hatırlatıcı 3 kez tekrar etsin mi? | Evet, 10 dk arayla | Bekliyor |
+| Q-13 | Hatırlatıcı 3 kez tekrar etsin mi? | **İlk gösterim + 3 tekrar = toplam 4**, 10 dk arayla | Kapandı |
 
 ### 2.3 Yedekleme ve güvenlik
 
@@ -101,20 +101,20 @@ ilerlenir; cevap gelirse dokümanlar ve kod güncellenir.
 |----|------|---------------------|-------|
 | Q-14 | Yedek dosyası şifrelensin mi? | **Evet.** AES-256-GCM + PBKDF2; parola DPAPI ile saklanır | Kapandı |
 | Q-15 | Google Drive hangi hesap? | **Kişisel Google hesabı**; OAuth 2.0 (drive.file) ile bağlanır | Kapandı |
-| Q-16 | Veri saklama süresi? | 2 yıl | Bekliyor |
+| Q-16 | Veri saklama süresi? | **2 yıl**; eski kayıtlar anonimleştirilir | Kapandı |
 | Q-17 | Kaç kullanıcı/rol tanımlanacak? | **1 yönetici + host isim listesi, opsiyonel giriş** (onaylandı) | Kapandı |
 | Q-18 | Bilgisayarda BitLocker açık mı? | Ayarlar'da durum göstergesi ve uyarı eklendi | Kapandı |
-| Q-19 | Yedekler ağ sürücüsüne mi gidecek? | Yerel klasör + opsiyonel ağ | Bekliyor |
+| Q-19 | Yedekler ağ sürücüsüne mi gidecek? | **Hayır**; yalnızca yerel/Drive klasörü | Kapandı |
 
 ### 2.4 İşleyiş
 
 | ID | Soru | Önerilen varsayılan | Durum |
 |----|------|---------------------|-------|
-| Q-20 | Görüşme sonucunu kim giriyor? | Host; sekreter de girebilir | Bekliyor |
-| Q-21 | "Tekrar edilecek" seçilince ne olacak? | Yeni randevu taslağı açılır | Bekliyor |
-| Q-22 | Ertelenen görüşme yeni tarih ister mi? | Evet, opsiyonel; boşsa takipsiz | Bekliyor |
-| Q-23 | İptal eden kişiye WhatsApp'tan bilgi verilecek mi? | Manuel, şablonla | Bekliyor |
-| Q-24 | Excel'den mevcut veri aktarılacak mı? | Faz 2; örnek dosya gerekli | Bekliyor |
+| Q-20 | Görüşme sonucunu kim giriyor? | Host; sekreter de girebilir | Kapandı |
+| Q-21 | "Tekrar edilecek" seçilince ne olacak? | Yeni randevu taslağı açılır | Kapandı |
+| Q-22 | Ertelenen görüşme yeni tarih ister mi? | **Evet, zorunlu**; onay alınır | Kapandı |
+| Q-23 | İptal eden kişiye WhatsApp'tan bilgi verilecek mi? | **Evet**, manuel onay + hazır mesaj | Kapandı |
+| Q-24 | Excel'den mevcut veri aktarılacak mı? | **Evet**, şablon + doğrulama ile içe aktarma | Kapandı |
 | Q-25 | Yazıcıdan kâğıt liste isteniyor mu? | **Evet.** PDF raporu ve Windows yazdırma diyaloğu eklendi | Kapandı |
 
 ---

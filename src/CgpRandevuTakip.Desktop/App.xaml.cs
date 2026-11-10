@@ -39,6 +39,7 @@ public partial class App : System.Windows.Application
     private CancellationTokenSource? _showListenerCts;
     private TrayService? _tray;
     private bool _runLoopActive;
+    private string? _pendingToastReminderId;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -67,6 +68,15 @@ public partial class App : System.Windows.Application
 
             _tray = _host.Services.GetRequiredService<TrayService>();
             _tray.Initialize();
+
+            if (_pendingToastReminderId is not null)
+            {
+                var pending = _pendingToastReminderId;
+                _pendingToastReminderId = null;
+                await TryActivateReminderAsync(pending);
+            }
+
+            ScheduleUpdateCheck();
             _tray.OpenRequested += OnTrayOpenRequested;
             _tray.ExitRequested += OnTrayExitRequested;
             ToastNotificationManagerCompat.OnActivated += OnToastActivated;
@@ -122,7 +132,124 @@ public partial class App : System.Windows.Application
         => Shutdown();
 
     private void OnToastActivated(ToastNotificationActivatedEventArgsCompat e)
-        => Dispatcher.Invoke(() => OnTrayOpenRequested(null, EventArgs.Empty));
+    {
+        var reminderId = ParseReminderId(e.Argument);
+        if (reminderId is null)
+        {
+            Dispatcher.Invoke(() => OnTrayOpenRequested(null, EventArgs.Empty));
+            return;
+        }
+
+        if (_host is null)
+        {
+            _pendingToastReminderId = reminderId;
+            Dispatcher.Invoke(() => OnTrayOpenRequested(null, EventArgs.Empty));
+            return;
+        }
+
+        _ = Dispatcher.InvokeAsync(async () =>
+        {
+            if (!await TryActivateReminderAsync(reminderId))
+                OnTrayOpenRequested(null, EventArgs.Empty);
+        });
+    }
+
+    private void ScheduleUpdateCheck()
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(15));
+                if (_host is null)
+                    return;
+
+                var updates = _host.Services.GetRequiredService<IUpdateService>();
+                var result = await updates.CheckAsync();
+                if (!result.UpdateAvailable)
+                    return;
+
+                var promptFile = Path.Combine(AppPaths.Root, "last-update-prompt.txt");
+                try
+                {
+                    if (File.Exists(promptFile)
+                        && File.ReadAllText(promptFile).Trim() == result.LatestVersion)
+                    {
+                        return;
+                    }
+
+                    File.WriteAllText(promptFile, result.LatestVersion ?? string.Empty);
+                }
+                catch
+                {
+                    // Uyarı dosyası yazılamazsa yine sorulur.
+                }
+
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    var answer = MessageBox.Show(
+                        $"Yeni sürüm hazır: {result.LatestVersion}\n\nŞimdi indirilip kurulsun mu?",
+                        "CGP güncelleme",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Information);
+
+                    if (answer != MessageBoxResult.Yes)
+                        return;
+
+                    _ = Dispatcher.InvokeAsync(async () =>
+                    {
+                        var install = await updates.InstallAsync(result);
+                        if (install.Success)
+                        {
+                            Shutdown();
+                            return;
+                        }
+
+                        MessageBox.Show(
+                            install.Error ?? "Güncelleme başlatılamadı.",
+                            "CGP güncelleme",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error);
+                    });
+                });
+            }
+            catch
+            {
+                // Güncelleme kontrolü uygulamayı durdurmaz.
+            }
+        });
+    }
+
+    private async Task<bool> TryActivateReminderAsync(string reminderId)
+    {
+        if (_host is null)
+            return false;
+
+        var dispatcher = _host.Services
+            .GetServices<IHostedService>()
+            .OfType<ReminderDispatcher>()
+            .FirstOrDefault();
+
+        return dispatcher is not null && await dispatcher.ActivateAsync(reminderId);
+    }
+
+    private static string? ParseReminderId(string? argument)
+    {
+        if (string.IsNullOrWhiteSpace(argument))
+            return null;
+
+        foreach (var part in argument.Split(new[] { '&', ';' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var pieces = part.Split('=', 2);
+            if (pieces.Length == 2
+                && pieces[0].Trim().Equals("reminderId", StringComparison.OrdinalIgnoreCase))
+            {
+                return Uri.UnescapeDataString(pieces[1]);
+            }
+        }
+
+        return null;
+    }
 
     private static void ConfigureServices(IServiceCollection services)
     {
@@ -167,8 +294,11 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IRecipientService, RecipientService>();
         services.AddSingleton<IDailyShareService, DailyShareService>();
         services.AddSingleton<IAppointmentExportService, AppointmentExportService>();
+        services.AddSingleton<IUpdateService, UpdateService>();
+        services.AddSingleton<IExcelImportService, ExcelImportService>();
         services.AddSingleton<IReminderService, ReminderService>();
         services.AddSingleton<IGoogleDriveBackupUploader, GoogleDriveBackupUploader>();
+        services.AddSingleton<IGoogleDriveFolderService, GoogleDriveFolderService>();
         services.AddSingleton<IGoogleDriveAuthService, GoogleDriveAuthService>();
         services.AddSingleton<IBackupService, BackupService>();
         services.AddSingleton<IAuditLogService, AuditLogService>();
@@ -182,6 +312,7 @@ public partial class App : System.Windows.Application
         services.AddHostedService<ReminderDispatcher>();
         services.AddHostedService<DailyShareScheduler>();
         services.AddHostedService<AutoBackupService>();
+        services.AddHostedService<RetentionService>();
         services.AddTransient<SessionLockService>();
 
         services.AddTransient<LoginViewModel>();

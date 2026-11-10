@@ -642,6 +642,92 @@ public class AppointmentServiceTests
     }
 
     [Fact]
+    public async Task AnonymizeOldAppointments_AnonymizesOnlyOldRecords()
+    {
+        using var sut = await CreateAsync();
+
+        string oldPersonId;
+        string recentPersonId;
+        string oldAppointmentId;
+        string recentAppointmentId;
+
+        await using (var db = sut.Db.CreateContext())
+        {
+            var oldPerson = new Person
+            {
+                FirstName = "Eski",
+                LastName = "Kişi",
+                PhoneE164 = "+905551110001"
+            };
+            var recentPerson = new Person
+            {
+                FirstName = "Yeni",
+                LastName = "Kişi",
+                PhoneE164 = "+905551110002"
+            };
+            db.Persons.AddRange(oldPerson, recentPerson);
+
+            var oldAppointment = new Appointment
+            {
+                PersonId = oldPerson.Id,
+                HostUserId = sut.Host.Id,
+                CategoryId = sut.Category.Id,
+                StartsAtUtc = new DateTime(2023, 1, 10, 9, 0, 0, DateTimeKind.Utc),
+                DurationMinutes = 30,
+                Status = AppointmentStatus.Completed,
+                Description = "Gizli açıklama",
+                StudentFirstName = "Öğrenci",
+                StudentLastName = "Adı",
+                UpdatedAtUtc = NowUtc
+            };
+            var recentAppointment = new Appointment
+            {
+                PersonId = recentPerson.Id,
+                HostUserId = sut.Host.Id,
+                CategoryId = sut.Category.Id,
+                StartsAtUtc = new DateTime(2026, 1, 10, 9, 0, 0, DateTimeKind.Utc),
+                DurationMinutes = 30,
+                Status = AppointmentStatus.Completed,
+                Description = "Güncel açıklama",
+                StudentFirstName = "Güncel",
+                StudentLastName = "Öğrenci",
+                UpdatedAtUtc = NowUtc
+            };
+            db.Appointments.AddRange(oldAppointment, recentAppointment);
+            await db.SaveChangesAsync();
+
+            oldPersonId = oldPerson.Id;
+            recentPersonId = recentPerson.Id;
+            oldAppointmentId = oldAppointment.Id;
+            recentAppointmentId = recentAppointment.Id;
+        }
+
+        var changed = await sut.Service.AnonymizeOldAppointmentsAsync(retentionYears: 2);
+
+        Assert.Equal(1, changed);
+        Assert.Contains(AuditAction.AppointmentAnonymized, sut.Audit.Actions);
+
+        await using (var db = sut.Db.CreateContext())
+        {
+            var oldAppointment = await db.Appointments.SingleAsync(x => x.Id == oldAppointmentId);
+            Assert.Null(oldAppointment.Description);
+            Assert.Null(oldAppointment.StudentFirstName);
+            Assert.Null(oldAppointment.StudentLastName);
+
+            var oldPerson = await db.Persons.SingleAsync(x => x.Id == oldPersonId);
+            Assert.Equal("Anonim", oldPerson.FirstName);
+            Assert.Equal("Kişi", oldPerson.LastName);
+            Assert.Equal("+900000000000", oldPerson.PhoneE164);
+
+            var recentAppointment = await db.Appointments.SingleAsync(x => x.Id == recentAppointmentId);
+            Assert.Equal("Güncel açıklama", recentAppointment.Description);
+
+            var recentPerson = await db.Persons.SingleAsync(x => x.Id == recentPersonId);
+            Assert.Equal("Yeni", recentPerson.FirstName);
+        }
+    }
+
+    [Fact]
     public async Task DeleteMany_RequiresAdminAndSoftDeletesAll()
     {
         using var sut = await CreateAsync();

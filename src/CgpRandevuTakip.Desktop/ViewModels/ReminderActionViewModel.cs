@@ -1,4 +1,7 @@
+using System.Diagnostics;
+using System.Windows;
 using CgpRandevuTakip.Application.Abstractions;
+using CgpRandevuTakip.Desktop.Services;
 using CgpRandevuTakip.Application.Reminders;
 using CgpRandevuTakip.Domain.Enums;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -10,15 +13,18 @@ public partial class ReminderActionViewModel : ObservableObject
 {
     private readonly IReminderService _reminders;
     private readonly IClock _clock;
+    private readonly IDialogService _dialogs;
     private readonly ReminderContextDto _context;
 
     public ReminderActionViewModel(
         IReminderService reminders,
         IClock clock,
+        IDialogService dialogs,
         ReminderContextDto context)
     {
         _reminders = reminders;
         _clock = clock;
+        _dialogs = dialogs;
         _context = context;
 
         PersonFullName = context.PersonFullName;
@@ -60,12 +66,22 @@ public partial class ReminderActionViewModel : ObservableObject
 
     [RelayCommand]
     private async Task VisitorCancelledAsync()
-        => await ApplyAsync(ReminderAction.VisitorCancelled);
+    {
+        var notify = _dialogs.Confirm(
+            "Görüşme iptal edilecek. Kişiye WhatsApp ile bilgi verilsin mi?",
+            "Ziyaretçi iptali");
 
-    private async Task ApplyAsync(ReminderAction action)
+        if (!await ApplyAsync(ReminderAction.VisitorCancelled))
+            return;
+
+        if (notify)
+            OpenWhatsAppCancellation();
+    }
+
+    private async Task<bool> ApplyAsync(ReminderAction action)
     {
         if (IsBusy)
-            return;
+            return false;
 
         IsBusy = true;
         ErrorMessage = null;
@@ -75,18 +91,62 @@ public partial class ReminderActionViewModel : ObservableObject
             if (!result.Success)
             {
                 ErrorMessage = result.Error;
-                return;
+                return false;
             }
 
             ActionTaken?.Invoke(this, EventArgs.Empty);
+            return true;
         }
         catch (Exception ex)
         {
             ErrorMessage = $"İşlem yapılamadı: {ex.Message}";
+            return false;
         }
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    private void OpenWhatsAppCancellation()
+    {
+        var message =
+            $"Merhaba {PersonFullName}, {DateLabel} saat {TimeLabel} randevunuz iptal edilmiştir. " +
+            "Bilgilendirme için teşekkür ederiz.";
+
+        try
+        {
+            Clipboard.SetText(message);
+        }
+        catch
+        {
+            // Pano erişilemezse WhatsApp yine açılır.
+        }
+
+        var phone = new string(PhoneE164.Where(char.IsDigit).ToArray());
+        var encoded = Uri.EscapeDataString(message);
+        var deepLink = string.IsNullOrWhiteSpace(phone)
+            ? "whatsapp://send"
+            : $"whatsapp://send?phone={phone}&text={encoded}";
+
+        try
+        {
+            Process.Start(new ProcessStartInfo(deepLink) { UseShellExecute = true });
+        }
+        catch
+        {
+            var webLink = string.IsNullOrWhiteSpace(phone)
+                ? $"https://wa.me/?text={encoded}"
+                : $"https://wa.me/{phone}?text={encoded}";
+
+            try
+            {
+                Process.Start(new ProcessStartInfo(webLink) { UseShellExecute = true });
+            }
+            catch
+            {
+                // Tarayıcı/WhatsApp yoksa mesaj panoda kalır.
+            }
         }
     }
 }

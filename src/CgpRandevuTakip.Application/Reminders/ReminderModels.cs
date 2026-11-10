@@ -45,6 +45,9 @@ public sealed record ReminderContextDto(
 
     /// <summary>Bildirimde kişisel veri içermeyen kısa gövde metni.</summary>
     public string AnonymousBody => $"{TimeLabel} · Görüşme";
+
+    /// <summary>Ürün sahibi onayıyla kişi adını içeren bildirim gövdesi.</summary>
+    public string NotificationBody => $"{PersonFullName} · {TimeLabel} · {CategoryName}";
 }
 
 public sealed record ReminderResult(bool Success, string? Error = null)

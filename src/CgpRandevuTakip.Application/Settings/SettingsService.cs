@@ -97,7 +97,8 @@ public sealed class SettingsService : ISettingsService
             GoogleRefreshToken: _secrets.Unprotect(Read(values, SettingsKeys.GoogleRefreshToken))
                                 ?? defaults.GoogleRefreshToken,
             GoogleAccountEmail: Read(values, SettingsKeys.GoogleAccountEmail) ?? defaults.GoogleAccountEmail,
-            GoogleFolderName: Read(values, SettingsKeys.GoogleFolderName) ?? defaults.GoogleFolderName);
+            GoogleFolderName: Read(values, SettingsKeys.GoogleFolderName) ?? defaults.GoogleFolderName,
+            GoogleDriveFolder: Read(values, SettingsKeys.GoogleDriveFolder) ?? defaults.GoogleDriveFolder);
 
         _cachedSettings = settings;
         return settings;
@@ -147,14 +148,12 @@ public sealed class SettingsService : ISettingsService
 
         if (settings.GoogleDriveEnabled)
         {
-            if (string.IsNullOrWhiteSpace(settings.GoogleClientId)
-                || string.IsNullOrWhiteSpace(settings.GoogleClientSecret))
-            {
-                return OperationResult.Fail("Google Drive için istemci kimliği ve gizli anahtar zorunludur.");
-            }
+            if (string.IsNullOrWhiteSpace(settings.GoogleDriveFolder))
+                return OperationResult.Fail("Google Drive klasörü seçilmelidir.");
 
-            if (string.IsNullOrWhiteSpace(settings.GoogleRefreshToken))
-                return OperationResult.Fail("Google Drive bağlantısı kurulmalıdır.");
+            var driveFolder = settings.GoogleDriveFolder.Trim();
+            if (!Directory.Exists(driveFolder))
+                return OperationResult.Fail("Google Drive klasörü bulunamadı. Drive for Desktop senkronizasyonunu kontrol edin.");
 
             if (!settings.BackupEncryptionEnabled)
                 return OperationResult.Fail("Google Drive'a yükleme için yedek şifreleme açık olmalıdır.");
@@ -218,7 +217,8 @@ public sealed class SettingsService : ISettingsService
             [SettingsKeys.GoogleAccountEmail] = settings.GoogleAccountEmail?.Trim() ?? string.Empty,
             [SettingsKeys.GoogleFolderName] = string.IsNullOrWhiteSpace(settings.GoogleFolderName)
                 ? "CGP Yedekler"
-                : settings.GoogleFolderName.Trim()
+                : settings.GoogleFolderName.Trim(),
+            [SettingsKeys.GoogleDriveFolder] = settings.GoogleDriveFolder?.Trim() ?? string.Empty
         };
 
         await _repository.SetManyAsync(values);

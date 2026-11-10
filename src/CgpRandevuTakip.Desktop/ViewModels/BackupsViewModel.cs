@@ -19,19 +19,22 @@ public partial class BackupsViewModel : ObservableObject
     private readonly ICurrentUser _currentUser;
     private readonly IDialogService _dialogs;
     private readonly IAppEnvironment _environment;
+    private readonly IGoogleDriveFolderService _drive;
 
     public BackupsViewModel(
         IBackupService backups,
         ISettingsService settings,
         ICurrentUser currentUser,
         IDialogService dialogs,
-        IAppEnvironment environment)
+        IAppEnvironment environment,
+        IGoogleDriveFolderService drive)
     {
         _backups = backups;
         _settings = settings;
         _currentUser = currentUser;
         _dialogs = dialogs;
         _environment = environment;
+        _drive = drive;
     }
 
     public RangeObservableCollection<BackupInfo> Backups { get; } = new();
@@ -80,7 +83,13 @@ public partial class BackupsViewModel : ObservableObject
                 ? "Otomatik yedekleme açık · günde 2 kez (12:30 ve öğleden sonra paylaşım sonrası, en geç 18:00)"
                 : "Otomatik yedekleme kapalı.";
 
-            var rows = await _backups.GetHistoryAsync();
+            var localRows = await _backups.GetHistoryAsync();
+            var driveRows = await _drive.ListAsync();
+            var rows = localRows
+                .Concat(driveRows)
+                .OrderByDescending(x => x.CreatedAtLocal)
+                .ToList();
+
             Backups.ReplaceWith(rows);
             OnPropertyChanged(nameof(HasBackups));
 
@@ -152,14 +161,26 @@ public partial class BackupsViewModel : ObservableObject
 
         try
         {
-            var validation = await _backups.ValidateAsync(SelectedBackup.Path);
+            var sourcePath = SelectedBackup.Path;
+            if (SelectedBackup.IsDrive)
+            {
+                var download = await _drive.DownloadAsync(sourcePath);
+                if (download.Path is null)
+                {
+                    ErrorMessage = download.Error;
+                    return;
+                }
+                sourcePath = download.Path;
+            }
+
+            var validation = await _backups.ValidateAsync(sourcePath);
             if (!validation.Success)
             {
                 ErrorMessage = validation.Error;
                 return;
             }
 
-            var result = await _backups.RestoreAsync(SelectedBackup.Path);
+            var result = await _backups.RestoreAsync(sourcePath);
             if (!result.Success)
             {
                 ErrorMessage = result.Error;

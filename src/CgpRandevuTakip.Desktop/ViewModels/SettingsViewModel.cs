@@ -37,6 +37,8 @@ public partial class SettingsViewModel : ObservableObject
     private readonly WindowsToastService _windowsToast;
     private readonly IBitLockerService _bitLocker;
     private readonly IGoogleDriveAuthService _googleAuth;
+    private readonly IUpdateService _updates;
+    private UpdateCheckResult? _lastUpdate;
     private string _googleRefreshToken = string.Empty;
     private string _googleAccountEmail = string.Empty;
     private readonly IServiceProvider _services;
@@ -56,6 +58,7 @@ public partial class SettingsViewModel : ObservableObject
         WindowsToastService windowsToast,
         IBitLockerService bitLocker,
         IGoogleDriveAuthService googleAuth,
+        IUpdateService updates,
         IServiceProvider services)
     {
         _settings = settings;
@@ -70,6 +73,7 @@ public partial class SettingsViewModel : ObservableObject
         _windowsToast = windowsToast;
         _bitLocker = bitLocker;
         _googleAuth = googleAuth;
+        _updates = updates;
         _services = services;
 
         ThemeOptions = new ObservableCollection<ThemeOption>
@@ -209,7 +213,22 @@ public partial class SettingsViewModel : ObservableObject
     private string _googleFolderName = "CGP Yedekler";
 
     [ObservableProperty]
-    private string _googleDriveStatus = "Bağlı değil.";
+    private string _googleDriveFolder = string.Empty;
+
+    [ObservableProperty]
+    private string _googleDriveStatus = "Klasör seçilmedi.";
+
+    [ObservableProperty]
+    private string _updateStatusText = $"Sürüm {AppConstants.Version}";
+
+    [ObservableProperty]
+    private bool _isCheckingUpdate;
+
+    [ObservableProperty]
+    private bool _isUpdateAvailable;
+
+    [ObservableProperty]
+    private string _latestVersionText = string.Empty;
 
     [ObservableProperty]
     private bool _isConnectingDrive;
@@ -287,6 +306,12 @@ public partial class SettingsViewModel : ObservableObject
             GoogleClientId = settings.GoogleClientId;
             GoogleClientSecret = settings.GoogleClientSecret;
             GoogleFolderName = settings.GoogleFolderName;
+            GoogleDriveFolder = string.IsNullOrWhiteSpace(settings.GoogleDriveFolder)
+                ? DetectDriveFolder() ?? string.Empty
+                : settings.GoogleDriveFolder;
+            GoogleDriveStatus = string.IsNullOrWhiteSpace(GoogleDriveFolder)
+                ? "Klasör seçilmedi."
+                : $"Klasör: {GoogleDriveFolder}";
             _googleRefreshToken = settings.GoogleRefreshToken;
             _googleAccountEmail = settings.GoogleAccountEmail;
             GoogleDriveStatus = string.IsNullOrWhiteSpace(settings.GoogleAccountEmail)
@@ -368,7 +393,8 @@ public partial class SettingsViewModel : ObservableObject
             GoogleClientSecret,
             _googleRefreshToken,
             _googleAccountEmail,
-            GoogleFolderName);
+            GoogleFolderName,
+            GoogleDriveFolder);
 
     [RelayCommand]
     private async Task ConnectGoogleDriveAsync()
@@ -436,6 +462,113 @@ public partial class SettingsViewModel : ObservableObject
         StatusMessage = saved.Success ? "Google Drive bağlantısı kesildi." : null;
         if (!saved.Success)
             ErrorMessage = saved.Error;
+    }
+
+    [RelayCommand]
+    private void BrowseGoogleDriveFolder()
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = "Google Drive yedek klasörünü seçin"
+        };
+
+        if (Directory.Exists(GoogleDriveFolder))
+            dialog.InitialDirectory = GoogleDriveFolder;
+
+        if (dialog.ShowDialog() == true)
+            GoogleDriveFolder = dialog.FolderName;
+    }
+
+    [RelayCommand]
+    private void DetectGoogleDriveFolder()
+    {
+        var detected = DetectDriveFolder();
+        if (detected is null)
+        {
+            ErrorMessage = "Google Drive klasörü bulunamadı. Drive for Desktop kurulu ve senkronize mi?";
+            return;
+        }
+
+        GoogleDriveFolder = detected;
+        GoogleDriveStatus = $"Klasör: {detected}";
+        StatusMessage = "Google Drive klasörü bulundu.";
+    }
+
+    private static string? DetectDriveFolder()
+    {
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var candidates = new[]
+        {
+            Path.Combine(home, "Google Drive", "My Drive", "CGP Yedekler"),
+            Path.Combine(home, "Google Drive", "CGP Yedekler"),
+            Path.Combine(home, "Google Drive", "My Drive"),
+            Path.Combine(home, "Google Drive"),
+            Path.Combine(home, "GoogleDrive")
+        };
+
+        return candidates.FirstOrDefault(Directory.Exists);
+    }
+
+    [RelayCommand]
+    private async Task CheckUpdatesAsync()
+    {
+        if (IsCheckingUpdate)
+            return;
+
+        IsCheckingUpdate = true;
+        UpdateStatusText = "Güncellemeler kontrol ediliyor...";
+        try
+        {
+            var result = await _updates.CheckAsync();
+            if (result.Error is not null)
+            {
+                UpdateStatusText = result.Error;
+                IsUpdateAvailable = false;
+                return;
+            }
+
+            _lastUpdate = result;
+            IsUpdateAvailable = result.UpdateAvailable;
+            LatestVersionText = result.LatestVersion ?? string.Empty;
+            UpdateStatusText = result.UpdateAvailable
+                ? $"Yeni sürüm hazır: {result.LatestVersion} (mevcut {result.CurrentVersion})"
+                : $"Güncel sürüm: {result.CurrentVersion}";
+            InstallUpdateCommand.NotifyCanExecuteChanged();
+        }
+        finally
+        {
+            IsCheckingUpdate = false;
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(IsUpdateAvailable))]
+    private async Task InstallUpdateAsync()
+    {
+        if (_lastUpdate is null || !_lastUpdate.UpdateAvailable)
+            return;
+
+        if (!_dialogs.Confirm(
+                $"{_lastUpdate.LatestVersion} sürümü indirilip kurulacak. Uygulama yeniden başlayacak. Devam edilsin mi?",
+                "Güncelleme"))
+            return;
+
+        IsCheckingUpdate = true;
+        try
+        {
+            var result = await _updates.InstallAsync(_lastUpdate);
+            if (!result.Success)
+            {
+                _dialogs.Error(result.Error ?? "Güncelleme başlatılamadı.", "Güncelleme");
+                return;
+            }
+
+            _dialogs.Info("Güncelleme başlatıldı. Uygulama yeniden başlayacak.", "Güncelleme");
+            System.Windows.Application.Current?.Shutdown();
+        }
+        finally
+        {
+            IsCheckingUpdate = false;
+        }
     }
 
     [RelayCommand]
@@ -610,6 +743,9 @@ public partial class SettingsViewModel : ObservableObject
         {
             UseShellExecute = true
         });
+
+    partial void OnIsUpdateAvailableChanged(bool value)
+        => InstallUpdateCommand.NotifyCanExecuteChanged();
 
     partial void OnSelectedPushProviderChanged(string value)
         => OnPropertyChanged(nameof(IsTelegramProvider));

@@ -61,6 +61,7 @@ public interface IAppointmentRepository
         AppointmentOutcome outcome,
         bool cancelPendingReminders);
     Task SoftDeleteAsync(string id, DateTime nowUtc);
+    Task<int> AnonymizeBeforeAsync(DateTime cutoffUtc, DateTime nowUtc);
     Task<bool> RestoreAsync(string id, DateTime nowUtc);
     Task<IReadOnlyList<string>> PurgeDeletedBeforeAsync(DateTime cutoffUtc);
 }

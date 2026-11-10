@@ -21,6 +21,20 @@ public sealed record GoogleDriveAuthResult(
         => new(false, error, null, null);
 }
 
+/// <summary>
+/// Google Drive for Desktop ile senkronize edilen yerel klasörü yönetir.
+/// Ayrı OAuth bağlantısı gerektirmez.
+/// </summary>
+public interface IGoogleDriveFolderService
+{
+    Task<IReadOnlyList<BackupInfo>> ListAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Drive klasöründeki yedeği yerel yedek klasörüne indirir.</summary>
+    Task<(string? Path, string? Error)> DownloadAsync(
+        string drivePath,
+        CancellationToken cancellationToken = default);
+}
+
 /// <summary>Tarayıcı üzerinden Google OAuth bağlantısını kurar.</summary>
 public interface IGoogleDriveAuthService
 {

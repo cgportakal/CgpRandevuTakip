@@ -9,13 +9,16 @@ namespace CgpRandevuTakip.Desktop.Services;
 /// </summary>
 public sealed class WindowsToastService
 {
-    public bool TryShow(string title, string body, bool silent = false)
+    public bool TryShow(string title, string body, bool silent = false, string? reminderId = null)
     {
         try
         {
             var builder = new ToastContentBuilder()
                 .AddText(title)
                 .AddText(body);
+
+            if (!string.IsNullOrWhiteSpace(reminderId))
+                builder.AddArgument("reminderId", reminderId);
 
             if (silent)
                 builder.AddAudio(new ToastAudio { Silent = true });

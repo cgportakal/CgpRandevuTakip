@@ -154,9 +154,18 @@
                             <Separator />
                             <MenuItem Header="PDF (.pdf)" Command="{Binding ExportPdfCommand}" />
                             <MenuItem Header="Yazdır" Command="{Binding PrintCommand}" />
+                            <Separator />
+                            <MenuItem Header="Excel içe aktarma şablonu" Command="{Binding DownloadImportTemplateCommand}" />
                         </ContextMenu>
                     </Button.ContextMenu>
                 </Button>
+                <Button Content="İçe aktar"
+                        Style="{StaticResource SecondaryButton}"
+                        Command="{Binding ImportExcelCommand}"
+                        Padding="14,7"
+                        Margin="0,0,8,0"
+                        ToolTip="Excel dosyasından görüşme aktar"
+                        Visibility="{Binding CanExport, Converter={StaticResource BoolToVisibility}}" />
                 <Button Content="Paylaş"
                         Style="{StaticResource SubtleButton}"
                         Command="{Binding ShareDailyListCommand}"
