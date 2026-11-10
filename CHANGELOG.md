@@ -3,6 +3,23 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [1.0.0] — 2026-11-10 · MVP sürümü
+
+### Eklendi
+- Per-user kurulum paketi (Inno Setup) ve taşınabilir ZIP
+- Kurulum betiği: `Kurulum-Olustur.cmd`
+- Sprint 6 UAT raporu: [docs/19_UAT_Raporu.md](docs/19_UAT_Raporu.md)
+
+### Sürüm kapsamı
+- Sprint 0–5, 4.5 UAT, 4.6 kimlik/kurtarma, manuel düzeltmeler
+- Sprint 6A/6B: yedekleme, geri yükleme, otomatik yedek
+- Sprint 6C: denetim kaydı ekranı
+- Faz 2: şifreli yedek, Google Drive, Excel/CSV/PDF/yazdırma, BitLocker göstergesi
+
+### Not
+- Google Drive gerçek uçtan uca testi, kullanıcı OAuth istemci bilgilerini girdiğinde yapılacak.
+- Kurulum EXE'si için Inno Setup 6 gerekir; yoksa taşınabilir ZIP kullanılabilir.
+
 ## [0.10.0] — 2026-11-10 · Şifreli yedek, Drive, dışa aktarma
 
 ### Eklendi

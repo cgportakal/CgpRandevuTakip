@@ -13,6 +13,7 @@ obj/
 publish/
 out/
 artifacts/
+dist/
 
 # Yerel veritabanı ve yedekler (asla commit edilmez)
 *.db
