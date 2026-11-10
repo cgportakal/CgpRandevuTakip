@@ -85,6 +85,16 @@ public partial class AppointmentListPage : UserControl
         _subscribed = false;
     }
 
+    private void OnExportClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { ContextMenu: { } menu } button)
+            return;
+
+        menu.DataContext = DataContext;
+        menu.PlacementTarget = button;
+        menu.IsOpen = true;
+    }
+
     private void OnRowDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (DataContext is not AppointmentListViewModel viewModel)

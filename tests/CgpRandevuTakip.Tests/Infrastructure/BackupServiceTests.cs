@@ -48,7 +48,8 @@ public class BackupServiceTests : IDisposable
             new FakeEnvironment(_root, _databasePath, _backupDirectory),
             _audit,
             _currentUser,
-            new FixedClock());
+            new FixedClock(),
+            new NoopGoogleDriveUploader());
 
     [Fact]
     public async Task Create_WritesZipWithManifestSettingsAndHistory()
@@ -172,6 +173,67 @@ public class BackupServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task Create_EncryptedBackup_CanBeValidatedAndRestored()
+    {
+        _settings.Settings = _settings.Settings with
+        {
+            BackupEncryptionEnabled = true,
+            BackupPassword = "guclu-yedek-parolasi"
+        };
+
+        var service = CreateService();
+        var created = await service.CreateAsync(BackupTrigger.Manual);
+
+        Assert.True(created.Success, created.Error);
+        Assert.EndsWith(".cgpbak", created.Backup!.FileName);
+        Assert.True(BackupCipher.IsEncryptedFile(created.Backup.Path));
+        Assert.True(created.Backup.IsEncrypted);
+
+        var validation = await service.ValidateAsync(created.Backup.Path);
+        Assert.True(validation.Success, validation.Error);
+        Assert.True(validation.Backup!.IsEncrypted);
+
+        var restored = await service.RestoreAsync(created.Backup.Path);
+        Assert.True(restored.Success, restored.Error);
+    }
+
+    [Fact]
+    public async Task Validate_EncryptedBackup_RejectsWrongPassword()
+    {
+        _settings.Settings = _settings.Settings with
+        {
+            BackupEncryptionEnabled = true,
+            BackupPassword = "dogru-parola-123"
+        };
+
+        var service = CreateService();
+        var created = await service.CreateAsync(BackupTrigger.Manual);
+        Assert.True(created.Success, created.Error);
+
+        _settings.Settings = _settings.Settings with { BackupPassword = "yanlis-parola-456" };
+        var validation = await service.ValidateAsync(created.Backup!.Path);
+
+        Assert.False(validation.Success);
+        Assert.Contains("açılamadı", validation.Error);
+    }
+
+    [Fact]
+    public async Task Create_EncryptedBackup_RequiresPassword()
+    {
+        _settings.Settings = _settings.Settings with
+        {
+            BackupEncryptionEnabled = true,
+            BackupPassword = string.Empty
+        };
+
+        var service = CreateService();
+        var result = await service.CreateAsync(BackupTrigger.Manual);
+
+        Assert.False(result.Success);
+        Assert.Contains("parola", result.Error, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task Create_AllowsSecretaryAndHostRoles()
     {
         var service = CreateService();
@@ -209,6 +271,12 @@ public class BackupServiceTests : IDisposable
         {
             // Test temizliği başarısız olsa da test sonucu korunur.
         }
+    }
+
+    private sealed class NoopGoogleDriveUploader : IGoogleDriveBackupUploader
+    {
+        public Task<OperationResult> UploadAsync(string filePath, CancellationToken cancellationToken = default)
+            => Task.FromResult(OperationResult.Ok());
     }
 
     private sealed class FakeSettings : ISettingsService

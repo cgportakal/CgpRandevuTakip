@@ -37,6 +37,7 @@ public sealed class BackupService : IBackupService
     private readonly IAuditLogger _audit;
     private readonly ICurrentUser _currentUser;
     private readonly IClock _clock;
+    private readonly IGoogleDriveBackupUploader _driveUploader;
 
     public BackupService(
         IDbContextFactory<AppDbContext> dbFactory,
@@ -44,7 +45,8 @@ public sealed class BackupService : IBackupService
         IAppEnvironment environment,
         IAuditLogger audit,
         ICurrentUser currentUser,
-        IClock clock)
+        IClock clock,
+        IGoogleDriveBackupUploader driveUploader)
     {
         _dbFactory = dbFactory;
         _settings = settings;
@@ -52,6 +54,7 @@ public sealed class BackupService : IBackupService
         _audit = audit;
         _currentUser = currentUser;
         _clock = clock;
+        _driveUploader = driveUploader;
     }
 
     public async Task<BackupCreateResult> CreateAsync(
@@ -62,6 +65,10 @@ public sealed class BackupService : IBackupService
             Path.GetTempPath(),
             "CgpRandevuTakip",
             $"backup-{Guid.NewGuid():N}.db");
+        var tempZip = Path.Combine(
+            Path.GetTempPath(),
+            "CgpRandevuTakip",
+            $"backup-{Guid.NewGuid():N}.zip");
 
         string? partialPath = null;
         try
@@ -71,10 +78,14 @@ public sealed class BackupService : IBackupService
                 ? _environment.DefaultBackupDirectory
                 : settings.BackupDirectory;
 
+            var encrypted = settings.BackupEncryptionEnabled;
+            if (encrypted && string.IsNullOrWhiteSpace(settings.BackupPassword))
+                return BackupCreateResult.Fail("Yedek şifreleme açık ancak yedek parolası tanımlı değil.");
+
             Directory.CreateDirectory(directory);
 
             var localNow = _clock.ToLocal(_clock.UtcNow);
-            var path = BuildUniquePath(directory, localNow);
+            var path = BuildUniquePath(directory, localNow, encrypted);
             partialPath = path;
 
             Directory.CreateDirectory(Path.GetDirectoryName(tempDb)!);
@@ -116,12 +127,17 @@ public sealed class BackupService : IBackupService
 
             var manifestJson = JsonSerializer.Serialize(manifest, JsonOptions);
 
-            using (var zip = ZipFile.Open(path, ZipArchiveMode.Create))
+            using (var zip = ZipFile.Open(tempZip, ZipArchiveMode.Create))
             {
                 zip.CreateEntryFromFile(tempDb, DatabaseEntry, CompressionLevel.Optimal);
                 AddTextEntry(zip, SettingsEntry, settingsJson);
                 AddTextEntry(zip, ManifestEntry, manifestJson);
             }
+
+            if (encrypted)
+                BackupCipher.EncryptFile(tempZip, path, settings.BackupPassword);
+            else
+                File.Copy(tempZip, path, overwrite: true);
 
             var fileInfo = new FileInfo(path);
             var record = new BackupRecord
@@ -151,6 +167,16 @@ public sealed class BackupService : IBackupService
                 record.Id,
                 JsonSerializer.Serialize(new { trigger, record.FileName }));
 
+            // Google Drive yüklemesi yerel yedeği bozmaz; hata olsa da yerel yedek geçerlidir.
+            try
+            {
+                await _driveUploader.UploadAsync(path, cancellationToken);
+            }
+            catch
+            {
+                // Yükleme hatası sonraki denemede ele alınır.
+            }
+
             return BackupCreateResult.Ok(ToInfo(record));
         }
         catch (Exception ex)
@@ -163,6 +189,7 @@ public sealed class BackupService : IBackupService
         finally
         {
             TryDelete(tempDb);
+            TryDelete(tempZip);
         }
     }
 
@@ -190,10 +217,11 @@ public sealed class BackupService : IBackupService
 
         if (Directory.Exists(directory))
         {
-            foreach (var file in Directory.GetFiles(
-                         directory,
-                         BackupFileNameBuilder.Prefix + "*" + BackupFileNameBuilder.Extension))
+            foreach (var file in Directory.GetFiles(directory, BackupFileNameBuilder.Prefix + "*"))
             {
+                if (!BackupFileNameBuilder.IsValid(Path.GetFileName(file)))
+                    continue;
+
                 if (result.ContainsKey(file))
                     continue;
 
@@ -204,7 +232,7 @@ public sealed class BackupService : IBackupService
                     file,
                     created,
                     new FileInfo(file).Length,
-                    QuickVerify(file),
+                    await QuickVerifyAsync(file, settings.BackupPassword),
                     string.Empty);
             }
         }
@@ -216,11 +244,30 @@ public sealed class BackupService : IBackupService
     }
 
     /// <summary>Liste için hızlı doğrulama: manifest + veritabanı özeti (çıkarma yapmaz).</summary>
-    private static bool QuickVerify(string path)
+    private static async Task<bool> QuickVerifyAsync(string path, string? password)
     {
+        var readablePath = path;
+        string? tempPath = null;
+
         try
         {
-            using var zip = ZipFile.OpenRead(path);
+            if (BackupFileNameBuilder.IsEncrypted(Path.GetFileName(path))
+                || BackupCipher.IsEncryptedFile(path))
+            {
+                if (string.IsNullOrWhiteSpace(password))
+                    return false;
+
+                tempPath = Path.Combine(
+                    Path.GetTempPath(),
+                    "CgpRandevuTakip",
+                    $"verify-{Guid.NewGuid():N}.zip");
+                Directory.CreateDirectory(Path.GetDirectoryName(tempPath)!);
+                BackupCipher.DecryptFile(path, tempPath, password);
+                readablePath = tempPath;
+            }
+
+            await Task.CompletedTask;
+            using var zip = ZipFile.OpenRead(readablePath);
             var manifestEntry = zip.GetEntry(ManifestEntry);
             var databaseEntry = zip.GetEntry(DatabaseEntry);
             if (manifestEntry is null || databaseEntry is null)
@@ -242,6 +289,10 @@ public sealed class BackupService : IBackupService
         {
             return false;
         }
+        finally
+        {
+            TryDelete(tempPath);
+        }
     }
 
     private static DateTime? ParseTimestamp(string fileName)
@@ -249,7 +300,11 @@ public sealed class BackupService : IBackupService
         if (!BackupFileNameBuilder.IsValid(fileName))
             return null;
 
-        var stamp = fileName[BackupFileNameBuilder.Prefix.Length..^BackupFileNameBuilder.Extension.Length];
+        var extensionLength = BackupFileNameBuilder.IsEncrypted(fileName)
+            ? BackupFileNameBuilder.EncryptedExtension.Length
+            : BackupFileNameBuilder.Extension.Length;
+
+        var stamp = fileName[BackupFileNameBuilder.Prefix.Length..^extensionLength];
         return DateTime.TryParseExact(
             stamp,
             "yyyy-MM-dd_HH-mm-ss",
@@ -265,12 +320,18 @@ public sealed class BackupService : IBackupService
         CancellationToken cancellationToken = default)
     {
         var stagedPath = string.Empty;
+        string? decryptedZip = null;
         try
         {
             if (string.IsNullOrWhiteSpace(zipPath) || !File.Exists(zipPath))
                 return BackupValidationResult.Fail("Yedek dosyası bulunamadı.");
 
-            using var zip = ZipFile.OpenRead(zipPath);
+            var prepared = await PrepareZipAsync(zipPath);
+            if (prepared.Error is not null)
+                return BackupValidationResult.Fail(prepared.Error);
+
+            decryptedZip = prepared.TempPath;
+            using var zip = ZipFile.OpenRead(prepared.Path);
             var manifestEntry = zip.GetEntry(ManifestEntry);
             var databaseEntry = zip.GetEntry(DatabaseEntry);
             var settingsEntry = zip.GetEntry(SettingsEntry);
@@ -333,6 +394,7 @@ public sealed class BackupService : IBackupService
         finally
         {
             TryDelete(stagedPath);
+            TryDelete(decryptedZip);
         }
     }
 
@@ -354,10 +416,13 @@ public sealed class BackupService : IBackupService
                 $"Güvenlik yedeği alınamadığı için geri yükleme durduruldu: {safety.Error}");
 
         var stagedPath = Path.Combine(Path.GetTempPath(), "CgpRandevuTakip", $"restore-{Guid.NewGuid():N}.db");
+        var prepared = await PrepareZipAsync(zipPath);
+        if (prepared.Error is not null)
+            return BackupCreateResult.Fail(prepared.Error);
 
         try
         {
-            using (var zip = ZipFile.OpenRead(zipPath))
+            using (var zip = ZipFile.OpenRead(prepared.Path))
             {
                 var databaseEntry = zip.GetEntry(DatabaseEntry)
                     ?? throw new InvalidOperationException("Yedekte data.db bulunamadı.");
@@ -392,19 +457,55 @@ public sealed class BackupService : IBackupService
         finally
         {
             TryDelete(stagedPath);
+            TryDelete(prepared.TempPath);
         }
     }
 
-    private static string BuildUniquePath(string directory, DateTime localNow)
+    private async Task<(string Path, string? TempPath, string? Error)> PrepareZipAsync(string path)
+    {
+        if (!BackupFileNameBuilder.IsEncrypted(Path.GetFileName(path))
+            && !BackupCipher.IsEncryptedFile(path))
+        {
+            return (path, null, null);
+        }
+
+        var settings = await _settings.GetAsync();
+        if (string.IsNullOrWhiteSpace(settings.BackupPassword))
+            return (path, null, "Şifreli yedeği açmak için yedek parolası gerekli.");
+
+        var tempPath = Path.Combine(
+            Path.GetTempPath(),
+            "CgpRandevuTakip",
+            $"decrypt-{Guid.NewGuid():N}.zip");
+
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(tempPath)!);
+            BackupCipher.DecryptFile(path, tempPath, settings.BackupPassword);
+            return (tempPath, tempPath, null);
+        }
+        catch (Exception ex)
+        {
+            TryDelete(tempPath);
+            return (path, null, $"Şifreli yedek açılamadı: {ex.Message}");
+        }
+    }
+
+    private static string BuildUniquePath(string directory, DateTime localNow, bool encrypted)
     {
         for (var offset = 0; offset < 120; offset++)
         {
-            var candidate = Path.Combine(directory, BackupFileNameBuilder.Build(localNow.AddSeconds(offset)));
+            var candidate = Path.Combine(
+                directory,
+                BackupFileNameBuilder.Build(localNow.AddSeconds(offset), encrypted));
+
             if (!File.Exists(candidate))
                 return candidate;
         }
 
-        return Path.Combine(directory, BackupFileNameBuilder.Build(localNow.AddMinutes(1)));
+        return Path.Combine(
+            directory,
+            BackupFileNameBuilder.Build(localNow.AddMinutes(1), encrypted));
     }
 
     private async Task ApplyRetentionAsync(string directory)

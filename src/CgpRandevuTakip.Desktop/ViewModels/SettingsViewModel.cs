@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using CgpRandevuTakip.Application.Abstractions;
+using CgpRandevuTakip.Application.Backups;
 using CgpRandevuTakip.Application.Notifications;
 using CgpRandevuTakip.Application.Settings;
 using CgpRandevuTakip.Desktop.Messages;
@@ -33,6 +34,10 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IPushNotifier _push;
     private readonly IEmailSender _email;
     private readonly WindowsToastService _windowsToast;
+    private readonly IBitLockerService _bitLocker;
+    private readonly IGoogleDriveAuthService _googleAuth;
+    private string _googleRefreshToken = string.Empty;
+    private string _googleAccountEmail = string.Empty;
     private readonly IServiceProvider _services;
 
     private bool _isLoading;
@@ -48,6 +53,8 @@ public partial class SettingsViewModel : ObservableObject
         IPushNotifier push,
         IEmailSender email,
         WindowsToastService windowsToast,
+        IBitLockerService bitLocker,
+        IGoogleDriveAuthService googleAuth,
         IServiceProvider services)
     {
         _settings = settings;
@@ -60,6 +67,8 @@ public partial class SettingsViewModel : ObservableObject
         _push = push;
         _email = email;
         _windowsToast = windowsToast;
+        _bitLocker = bitLocker;
+        _googleAuth = googleAuth;
         _services = services;
 
         ThemeOptions = new ObservableCollection<ThemeOption>
@@ -178,6 +187,39 @@ public partial class SettingsViewModel : ObservableObject
     private bool _autoBackupEnabled = true;
 
     [ObservableProperty]
+    private bool _backupEncryptionEnabled;
+
+    [ObservableProperty]
+    private string _backupPassword = string.Empty;
+
+    [ObservableProperty]
+    private string _backupPasswordConfirm = string.Empty;
+
+    [ObservableProperty]
+    private bool _googleDriveEnabled;
+
+    [ObservableProperty]
+    private string _googleClientId = string.Empty;
+
+    [ObservableProperty]
+    private string _googleClientSecret = string.Empty;
+
+    [ObservableProperty]
+    private string _googleFolderName = "CGP Yedekler";
+
+    [ObservableProperty]
+    private string _googleDriveStatus = "Bağlı değil.";
+
+    [ObservableProperty]
+    private bool _isConnectingDrive;
+
+    [ObservableProperty]
+    private string _bitLockerText = "Kontrol edilmedi.";
+
+    [ObservableProperty]
+    private bool _isCheckingBitLocker;
+
+    [ObservableProperty]
     private string? _errorMessage;
 
     [ObservableProperty]
@@ -233,16 +275,162 @@ public partial class SettingsViewModel : ObservableObject
             WorkHoursEnd = settings.WorkHoursEnd;
             AllowOutOfHoursAppointments = settings.AllowOutOfHoursAppointments;
             AutoBackupEnabled = settings.AutoBackupEnabled;
+            BackupEncryptionEnabled = settings.BackupEncryptionEnabled;
+            BackupPassword = settings.BackupPassword;
+            BackupPasswordConfirm = settings.BackupPassword;
+            GoogleDriveEnabled = settings.GoogleDriveEnabled;
+            GoogleClientId = settings.GoogleClientId;
+            GoogleClientSecret = settings.GoogleClientSecret;
+            GoogleFolderName = settings.GoogleFolderName;
+            _googleRefreshToken = settings.GoogleRefreshToken;
+            _googleAccountEmail = settings.GoogleAccountEmail;
+            GoogleDriveStatus = string.IsNullOrWhiteSpace(settings.GoogleAccountEmail)
+                ? "Bağlı değil."
+                : $"Bağlı: {settings.GoogleAccountEmail}";
             SelectedAutoStartMode = AutoStartModeOptions.FirstOrDefault(x => x.Value == settings.AutoStartMode)
                                     ?? AutoStartModeOptions[0];
             SelectedTheme = ThemeOptions.FirstOrDefault(x => x.Value == settings.Theme) ?? ThemeOptions[0];
             SelectedReminder = ReminderOptions.FirstOrDefault(x => x.Minutes == settings.DefaultReminderMinutes)
                                ?? ReminderOptions[0];
+
+            _ = CheckBitLockerAsync();
         }
         finally
         {
             _isLoading = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task CheckBitLockerAsync()
+    {
+        if (IsCheckingBitLocker)
+            return;
+
+        IsCheckingBitLocker = true;
+        try
+        {
+            var status = await _bitLocker.GetStatusAsync();
+            BitLockerText = status switch
+            {
+                Domain.Rules.BitLockerProtectionStatus.On =>
+                    "Açık — disk şifrelemesi etkin.",
+                Domain.Rules.BitLockerProtectionStatus.Off =>
+                    "Kapalı — Windows'ta BitLocker'ı açmanız önerilir.",
+                _ => "Kontrol edilemedi (yönetici hakkı veya BitLocker cmdlet'i gerekli)."
+            };
+        }
+        finally
+        {
+            IsCheckingBitLocker = false;
+        }
+    }
+
+    private AppSettings BuildSettings()
+        => new(
+            SelectedTheme?.Value ?? AppTheme.Auto,
+            InstitutionName,
+            BackupDirectory,
+            NotificationsEnabled,
+            SelectedReminder?.Minutes ?? 30,
+            PushEnabled,
+            SelectedPushProvider,
+            PushTopic,
+            DailyShareTime,
+            PushToken,
+            PushChatId,
+            QuietHoursEnabled,
+            QuietHoursStart,
+            QuietHoursEnd,
+            AutoStartEnabled,
+            SelectedAutoStartMode?.Value ?? "login",
+            CloseToTray,
+            SmtpHost,
+            int.TryParse(SmtpPort, out var smtpPort) ? smtpPort : 587,
+            SmtpUseSsl,
+            SmtpUsername,
+            SmtpPassword,
+            SmtpFromAddress,
+            SmtpFromName,
+            WorkHoursStart,
+            WorkHoursEnd,
+            AllowOutOfHoursAppointments,
+            AutoBackupEnabled,
+            BackupEncryptionEnabled,
+            BackupPassword,
+            GoogleDriveEnabled,
+            GoogleClientId,
+            GoogleClientSecret,
+            _googleRefreshToken,
+            _googleAccountEmail,
+            GoogleFolderName);
+
+    [RelayCommand]
+    private async Task ConnectGoogleDriveAsync()
+    {
+        ErrorMessage = null;
+        StatusMessage = null;
+
+        if (!BackupEncryptionEnabled)
+        {
+            ErrorMessage = "Google Drive'a yükleme için önce yedek şifrelemeyi açın.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(GoogleClientId) || string.IsNullOrWhiteSpace(GoogleClientSecret))
+        {
+            ErrorMessage = "Google istemci kimliği ve gizli anahtarını girin.";
+            return;
+        }
+
+        IsConnectingDrive = true;
+        try
+        {
+            var result = await _googleAuth.ConnectAsync(GoogleClientId.Trim(), GoogleClientSecret.Trim());
+            if (!result.Success)
+            {
+                ErrorMessage = result.Error;
+                return;
+            }
+
+            _googleRefreshToken = result.RefreshToken ?? string.Empty;
+            _googleAccountEmail = result.Email ?? string.Empty;
+            GoogleDriveEnabled = true;
+            GoogleDriveStatus = string.IsNullOrWhiteSpace(_googleAccountEmail)
+                ? "Bağlı"
+                : $"Bağlı: {_googleAccountEmail}";
+
+            var saved = await _settings.SaveAsync(BuildSettings());
+            if (!saved.Success)
+            {
+                ErrorMessage = saved.Error;
+                return;
+            }
+
+            StatusMessage = "Google Drive bağlantısı kuruldu.";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Google Drive bağlantısı kurulamadı: {ex.Message}";
+        }
+        finally
+        {
+            IsConnectingDrive = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task DisconnectGoogleDriveAsync()
+    {
+        _googleRefreshToken = string.Empty;
+        _googleAccountEmail = string.Empty;
+        GoogleDriveEnabled = false;
+        GoogleDriveStatus = "Bağlı değil.";
+
+        var saved = await _settings.SaveAsync(BuildSettings());
+        StatusMessage = saved.Success ? "Google Drive bağlantısı kesildi." : null;
+        if (!saved.Success)
+            ErrorMessage = saved.Error;
     }
 
     [RelayCommand]
@@ -256,39 +444,19 @@ public partial class SettingsViewModel : ObservableObject
 
         ErrorMessage = null;
         StatusMessage = null;
+
+        if (BackupEncryptionEnabled
+            && !string.Equals(BackupPassword, BackupPasswordConfirm, StringComparison.Ordinal))
+        {
+            ErrorMessage = "Yedek parolası ve doğrulaması aynı olmalıdır.";
+            return;
+        }
+
         IsBusy = true;
 
         try
         {
-            var settings = new AppSettings(
-                SelectedTheme?.Value ?? AppTheme.Auto,
-                InstitutionName,
-                BackupDirectory,
-                NotificationsEnabled,
-                SelectedReminder?.Minutes ?? 30,
-                PushEnabled,
-                SelectedPushProvider,
-                PushTopic,
-                DailyShareTime,
-                PushToken,
-                PushChatId,
-                QuietHoursEnabled,
-                QuietHoursStart,
-                QuietHoursEnd,
-                AutoStartEnabled,
-                SelectedAutoStartMode?.Value ?? "login",
-                CloseToTray,
-                SmtpHost,
-                int.TryParse(SmtpPort, out var smtpPort) ? smtpPort : 587,
-                SmtpUseSsl,
-                SmtpUsername,
-                SmtpPassword,
-                SmtpFromAddress,
-                SmtpFromName,
-                WorkHoursStart,
-                WorkHoursEnd,
-                AllowOutOfHoursAppointments,
-                AutoBackupEnabled);
+            var settings = BuildSettings();
 
             var result = await _settings.SaveAsync(settings);
             if (!result.Success)

@@ -80,7 +80,24 @@ public sealed class SettingsService : ISettingsService
             AutoBackupEnabled: ReadBool(
                 values,
                 SettingsKeys.AutoBackupEnabled,
-                defaults.AutoBackupEnabled));
+                defaults.AutoBackupEnabled),
+            BackupEncryptionEnabled: ReadBool(
+                values,
+                SettingsKeys.BackupEncryptionEnabled,
+                defaults.BackupEncryptionEnabled),
+            BackupPassword: _secrets.Unprotect(Read(values, SettingsKeys.BackupPassword))
+                            ?? defaults.BackupPassword,
+            GoogleDriveEnabled: ReadBool(
+                values,
+                SettingsKeys.GoogleDriveEnabled,
+                defaults.GoogleDriveEnabled),
+            GoogleClientId: Read(values, SettingsKeys.GoogleClientId) ?? defaults.GoogleClientId,
+            GoogleClientSecret: _secrets.Unprotect(Read(values, SettingsKeys.GoogleClientSecret))
+                                ?? defaults.GoogleClientSecret,
+            GoogleRefreshToken: _secrets.Unprotect(Read(values, SettingsKeys.GoogleRefreshToken))
+                                ?? defaults.GoogleRefreshToken,
+            GoogleAccountEmail: Read(values, SettingsKeys.GoogleAccountEmail) ?? defaults.GoogleAccountEmail,
+            GoogleFolderName: Read(values, SettingsKeys.GoogleFolderName) ?? defaults.GoogleFolderName);
 
         _cachedSettings = settings;
         return settings;
@@ -120,6 +137,28 @@ public sealed class SettingsService : ISettingsService
 
         if (workStart >= workEnd)
             return OperationResult.Fail("Çalışma saati başlangıcı bitişten önce olmalıdır.");
+
+        var backupPassword = settings.BackupPassword ?? string.Empty;
+        if (backupPassword.Length is > 0 and < 8)
+            return OperationResult.Fail("Yedek parolası en az 8 karakter olmalıdır.");
+
+        if (settings.BackupEncryptionEnabled && string.IsNullOrWhiteSpace(backupPassword))
+            return OperationResult.Fail("Yedek şifreleme açıkken parola zorunludur.");
+
+        if (settings.GoogleDriveEnabled)
+        {
+            if (string.IsNullOrWhiteSpace(settings.GoogleClientId)
+                || string.IsNullOrWhiteSpace(settings.GoogleClientSecret))
+            {
+                return OperationResult.Fail("Google Drive için istemci kimliği ve gizli anahtar zorunludur.");
+            }
+
+            if (string.IsNullOrWhiteSpace(settings.GoogleRefreshToken))
+                return OperationResult.Fail("Google Drive bağlantısı kurulmalıdır.");
+
+            if (!settings.BackupEncryptionEnabled)
+                return OperationResult.Fail("Google Drive'a yükleme için yedek şifreleme açık olmalıdır.");
+        }
 
         if (settings.SmtpPort is < 1 or > 65535)
             return OperationResult.Fail("SMTP portu 1–65535 arasında olmalıdır.");
@@ -169,7 +208,17 @@ public sealed class SettingsService : ISettingsService
             [SettingsKeys.WorkHoursStart] = settings.WorkHoursStart,
             [SettingsKeys.WorkHoursEnd] = settings.WorkHoursEnd,
             [SettingsKeys.AllowOutOfHoursAppointments] = settings.AllowOutOfHoursAppointments.ToString(),
-            [SettingsKeys.AutoBackupEnabled] = settings.AutoBackupEnabled.ToString()
+            [SettingsKeys.AutoBackupEnabled] = settings.AutoBackupEnabled.ToString(),
+            [SettingsKeys.BackupEncryptionEnabled] = settings.BackupEncryptionEnabled.ToString(),
+            [SettingsKeys.BackupPassword] = _secrets.Protect(settings.BackupPassword ?? string.Empty) ?? string.Empty,
+            [SettingsKeys.GoogleDriveEnabled] = settings.GoogleDriveEnabled.ToString(),
+            [SettingsKeys.GoogleClientId] = settings.GoogleClientId?.Trim() ?? string.Empty,
+            [SettingsKeys.GoogleClientSecret] = _secrets.Protect(settings.GoogleClientSecret) ?? string.Empty,
+            [SettingsKeys.GoogleRefreshToken] = _secrets.Protect(settings.GoogleRefreshToken) ?? string.Empty,
+            [SettingsKeys.GoogleAccountEmail] = settings.GoogleAccountEmail?.Trim() ?? string.Empty,
+            [SettingsKeys.GoogleFolderName] = string.IsNullOrWhiteSpace(settings.GoogleFolderName)
+                ? "CGP Yedekler"
+                : settings.GoogleFolderName.Trim()
         };
 
         await _repository.SetManyAsync(values);

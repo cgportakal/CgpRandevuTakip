@@ -3,6 +3,25 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.10.0] — 2026-11-10 · Şifreli yedek, Drive, dışa aktarma
+
+### Eklendi
+- **Yedek şifreleme:** AES-256-GCM + PBKDF2; `.cgpbak` dosyaları. Parola DPAPI ile saklanır, otomatik yedeklerde kullanılır.
+- **Google Drive:** OAuth 2.0 + PKCE ile bağlanma, `drive.file` kapsamı, klasör oluşturma ve şifreli yedeği yükleme. Bağlantı token'ı DPAPI ile saklanır.
+- **Excel (`.xlsx`)** ve **CSV** dışa aktarma; Günlük Liste'deki mevcut filtreyi kullanır.
+- **PDF raporu** (QuestPDF, A4 yatay) ve **yazdırma** (Windows yazdırma diyaloğu).
+- **BitLocker göstergesi:** Ayarlar'da disk şifreleme durumu ve yeniden kontrol.
+
+### Güvenlik
+- Drive'a yükleme yalnızca şifreli yedeklerle yapılabilir.
+- Şifreli yedeklerin parolası kaybolursa geri yükleme yapılamaz.
+- Dışa aktarılan Excel/PDF/CSV dosyaları kişisel veri içerir; yalnızca kullanıcı kaydeder.
+
+### Test
+- 221/221 otomatik test.
+- Excel/CSV/PDF üretimi doğrulandı (PDF `%PDF`, xlsx açıldı).
+- Google Drive gerçek uçtan uca testi, kullanıcı OAuth istemci bilgileri girilince yapılacak.
+
 ## [0.9.0] — 2026-11-10 · Sprint 6C: denetim kaydı ekranı
 
 ### Eklendi

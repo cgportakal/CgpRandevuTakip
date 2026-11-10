@@ -2,9 +2,12 @@ using System.Windows.Threading;
 using CgpRandevuTakip.Application.Appointments;
 using CgpRandevuTakip.Application.Categories;
 using CgpRandevuTakip.Application.Hosts;
+using CgpRandevuTakip.Application.Settings;
 using CgpRandevuTakip.Desktop.Common;
 using CgpRandevuTakip.Desktop.Messages;
+using CgpRandevuTakip.Domain.Common;
 using CgpRandevuTakip.Domain.Enums;
+using Microsoft.Win32;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -25,6 +28,8 @@ public partial class AppointmentListViewModel : ObservableObject
     private readonly Application.Abstractions.ICurrentUser _currentUser;
     private readonly Services.IDialogService _dialogs;
     private readonly Services.IAppointmentDialogService _appointmentDialogs;
+    private readonly Services.IAppointmentExportService _exports;
+    private readonly ISettingsService _settings;
     private readonly DispatcherTimer _searchTimer;
     private readonly List<AppointmentRowViewModel> _selectedRows = new();
     private bool _isAllSelected;
@@ -39,7 +44,9 @@ public partial class AppointmentListViewModel : ObservableObject
         IHostService hosts,
         Application.Abstractions.ICurrentUser currentUser,
         Services.IDialogService dialogs,
-        Services.IAppointmentDialogService appointmentDialogs)
+        Services.IAppointmentDialogService appointmentDialogs,
+        Services.IAppointmentExportService exports,
+        ISettingsService settings)
     {
         _appointments = appointments;
         _categories = categories;
@@ -47,6 +54,8 @@ public partial class AppointmentListViewModel : ObservableObject
         _currentUser = currentUser;
         _dialogs = dialogs;
         _appointmentDialogs = appointmentDialogs;
+        _exports = exports;
+        _settings = settings;
 
         CategoryFilters = new RangeObservableCollection<CategoryFilterOption>
         {
@@ -166,6 +175,8 @@ public partial class AppointmentListViewModel : ObservableObject
     public bool CanFilterHosts => !_currentUser.IsInRole(UserRole.Host);
 
     public bool CanShareDailyList => _currentUser.IsInRole(UserRole.Admin, UserRole.Secretary);
+
+    public bool CanExport => _currentUser.IsInRole(UserRole.Admin, UserRole.Secretary);
 
     public bool IsHostRole => _currentUser.IsInRole(UserRole.Host);
 
@@ -410,6 +421,89 @@ public partial class AppointmentListViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanShareDailyList))]
     private async Task ShareDailyListAsync()
         => await _appointmentDialogs.ShowShareDailyListAsync(SelectedDate);
+
+    [RelayCommand(CanExecute = nameof(CanExport))]
+    private async Task ExportExcelAsync()
+        => await ExportFileAsync(
+            "xlsx",
+            "Excel çalışma kitabı (*.xlsx)|*.xlsx",
+            (path, institution, date, rows) => _exports.ExportExcel(path, institution, date, rows));
+
+    [RelayCommand(CanExecute = nameof(CanExport))]
+    private async Task ExportCsvAsync()
+        => await ExportFileAsync(
+            "csv",
+            "CSV dosyası (*.csv)|*.csv",
+            (path, institution, date, rows) => _exports.ExportCsv(path, institution, date, rows));
+
+    [RelayCommand(CanExecute = nameof(CanExport))]
+    private async Task ExportPdfAsync()
+        => await ExportFileAsync(
+            "pdf",
+            "PDF dosyası (*.pdf)|*.pdf",
+            (path, institution, date, rows) => _exports.ExportPdf(path, institution, date, rows));
+
+    [RelayCommand(CanExecute = nameof(CanExport))]
+    private async Task PrintAsync()
+    {
+        var rows = Appointments.Select(x => x.Item).ToList();
+        if (rows.Count == 0)
+        {
+            _dialogs.Info("Yazdırılacak görüşme yok.", "Yazdır");
+            return;
+        }
+
+        var settings = await _settings.GetAsync();
+        var institution = AppConstants.ResolveInstitutionName(settings.InstitutionName);
+
+        try
+        {
+            if (_exports.Print(institution, SelectedDate, rows))
+                _dialogs.Info("Yazdırma işi gönderildi.", "Yazdır");
+        }
+        catch (Exception ex)
+        {
+            _dialogs.Error($"Yazdırılamadı: {ex.Message}", "Yazdır");
+        }
+    }
+
+    private async Task ExportFileAsync(
+        string extension,
+        string filter,
+        Action<string, string, DateTime, IReadOnlyList<AppointmentListItemDto>> export)
+    {
+        var rows = Appointments.Select(x => x.Item).ToList();
+        if (rows.Count == 0)
+        {
+            _dialogs.Info("Dışa aktarılacak görüşme yok.", "Dışa aktar");
+            return;
+        }
+
+        var settings = await _settings.GetAsync();
+        var institution = AppConstants.ResolveInstitutionName(settings.InstitutionName);
+
+        var dialog = new SaveFileDialog
+        {
+            Title = "Günlük listeyi dışa aktar",
+            Filter = filter,
+            DefaultExt = "." + extension,
+            AddExtension = true,
+            FileName = $"CGP_Gunluk_Liste_{SelectedDate:yyyy-MM-dd}.{extension}"
+        };
+
+        if (dialog.ShowDialog() != true)
+            return;
+
+        try
+        {
+            export(dialog.FileName, institution, SelectedDate, rows);
+            _dialogs.Info($"Dosya kaydedildi:{Environment.NewLine}{dialog.FileName}", "Dışa aktar");
+        }
+        catch (Exception ex)
+        {
+            _dialogs.Error($"Dışa aktarma başarısız: {ex.Message}", "Dışa aktar");
+        }
+    }
 
     private async Task EnsureFiltersAsync()
     {

@@ -36,7 +36,15 @@ public sealed record AppSettings(
     string WorkHoursStart = "06:00",
     string WorkHoursEnd = "20:45",
     bool AllowOutOfHoursAppointments = false,
-    bool AutoBackupEnabled = true)
+    bool AutoBackupEnabled = true,
+    bool BackupEncryptionEnabled = false,
+    string BackupPassword = "",
+    bool GoogleDriveEnabled = false,
+    string GoogleClientId = "",
+    string GoogleClientSecret = "",
+    string GoogleRefreshToken = "",
+    string GoogleAccountEmail = "",
+    string GoogleFolderName = "CGP Yedekler")
 {
     public static AppSettings CreateDefault(string defaultBackupDirectory) => new(
         AppTheme.Auto,
@@ -66,7 +74,15 @@ public sealed record AppSettings(
         WorkHoursStart: "06:00",
         WorkHoursEnd: "20:45",
         AllowOutOfHoursAppointments: false,
-        AutoBackupEnabled: true);
+        AutoBackupEnabled: true,
+        BackupEncryptionEnabled: false,
+        BackupPassword: string.Empty,
+        GoogleDriveEnabled: false,
+        GoogleClientId: string.Empty,
+        GoogleClientSecret: string.Empty,
+        GoogleRefreshToken: string.Empty,
+        GoogleAccountEmail: string.Empty,
+        GoogleFolderName: "CGP Yedekler");
 }
 
 public static class SettingsKeys
@@ -100,4 +116,12 @@ public static class SettingsKeys
     public const string WorkHoursEnd = "app.work_hours_end";
     public const string AllowOutOfHoursAppointments = "app.allow_out_of_hours";
     public const string AutoBackupEnabled = "app.auto_backup_enabled";
+    public const string BackupEncryptionEnabled = "app.backup_encryption_enabled";
+    public const string BackupPassword = "app.backup_password";
+    public const string GoogleDriveEnabled = "app.google_drive_enabled";
+    public const string GoogleClientId = "app.google_client_id";
+    public const string GoogleClientSecret = "app.google_client_secret";
+    public const string GoogleRefreshToken = "app.google_refresh_token";
+    public const string GoogleAccountEmail = "app.google_account_email";
+    public const string GoogleFolderName = "app.google_folder_name";
 }

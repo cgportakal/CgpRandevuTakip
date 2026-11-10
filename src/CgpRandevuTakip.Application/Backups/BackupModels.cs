@@ -28,6 +28,11 @@ public sealed record BackupInfo(
     public string CreatedAtText => CreatedAtLocal.ToString("dd/MM/yyyy HH:mm");
 
     public string VerificationText => IsVerified ? "Doğrulandı" : "Doğrulanmadı";
+
+    public bool IsEncrypted
+        => Path.EndsWith(".cgpbak", StringComparison.OrdinalIgnoreCase);
+
+    public string EncryptionText => IsEncrypted ? "Şifreli" : "Şifresiz";
 }
 
 public sealed record BackupManifest(

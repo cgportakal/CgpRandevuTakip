@@ -242,6 +242,63 @@
                                       AutomationProperties.Name="Otomatik yedekleme" />
                             <TextBlock Text="Öğle yedeği 12:30'da alınır. Günlük liste öğleden sonra paylaşıldığında ikinci yedek hemen tetiklenir; paylaşım yoksa 18:00'de tamamlanır."
                                        Style="{StaticResource MutedText}" Margin="0,6,0,0" TextWrapping="Wrap" />
+
+                            <CheckBox Content="Yedekleri parola ile şifrele (AES-256-GCM)"
+                                      IsChecked="{Binding BackupEncryptionEnabled}"
+                                      Margin="0,14,0,0"
+                                      AutomationProperties.Name="Yedek şifreleme" />
+                            <Grid Margin="0,8,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Parola" Style="{StaticResource LabelText}" />
+                                    <PasswordBox x:Name="BackupPasswordBox"
+                                                 PasswordChanged="OnBackupPasswordChanged"
+                                                 AutomationProperties.Name="Yedek parolası" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Parola (tekrar)" Style="{StaticResource LabelText}" />
+                                    <PasswordBox x:Name="BackupPasswordConfirmBox"
+                                                 PasswordChanged="OnBackupPasswordConfirmChanged"
+                                                 AutomationProperties.Name="Yedek parolası tekrar" />
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="Parola bu bilgisayara bağlı olarak şifrelenip saklanır; otomatik yedeklerde kullanılır. Parolayı kaybederseniz şifreli yedeği geri yükleyemezsiniz."
+                                       Style="{StaticResource MutedText}" Margin="0,6,0,0" TextWrapping="Wrap" />
+
+                            <Border Style="{StaticResource Divider}" />
+
+                            <CheckBox Content="Google Drive'a yedekle (şifreli yedekler)"
+                                      IsChecked="{Binding GoogleDriveEnabled}"
+                                      Margin="0,0,0,8"
+                                      AutomationProperties.Name="Google Drive yedekleme" />
+                            <TextBlock Text="Google istemci kimliği" Style="{StaticResource LabelText}" />
+                            <TextBox Text="{Binding GoogleClientId, UpdateSourceTrigger=PropertyChanged}"
+                                     AutomationProperties.Name="Google istemci kimliği" />
+                            <TextBlock Text="Google istemci gizli anahtarı" Style="{StaticResource LabelText}" Margin="0,8,0,6" />
+                            <PasswordBox x:Name="GoogleClientSecretBox"
+                                         PasswordChanged="OnGoogleClientSecretChanged"
+                                         AutomationProperties.Name="Google istemci gizli anahtarı" />
+                            <TextBlock Text="Drive klasörü" Style="{StaticResource LabelText}" Margin="0,8,0,6" />
+                            <TextBox Text="{Binding GoogleFolderName, UpdateSourceTrigger=PropertyChanged}"
+                                     AutomationProperties.Name="Google Drive klasörü" />
+
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <Button Content="Bağlan"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding ConnectGoogleDriveCommand}"
+                                        Margin="0,0,8,0" />
+                                <Button Content="Bağlantıyı kes"
+                                        Style="{StaticResource GhostButton}"
+                                        Command="{Binding DisconnectGoogleDriveCommand}" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding GoogleDriveStatus}"
+                                       Style="{StaticResource MutedText}" Margin="0,8,0,0" />
+                            <TextBlock Text="Google Cloud'da Masaüstü uygulaması türünde OAuth istemcisi oluşturup kimlik bilgilerini buraya girin. Yalnızca drive.file kapsamı kullanılır."
+                                       Style="{StaticResource MutedText}" Margin="0,4,0,0" TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -354,6 +411,16 @@
                             <TextBlock Text="{Binding Copyright}" Style="{StaticResource MutedText}" Margin="0,2,0,0" />
 
                             <Border Style="{StaticResource Divider}" Margin="0,16" />
+
+                            <TextBlock Text="DİSK ŞİFRELEME (BITLOCKER)" Style="{StaticResource LabelText}" Margin="0,0,0,2" />
+                            <TextBlock Text="{Binding BitLockerText}"
+                                       Style="{StaticResource MutedText}"
+                                       TextWrapping="Wrap" />
+                            <Button Content="Kontrol et"
+                                    Style="{StaticResource GhostButton}"
+                                    Command="{Binding CheckBitLockerCommand}"
+                                    HorizontalAlignment="Left"
+                                    Margin="0,6,0,14" />
 
                             <TextBlock Text="VERİTABANI" Style="{StaticResource LabelText}" Margin="0,0,0,2" />
                             <TextBlock Text="{Binding DatabasePath}"

@@ -99,11 +99,11 @@ ilerlenir; cevap gelirse dokümanlar ve kod güncellenir.
 
 | ID | Soru | Önerilen varsayılan | Durum |
 |----|------|---------------------|-------|
-| Q-14 | Yedek dosyası şifrelensin mi? | Faz 2'de parola ile; MVP'de NTFS | Bekliyor |
-| Q-15 | Google Drive hangi hesap? | Kurum hesabı, Faz 2 | Bekliyor |
+| Q-14 | Yedek dosyası şifrelensin mi? | **Evet.** AES-256-GCM + PBKDF2; parola DPAPI ile saklanır | Kapandı |
+| Q-15 | Google Drive hangi hesap? | **Kişisel Google hesabı**; OAuth 2.0 (drive.file) ile bağlanır | Kapandı |
 | Q-16 | Veri saklama süresi? | 2 yıl | Bekliyor |
 | Q-17 | Kaç kullanıcı/rol tanımlanacak? | **1 yönetici + host isim listesi, opsiyonel giriş** (onaylandı) | Kapandı |
-| Q-18 | Bilgisayarda BitLocker açık mı? | Önerilir, doğrulanmalı | Bekliyor |
+| Q-18 | Bilgisayarda BitLocker açık mı? | Ayarlar'da durum göstergesi ve uyarı eklendi | Kapandı |
 | Q-19 | Yedekler ağ sürücüsüne mi gidecek? | Yerel klasör + opsiyonel ağ | Bekliyor |
 
 ### 2.4 İşleyiş
@@ -115,7 +115,7 @@ ilerlenir; cevap gelirse dokümanlar ve kod güncellenir.
 | Q-22 | Ertelenen görüşme yeni tarih ister mi? | Evet, opsiyonel; boşsa takipsiz | Bekliyor |
 | Q-23 | İptal eden kişiye WhatsApp'tan bilgi verilecek mi? | Manuel, şablonla | Bekliyor |
 | Q-24 | Excel'den mevcut veri aktarılacak mı? | Faz 2; örnek dosya gerekli | Bekliyor |
-| Q-25 | Yazıcıdan kâğıt liste isteniyor mu? | Faz 2 (PNG/PDF) | Bekliyor |
+| Q-25 | Yazıcıdan kâğıt liste isteniyor mu? | **Evet.** PDF raporu ve Windows yazdırma diyaloğu eklendi | Kapandı |
 
 ---
 

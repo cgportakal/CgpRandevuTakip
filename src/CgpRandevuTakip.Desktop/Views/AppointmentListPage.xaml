@@ -136,6 +136,23 @@
                         Command="{Binding OpenDetailCommand}"
                         Padding="14,7"
                         Margin="0,0,8,0" />
+                <Button Content="Dışa aktar"
+                        Style="{StaticResource SecondaryButton}"
+                        Click="OnExportClick"
+                        Padding="14,7"
+                        Margin="0,0,8,0"
+                        ToolTip="Excel, CSV veya PDF olarak dışa aktar"
+                        Visibility="{Binding CanExport, Converter={StaticResource BoolToVisibility}}">
+                    <Button.ContextMenu>
+                        <ContextMenu x:Name="ExportMenu">
+                            <MenuItem Header="Excel (.xlsx)" Command="{Binding ExportExcelCommand}" />
+                            <MenuItem Header="CSV (.csv)" Command="{Binding ExportCsvCommand}" />
+                            <Separator />
+                            <MenuItem Header="PDF (.pdf)" Command="{Binding ExportPdfCommand}" />
+                            <MenuItem Header="Yazdır" Command="{Binding PrintCommand}" />
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
                 <Button Content="Paylaş"
                         Style="{StaticResource SubtleButton}"
                         Command="{Binding ShareDailyListCommand}"

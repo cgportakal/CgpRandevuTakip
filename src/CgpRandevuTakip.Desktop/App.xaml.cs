@@ -19,6 +19,7 @@ using CgpRandevuTakip.Desktop.ViewModels;
 using CgpRandevuTakip.Desktop.Views;
 using CgpRandevuTakip.Infrastructure.Auditing;
 using CgpRandevuTakip.Infrastructure.Backups;
+using CgpRandevuTakip.Infrastructure.Google;
 using CgpRandevuTakip.Infrastructure.Persistence;
 using CgpRandevuTakip.Infrastructure.Repositories;
 using CgpRandevuTakip.Infrastructure.Security;
@@ -139,6 +140,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<SessionStateService>();
         services.AddSingleton<TrayService>();
         services.AddSingleton<AutoStartService>();
+        services.AddSingleton<IBitLockerService, BitLockerService>();
 
         services.AddSingleton<IUserRepository, UserRepository>();
         services.AddSingleton<ICategoryRepository, CategoryRepository>();
@@ -163,7 +165,10 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IUserService, UserService>();
         services.AddSingleton<IRecipientService, RecipientService>();
         services.AddSingleton<IDailyShareService, DailyShareService>();
+        services.AddSingleton<IAppointmentExportService, AppointmentExportService>();
         services.AddSingleton<IReminderService, ReminderService>();
+        services.AddSingleton<IGoogleDriveBackupUploader, GoogleDriveBackupUploader>();
+        services.AddSingleton<IGoogleDriveAuthService, GoogleDriveAuthService>();
         services.AddSingleton<IBackupService, BackupService>();
         services.AddSingleton<IAuditLogService, AuditLogService>();
 
