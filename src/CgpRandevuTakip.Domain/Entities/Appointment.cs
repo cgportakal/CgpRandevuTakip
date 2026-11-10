@@ -9,7 +9,7 @@ public class Appointment : EntityBase
     public string HostUserId { get; set; } = string.Empty;
     public string CategoryId { get; set; } = string.Empty;
 
-    /// <summary>Randevu başlangıcı, UTC. Gösterim Europe/Istanbul ile yapılır.</summary>
+    /// <summary>Randevu başlangıcı, UTC. Gösterim sistem saat dilimiyle yapılır.</summary>
     public DateTime StartsAtUtc { get; set; }
 
     public int DurationMinutes { get; set; } = 30;

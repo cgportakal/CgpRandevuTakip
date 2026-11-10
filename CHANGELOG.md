@@ -3,6 +3,13 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [1.1.1] — 2026-11-11 · Sistem saat dilimi
+
+### Düzeltildi
+- Tüm UTC ↔ yerel saat dönüşümleri artık **Windows sistem saat dilimini** kullanır (önceden sabit `Europe/Istanbul` idi).
+- Yedek dosya adları ve manifest zamanları, yedek geçmişi, randevu saatleri, hatırlatıcılar, denetim kaydı ve günlük paylaşım saatleri sistem saat dilimine göre gösterilir/hesaplanır.
+- İşletim sistemi saat dilimi değiştirilirse uygulama yeniden başlatıldığında yeni dilim geçerli olur.
+
 ## [1.1.0] — 2026-11-10 · Taşınabilir mod
 
 ### Eklendi

@@ -2,31 +2,22 @@ using CgpRandevuTakip.Application.Abstractions;
 
 namespace CgpRandevuTakip.Infrastructure.Time;
 
+/// <summary>
+/// Tüm UTC ↔ yerel dönüşümleri Windows'un sistem saat dilimini kullanır.
+/// Kullanıcı işletim sistemi saat dilimini değiştirirse uygulama yeniden başlatıldığında
+/// yeni dilim geçerli olur.
+/// </summary>
 public sealed class SystemClock : IClock
 {
-    private static readonly TimeZoneInfo IstanbulTimeZone = ResolveIstanbulTimeZone();
-
     public DateTime UtcNow => DateTime.UtcNow;
 
     public DateTime ToLocal(DateTime utc)
-        => TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), IstanbulTimeZone);
+        => TimeZoneInfo.ConvertTimeFromUtc(
+            DateTime.SpecifyKind(utc, DateTimeKind.Utc),
+            TimeZoneInfo.Local);
 
     public DateTime ToUtc(DateTime local)
-        => TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(local, DateTimeKind.Unspecified), IstanbulTimeZone);
-
-    private static TimeZoneInfo ResolveIstanbulTimeZone()
-    {
-        try
-        {
-            return TimeZoneInfo.FindSystemTimeZoneById("Turkey Standard Time");
-        }
-        catch (TimeZoneNotFoundException)
-        {
-            return TimeZoneInfo.CreateCustomTimeZone(
-                "Europe/Istanbul",
-                TimeSpan.FromHours(3),
-                "Türkiye Saati",
-                "Türkiye Saati");
-        }
-    }
+        => TimeZoneInfo.ConvertTimeToUtc(
+            DateTime.SpecifyKind(local, DateTimeKind.Unspecified),
+            TimeZoneInfo.Local);
 }
