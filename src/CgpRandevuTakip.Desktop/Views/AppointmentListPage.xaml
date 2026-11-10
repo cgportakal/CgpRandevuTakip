@@ -144,7 +144,11 @@
                         ToolTip="Excel, CSV veya PDF olarak dışa aktar"
                         Visibility="{Binding CanExport, Converter={StaticResource BoolToVisibility}}">
                     <Button.ContextMenu>
-                        <ContextMenu x:Name="ExportMenu">
+                        <ContextMenu x:Name="ExportMenu" Style="{StaticResource DarkContextMenu}">
+                            <ContextMenu.Resources>
+                                <Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DarkMenuItem}" />
+                                <Style TargetType="{x:Type Separator}" BasedOn="{StaticResource DarkMenuSeparator}" />
+                            </ContextMenu.Resources>
                             <MenuItem Header="Excel (.xlsx)" Command="{Binding ExportExcelCommand}" />
                             <MenuItem Header="CSV (.csv)" Command="{Binding ExportCsvCommand}" />
                             <Separator />

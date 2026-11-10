@@ -3,6 +3,12 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [1.1.2] — 2026-11-11 · Dışa aktar menüsü teması
+
+### Düzeltildi
+- “Dışa aktar” düğmesinin açtığı bağlam menüsü koyu temaya uyarlandı; beyaz arka plan ve okunmayan yazılar giderildi.
+- Menü öğeleri için koyu arka plan, açık metin ve vurgu rengi eklendi.
+
 ## [1.1.1] — 2026-11-11 · Sistem saat dilimi
 
 ### Düzeltildi
