@@ -3,6 +3,19 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [1.2.1] — 2026-11-11 · Dijital imza ve indirme sayfası
+
+### Eklendi
+- **Kod imzalama hattı:** `Imza-Sertifikasi-Olustur.ps1` geliştirme sertifikası üretir; `Kurulum-Olustur.ps1` uygulama EXE'sini ve Setup EXE'yi imzalar.
+- Üretim için PFX/CA sertifikası desteği (`-PfxPath`, `-CertificateThumbprint`).
+- README ana sayfasına **İndir** bölümü: Setup EXE ve taşınabilir ZIP bağlantıları.
+- `docs/22_Imza_ve_Yayin.md` yayın/imza rehberi.
+- GitHub deposu public; Releases üzerinden indirilebilir.
+
+### Önemli
+- Bu sürümdeki imza **geliştirme (self-signed)** sertifikasıyladır. Windows, sertifika güvenilir değilse
+  “Bilinmeyen yayıncı” gösterebilir. Üretim için CA'dan alınmış kod imzalama sertifikası kullanılmalıdır.
+
 ## [1.2.0] — 2026-11-11 · Kararlar ve yeni özellikler
 
 ### Eklendi

@@ -1,12 +1,23 @@
 # CGP - Randevu Takip
 
 [![CI](https://github.com/cgportakal/CgpRandevuTakip/actions/workflows/ci.yml/badge.svg)](https://github.com/cgportakal/CgpRandevuTakip/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/cgportakal/CgpRandevuTakip)](https://github.com/cgportakal/CgpRandevuTakip/releases/latest)
+
+## İndir
+
+- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.2.1-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.2.1/CGP-RandevuTakip-1.2.1-Setup.exe)
+- **Taşınabilir ZIP:** [CGP-RandevuTakip-1.2.1-portable.zip](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.2.1/CGP-RandevuTakip-1.2.1-portable.zip)
+- **Tüm sürümler:** [Releases](https://github.com/cgportakal/CgpRandevuTakip/releases/latest)
+
+> Kurulum EXE'si per-user çalışır; yönetici hakkı istemez. Taşınabilir ZIP'i yazılabilir bir klasöre açıp
+> `CgpRandevuTakip.Desktop.exe` dosyasını çalıştırın. Dijital imza ayrıntıları:
+> [docs/22_Imza_ve_Yayin.md](docs/22_Imza_ve_Yayin.md).
 
 Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöneten, günlük listeyi
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
 > Durum: **Sprint 4 + 4.5 UAT + Sprint 5 tamamlandı** — hatırlatıcılar, Windows toast/push, tepsi, "beni hatırla", e-posta ile şifre sıfırlama, günlük liste PNG'si, WhatsApp paylaşımı ve alıcı rehberi hazır.
-> Sürüm: 1.2.0 · Tarih: 11.11.2026 · 233 test geçiyor
+> Sürüm: 1.2.1 · Tarih: 11.11.2026 · 233 test geçiyor
 
 ## Neden bu proje?
 
