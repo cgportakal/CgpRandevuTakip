@@ -62,16 +62,15 @@ public sealed class AppointmentDialogService : IAppointmentDialogService
         window.ShowDialog();
     }
 
-    public Task<BulkMoveSelection?> ShowBulkMoveAsync(
+    public async Task<BulkMoveSelection?> ShowBulkMoveAsync(
         int count,
         DateTime initialDate,
         IReadOnlyList<DateTime> startsAtLocal)
     {
         var window = _services.GetRequiredService<BulkMoveWindow>();
         window.Owner = Owner;
-        window.Initialize(count, initialDate, startsAtLocal);
-        var result = window.ShowDialog() == true ? window.Selection : null;
-        return Task.FromResult(result);
+        await window.InitializeAsync(count, initialDate, startsAtLocal);
+        return window.ShowDialog() == true ? window.Selection : null;
     }
 
     public Task ShowRecipientsAsync()

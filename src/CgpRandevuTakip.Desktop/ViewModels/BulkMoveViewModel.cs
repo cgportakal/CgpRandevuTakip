@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using CgpRandevuTakip.Application.Settings;
+using CgpRandevuTakip.Domain.Rules;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -10,14 +12,17 @@ public sealed record BulkMoveSelection(DateTime NewDate, TimeSpan? NewTime);
 
 public partial class BulkMoveViewModel : ObservableObject
 {
+    private readonly ISettingsService _settings;
     private IReadOnlyList<DateTime> _startsAtLocal = Array.Empty<DateTime>();
 
-    public BulkMoveViewModel()
+    public BulkMoveViewModel(ISettingsService settings)
     {
-        // 06:00–20:45 arası 15 dakikalık seçenekler.
+        _settings = settings;
         TimeOptions = new ObservableCollection<string>(
-            Enumerable.Range(24, 60)
-                .Select(i => TimeSpan.FromMinutes(i * 15).ToString(@"hh\:mm", CultureInfo.InvariantCulture)));
+            AppointmentDefaults.BuildTimeOptions(
+                AppointmentDefaults.DefaultDayStart,
+                AppointmentDefaults.DefaultDayEnd,
+                allowOutOfHours: false));
     }
 
     public ObservableCollection<string> TimeOptions { get; }
@@ -50,8 +55,24 @@ public partial class BulkMoveViewModel : ObservableObject
         set => KeepTimes = !value;
     }
 
-    public void Initialize(int count, DateTime initialDate, IReadOnlyList<DateTime> startsAtLocal)
+    public async Task InitializeAsync(int count, DateTime initialDate, IReadOnlyList<DateTime> startsAtLocal)
     {
+        var settings = await _settings.GetAsync();
+        var start = TimeSpan.TryParseExact(settings.WorkHoursStart, @"hh\:mm", CultureInfo.InvariantCulture, out var s)
+            ? s
+            : AppointmentDefaults.DefaultDayStart;
+        var end = TimeSpan.TryParseExact(settings.WorkHoursEnd, @"hh\:mm", CultureInfo.InvariantCulture, out var e)
+            ? e
+            : AppointmentDefaults.DefaultDayEnd;
+
+        var options = AppointmentDefaults.BuildTimeOptions(
+            start,
+            end,
+            settings.AllowOutOfHoursAppointments);
+        TimeOptions.Clear();
+        foreach (var option in options)
+            TimeOptions.Add(option);
+
         _startsAtLocal = startsAtLocal;
         Title = count == 1 ? "Görüşmeyi taşı" : $"{count} görüşmeyi taşı";
         CountText = count == 1

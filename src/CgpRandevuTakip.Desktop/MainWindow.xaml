@@ -127,6 +127,18 @@
 
                         <RadioButton Style="{StaticResource NavButton}"
                                      GroupName="MainNav"
+                                     AutomationProperties.Name="Yedekleme"
+                                     IsChecked="{Binding IsBackupsSelected}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🗄" Width="24" FontSize="14"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" />
+                                <TextBlock Text="Yedekleme"
+                                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" />
+                            </StackPanel>
+                        </RadioButton>
+
+                        <RadioButton Style="{StaticResource NavButton}"
+                                     GroupName="MainNav"
                                      AutomationProperties.Name="Ayarlar"
                                      IsChecked="{Binding IsSettingsSelected}">
                             <StackPanel Orientation="Horizontal">
@@ -146,7 +158,6 @@
                                    Margin="24,0,0,8" />
 
                         <TextBlock Text="Alıcı rehberi" Style="{StaticResource MutedText}" Margin="24,6,0,0" />
-                        <TextBlock Text="Yedekleme" Style="{StaticResource MutedText}" Margin="24,6,0,0" />
 
                         <Border Background="{DynamicResource SurfaceAltBrush}"
                                 BorderBrush="{DynamicResource BorderBrush}"

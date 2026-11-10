@@ -166,6 +166,18 @@ public partial class SettingsViewModel : ObservableObject
     private string _dailyShareTime = "08:30";
 
     [ObservableProperty]
+    private string _workHoursStart = "06:00";
+
+    [ObservableProperty]
+    private string _workHoursEnd = "20:45";
+
+    [ObservableProperty]
+    private bool _allowOutOfHoursAppointments;
+
+    [ObservableProperty]
+    private bool _autoBackupEnabled = true;
+
+    [ObservableProperty]
     private string? _errorMessage;
 
     [ObservableProperty]
@@ -217,6 +229,10 @@ public partial class SettingsViewModel : ObservableObject
             AutoStartEnabled = settings.AutoStartEnabled;
             CloseToTray = settings.CloseToTray;
             DailyShareTime = settings.DailyShareTime;
+            WorkHoursStart = settings.WorkHoursStart;
+            WorkHoursEnd = settings.WorkHoursEnd;
+            AllowOutOfHoursAppointments = settings.AllowOutOfHoursAppointments;
+            AutoBackupEnabled = settings.AutoBackupEnabled;
             SelectedAutoStartMode = AutoStartModeOptions.FirstOrDefault(x => x.Value == settings.AutoStartMode)
                                     ?? AutoStartModeOptions[0];
             SelectedTheme = ThemeOptions.FirstOrDefault(x => x.Value == settings.Theme) ?? ThemeOptions[0];
@@ -268,7 +284,11 @@ public partial class SettingsViewModel : ObservableObject
                 SmtpUsername,
                 SmtpPassword,
                 SmtpFromAddress,
-                SmtpFromName);
+                SmtpFromName,
+                WorkHoursStart,
+                WorkHoursEnd,
+                AllowOutOfHoursAppointments,
+                AutoBackupEnabled);
 
             var result = await _settings.SaveAsync(settings);
             if (!result.Success)

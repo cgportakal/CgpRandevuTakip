@@ -78,9 +78,9 @@ ilerlenir; cevap gelirse dokümanlar ve kod güncellenir.
 |----|------|--------------|---------------------|-------|
 | Q-01 | Ürünün resmî adı ne olacak? | Yedek adı, kurulum, Hakkında | **CGP - Randevu Takip** (D-37 ile güncellendi) | Kapandı |
 | Q-02 | Kurum türü ne? (okul, danışmanlık, hukuk, sağlık, kamu) | Terminoloji ve KVKK hassasiyeti | **Eğitim kurumu** (onaylandı) | Kapandı |
-| Q-03 | Kurum adı (paylaşım başlığında) | Görsel ve mesaj | Ayarlardan girilir, boş başlar | Bekliyor |
+| Q-03 | Kurum adı (paylaşım başlığında) | Görsel ve mesaj | **BEK Okulları** varsayılan; Ayarlar'dan değiştirilebilir | Kapandı |
 | Q-04 | Görüşme süresi ve iki randevu arası tampon? | Çakışma, takvim | **30 dk** (onaylandı), tampon yok | Kapandı |
-| Q-05 | Görüşmeler mesai dışına taşar mı? | Sessiz saat, gece bildirimi | 08:00-20:00 arası; dışında sessiz | Bekliyor |
+| Q-05 | Görüşmeler mesai dışına taşar mı? | Sessiz saat, gece bildirimi | Çalışma saatleri **06:00–20:45** varsayılan; Ayarlar'dan değiştirilebilir. "Mesai dışı görüşme" izni ayrı açılır/kapanır; bildirimler sessiz saatlere uyar. | Kapandı |
 | Q-06 | Aynı kişiye aynı gün birden çok görüşme olur mu? | Listeleme, çakışma | Evet, izin ver | Bekliyor |
 
 ### 2.2 WhatsApp ve bildirim
@@ -90,7 +90,7 @@ ilerlenir; cevap gelirse dokümanlar ve kod güncellenir.
 | Q-07 | Günlük liste kaç alıcıya gidiyor, isimleri? | Ayarlardan yönetilir; MVP'de boş rehber | Bekliyor |
 | Q-08 | Gönderim saati kaç? | 08:30 | Bekliyor |
 | Q-09 | WhatsApp Desktop mı, Web mi kullanılıyor? | **Desktop + test telefonu var** (onaylandı) | Kapandı |
-| Q-10 | Push için ntfy mi Telegram mı? | ntfy (kurulumu kolay) | Bekliyor |
+| Q-10 | Push için ntfy mi Telegram mı? | **İkisi de desteklenir**; Ayarlar'dan seçilen sağlayıcı kullanılır | Kapandı |
 | Q-11 | Bildirimde kişi adı görünsün mü? | Hayır (KVKK) | Bekliyor |
 | Q-12 | "Sırası gelen" bildirimi ne zaman? | 30 dk + 5 dk önce (onaylandı) | Kapandı |
 | Q-13 | Hatırlatıcı 3 kez tekrar etsin mi? | Evet, 10 dk arayla | Bekliyor |

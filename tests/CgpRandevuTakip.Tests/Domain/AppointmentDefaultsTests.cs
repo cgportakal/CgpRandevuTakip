@@ -53,4 +53,42 @@ public class AppointmentDefaultsTests
 
         Assert.Equal(new DateTime(2026, 11, 11, 6, 0, 0), start);
     }
+
+    [Fact]
+    public void NextStart_UsesConfiguredWorkHours()
+    {
+        var now = new DateTime(2026, 11, 10, 16, 30, 0);
+
+        var start = AppointmentDefaults.NextStart(
+            now,
+            TimeSpan.FromHours(8),
+            TimeSpan.FromHours(17));
+
+        Assert.Equal(new DateTime(2026, 11, 11, 8, 0, 0), start);
+    }
+
+    [Fact]
+    public void NextStart_AllowsOutOfHoursWhenEnabled()
+    {
+        var now = new DateTime(2026, 11, 10, 22, 0, 0);
+
+        var start = AppointmentDefaults.NextStart(
+            now,
+            allowOutOfHours: true);
+
+        Assert.Equal(new DateTime(2026, 11, 10, 23, 0, 0), start);
+    }
+
+    [Fact]
+    public void BuildTimeOptions_CoversWorkHoursInQuarterHours()
+    {
+        var options = AppointmentDefaults.BuildTimeOptions(
+            TimeSpan.FromHours(6),
+            TimeSpan.FromHours(20).Add(TimeSpan.FromMinutes(45)),
+            allowOutOfHours: false);
+
+        Assert.Equal(60, options.Count);
+        Assert.Equal("06:00", options[0]);
+        Assert.Equal("20:45", options[^1]);
+    }
 }

@@ -91,6 +91,41 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- Çalışma saatleri -->
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,16"
+                            Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel>
+                            <TextBlock Text="Çalışma saatleri" Style="{StaticResource SectionTitle}" />
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Başlangıç (SS:dd)" Style="{StaticResource LabelText}" />
+                                    <TextBox Text="{Binding WorkHoursStart, UpdateSourceTrigger=PropertyChanged}"
+                                             MaxLength="5"
+                                             AutomationProperties.Name="Çalışma saati başlangıcı" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Bitiş (SS:dd)" Style="{StaticResource LabelText}" />
+                                    <TextBox Text="{Binding WorkHoursEnd, UpdateSourceTrigger=PropertyChanged}"
+                                             MaxLength="5"
+                                             AutomationProperties.Name="Çalışma saati bitişi" />
+                                </StackPanel>
+                            </Grid>
+
+                            <CheckBox Content="Mesai dışında görüşme oluşturulabilsin"
+                                      IsChecked="{Binding AllowOutOfHoursAppointments}"
+                                      Margin="0,12,0,0"
+                                      AutomationProperties.Name="Mesai dışı görüşme" />
+                            <TextBlock Text="Randevu saat seçenekleri bu aralığa göre üretilir. Mesai dışı kapalıyken aralık dışına randevu girilemez."
+                                       Style="{StaticResource MutedText}" Margin="0,6,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+
                     <!-- Bildirimler -->
                     <Border Style="{StaticResource Card}" Margin="0,0,0,16"
                             Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibility}}">
@@ -104,10 +139,12 @@
                                       IsChecked="{Binding PushEnabled}"
                                       Margin="0,0,0,12" />
 
-                            <TextBlock Text="Push sağlayıcısı" Style="{StaticResource LabelText}" />
+                            <TextBlock Text="Push sağlayıcısı (seçili olan kullanılır)" Style="{StaticResource LabelText}" />
                             <ComboBox ItemsSource="{Binding PushProviderOptions}"
                                       SelectedItem="{Binding SelectedPushProvider, Mode=TwoWay}"
                                       AutomationProperties.Name="Push sağlayıcısı" />
+                            <TextBlock Text="ntfy ve Telegram birlikte desteklenir; hangisini kullanacağınızı buradan seçin."
+                                       Style="{StaticResource MutedText}" Margin="0,5,0,0" TextWrapping="Wrap" />
 
                             <StackPanel Visibility="{Binding IsTelegramProvider, Converter={StaticResource InverseBoolToVisibility}}">
                                 <TextBlock Text="Push konusu / topic" Style="{StaticResource LabelText}" Margin="0,14,0,6" />
@@ -198,6 +235,13 @@
                             </Grid>
                             <TextBlock Text="Kaydederken klasörün yazılabilirliği test edilir."
                                        Style="{StaticResource MutedText}" Margin="0,6,0,0" />
+
+                            <CheckBox Content="Otomatik yedekleme açık (günde 2 kez)"
+                                      IsChecked="{Binding AutoBackupEnabled}"
+                                      Margin="0,14,0,0"
+                                      AutomationProperties.Name="Otomatik yedekleme" />
+                            <TextBlock Text="Öğle yedeği 12:30'da alınır. Günlük liste öğleden sonra paylaşıldığında ikinci yedek hemen tetiklenir; paylaşım yoksa 18:00'de tamamlanır."
+                                       Style="{StaticResource MutedText}" Margin="0,6,0,0" TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
                 </StackPanel>

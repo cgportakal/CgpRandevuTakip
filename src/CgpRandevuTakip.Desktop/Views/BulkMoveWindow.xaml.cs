@@ -17,8 +17,8 @@ public partial class BulkMoveWindow : Window
         _viewModel.Cancelled += OnCancelled;
     }
 
-    public void Initialize(int count, DateTime initialDate, IReadOnlyList<DateTime> startsAtLocal)
-        => _viewModel.Initialize(count, initialDate, startsAtLocal);
+    public Task InitializeAsync(int count, DateTime initialDate, IReadOnlyList<DateTime> startsAtLocal)
+        => _viewModel.InitializeAsync(count, initialDate, startsAtLocal);
 
     public BulkMoveSelection? Selection => _viewModel.Selection;
 

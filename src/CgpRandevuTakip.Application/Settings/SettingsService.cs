@@ -70,7 +70,17 @@ public sealed class SettingsService : ISettingsService
             SmtpUsername: Read(values, SettingsKeys.SmtpUsername) ?? defaults.SmtpUsername,
             SmtpPassword: _secrets.Unprotect(Read(values, SettingsKeys.SmtpPassword)) ?? defaults.SmtpPassword,
             SmtpFromAddress: Read(values, SettingsKeys.SmtpFromAddress) ?? defaults.SmtpFromAddress,
-            SmtpFromName: Read(values, SettingsKeys.SmtpFromName) ?? defaults.SmtpFromName);
+            SmtpFromName: Read(values, SettingsKeys.SmtpFromName) ?? defaults.SmtpFromName,
+            WorkHoursStart: ReadTime(values, SettingsKeys.WorkHoursStart, defaults.WorkHoursStart),
+            WorkHoursEnd: ReadTime(values, SettingsKeys.WorkHoursEnd, defaults.WorkHoursEnd),
+            AllowOutOfHoursAppointments: ReadBool(
+                values,
+                SettingsKeys.AllowOutOfHoursAppointments,
+                defaults.AllowOutOfHoursAppointments),
+            AutoBackupEnabled: ReadBool(
+                values,
+                SettingsKeys.AutoBackupEnabled,
+                defaults.AutoBackupEnabled));
 
         _cachedSettings = settings;
         return settings;
@@ -101,6 +111,15 @@ public sealed class SettingsService : ISettingsService
         {
             return OperationResult.Fail("Sessiz saatler SS:dd biçiminde olmalıdır.");
         }
+
+        if (!TimeSpan.TryParseExact(settings.WorkHoursStart, @"hh\:mm", CultureInfo.InvariantCulture, out var workStart)
+            || !TimeSpan.TryParseExact(settings.WorkHoursEnd, @"hh\:mm", CultureInfo.InvariantCulture, out var workEnd))
+        {
+            return OperationResult.Fail("Çalışma saatleri SS:dd biçiminde olmalıdır.");
+        }
+
+        if (workStart >= workEnd)
+            return OperationResult.Fail("Çalışma saati başlangıcı bitişten önce olmalıdır.");
 
         if (settings.SmtpPort is < 1 or > 65535)
             return OperationResult.Fail("SMTP portu 1–65535 arasında olmalıdır.");
@@ -146,7 +165,11 @@ public sealed class SettingsService : ISettingsService
             [SettingsKeys.SmtpUsername] = settings.SmtpUsername?.Trim() ?? string.Empty,
             [SettingsKeys.SmtpPassword] = _secrets.Protect(settings.SmtpPassword) ?? string.Empty,
             [SettingsKeys.SmtpFromAddress] = settings.SmtpFromAddress?.Trim() ?? string.Empty,
-            [SettingsKeys.SmtpFromName] = settings.SmtpFromName?.Trim() ?? string.Empty
+            [SettingsKeys.SmtpFromName] = settings.SmtpFromName?.Trim() ?? string.Empty,
+            [SettingsKeys.WorkHoursStart] = settings.WorkHoursStart,
+            [SettingsKeys.WorkHoursEnd] = settings.WorkHoursEnd,
+            [SettingsKeys.AllowOutOfHoursAppointments] = settings.AllowOutOfHoursAppointments.ToString(),
+            [SettingsKeys.AutoBackupEnabled] = settings.AutoBackupEnabled.ToString()
         };
 
         await _repository.SetManyAsync(values);

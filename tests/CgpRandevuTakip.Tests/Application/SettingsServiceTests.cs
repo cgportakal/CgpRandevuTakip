@@ -36,7 +36,7 @@ public class SettingsServiceTests
             var settings = await service.GetAsync();
 
             Assert.Equal(AppTheme.Auto, settings.Theme);
-            Assert.Equal(string.Empty, settings.InstitutionName);
+            Assert.Equal("BEK Okulları", settings.InstitutionName);
             Assert.Equal(environment.DefaultBackupDirectory, settings.BackupDirectory);
             Assert.True(settings.NotificationsEnabled);
             Assert.Equal(30, settings.DefaultReminderMinutes);

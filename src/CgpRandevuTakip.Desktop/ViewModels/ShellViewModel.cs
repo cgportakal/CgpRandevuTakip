@@ -68,6 +68,9 @@ public partial class ShellViewModel : ObservableObject, IDisposable
     private bool _isSettingsSelected;
 
     [ObservableProperty]
+    private bool _isBackupsSelected;
+
+    [ObservableProperty]
     private string _institutionName = AppConstants.DefaultInstitutionName;
 
     public string UserDisplayName => _currentUser.DisplayName;
@@ -158,6 +161,7 @@ public partial class ShellViewModel : ObservableObject, IDisposable
         IsCategoriesSelected = key == "categories";
         IsUsersSelected = key == "users";
         IsSettingsSelected = key == "settings";
+        IsBackupsSelected = key == "backups";
         _suppressNavigation = false;
 
         CurrentPage = key switch
@@ -166,6 +170,7 @@ public partial class ShellViewModel : ObservableObject, IDisposable
             "categories" => _services.GetRequiredService<CategoriesPage>(),
             "users" => _services.GetRequiredService<UsersPage>(),
             "settings" => _services.GetRequiredService<SettingsPage>(),
+            "backups" => _services.GetRequiredService<BackupsPage>(),
             "dashboard" => _services.GetRequiredService<DashboardPage>(),
             _ => _services.GetRequiredService<AppointmentListPage>()
         };
@@ -176,6 +181,7 @@ public partial class ShellViewModel : ObservableObject, IDisposable
             "categories" => ("Kategoriler", "Görüşme konularını ekleyin, düzenleyin ve sıralayın"),
             "users" => ("Kullanıcılar", "Roller, giriş izinleri ve şifre yönetimi"),
             "settings" => ("Ayarlar", "Tema, bildirim, yedekleme ve tanılama"),
+            "backups" => ("Yedekleme", "Yedek alın, doğrulayın ve geri yükleyin"),
             "dashboard" => ("Kontrol Paneli", "Sistem durumu ve yapılandırma özeti"),
             _ => ("Günlük Liste", "Randevular, arama ve günlük akış")
         };
@@ -215,6 +221,12 @@ public partial class ShellViewModel : ObservableObject, IDisposable
     {
         if (value && !_suppressNavigation)
             NavigateTo("settings");
+    }
+
+    partial void OnIsBackupsSelectedChanged(bool value)
+    {
+        if (value && !_suppressNavigation)
+            NavigateTo("backups");
     }
 
     public void Dispose()

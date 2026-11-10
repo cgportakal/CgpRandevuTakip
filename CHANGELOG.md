@@ -3,6 +3,25 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [0.8.0] — 2026-11-10 · Sprint 6A/6B: yedekleme ve geri yükleme
+
+### Eklendi
+- ZIP yedeği: `data.db` + `settings.json` + `manifest.json`; manifestte sürüm, şema, kayıt sayıları ve SHA-256
+- Yedekleme sayfası: manuel yedek (tüm roller), yedek geçmişi, doğrulama durumu, klasörü açma
+- Son 30 yedeğin saklanması
+- Günde 2 otomatik yedek: 12:30 öğle yedeği + öğleden sonra günlük liste paylaşımı sonrası; paylaşım yoksa 18:00
+- Geri yükleme: ZIP bütünlüğü, şema uyumu, SHA-256 ve SQLite `integrity_check` doğrulaması
+- Geri yükleme öncesi otomatik güvenlik yedeği ve uygulamanın yeniden başlatılması
+
+### Değişti
+- Kurum adı varsayılanı **BEK Okulları**; Ayarlar'dan değiştirilebilir
+- Çalışma saatleri (varsayılan 06:00–20:45) ve "mesai dışı görüşme" izni Ayarlar'dan yönetilir
+- Push sağlayıcı seçimi (ntfy/Telegram) Ayarlar'dan yapılır; seçili sağlayıcı kullanılır
+
+### Güvenlik
+- Geri yükleme yalnızca yönetici rolüne açıktır
+- Yedek `settings.json` dosyasına SMTP parolası ve push token/chat id yazılmaz
+
 ## [0.7.0] — 2026-11-10 · Toplu işlemler
 
 ### Eklendi

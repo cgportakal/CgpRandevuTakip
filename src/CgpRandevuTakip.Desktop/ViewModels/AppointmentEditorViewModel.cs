@@ -31,6 +31,9 @@ public partial class AppointmentEditorViewModel : ObservableObject
     private bool _closedWarningConfirmed;
     private DateTime? _originalStartsAtLocal;
     private int _defaultReminderMinutes = 30;
+    private TimeSpan _workHoursStart = AppointmentDefaults.DefaultDayStart;
+    private TimeSpan _workHoursEnd = AppointmentDefaults.DefaultDayEnd;
+    private bool _allowOutOfHours;
 
     public AppointmentEditorViewModel(
         IAppointmentService appointments,
@@ -68,10 +71,12 @@ public partial class AppointmentEditorViewModel : ObservableObject
         _selectedMethod = Methods[0];
         _selectedDuration = Durations.First(x => x.Minutes == 60);
 
-        // 06:00–20:45 arası 15 dakikalık seçenekler.
+        // İlk değerler; ayarlar yüklendiğinde çalışma saatlerine göre yenilenir.
         TimeOptions = new ObservableCollection<string>(
-            Enumerable.Range(24, 60)
-                .Select(i => TimeSpan.FromMinutes(i * 15).ToString(@"hh\:mm", CultureInfo.InvariantCulture)));
+            AppointmentDefaults.BuildTimeOptions(
+                AppointmentDefaults.DefaultDayStart,
+                AppointmentDefaults.DefaultDayEnd,
+                allowOutOfHours: false));
 
         ReminderHourOptions = new ObservableCollection<int>(Enumerable.Range(0, 169));
         ReminderMinuteOptions = new ObservableCollection<int>(Enumerable.Range(0, 60));
@@ -346,7 +351,19 @@ public partial class AppointmentEditorViewModel : ObservableObject
 
         await Task.WhenAll(settingsTask, categoriesTask, hostsTask);
 
-        _defaultReminderMinutes = (await settingsTask).DefaultReminderMinutes;
+        var settings = await settingsTask;
+        _defaultReminderMinutes = settings.DefaultReminderMinutes;
+        _workHoursStart = ParseTime(settings.WorkHoursStart, AppointmentDefaults.DefaultDayStart);
+        _workHoursEnd = ParseTime(settings.WorkHoursEnd, AppointmentDefaults.DefaultDayEnd);
+        _allowOutOfHours = settings.AllowOutOfHoursAppointments;
+
+        var timeOptions = AppointmentDefaults.BuildTimeOptions(
+            _workHoursStart,
+            _workHoursEnd,
+            _allowOutOfHours);
+        TimeOptions.Clear();
+        foreach (var option in timeOptions)
+            TimeOptions.Add(option);
 
         // Yeni görüşmede yalnızca aktif kategoriler seçilebilir.
         // Düzenlemede mevcut pasif kategori, kayıt bozulmasın diye ayrıca eklenir.
@@ -512,10 +529,14 @@ public partial class AppointmentEditorViewModel : ObservableObject
         EnsureTimeOption(TimeText);
     }
 
-    private static DateTime DefaultStart(DateTime initialDate)
+    private DateTime DefaultStart(DateTime initialDate)
     {
         // Yeni görüşme: şimdiki saatten 1 saat sonrası (15 dk dilime yuvarlanır).
-        var start = AppointmentDefaults.NextStart(DateTime.Now);
+        var start = AppointmentDefaults.NextStart(
+            DateTime.Now,
+            _workHoursStart,
+            _workHoursEnd,
+            _allowOutOfHours);
 
         // Kullanıcı ileri bir tarihi görüntülüyorsa tarih korunur, saat yine 1 saat sonrasıdır.
         if (initialDate.Date > start.Date)
@@ -524,6 +545,11 @@ public partial class AppointmentEditorViewModel : ObservableObject
         // Bugün veya geçmiş bir tarih görüntüleniyorsa hedef her zaman bugündür.
         return start;
     }
+
+    private static TimeSpan ParseTime(string? text, TimeSpan fallback)
+        => TimeSpan.TryParseExact(text?.Trim(), @"hh\:mm", CultureInfo.InvariantCulture, out var parsed)
+            ? parsed
+            : fallback;
 
     private static bool TryParseTime(string? text, out TimeSpan time)
     {

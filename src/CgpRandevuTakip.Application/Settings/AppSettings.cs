@@ -32,11 +32,15 @@ public sealed record AppSettings(
     string SmtpUsername = "",
     string SmtpPassword = "",
     string SmtpFromAddress = "",
-    string SmtpFromName = "CGP - Randevu Takip")
+    string SmtpFromName = "CGP - Randevu Takip",
+    string WorkHoursStart = "06:00",
+    string WorkHoursEnd = "20:45",
+    bool AllowOutOfHoursAppointments = false,
+    bool AutoBackupEnabled = true)
 {
     public static AppSettings CreateDefault(string defaultBackupDirectory) => new(
         AppTheme.Auto,
-        string.Empty,
+        "BEK Okulları",
         defaultBackupDirectory,
         NotificationsEnabled: true,
         DefaultReminderMinutes: 30,
@@ -58,7 +62,11 @@ public sealed record AppSettings(
         SmtpUsername: string.Empty,
         SmtpPassword: string.Empty,
         SmtpFromAddress: string.Empty,
-        SmtpFromName: "CGP - Randevu Takip");
+        SmtpFromName: "CGP - Randevu Takip",
+        WorkHoursStart: "06:00",
+        WorkHoursEnd: "20:45",
+        AllowOutOfHoursAppointments: false,
+        AutoBackupEnabled: true);
 }
 
 public static class SettingsKeys
@@ -88,4 +96,8 @@ public static class SettingsKeys
     public const string SmtpPassword = "app.smtp_password";
     public const string SmtpFromAddress = "app.smtp_from_address";
     public const string SmtpFromName = "app.smtp_from_name";
+    public const string WorkHoursStart = "app.work_hours_start";
+    public const string WorkHoursEnd = "app.work_hours_end";
+    public const string AllowOutOfHoursAppointments = "app.allow_out_of_hours";
+    public const string AutoBackupEnabled = "app.auto_backup_enabled";
 }

@@ -5,6 +5,7 @@ using System.Windows;
 using CgpRandevuTakip.Application.Abstractions;
 using CgpRandevuTakip.Application.Appointments;
 using CgpRandevuTakip.Application.Auth;
+using CgpRandevuTakip.Application.Backups;
 using CgpRandevuTakip.Application.Categories;
 using CgpRandevuTakip.Application.Hosts;
 using CgpRandevuTakip.Application.Notifications;
@@ -16,6 +17,7 @@ using CgpRandevuTakip.Desktop.Services;
 using CgpRandevuTakip.Desktop.ViewModels;
 using CgpRandevuTakip.Desktop.Views;
 using CgpRandevuTakip.Infrastructure.Auditing;
+using CgpRandevuTakip.Infrastructure.Backups;
 using CgpRandevuTakip.Infrastructure.Persistence;
 using CgpRandevuTakip.Infrastructure.Repositories;
 using CgpRandevuTakip.Infrastructure.Security;
@@ -160,6 +162,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IRecipientService, RecipientService>();
         services.AddSingleton<IDailyShareService, DailyShareService>();
         services.AddSingleton<IReminderService, ReminderService>();
+        services.AddSingleton<IBackupService, BackupService>();
 
         services.AddSingleton<ThemeService>();
         services.AddSingleton<IDialogService, DialogService>();
@@ -169,6 +172,7 @@ public partial class App : System.Windows.Application
         services.AddHostedService<DeletedAppointmentCleanupService>();
         services.AddHostedService<ReminderDispatcher>();
         services.AddHostedService<DailyShareScheduler>();
+        services.AddHostedService<AutoBackupService>();
         services.AddTransient<SessionLockService>();
 
         services.AddTransient<LoginViewModel>();
@@ -190,6 +194,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<ShareDailyListViewModel>();
         services.AddTransient<RecipientsViewModel>();
         services.AddTransient<BulkMoveViewModel>();
+        services.AddTransient<BackupsViewModel>();
 
         services.AddTransient<LoginWindow>();
         services.AddTransient<ForgotPasswordWindow>();
@@ -210,6 +215,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<ShareDailyListWindow>();
         services.AddTransient<RecipientsWindow>();
         services.AddTransient<BulkMoveWindow>();
+        services.AddTransient<BackupsPage>();
     }
 
     private async Task InitializeDatabaseAsync()
