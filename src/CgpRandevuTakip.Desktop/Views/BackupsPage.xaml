@@ -53,12 +53,18 @@
                                TextWrapping="Wrap" />
                 </StackPanel>
 
-                <Button Grid.Column="1"
-                        Content="Seçili yedeği geri yükle"
-                        Style="{StaticResource DangerButton}"
-                        Command="{Binding RestoreSelectedCommand}"
-                        VerticalAlignment="Center"
-                        Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibility}}" />
+                <StackPanel Grid.Column="1" VerticalAlignment="Center"
+                            Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibility}}">
+                    <Button Content="Seçili yedeği doğrula"
+                            Style="{StaticResource SecondaryButton}"
+                            Command="{Binding ValidateSelectedCommand}"
+                            Margin="0,0,0,8"
+                            HorizontalAlignment="Stretch" />
+                    <Button Content="Seçili yedeği geri yükle"
+                            Style="{StaticResource DangerButton}"
+                            Command="{Binding RestoreSelectedCommand}"
+                            HorizontalAlignment="Stretch" />
+                </StackPanel>
             </Grid>
         </Border>
 

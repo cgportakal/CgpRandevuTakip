@@ -2,7 +2,7 @@
 ; Build: dotnet publish + ISCC (see Kurulum-Olustur.ps1)
 
 #define MyAppName "CGP - Randevu Takip"
-#define MyAppVersion "1.4.2"
+#define MyAppVersion "1.5.0"
 #define MyAppPublisher "CGP"
 #define MyAppExeName "CgpRandevuTakip.Desktop.exe"
 
@@ -33,6 +33,9 @@ Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 [Tasks]
 Name: "desktopicon"; Description: "Masaüstü kısayolu oluştur"; GroupDescription: "Kısayollar:"; Flags: unchecked
 
+[Registry]
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "CgpRandevuTakip"; Flags: uninsdeletevalue
+
 [Files]
 Source: "..\dist\CGP-RandevuTakip-{#MyAppVersion}-win-x64\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
@@ -45,5 +48,6 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
+Type: files; Name: "{userappdata}\Microsoft\Windows\Start Menu\Programs\Startup\CGP - Randevu Takip.vbs"
 
 ; Kullanıcı verisi (%LOCALAPPDATA%\CgpRandevuTakip) ve yedekler kaldırılmaz.

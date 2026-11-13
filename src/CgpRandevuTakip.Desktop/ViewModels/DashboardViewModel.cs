@@ -16,6 +16,7 @@ public partial class DashboardViewModel : ObservableObject
     private readonly ICategoryRepository _categories;
     private readonly IUserRepository _users;
     private readonly IAppointmentService _appointments;
+    private readonly IAppointmentRepository _appointmentRepository;
     private readonly ISettingsService _settings;
     private readonly IAppEnvironment _environment;
     private readonly ICurrentUser _currentUser;
@@ -24,6 +25,7 @@ public partial class DashboardViewModel : ObservableObject
         ICategoryRepository categories,
         IUserRepository users,
         IAppointmentService appointments,
+        IAppointmentRepository appointmentRepository,
         ISettingsService settings,
         IAppEnvironment environment,
         ICurrentUser currentUser)
@@ -31,6 +33,7 @@ public partial class DashboardViewModel : ObservableObject
         _categories = categories;
         _users = users;
         _appointments = appointments;
+        _appointmentRepository = appointmentRepository;
         _settings = settings;
         _environment = environment;
         _currentUser = currentUser;
@@ -80,6 +83,9 @@ public partial class DashboardViewModel : ObservableObject
     private string _todaySummary = "Bugünün görüşmeleri yükleniyor…";
 
     [ObservableProperty]
+    private string _weekSummary = "Son 7 gün yükleniyor…";
+
+    [ObservableProperty]
     private string _lastBackupText = "Henüz yedek yok";
 
     [ObservableProperty]
@@ -103,11 +109,22 @@ public partial class DashboardViewModel : ObservableObject
         var userCountTask = _users.CountAsync();
         var todayTask = _appointments.GetDayAsync(DateTime.Today);
 
-        await Task.WhenAll(categoriesTask, settingsTask, userCountTask, todayTask);
+        var weekFromUtc = DateTime.Today.AddDays(-6).ToUniversalTime();
+        var weekToUtc = DateTime.Today.AddDays(1).ToUniversalTime();
+        var weekTask = _appointmentRepository.QueryAsync(new AppointmentQuery(
+            weekFromUtc,
+            weekToUtc,
+            null,
+            null,
+            null,
+            null));
+
+        await Task.WhenAll(categoriesTask, settingsTask, userCountTask, todayTask, weekTask);
 
         var all = await categoriesTask;
         var settings = await settingsTask;
         var todayCount = (await todayTask).Count;
+        var week = await weekTask;
 
         ActiveCategoryCount = all.Count(x => x.IsActive);
         TotalCategoryCount = all.Count;
@@ -147,6 +164,10 @@ public partial class DashboardViewModel : ObservableObject
         TodaySummary = todayCount == 0
             ? $"Bugün görüşme yok · Çalışma saatleri {settings.WorkHoursStart}–{settings.WorkHoursEnd}"
             : $"Bugün {todayCount} görüşme · Çalışma saatleri {settings.WorkHoursStart}–{settings.WorkHoursEnd}";
+
+        var weekCompleted = week.Count(x => x.Status == AppointmentStatus.Completed);
+        var weekNoShow = week.Count(x => x.Status == AppointmentStatus.NoShow);
+        WeekSummary = $"Son 7 gün: {week.Count} görüşme · {weekCompleted} tamamlandı · {weekNoShow} gelmedi";
 
         LastBackupText = ResolveLastBackupText(settings.BackupDirectory);
         NotificationsText = settings.NotificationsEnabled

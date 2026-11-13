@@ -30,6 +30,13 @@
                                    MaxWidth="560"
                                    HorizontalAlignment="Left"
                                    Margin="0,16,0,0" />
+                        <TextBlock Text="{Binding WeekSummary}"
+                                   Foreground="#CCFFFFFF"
+                                   FontSize="12"
+                                   TextWrapping="Wrap"
+                                   MaxWidth="560"
+                                   HorizontalAlignment="Left"
+                                   Margin="0,4,0,0" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">

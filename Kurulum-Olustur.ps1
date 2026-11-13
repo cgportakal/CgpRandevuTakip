@@ -1,5 +1,5 @@
 param(
-    [string]$Version = "1.4.2",
+    [string]$Version = "1.5.0",
     [string]$CertificateThumbprint = "",
     [string]$PfxPath = "",
     [string]$PfxPassword = "",
@@ -134,3 +134,18 @@ if ($iscc) {
     Get-ChildItem $dist -Filter "CGP-RandevuTakip-$Version-Setup.exe" |
         ForEach-Object { Write-Host "  Setup  : $($_.FullName)" }
 }
+
+# Güncelleme paketleri için SHA-256 özetleri (uygulama bunları GitHub digest alanından doğrular).
+$checksumFiles = @($zip)
+$setupPath = Join-Path $dist "CGP-RandevuTakip-$Version-Setup.exe"
+if ($iscc -and (Test-Path $setupPath)) {
+    $checksumFiles += $setupPath
+}
+
+$checksumPath = Join-Path $dist "SHA256SUMS.txt"
+$checksumLines = foreach ($file in $checksumFiles) {
+    $hash = (Get-FileHash -Path $file -Algorithm SHA256).Hash.ToLowerInvariant()
+    "$hash  $(Split-Path $file -Leaf)"
+}
+$checksumLines | Set-Content -Path $checksumPath -Encoding ASCII
+Write-Host "  SHA256 : $checksumPath"

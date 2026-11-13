@@ -18,7 +18,19 @@ public sealed class InstitutionLogoService
 
     private static readonly string[] AllowedExtensions = { ".png", ".jpg", ".jpeg", ".bmp" };
 
-    public string BrandingDirectory => Path.Combine(AppPaths.Root, BrandingFolder);
+    private readonly string _rootDirectory;
+
+    public InstitutionLogoService()
+        : this(AppPaths.Root)
+    {
+    }
+
+    public InstitutionLogoService(string rootDirectory)
+    {
+        _rootDirectory = rootDirectory;
+    }
+
+    public string BrandingDirectory => Path.Combine(_rootDirectory, BrandingFolder);
 
     public static string SupportedFormatsText => "PNG, JPG veya BMP · en fazla 4 MB";
 
@@ -32,7 +44,7 @@ public sealed class InstitutionLogoService
             var path = Path.IsPathRooted(relativePath)
                 ? relativePath
                 : Path.Combine(
-                    AppPaths.Root,
+                    _rootDirectory,
                     relativePath.Replace('/', Path.DirectorySeparatorChar));
 
             return File.Exists(path) ? path : null;

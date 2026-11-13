@@ -49,11 +49,11 @@ benzersiz bir kimlik taşır ve test/sprint ile izlenebilir.
 | FR-AUTH-02 | İlk kurulumda bir yönetici hesabı oluşturulur; varsayılan şifre yoktur. | P0 |
 | FR-AUTH-03 | Şifre en az 8 karakter, en az bir harf ve bir rakam içerir; PBKDF2-SHA256 (≥210.000 iterasyon) ile saklanır. | P0 |
 | FR-AUTH-04 | 5 hatalı denemede hesap 15 dakika kilitlenir; kalan süre gösterilir. | P1 |
-| FR-AUTH-05 | 30 dakika işlem yapılmazsa oturum kilitlenir; şifre ile açılır. | P1 |
+| FR-AUTH-05 | Oturum, açık çıkış yapılana kadar açık kalır (süre sınırı yok). Kullanıcı isterse elle kilitler; kilit şifreyle açılır ve yeniden başlatmada korunur. | P1 |
 | FR-AUTH-06 | Kullanıcı kendi şifresini değiştirebilir; yönetici şifre sıfırlayabilir. | P1 |
 | FR-AUTH-07 | Rol ataması yalnızca yönetici tarafından yapılır. | P1 |
 | FR-AUTH-08 | Başarılı/başarısız giriş denemeleri denetim kaydına yazılır (şifre asla loglanmaz). | P1 |
-| FR-AUTH-09 | "Beni hatırla" yoktur; uygulama kapanınca oturum sonlanır. | P1 |
+| FR-AUTH-09 | "Beni hatırla" yalnızca çıkış sonrası giriş formunun ön doldurulmasını yönetir; oturum süresizdir ve şifre değişiminde kayıtlı kimlik güncellenir. | P1 |
 
 ### 2.2 Görüşme yönetimi (APPT)
 
@@ -510,7 +510,7 @@ açılışta görebileyim, **böylece** görüşmeyi kaçırmayayım.
 |----|------------|
 | NFR-PRIV-01 | Veri minimizasyonu: yalnızca görüşme için gerekli alanlar. |
 | NFR-PRIV-02 | Varsayılan saklama 2 yıl; süre sonunda anonimleştirme/silme. |
-| NFR-PRIV-03 | Push varsayılan olarak isimsiz; WhatsApp paylaşımı kullanıcı eylemiyle. |
+| NFR-PRIV-03 | Push bildiriminde görüşmeci ve kişi adı gösterilir (ürün sahibi onayı); WhatsApp paylaşımı kullanıcı eylemiyle yapılır. |
 | NFR-PRIV-04 | Aydınlatma metni ve KVKK bilgisi Hakkında/Ayarlar içinde erişilebilir. |
 | NFR-PRIV-05 | Üçüncü taraf (ntfy, Google) aktarımları belgelenir ve yapılandırma sırasında bildirilir. |
 

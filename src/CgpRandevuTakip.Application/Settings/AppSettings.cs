@@ -106,7 +106,6 @@ public static class SettingsKeys
     public const string PushProvider = "app.push_provider";
     public const string PushTopic = "app.push_topic";
     public const string DailyShareTime = "app.daily_share_time";
-    public const string FirstRunCompleted = "app.first_run_completed";
     public const string PushToken = "app.push_token";
     public const string PushChatId = "app.push_chat_id";
     public const string QuietHoursEnabled = "app.quiet_hours_enabled";

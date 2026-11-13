@@ -144,6 +144,39 @@ public partial class BackupsViewModel : ObservableObject
     }
 
     [RelayCommand(CanExecute = nameof(CanRestore))]
+    private async Task ValidateSelectedAsync()
+    {
+        if (SelectedBackup is null)
+            return;
+
+        ErrorMessage = null;
+        StatusMessage = null;
+        IsBusy = true;
+
+        try
+        {
+            var result = await _backups.ValidateAsync(SelectedBackup.Path);
+            if (!result.Success)
+            {
+                ErrorMessage = result.Error;
+                return;
+            }
+
+            StatusMessage =
+                $"Yedek doğrulandı: {SelectedBackup.FileName} · " +
+                $"{result.Manifest?.AppointmentCount ?? 0} görüşme · {result.Manifest?.Version}";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Yedek doğrulanamadı: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRestore))]
     private async Task RestoreSelectedAsync()
     {
         if (SelectedBackup is null)
@@ -224,10 +257,16 @@ public partial class BackupsViewModel : ObservableObject
         => IsAdmin && SelectedBackup is not null && !IsBusy;
 
     partial void OnSelectedBackupChanged(BackupInfo? value)
-        => RestoreSelectedCommand.NotifyCanExecuteChanged();
+    {
+        RestoreSelectedCommand.NotifyCanExecuteChanged();
+        ValidateSelectedCommand.NotifyCanExecuteChanged();
+    }
 
     partial void OnIsBusyChanged(bool value)
-        => RestoreSelectedCommand.NotifyCanExecuteChanged();
+    {
+        RestoreSelectedCommand.NotifyCanExecuteChanged();
+        ValidateSelectedCommand.NotifyCanExecuteChanged();
+    }
 
     private static void RestartApplication()
     {

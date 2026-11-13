@@ -1,9 +1,9 @@
 <Project>
 
   <PropertyGroup>
-    <Version>1.4.2</Version>
-    <FileVersion>1.4.2.0</FileVersion>
-    <AssemblyVersion>1.4.2.0</AssemblyVersion>
+    <Version>1.5.0</Version>
+    <FileVersion>1.5.0.0</FileVersion>
+    <AssemblyVersion>1.5.0.0</AssemblyVersion>
     <Product>CGP - Randevu Takip</Product>
     <Company>CGP</Company>
     <Copyright>© 2026 CGP</Copyright>

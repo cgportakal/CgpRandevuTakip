@@ -66,6 +66,16 @@ public partial class App : System.Windows.Application
             await InitializeDatabaseAsync();
             await _host.StartAsync();
 
+            var rollback = _host.Services.GetRequiredService<UpdateRollbackService>();
+            if (rollback.HandlePendingOnStartup())
+            {
+                Shutdown();
+                return;
+            }
+
+            _host.Services.GetRequiredService<UpdateService>().ReportPortableResult();
+            DiagnosticsService.CleanupOldLogs();
+
             _tray = _host.Services.GetRequiredService<TrayService>();
             _tray.Initialize();
 
@@ -307,6 +317,8 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IDailyShareService, DailyShareService>();
         services.AddSingleton<IAppointmentExportService, AppointmentExportService>();
         services.AddSingleton<IUpdateService, UpdateService>();
+        services.AddSingleton<UpdateRollbackService>();
+        services.AddSingleton<UpdateService>(sp => (UpdateService)sp.GetRequiredService<IUpdateService>());
         services.AddSingleton<IExcelImportService, ExcelImportService>();
         services.AddSingleton<IReminderService, ReminderService>();
         services.AddSingleton<IGoogleDriveBackupUploader, GoogleDriveBackupUploader>();

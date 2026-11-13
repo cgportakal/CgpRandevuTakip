@@ -3,6 +3,33 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [1.5.0] — 2026-11-14 · Güncelleme güvenliği, geri dönüş ve kalite
+
+### Güncelleme
+- **SHA-256 doğrulama:** İndirilen Setup/ZIP, GitHub Releases `digest` değeriyle doğrulanır. Özet yoksa veya eşleşmezse güncelleme başlatılmaz.
+- **Geri dönüş:** Kurulum öncesi program dosyalarının anlık görüntüsü alınır. Güncelleme uygulanamazsa açılışta otomatik olarak önceki sürüme dönülür; Ayarlar > Güncelleme > **Önceki sürüme dön** ile elle de yapılabilir. Veri klasörü korunur.
+- **Taşınabilir güncelleme:** Süreç kapanışı beklenir; kopyalama başarısız olursa anlık görüntüden geri yüklenir ve sonuç bir sonraki açılışta bildirilir.
+- **Güncelleme günlüğü:** Denetim, indirme, doğrulama ve kurulum adımları `logs/update.log` dosyasına yazılır; Ayarlar’dan açılır.
+- **Sürüm notları:** Güncelleme kontrolünde GitHub release notları uygulama içinde görüntülenir.
+- **Kaldırma:** Uninstall, HKCU başlangıç kaydını ve taşınabilir başlangıç VBS’ini temizler; kullanıcı verisi korunur.
+
+### Kalite
+- **Desktop test projesi:** `CgpRandevuTakip.Desktop.Tests` eklendi (logo servisi, geri dönüş anlık görüntüsü, PNG üretimi).
+- **Performans:** 50 satırlık PNG üretimi ve 1000 kayıtlı gün sorgusu için eşikli testler.
+- **Sürüm tutarlılığı:** `AppConstants.Version` ile derleme sürümü testle doğrulanıyor.
+- **SHA-256 testleri:** Özet normalizasyonu ve dosya doğrulaması.
+- **Tanılama paketi:** Kişisel veri içermeyen ZIP (günlükler + sistem bilgisi) masaüstüne kaydedilir.
+- **Günlük saklama:** 90 günden eski günlükler açılışta temizlenir.
+- **Erişilebilirlik:** Ayarlar alanlarına ekran okuyucu adları eklendi.
+
+### Ürün / UX
+- **Kullanım kılavuzu:** Uygulama içi `Yardım` penceresi ve `docs/26_Kullanici_Kilavuzu.md`.
+- **Kontrol paneli:** Son 7 günün görüşme/tamamlanan/gelmedi özeti.
+- **Yedek doğrulama:** Yedekleme sayfasında seçili yedeği doğrulama düğmesi.
+
+### Test
+- **292 test** (280 uygulama + 12 Desktop), Release 0 uyarı / 0 hata.
+
 ## [1.4.2] — 2026-11-14 · Kurulum sihirbazı tutarlılık düzeltmeleri
 
 ### Düzeltildi

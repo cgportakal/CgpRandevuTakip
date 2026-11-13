@@ -1,6 +1,6 @@
 # 06 — Karar Kaydı ve Açık Sorular
 
-**Sürüm:** 1.4.2 · **Tarih:** 14.11.2026
+**Sürüm:** 1.5.0 · **Tarih:** 14.11.2026
 
 ---
 
@@ -159,6 +159,11 @@ cevap gelmezse dokümandaki varsayılanlarla ilerlenir.
 - **K-08** “Atla” ile geçilen adımlarda yarım değerler kaydedilmez; mevcut ayarlar korunur ve özet “Atlandı” gösterir.
 - **K-09** Şifre değişiminde “Beni hatırla” kayıtlı kimliği yeni şifreyle güncellenir.
 - **K-10** Sihirbazdaki başlangıç modu kullanıcının mevcut seçimini korur (gizli / giriş ekranı).
+- **K-11** Güncelleme paketleri SHA-256 ile doğrulanır; özet yoksa veya eşleşmezse kurulum başlatılmaz.
+- **K-12** Kurulum öncesi program dosyalarının anlık görüntüsü alınır; başarısız güncellemede otomatik, istenirse elle geri dönüş yapılır. Veri klasörü kopyalanmaz.
+- **K-13** Her güncelleme adımı `logs/update.log` dosyasına yazılır; sürüm notları uygulama içinde gösterilir.
+- **K-14** Tanılama paketi kişisel veri içermez; yalnızca günlükler ve sistem/sürüm bilgisi toplanır.
+- **K-15** Desktop katmanı için ayrı test projesi ve performans eşikli testler kullanılır.
 
 > Bu noktadan sonra her sürüm sonunda bu doküman, gereksinimler ve backlog
 > güncellenir; kararlar **döngüsel** olarak yeniden gözden geçirilir.

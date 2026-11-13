@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -16,6 +16,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{02C255BB-C17D-403A-9333-159280927FB1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CgpRandevuTakip.Tests", "tests\CgpRandevuTakip.Tests\CgpRandevuTakip.Tests.csproj", "{7EF1A048-412E-40F4-9CEF-A27D1256E15D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CgpRandevuTakip.Desktop.Tests", "tests\CgpRandevuTakip.Desktop.Tests\CgpRandevuTakip.Desktop.Tests.csproj", "{86BB8DA1-4263-462E-8A0A-C46163A7FB3B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,6 +48,10 @@ Global
 		{7EF1A048-412E-40F4-9CEF-A27D1256E15D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7EF1A048-412E-40F4-9CEF-A27D1256E15D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7EF1A048-412E-40F4-9CEF-A27D1256E15D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{86BB8DA1-4263-462E-8A0A-C46163A7FB3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86BB8DA1-4263-462E-8A0A-C46163A7FB3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86BB8DA1-4263-462E-8A0A-C46163A7FB3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86BB8DA1-4263-462E-8A0A-C46163A7FB3B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{457EC006-E8DE-42B1-9E6A-EA966587F0CB} = {961CF460-B2AB-4A24-9894-46DDC577C3CF}
@@ -53,5 +59,6 @@ Global
 		{FD58373A-2AA9-400A-8E9B-A9A8FCCE7A8D} = {961CF460-B2AB-4A24-9894-46DDC577C3CF}
 		{7FD6EC62-59D9-417B-954C-767DB6E09BA0} = {961CF460-B2AB-4A24-9894-46DDC577C3CF}
 		{7EF1A048-412E-40F4-9CEF-A27D1256E15D} = {02C255BB-C17D-403A-9333-159280927FB1}
+		{86BB8DA1-4263-462E-8A0A-C46163A7FB3B} = {02C255BB-C17D-403A-9333-159280927FB1}
 	EndGlobalSection
 EndGlobal

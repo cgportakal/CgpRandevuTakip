@@ -39,6 +39,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IBitLockerService _bitLocker;
     private readonly IGoogleDriveAuthService _googleAuth;
     private readonly IUpdateService _updates;
+    private readonly UpdateRollbackService _rollback;
     private readonly InstitutionLogoService _logoService;
     private UpdateCheckResult? _lastUpdate;
     private string _googleRefreshToken = string.Empty;
@@ -62,6 +63,7 @@ public partial class SettingsViewModel : ObservableObject
         IBitLockerService bitLocker,
         IGoogleDriveAuthService googleAuth,
         IUpdateService updates,
+        UpdateRollbackService rollbackService,
         InstitutionLogoService logoService,
         IServiceProvider services)
     {
@@ -78,6 +80,7 @@ public partial class SettingsViewModel : ObservableObject
         _bitLocker = bitLocker;
         _googleAuth = googleAuth;
         _updates = updates;
+        _rollback = rollbackService;
         _logoService = logoService;
         _services = services;
 
@@ -134,6 +137,19 @@ public partial class SettingsViewModel : ObservableObject
     private BitmapImage? _logoPreview;
 
     public bool HasLogo => LogoPreview is not null;
+
+    public bool CanRollback => _rollback.CanRollback();
+
+    public string RollbackHint
+    {
+        get
+        {
+            var snapshot = _rollback.GetSnapshot();
+            return snapshot is null
+                ? "Geri dönüş sürümü yok."
+                : $"Hazır: {snapshot.Version}";
+        }
+    }
 
     public string LogoFormatsText => InstitutionLogoService.SupportedFormatsText;
 
@@ -354,6 +370,9 @@ public partial class SettingsViewModel : ObservableObject
                                ?? ReminderOptions[0];
 
             _ = CheckBitLockerAsync();
+
+            OnPropertyChanged(nameof(CanRollback));
+            OnPropertyChanged(nameof(RollbackHint));
         }
         finally
         {
@@ -602,6 +621,102 @@ public partial class SettingsViewModel : ObservableObject
         finally
         {
             IsCheckingUpdate = false;
+        }
+    }
+
+    [RelayCommand]
+    private void ShowReleaseNotes()
+    {
+        if (_lastUpdate is null || string.IsNullOrWhiteSpace(_lastUpdate.ReleaseNotes))
+        {
+            ErrorMessage = "Sürüm notları bulunamadı. Önce güncellemeleri kontrol edin.";
+            return;
+        }
+
+        ErrorMessage = null;
+        var window = new Views.ReleaseNotesWindow(
+            _lastUpdate.LatestVersion ?? AppConstants.Version,
+            _lastUpdate.ReleaseNotes!,
+            _lastUpdate.ReleaseUrl)
+        {
+            Owner = System.Windows.Application.Current?.MainWindow
+        };
+
+        window.ShowDialog();
+    }
+
+    [RelayCommand]
+    private void OpenUpdateLog()
+    {
+        ErrorMessage = null;
+
+        if (!File.Exists(UpdateLog.FilePath))
+        {
+            StatusMessage = "Güncelleme günlüğü henüz oluşmadı.";
+            return;
+        }
+
+        Process.Start(new ProcessStartInfo(UpdateLog.FilePath) { UseShellExecute = true });
+    }
+
+    [RelayCommand]
+    private void RollbackUpdate()
+    {
+        ErrorMessage = null;
+
+        var snapshot = _rollback.GetSnapshot();
+        if (snapshot is null || !_rollback.CanRollback())
+        {
+            ErrorMessage = "Geri dönülecek bir sürüm bulunamadı.";
+            return;
+        }
+
+        if (!_dialogs.Confirm(
+                $"{snapshot.Version} sürümüne dönülecek. Uygulama yeniden başlayacak. Devam edilsin mi?",
+                "Önceki sürüme dön"))
+        {
+            return;
+        }
+
+        if (!_rollback.StartManualRollback())
+        {
+            ErrorMessage = "Geri dönüş başlatılamadı.";
+            return;
+        }
+
+        System.Windows.Application.Current?.Shutdown();
+    }
+
+    [RelayCommand]
+    private void OpenHelp()
+    {
+        var window = new Views.HelpWindow
+        {
+            Owner = System.Windows.Application.Current?.MainWindow
+        };
+
+        window.ShowDialog();
+    }
+
+    [RelayCommand]
+    private async Task CreateDiagnosticsAsync()
+    {
+        ErrorMessage = null;
+        IsBusy = true;
+
+        try
+        {
+            var path = await Task.Run(DiagnosticsService.CreateBundle);
+            StatusMessage = $"Tanılama paketi oluşturuldu: {path}";
+            DiagnosticsService.RevealInExplorer(path);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Tanılama paketi oluşturulamadı: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 

@@ -5,8 +5,8 @@
 
 ## İndir
 
-- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.4.2-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.4.2/CGP-RandevuTakip-1.4.2-Setup.exe)
-- **Taşınabilir ZIP:** [CGP-RandevuTakip-1.4.2-portable.zip](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.4.2/CGP-RandevuTakip-1.4.2-portable.zip)
+- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.5.0-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.5.0/CGP-RandevuTakip-1.5.0-Setup.exe)
+- **Taşınabilir ZIP:** [CGP-RandevuTakip-1.5.0-portable.zip](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.5.0/CGP-RandevuTakip-1.5.0-portable.zip)
 - **Tüm sürümler:** [Releases](https://github.com/cgportakal/CgpRandevuTakip/releases/latest)
 
 > Kurulum EXE'si per-user çalışır; yönetici hakkı istemez. Taşınabilir ZIP'i yazılabilir bir klasöre açıp
@@ -17,7 +17,7 @@ Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöne
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
 > Durum: **1.4.0 hazır** — kurulum sihirbazı, kurum profili ve logosu, canlı tema, SMTP/push/yedekleme adımları, güncelleme modu, canlı sistem durumu, kalıcı oturum, elle kilit ve arka plan bildirimleri tamamlandı.
-> Sürüm: 1.4.2 · Tarih: 14.11.2026 · 269 test geçiyor
+> Sürüm: 1.5.0 · Tarih: 14.11.2026 · 292 test geçiyor
 
 ## Neden bu proje?
 
@@ -46,9 +46,15 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 14 | [Push Kurulum Rehberi](docs/14_Push_Kurulum_Rehberi.md) | ntfy ve Telegram kurulumu, test |
 | 15 | [E-posta ile Şifre Sıfırlama](docs/15_Email_Sifre_Sifirlama_Rehberi.md) | SMTP ayarları, beni hatırla, kurtarma akışı |
 | 16 | [Sprint 5 Sonuç Raporu](docs/16_Sprint5_Raporu.md) | PNG, WhatsApp, alıcı rehberi, günlük tetikleme |
+| 17 | [Sprint 6A/6B Raporu](docs/17_Sprint6A_6B_Raporu.md) | Excel içe aktarma, anonimleştirme, güncelleme |
+| 18 | [Sprint 6C Raporu](docs/18_Sprint6C_Raporu.md) | Drive for Desktop yedeği, liste/indirme |
+| 19 | [UAT Raporu](docs/19_UAT_Raporu.md) | Gerçek kullanım doğrulaması |
+| 20 | [Taşınabilir Kullanım](docs/20_Portable_Kullanim.md) | Portable mod ve veri klasörü |
+| 22 | [İmza ve Yayın](docs/22_Imza_ve_Yayin.md) | Dijital imza, paketleme, release |
 | 23 | [Oturum ve Arka Plan](docs/23_Oturum_ve_Arka_Plan.md) | Kalıcı oturum, elle kilit, arka plan bildirimleri |
 | 24 | [Kurulum Sihirbazı](docs/24_Kurulum_Sihirbazi.md) | Adımlar, zorunlu alanlar, logo, güncelleme modu |
 | 25 | [1.4.1 Kurulum UAT](docs/25_UAT_1.4_Kurulum.md) | Kurulum, 1.3.0 → 1.4.1 yükseltme, veri koruma |
+| 26 | [Kullanım Kılavuzu](docs/26_Kullanici_Kilavuzu.md) | Son kullanıcı akışları, bildirim, yedek, güncelleme |
 
 ## Alınan temel kararlar
 

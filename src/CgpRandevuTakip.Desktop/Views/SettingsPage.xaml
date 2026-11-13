@@ -154,7 +154,7 @@
                                       IsEnabled="{Binding IsAdmin}" />
 
                             <TextBlock Text="Günlük paylaşım saati (SS:dd)" Style="{StaticResource LabelText}" Margin="0,16,0,6" />
-                            <TextBox Text="{Binding DailyShareTime, UpdateSourceTrigger=PropertyChanged}"
+                            <TextBox Text="{Binding DailyShareTime, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Günlük paylaşım saati"
                                      IsEnabled="{Binding IsAdmin}"
                                      MaxLength="5" />
                         </StackPanel>
@@ -251,11 +251,11 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="Başlangıç (SS:dd)" Style="{StaticResource LabelText}" />
-                                    <TextBox Text="{Binding QuietHoursStart, UpdateSourceTrigger=PropertyChanged}" MaxLength="5" />
+                                    <TextBox Text="{Binding QuietHoursStart, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Sessiz saat başlangıç" MaxLength="5" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="Bitiş (SS:dd)" Style="{StaticResource LabelText}" />
-                                    <TextBox Text="{Binding QuietHoursEnd, UpdateSourceTrigger=PropertyChanged}" MaxLength="5" />
+                                    <TextBox Text="{Binding QuietHoursEnd, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Sessiz saat bitiş" MaxLength="5" />
                                 </StackPanel>
                             </Grid>
                             <TextBlock Text="Sessiz saatte push gönderilmez; Windows bildirimi sessiz gösterilir."
@@ -302,7 +302,7 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBox Text="{Binding BackupDirectory, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding BackupDirectory, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Yedek klasörü" />
                                 <Button Grid.Column="1"
                                         Content="Gözat"
                                         Style="{StaticResource SecondaryButton}"
@@ -470,6 +470,22 @@
                                         Command="{Binding InstallUpdateCommand}"
                                         Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVisibility}}" />
                             </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button Content="Sürüm notları"
+                                        Style="{StaticResource GhostButton}"
+                                        Command="{Binding ShowReleaseNotesCommand}"
+                                        Margin="0,0,8,0" />
+                                <Button Content="Güncelleme günlüğü"
+                                        Style="{StaticResource GhostButton}"
+                                        Command="{Binding OpenUpdateLogCommand}"
+                                        Margin="0,0,8,0" />
+                                <Button Content="Önceki sürüme dön"
+                                        Style="{StaticResource GhostButton}"
+                                        Command="{Binding RollbackUpdateCommand}"
+                                        ToolTip="{Binding RollbackHint}"
+                                        Visibility="{Binding CanRollback, Converter={StaticResource BoolToVisibility}}" />
+                            </StackPanel>
                         </StackPanel>
                     </Border>
 
@@ -492,6 +508,11 @@
                                        TextWrapping="Wrap"
                                        Margin="0,0,0,12" />
 
+                            <Button Content="Kullanım kılavuzu"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding OpenHelpCommand}"
+                                    HorizontalAlignment="Stretch"
+                                    Margin="0,0,0,8" />
                             <Button Content="Bugünün listesini paylaş"
                                     Style="{StaticResource SecondaryButton}"
                                     Command="{Binding OpenDailyShareCommand}"
@@ -502,6 +523,12 @@
                                     Command="{Binding TestWindowsToastCommand}"
                                     HorizontalAlignment="Stretch"
                                     Margin="0,0,0,8" />
+                            <Button Content="Tanılama paketi oluştur"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding CreateDiagnosticsCommand}"
+                                    HorizontalAlignment="Stretch"
+                                    Margin="0,0,0,8"
+                                    ToolTip="Günlükler ve sürüm bilgilerini masaüstüne ZIP olarak kaydeder (kişisel veri içermez)." />
                             <Button Content="Veri klasörünü aç"
                                     Style="{StaticResource GhostButton}"
                                     Command="{Binding OpenDataFolderCommand}"
