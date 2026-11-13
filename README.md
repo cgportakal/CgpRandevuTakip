@@ -17,7 +17,7 @@ Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöne
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
 > Durum: **1.4.0 hazır** — kurulum sihirbazı, kurum profili ve logosu, canlı tema, SMTP/push/yedekleme adımları, güncelleme modu, canlı sistem durumu, kalıcı oturum, elle kilit ve arka plan bildirimleri tamamlandı.
-> Sürüm: 1.5.0 · Tarih: 14.11.2026 · 292 test geçiyor
+> Sürüm: 1.5.0 · Tarih: 14.11.2026 · 295 test geçiyor
 
 ## Neden bu proje?
 

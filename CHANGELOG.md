@@ -28,7 +28,7 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 - **Yedek doğrulama:** Yedekleme sayfasında seçili yedeği doğrulama düğmesi.
 
 ### Test
-- **292 test** (280 uygulama + 12 Desktop), Release 0 uyarı / 0 hata.
+- **295 test** (280 uygulama + 15 Desktop), Release 0 uyarı / 0 hata.
 
 ## [1.4.2] — 2026-11-14 · Kurulum sihirbazı tutarlılık düzeltmeleri
 

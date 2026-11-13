@@ -66,12 +66,12 @@ Yarı zamanlı çalışmada 18-22 hafta öngörülür. Efor: ~95-115 adam-gün.
 **Toplam:** ~138 SP (Sprint 3.5 dahil). Hız (velocity) ilk sprintte ölçülür; 18-22 SP/sprint
 varsayımı gerçekleşmezse kapsam değil **tarih** esnetilir (MVP sabit tutulur).
 
-> **Güncel durum (10.11.2026):** Sprint 0-5, 4.5 UAT, 4.6 kimlik/kurtarma, manuel düzeltmeler, toplu işlemler,
-> Sprint 6A/6B/6C ve Faz 2 özellikleri (şifreli yedek, Google Drive, Excel/CSV/PDF/yazdırma, BitLocker göstergesi)
-> tamamlandı. Sürüm **1.5.0**, **269/269 test** geçiyor, derleme 0 uyarı / 0 hata. Taşınabilir mod eklendi; kullanım için [docs/20_Portable_Kullanim.md](20_Portable_Kullanim.md). Taşınabilir ZIP ve per-user Setup EXE üretildi; kurulum/kaldırma test edildi. UAT için [docs/19_UAT_Raporu.md](19_UAT_Raporu.md). Sprint 5 için
-> [docs/16_Sprint5_Raporu.md](16_Sprint5_Raporu.md), 6A/6B için
-> [docs/17_Sprint6A_6B_Raporu.md](17_Sprint6A_6B_Raporu.md), 6C için
-> [docs/18_Sprint6C_Raporu.md](18_Sprint6C_Raporu.md).
+> **Güncel durum (14.11.2026):** Sprint 0-6 ve Faz 2 özellikleri (şifreli yedek, Google Drive,
+> Excel/CSV/PDF/yazdırma, BitLocker göstergesi) tamamlandı. Sürüm **1.5.0**, **295/295 test** geçiyor,
+> derleme 0 uyarı / 0 hata. Kurulum sihirbazı, kurum logosu, kalıcı oturum, elle kilit, arka plan
+> bildirimleri, güvenli güncelleme ve geri dönüş eklendi. Kurulum/kaldırma ve taşınabilir mod test edildi;
+> ayrıntılar [docs/27_UAT_1.5_Guncelleme.md](27_UAT_1.5_Guncelleme.md) ve
+> [docs/20_Portable_Kullanim.md](20_Portable_Kullanim.md) dosyalarında.
 
 ### 2.1 Sprint 0 — ayrıntılı
 
