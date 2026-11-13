@@ -62,7 +62,8 @@ public sealed class SettingsService : ISettingsService
             QuietHoursStart: ReadTime(values, SettingsKeys.QuietHoursStart, defaults.QuietHoursStart),
             QuietHoursEnd: ReadTime(values, SettingsKeys.QuietHoursEnd, defaults.QuietHoursEnd),
             AutoStartEnabled: ReadBool(values, SettingsKeys.AutoStartEnabled, defaults.AutoStartEnabled),
-            AutoStartMode: NormalizeAutoStartMode(Read(values, SettingsKeys.AutoStartMode)),
+            AutoStartMode: NormalizeAutoStartMode(
+                Read(values, SettingsKeys.AutoStartMode) ?? defaults.AutoStartMode),
             CloseToTray: ReadBool(values, SettingsKeys.CloseToTray, defaults.CloseToTray),
             SmtpHost: Read(values, SettingsKeys.SmtpHost) ?? defaults.SmtpHost,
             SmtpPort: ReadInt(values, SettingsKeys.SmtpPort, defaults.SmtpPort),

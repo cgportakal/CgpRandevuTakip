@@ -69,6 +69,17 @@ public partial class App : System.Windows.Application
             _tray = _host.Services.GetRequiredService<TrayService>();
             _tray.Initialize();
 
+            try
+            {
+                var startupSettings = await _host.Services.GetRequiredService<ISettingsService>().GetAsync();
+                _host.Services.GetRequiredService<AutoStartService>()
+                    .SetEnabled(startupSettings.AutoStartEnabled, startupSettings.AutoStartMode);
+            }
+            catch
+            {
+                // Otomatik başlatma kurulamazsa uygulama normal açılır.
+            }
+
             if (_pendingToastReminderId is not null)
             {
                 var pending = _pendingToastReminderId;
@@ -82,8 +93,7 @@ public partial class App : System.Windows.Application
             ToastNotificationManagerCompat.OnActivated += OnToastActivated;
 
             var startHidden = e.Args.Any(a => a.Equals("--tray", StringComparison.OrdinalIgnoreCase));
-            if (!startHidden)
-                await RunApplicationLoopAsync();
+            await RunApplicationLoopAsync(startHidden);
         }
         catch (Exception ex)
         {
@@ -266,6 +276,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IPushNotifier, PushNotifier>();
         services.AddSingleton<WindowsToastService>();
         services.AddSingleton<SessionStateService>();
+        services.AddSingleton<SessionLockStore>();
         services.AddSingleton<TrayService>();
         services.AddSingleton<AutoStartService>();
         services.AddSingleton<IBitLockerService, BitLockerService>();
@@ -373,7 +384,7 @@ public partial class App : System.Windows.Application
         await theme.InitializeAsync();
     }
 
-    private async Task RunApplicationLoopAsync()
+    private async Task RunApplicationLoopAsync(bool startHidden = false)
     {
         if (_host is null || _runLoopActive)
             return;
@@ -383,6 +394,7 @@ public partial class App : System.Windows.Application
         {
             var auth = _host.Services.GetRequiredService<IAuthService>();
             var allowRememberedLogin = true;
+            var hideShell = startHidden;
 
             while (true)
             {
@@ -417,11 +429,33 @@ public partial class App : System.Windows.Application
 
                     if (rememberedLogin?.Success != true)
                     {
+                        hideShell = false;
                         var login = _host.Services.GetRequiredService<LoginWindow>();
                         if (login.ShowDialog() != true)
                         {
                             Shutdown();
                             return;
+                        }
+                    }
+                    else
+                    {
+                        // Önceki oturumda elle kilitlenmişse şifre iste; çıkış yapılmadıysa token geçerli kalır.
+                        var lockStore = _host.Services.GetRequiredService<SessionLockStore>();
+                        var currentUser = _host.Services.GetRequiredService<ICurrentUser>();
+                        if (lockStore.IsLocked(currentUser.UserId))
+                        {
+                            var lockWindow = _host.Services.GetRequiredService<LockWindow>();
+                            var unlocked = lockWindow.ShowDialog() == true;
+
+                            if (!unlocked || lockWindow.LogoutRequested)
+                            {
+                                await auth.LogoutAsync();
+                                lockStore.Clear();
+                                hideShell = false;
+                                continue;
+                            }
+
+                            lockStore.Clear();
                         }
                     }
                 }
@@ -433,6 +467,14 @@ public partial class App : System.Windows.Application
                 var closed = new TaskCompletionSource();
                 shell.Closed += (_, _) => closed.TrySetResult();
                 shell.Show();
+
+                if (hideShell)
+                {
+                    hideShell = false;
+                    shell.Hide();
+                    shell.ShowInTaskbar = false;
+                }
+
                 await closed.Task;
 
                 if (!shell.LogoutRequested)

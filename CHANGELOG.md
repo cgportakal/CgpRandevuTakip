@@ -3,6 +3,28 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [1.3.0] — 2026-11-13 · Kalıcı oturum ve arka plan bildirimleri
+
+### Eklendi
+- **Süresiz oturum:** Başarılı girişten sonra oturum, açık çıkış yapılana kadar geçerli. Token süresi yok; uygulama ve bilgisayar yeniden başlasa da otomatik giriş yapılır.
+- **Çıkış:** Kalıcı token iptal edilir; sonraki açılışta giriş formu gösterilir.
+- **Şifre değişimi/sıfırlama:** Kalıcı oturum token'ı geçersiz olur.
+- **“Beni hatırla”:** Kutu korunur ve varsayılan işaretlidir. Süresiz oturum her durumda geçerlidir; kutu yalnızca çıkış sonrası kullanıcı adı/şifre ön doldurmayı yönetir.
+- **Otomatik kilit kaldırıldı:** 30 dakika hareketsizlikte şifre sorulmaz.
+- **Elle kilitleme:** Kenar çubuğunda “Kilitle” düğmesi. Şifre ile açılır; kilit durumu uygulama/PC yeniden başlasa da korunur.
+- **Arka plan bildirimleri:** Windows açılışında gizli (`--tray`) başlatma. Kurulu sürümde HKCU Run, taşınabilir sürümde Başlangıç klasörü kısayolu.
+- **Varsayılan otomatik başlatma:** Açık ve gizli mod. Bildirimler, hatırlatıcılar, otomatik yedek ve saklama servisleri arka planda çalışır.
+
+### Not
+- Bilgisayarda Windows oturumu kapalıysa uygulama çalışmaz; toast/push üretilemez. Windows açılışında gizli başlatma bu süreyi en aza indirir.
+- Kalıcı oturum, aynı Windows hesabını kullanan herkesin uygulamaya erişebilmesi anlamına gelir.
+
+### Test
+- 235/235 test.
+- Otomatik başlatma kaydı `--tray` ile doğrulandı.
+- Elle kilitleme, kilit durumunun yeniden başlatmada korunması ve şifreyle açılması doğrulandı.
+- `--tray` ile açılışta görünür pencere açılmadı; oturum otomatik açıldı.
+
 ## [1.2.1] — 2026-11-11 · Dijital imza ve indirme sayfası
 
 ### Eklendi

@@ -14,7 +14,6 @@ public sealed class AuthService : IAuthService
 {
     public const int MaxFailedAttempts = 5;
     public const int LockoutMinutes = 15;
-    private const int RememberTokenDays = 30;
 
     private readonly IUserRepository _users;
     private readonly IPasswordHasher _hasher;
@@ -165,7 +164,8 @@ public sealed class AuthService : IAuthService
 
         var token = CreateToken();
         user.RememberTokenHash = HashToken(token);
-        user.RememberTokenExpiresAtUtc = _clock.UtcNow.AddDays(RememberTokenDays);
+        // Kullanıcı çıkış yapana kadar oturum geçerlidir; süre sınırı yoktur.
+        user.RememberTokenExpiresAtUtc = null;
         await _users.SaveAsync(user);
 
         return token;
@@ -182,21 +182,19 @@ public sealed class AuthService : IAuthService
             return LoginResult.Fail("Oturum bilgisi geçersiz.");
 
         var now = _clock.UtcNow;
-        if (!user.IsActive
-            || !user.IsLoginEnabled
-            || user.RememberTokenExpiresAtUtc is null
-            || user.RememberTokenExpiresAtUtc <= now)
+        if (!user.IsActive || !user.IsLoginEnabled)
         {
             user.RememberTokenHash = null;
             user.RememberTokenExpiresAtUtc = null;
             await _users.SaveAsync(user);
-            return LoginResult.Fail("Oturum süresi doldu. Lütfen giriş yapın.");
+            return LoginResult.Fail("Oturum bilgisi geçersiz. Lütfen giriş yapın.");
         }
 
         user.FailedLoginCount = 0;
         user.LockoutUntilUtc = null;
         user.LastLoginAtUtc = now;
-        user.RememberTokenExpiresAtUtc = now.AddDays(RememberTokenDays);
+        // Eski sürümlerden kalan süreli token'lar da süresiz oturuma yükseltilir.
+        user.RememberTokenExpiresAtUtc = null;
         await _users.SaveAsync(user);
 
         var session = ToSession(user);
@@ -223,8 +221,20 @@ public sealed class AuthService : IAuthService
     public async Task<OperationResult> LogoutAsync()
     {
         var userId = _currentUser.UserId;
-        // "Beni hatırla" token'ı çıkışta korunur; giriş ekranı kimlik bilgilerini
-        // yeniden doldurur. Parola değişimi/sıfırlama token'ı ayrıca geçersiz kılar.
+
+        // Açık çıkış: kalıcı oturum token'ı iptal edilir. Bir sonraki açılışta
+        // (istenirse ön doldurulmuş) giriş formu gösterilir.
+        if (userId is not null)
+        {
+            var user = await _users.GetByIdAsync(userId);
+            if (user is not null)
+            {
+                user.RememberTokenHash = null;
+                user.RememberTokenExpiresAtUtc = null;
+                await _users.SaveAsync(user);
+            }
+        }
+
         _currentUser.SignOut();
 
         if (userId is not null)

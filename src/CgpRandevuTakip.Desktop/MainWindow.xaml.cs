@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
+using CgpRandevuTakip.Application.Abstractions;
 using CgpRandevuTakip.Application.Settings;
 using CgpRandevuTakip.Desktop.Messages;
 using CgpRandevuTakip.Desktop.Services;
@@ -13,7 +14,8 @@ namespace CgpRandevuTakip.Desktop;
 public partial class MainWindow : Window
 {
     private readonly ShellViewModel _viewModel;
-    private readonly SessionLockService _sessionLock;
+    private readonly SessionLockStore _lockStore;
+    private readonly ICurrentUser _currentUser;
     private readonly SessionStateService _sessionState;
     private readonly TrayService _tray;
     private readonly ISettingsService _settings;
@@ -23,7 +25,8 @@ public partial class MainWindow : Window
 
     public MainWindow(
         ShellViewModel viewModel,
-        SessionLockService sessionLock,
+        SessionLockStore lockStore,
+        ICurrentUser currentUser,
         SessionStateService sessionState,
         TrayService tray,
         ISettingsService settings,
@@ -31,7 +34,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         _viewModel = viewModel;
-        _sessionLock = sessionLock;
+        _lockStore = lockStore;
+        _currentUser = currentUser;
         _sessionState = sessionState;
         _tray = tray;
         _settings = settings;
@@ -39,7 +43,7 @@ public partial class MainWindow : Window
         DataContext = viewModel;
 
         viewModel.LogoutRequested += OnLogoutRequested;
-        _sessionLock.LockRequested += OnLockRequested;
+        viewModel.LockRequested += OnLockRequested;
         WeakReferenceMessenger.Default.Register<SettingsChangedMessage>(
             this,
             static (recipient, message) =>
@@ -64,8 +68,6 @@ public partial class MainWindow : Window
         {
             _closeToTray = true;
         }
-
-        _sessionLock.Start();
     }
 
     private void OnClosing(object? sender, CancelEventArgs e)
@@ -85,6 +87,7 @@ public partial class MainWindow : Window
     private void OnLogoutRequested(object? sender, EventArgs e)
     {
         LogoutRequested = true;
+        _lockStore.Clear();
         Close();
     }
 
@@ -97,19 +100,23 @@ public partial class MainWindow : Window
         try
         {
             _sessionState.SetLocked(true);
+            _lockStore.SetLocked(_currentUser.UserId);
+
             var lockWindow = _services.GetRequiredService<LockWindow>();
             lockWindow.Owner = this;
-            lockWindow.ShowDialog();
+            var unlocked = lockWindow.ShowDialog() == true;
 
             if (lockWindow.LogoutRequested)
             {
                 LogoutRequested = true;
+                _lockStore.Clear();
                 _sessionState.SetLocked(false);
                 Close();
                 return;
             }
 
-            _sessionLock.Start();
+            if (unlocked)
+                _lockStore.Clear();
         }
         finally
         {
@@ -121,10 +128,8 @@ public partial class MainWindow : Window
     protected override void OnClosed(EventArgs e)
     {
         _viewModel.LogoutRequested -= OnLogoutRequested;
-        _sessionLock.LockRequested -= OnLockRequested;
+        _viewModel.LockRequested -= OnLockRequested;
         WeakReferenceMessenger.Default.UnregisterAll(this);
-        _sessionLock.Stop();
-        _sessionLock.Dispose();
         _viewModel.Dispose();
         base.OnClosed(e);
     }

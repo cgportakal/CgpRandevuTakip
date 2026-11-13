@@ -292,7 +292,7 @@ public partial class SettingsViewModel : ObservableObject
             SmtpPassword = settings.SmtpPassword;
             SmtpFromAddress = settings.SmtpFromAddress;
             SmtpFromName = settings.SmtpFromName;
-            AutoStartEnabled = AppPaths.IsPortable ? false : settings.AutoStartEnabled;
+            AutoStartEnabled = settings.AutoStartEnabled;
             CloseToTray = settings.CloseToTray;
             DailyShareTime = settings.DailyShareTime;
             WorkHoursStart = settings.WorkHoursStart;

@@ -200,25 +200,24 @@
                         <StackPanel>
                             <TextBlock Text="Uygulama" Style="{StaticResource SectionTitle}" />
 
-                            <CheckBox Content="Windows açılışında başlat"
+                            <CheckBox Content="Windows açılışında gizli başlat"
                                       IsChecked="{Binding AutoStartEnabled}"
-                                      Margin="0,0,0,10"
-                                      Visibility="{Binding IsPortable, Converter={StaticResource InverseBoolToVisibility}}" />
+                                      Margin="0,0,0,10" />
                             <CheckBox Content="Kapatınca tepside çalış"
                                       IsChecked="{Binding CloseToTray}"
                                       Margin="0,0,0,12" />
 
-                            <StackPanel Visibility="{Binding IsPortable, Converter={StaticResource InverseBoolToVisibility}}">
+                            <StackPanel>
                                 <TextBlock Text="Başlangıç modu" Style="{StaticResource LabelText}" />
                                 <ComboBox ItemsSource="{Binding AutoStartModeOptions}"
                                           DisplayMemberPath="Label"
                                           SelectedItem="{Binding SelectedAutoStartMode, Mode=TwoWay}" />
                             </StackPanel>
 
-                            <TextBlock Text="Taşınabilir mod: otomatik başlatma kullanılmaz; veriler EXE yanındaki CGP-Data klasöründe tutulur."
+                            <TextBlock Text="Bildirimlerin arka planda çalışması için uygulama Windows açılışında gizli başlar."
                                        Style="{StaticResource MutedText}"
                                        TextWrapping="Wrap"
-                                       Visibility="{Binding IsPortable, Converter={StaticResource BoolToVisibility}}" />
+                                       Margin="0,8,0,0" />
                         </StackPanel>
                     </Border>
 

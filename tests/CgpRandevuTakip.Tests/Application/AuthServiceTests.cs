@@ -303,6 +303,55 @@ public class AuthServiceTests
             Assert.Contains(AuditAction.Logout, audit.Actions);
         }
     }
+
+    [Fact]
+    public async Task RememberToken_HasNoExpiryAndSurvivesLongTime()
+    {
+        var (service, currentUser, clock, _, db) = CreateSut();
+        using (db)
+        {
+            await service.CreateFirstAdminAsync(ValidSetup());
+            var token = await service.CreateRememberTokenAsync();
+            Assert.NotNull(token);
+
+            var user = await new UserRepository(db.Factory).FindByRememberTokenHashAsync(
+                Sha256Hex(token!));
+            Assert.NotNull(user);
+            Assert.Null(user!.RememberTokenExpiresAtUtc);
+
+            currentUser.SignOut();
+            clock.UtcNow = clock.UtcNow.AddYears(5);
+
+            var result = await service.LoginWithRememberTokenAsync(token!);
+
+            Assert.True(result.Success, result.Error);
+            Assert.True(currentUser.IsAuthenticated);
+        }
+    }
+
+    [Fact]
+    public async Task Logout_RevokesRememberToken()
+    {
+        var (service, currentUser, _, _, db) = CreateSut();
+        using (db)
+        {
+            await service.CreateFirstAdminAsync(ValidSetup());
+            var token = await service.CreateRememberTokenAsync();
+            Assert.NotNull(token);
+
+            await service.LogoutAsync();
+
+            var result = await service.LoginWithRememberTokenAsync(token!);
+            Assert.False(result.Success);
+            Assert.False(currentUser.IsAuthenticated);
+        }
+    }
+
+    private static string Sha256Hex(string value)
+        => Convert.ToHexString(
+                System.Security.Cryptography.SHA256.HashData(
+                    System.Text.Encoding.UTF8.GetBytes(value)))
+            .ToLowerInvariant();
 }
 
 public class PasswordPolicyTests

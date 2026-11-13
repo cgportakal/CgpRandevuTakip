@@ -222,13 +222,21 @@
                                        FontSize="10" />
                         </StackPanel>
 
-                        <Button Grid.Column="2"
-                                Content="Çıkış"
-                                Style="{StaticResource GhostButton}"
-                                Padding="10,6"
-                                MinHeight="30"
-                                FontSize="11"
-                                Command="{Binding LogoutCommand}" />
+                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                            <Button Content="Kilitle"
+                                    Style="{StaticResource GhostButton}"
+                                    Padding="10,6"
+                                    MinHeight="30"
+                                    FontSize="11"
+                                    Margin="0,0,6,0"
+                                    Command="{Binding LockCommand}" />
+                            <Button Content="Çıkış"
+                                    Style="{StaticResource GhostButton}"
+                                    Padding="10,6"
+                                    MinHeight="30"
+                                    FontSize="11"
+                                    Command="{Binding LogoutCommand}" />
+                        </StackPanel>
                     </Grid>
                 </Border>
             </Grid>

@@ -39,7 +39,7 @@ public partial class LoginViewModel : ObservableObject
     private bool _isBusy;
 
     [ObservableProperty]
-    private bool _rememberMe;
+    private bool _rememberMe = true;
 
     public event EventHandler? LoginSucceeded;
 
@@ -77,18 +77,16 @@ public partial class LoginViewModel : ObservableObject
                 return;
             }
 
-            if (RememberMe)
-            {
-                var token = await _auth.CreateRememberTokenAsync();
-                if (!string.IsNullOrWhiteSpace(token))
-                    _remembered.Save(token);
+            // Oturum, açık çıkış yapılana kadar süresiz açık kalır.
+            var token = await _auth.CreateRememberTokenAsync();
+            if (!string.IsNullOrWhiteSpace(token))
+                _remembered.Save(token);
 
+            // "Beni hatırla" yalnızca çıkış sonrası giriş formunun ön doldurulmasını yönetir.
+            if (RememberMe)
                 _remembered.SaveCredentials(Username, Password);
-            }
             else
-            {
-                _remembered.Clear();
-            }
+                _remembered.ClearCredentials();
 
             Password = string.Empty;
             LoginSucceeded?.Invoke(this, EventArgs.Empty);

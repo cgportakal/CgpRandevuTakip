@@ -46,8 +46,8 @@ public class SettingsServiceTests
             Assert.True(settings.QuietHoursEnabled);
             Assert.Equal("22:00", settings.QuietHoursStart);
             Assert.Equal("07:00", settings.QuietHoursEnd);
-            Assert.False(settings.AutoStartEnabled);
-            Assert.Equal("login", settings.AutoStartMode);
+            Assert.True(settings.AutoStartEnabled);
+            Assert.Equal("tray", settings.AutoStartMode);
             Assert.True(settings.CloseToTray);
         }
     }

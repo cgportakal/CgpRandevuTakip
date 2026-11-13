@@ -116,6 +116,11 @@ public partial class ShellViewModel : ObservableObject, IDisposable
 
     public event EventHandler? LogoutRequested;
 
+    public event EventHandler? LockRequested;
+
+    [RelayCommand]
+    private void Lock() => LockRequested?.Invoke(this, EventArgs.Empty);
+
     public async Task InitializeAsync()
     {
         try

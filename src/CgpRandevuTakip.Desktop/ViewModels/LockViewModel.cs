@@ -37,7 +37,7 @@ public partial class LockViewModel : ObservableObject
 
     private readonly string _displayName;
 
-    public string Message => "Oturumunuz 30 dakika işlem yapılmadığı için kilitlendi.";
+    public string Message => "Oturum kilitlendi. Devam etmek için şifrenizi girin.";
 
     public event EventHandler? Unlocked;
 
