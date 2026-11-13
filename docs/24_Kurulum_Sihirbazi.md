@@ -56,3 +56,13 @@ doğrulanır; WPF katmanı yalnızca adım akışını yönetir.
 - Veri kökünde `branding/` altında saklanır; ayarlarda göreli yol tutulur (taşınabilir mod uyumlu).
 - Günlük WhatsApp liste PNG’sinde en üstte, kurum adının üzerinde ~56 px yükseklikte çizilir.
 - Logo yoksa veya okunamazsa liste görseli logosuz üretilir.
+
+## 6. 1.4.2 davranışları
+
+- **Kurum e-postası → SMTP:** Adım 1’de girilen adres, gönderen adresi/test alıcısı boşsa otomatik doldurulur. SMTP adımı atlansa bile kaydetmede gönderen adresi boşsa kurum e-postası kullanılır.
+- **Başlangıç modu:** “Windows açılışında başlat” açıksa “Gizli başlat (tepside)” veya “Giriş ekranı açık” seçilebilir; mevcut seçim korunur.
+- **Atla:** Atlanan adımda girilen yarım değerler kaydedilmez, mevcut ayarlar korunur; kenar çubuğunda “Atlandı”, özette “Atlandı” görünür.
+- **Şifre değişimi:** Güncelleme modunda şifre değişirse yeni süresiz oturum token’ı üretilir ve “Beni hatırla” kaydı yeni şifreyle güncellenir.
+- **Kapatma onayı:** Sihirbaz X ile kapatılırken değişikliklerin kaybolacağı bildirilir ve onay istenir.
+- **Ayarlar:** Kurum adı, e-posta, telefon ve adres Ayarlar kaydında da zorunludur.
+- **Yetki:** Kurulum sihirbazını yeniden çalıştırma yalnızca yöneticide etkindir.

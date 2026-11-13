@@ -484,6 +484,7 @@
                             <Button Content="Kurulum sihirbazını yeniden çalıştır"
                                     Style="{StaticResource PrimaryButton}"
                                     Command="{Binding OpenSetupWizardCommand}"
+                                    IsEnabled="{Binding IsAdmin}"
                                     HorizontalAlignment="Stretch"
                                     Margin="0,0,0,8" />
                             <TextBlock Text="Kurum bilgilerini, yönetici e-postasını, entegrasyonları ve yedeklemeyi adım adım gözden geçirin."

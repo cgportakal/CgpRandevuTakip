@@ -1,6 +1,6 @@
 # 06 — Karar Kaydı ve Açık Sorular
 
-**Sürüm:** 0.3 · **Tarih:** 07.11.2026
+**Sürüm:** 1.4.2 · **Tarih:** 14.11.2026
 
 ---
 
@@ -147,14 +147,18 @@ Sürüm **1.4.0** ile kurulum sihirbazı, kurum profili/logosu ve canlı durum e
 Açık ürün sorularından Q-03, Q-05, Q-10, Q-14, Q-15 ve Q-17 için ürün sahibi cevabı bekleniyor;
 cevap gelmezse dokümandaki varsayılanlarla ilerlenir.
 
-## 6. 1.4.0 kararları (13.11.2026)
+## 6. 1.4.x kararları (13–14.11.2026)
 
-- **D-36** Kurulum sihirbazı 8 adımdan oluşur; SMTP, telefon bildirimleri ve yedekleme adımları isteğe bağlıdır ve atlanabilir.
-- **D-37** Kurum adı, kurum e-postası, telefon ve adres zorunludur; yönetici e-postası da zorunludur ve şifre sıfırlama için kullanılır.
-- **D-38** Tema sihirbaz sırasında canlı uygulanır; sihirbaz iptal edilirse önceki temaya dönülür ve ayarlar yalnızca tamamlanınca kaydedilir.
-- **D-39** Sihirbaz Ayarlar’dan güncelleme modunda yeniden çalıştırılabilir; yönetici e-postası ve isteğe bağlı şifre değiştirilebilir, şifre değişiminde yeni süresiz oturum token’ı üretilir.
-- **D-40** Kurum logosu sihirbazda ve Ayarlar’da seçilebilir; veri kökünde göreli yol olarak saklanır ve günlük WhatsApp liste PNG’sinin üstünde çizilir.
-- **D-41** Geçmiş sprint bilgilendirmeleri arayüzden kaldırıldı; yerine canlı sistem durumu (son yedek, bildirim, veri klasörü, sürüm) gösterilir.
+- **K-01** Kurulum sihirbazı 8 adımdan oluşur; SMTP, telefon bildirimleri ve yedekleme adımları isteğe bağlıdır ve atlanabilir.
+- **K-02** Kurum adı, kurum e-postası, telefon ve adres zorunludur; yönetici e-postası da zorunludur ve şifre sıfırlama için kullanılır.
+- **K-03** Tema sihirbaz sırasında canlı uygulanır; sihirbaz iptal edilirse önceki temaya dönülür ve ayarlar yalnızca tamamlanınca kaydedilir.
+- **K-04** Sihirbaz Ayarlar’dan güncelleme modunda yeniden çalıştırılabilir; yönetici e-postası ve isteğe bağlı şifre değiştirilebilir, şifre değişiminde yeni süresiz oturum token’ı üretilir.
+- **K-05** Kurum logosu sihirbazda ve Ayarlar’da seçilebilir; veri kökünde göreli yol olarak saklanır ve günlük WhatsApp liste PNG’sinin üstünde çizilir.
+- **K-06** Geçmiş sprint bilgilendirmeleri arayüzden kaldırıldı; yerine canlı sistem durumu (son yedek, bildirim, veri klasörü, sürüm) gösterilir.
+- **K-07** Kurum e-postası SMTP gönderen adresinin varsayılanıdır; boş bırakılırsa tamamlamada otomatik kullanılır.
+- **K-08** “Atla” ile geçilen adımlarda yarım değerler kaydedilmez; mevcut ayarlar korunur ve özet “Atlandı” gösterir.
+- **K-09** Şifre değişiminde “Beni hatırla” kayıtlı kimliği yeni şifreyle güncellenir.
+- **K-10** Sihirbazdaki başlangıç modu kullanıcının mevcut seçimini korur (gizli / giriş ekranı).
 
 > Bu noktadan sonra her sürüm sonunda bu doküman, gereksinimler ve backlog
 > güncellenir; kararlar **döngüsel** olarak yeniden gözden geçirilir.

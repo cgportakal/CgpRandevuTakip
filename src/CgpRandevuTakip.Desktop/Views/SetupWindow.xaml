@@ -443,9 +443,24 @@
                                    Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,6,0,0" />
 
                         <TextBlock Text="Uygulama" Style="{StaticResource SectionTitle}" Margin="0,20,0,0" />
-                        <CheckBox Content="Windows açılışında gizli başlat (bildirimler arka planda çalışır)"
+                        <CheckBox Content="Windows açılışında başlat (bildirimler arka planda çalışır)"
                                   IsChecked="{Binding AutoStartEnabled}"
                                   Margin="0,10,0,0" />
+
+                        <StackPanel Margin="24,8,0,0"
+                                    Visibility="{Binding AutoStartEnabled, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="Başlangıç modu" Style="{StaticResource LabelText}" />
+                            <ComboBox ItemsSource="{Binding AutoStartModeOptions}"
+                                      DisplayMemberPath="Label"
+                                      SelectedItem="{Binding SelectedAutoStartMode, Mode=TwoWay}"
+                                      Width="240"
+                                      HorizontalAlignment="Left" />
+                            <TextBlock Text="Gizli başlat seçilirse uygulama tepside açılır; giriş ekranı seçilirse oturum formu gösterilir."
+                                       Style="{StaticResource MutedText}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,5,0,0" />
+                        </StackPanel>
+
                         <CheckBox Content="Pencere kapatılınca tepside çalışmaya devam et"
                                   IsChecked="{Binding CloseToTray}"
                                   Margin="0,8,0,0" />
@@ -570,8 +585,11 @@
                                         Margin="0,14,0,0">
                                 <TextBlock Text="ntfy topic" Style="{StaticResource LabelText}" />
                                 <TextBox Text="{Binding PushTopic, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Push topic" />
-                                <TextBlock Text="Telefonunuzda ntfy uygulamasını kurun, aynı topic'e abone olun ve test gönderin."
-                                           Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,5,0,0" />
+                                <TextBlock Text="1) Telefonunuza ntfy uygulamasını kurun (ntfy.sh).&#10;2) Uygulamada + düğmesiyle bir topic'e abone olun.&#10;3) Topic adını buraya aynen yazın.&#10;4) Test bildirimi gönderin; gelmezse topic ve internet bağlantısını kontrol edin."
+                                           Style="{StaticResource MutedText}"
+                                           TextWrapping="Wrap"
+                                           LineHeight="18"
+                                           Margin="0,5,0,0" />
                             </StackPanel>
 
                             <!-- Telegram -->
@@ -579,12 +597,15 @@
                                         Margin="0,14,0,0">
                                 <TextBlock Text="Bot token" Style="{StaticResource LabelText}" />
                                 <TextBox Text="{Binding PushToken, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Telegram bot token" />
-                                <TextBlock Text="@BotFather üzerinden bot oluşturup size verilen token'ı girin."
-                                           Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,5,0,0" />
+                                <TextBlock Text="1) Telegram'da @BotFather'a /newbot yazıp bot oluşturun.&#10;2) BotFather'ın verdiği token'ı buraya girin.&#10;3) Bota bir kez /start mesajı gönderin.&#10;4) Chat id için @userinfobot'a yazabilir veya botun /getUpdates yanıtındaki sayısal id'yi kullanabilirsiniz.&#10;5) Test bildirimi gönderin."
+                                           Style="{StaticResource MutedText}"
+                                           TextWrapping="Wrap"
+                                           LineHeight="18"
+                                           Margin="0,5,0,0" />
 
                                 <TextBlock Text="Sohbet kimliği (chat id)" Style="{StaticResource LabelText}" Margin="0,12,0,6" />
                                 <TextBox Text="{Binding PushChatId, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Telegram chat id" />
-                                <TextBlock Text="Bota bir kez /start mesajı gönderin; chat id sayısal olmalıdır."
+                                <TextBlock Text="Chat id sayısal olmalıdır (örn. 123456789)."
                                            Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,5,0,0" />
                             </StackPanel>
 

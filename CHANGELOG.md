@@ -3,6 +3,25 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [1.4.2] — 2026-11-14 · Kurulum sihirbazı tutarlılık düzeltmeleri
+
+### Düzeltildi
+- **Kurum e-postası → SMTP:** Adım 1’de girilen kurum e-postası, SMTP gönderen adresi ve test alıcısı boşsa otomatik doldurulur. SMTP adımı atlansa bile tamamlamada gönderen adresi boşsa kurum e-postası kullanılır.
+- **"Beni hatırla" ve şifre değişimi:** Sihirbazda veya Ayarlar > Şifre değiştir akışında şifre değişince kayıtlı kimlik yeni şifreyle güncellenir; çıkış sonrası giriş formu eski şifreyle gelmez.
+- **Yetki:** Ayarlar’daki “Kurulum sihirbazını yeniden çalıştır” düğmesi yalnızca yöneticide etkin.
+- **Başlangıç modu:** Sihirbaza “Windows açılışında başlat” + “Gizli başlat / Giriş ekranı açık” seçimi eklendi; kullanıcının mevcut modu ezilmiyor.
+- **Zorunlu kurum bilgileri:** Ayarlar kaydında da kurum adı, e-posta, telefon ve adres zorunlu; eksikse satır içi hata gösterilir.
+- **Kapatma onayı:** Sihirbaz X ile kapatılırken “Değişiklikler kaydedilmedi, çıkılsın mı?” onayı istenir.
+- **Logo temizliği:** Kayıt başarısız olursa ve önceden logo yoksa, bu çalıştırmada kopyalanan logo dosyası silinir.
+- **Giriş ekranı:** Sürüm bilgisi eklendi; “Beni hatırla (30 gün)” etiketi güncel oturum davranışına göre düzeltildi.
+- **Bildirim yardımı:** ntfy ve Telegram kurulum adımları numaralı ve ayrıntılı hale getirildi.
+
+### Test
+- 269/269 test.
+- Kurum e-postası → SMTP ön doldurma; atlanan SMTP’de gönderen adresinin kurum e-postasına düşmesi doğrulandı.
+- Güncelleme modunda şifre değişimi → çıkış → kayıtlı kimlikle (yazmadan) giriş doğrulandı.
+- Ayarlar’da boş telefonla kaydetmenin engellenmesi, başlangıç modunun korunması ve kapatma onayı doğrulandı.
+
 ## [1.4.1] — 2026-11-14 · Kurulum sihirbazı rötuşları
 
 ### Düzeltildi

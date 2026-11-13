@@ -1,4 +1,6 @@
+using CgpRandevuTakip.Application.Abstractions;
 using CgpRandevuTakip.Application.Auth;
+using CgpRandevuTakip.Desktop.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -7,10 +9,17 @@ namespace CgpRandevuTakip.Desktop.ViewModels;
 public partial class ChangePasswordViewModel : ObservableObject
 {
     private readonly IAuthService _auth;
+    private readonly IRememberedLoginStore _remembered;
+    private readonly ICurrentUser _currentUser;
 
-    public ChangePasswordViewModel(IAuthService auth)
+    public ChangePasswordViewModel(
+        IAuthService auth,
+        IRememberedLoginStore remembered,
+        ICurrentUser currentUser)
     {
         _auth = auth;
+        _remembered = remembered;
+        _currentUser = currentUser;
     }
 
     [ObservableProperty]
@@ -52,6 +61,14 @@ public partial class ChangePasswordViewModel : ObservableObject
             NewPassword = string.Empty;
             ConfirmPassword = string.Empty;
             SuccessMessage = "Şifreniz güncellendi.";
+
+            // "Beni hatırla" kayıtlı kimliği eski şifreyle kalmasın.
+            if (_remembered.LoadCredentials() is not null
+                && !string.IsNullOrWhiteSpace(_currentUser.Username))
+            {
+                _remembered.SaveCredentials(_currentUser.Username, NewPassword);
+            }
+
             Completed?.Invoke(this, EventArgs.Empty);
         }
         catch (Exception ex)

@@ -84,6 +84,7 @@ public sealed partial class SetupViewModel : ObservableObject
 
     private AppSettings? _loadedSettings;
     private readonly HashSet<int> _skippedSteps = new();
+    private string _lastInstitutionEmail = string.Empty;
     private AppTheme _originalTheme = AppTheme.Auto;
     private string? _pendingLogoSource;
     private bool _logoRemoved;
@@ -129,6 +130,12 @@ public sealed partial class SetupViewModel : ObservableObject
         };
 
         PushProviderOptions = new ObservableCollection<string> { "ntfy", "telegram" };
+
+        AutoStartModeOptions = new ObservableCollection<AutoStartModeOption>
+        {
+            new("tray", "Gizli başlat (tepside)"),
+            new("login", "Giriş ekranı açık")
+        };
 
         Steps = new ObservableCollection<SetupStepItem>
         {
@@ -287,6 +294,11 @@ public sealed partial class SetupViewModel : ObservableObject
     [ObservableProperty]
     private bool _autoStartEnabled = true;
 
+    public ObservableCollection<AutoStartModeOption> AutoStartModeOptions { get; }
+
+    [ObservableProperty]
+    private AutoStartModeOption? _selectedAutoStartMode;
+
     [ObservableProperty]
     private bool _closeToTray = true;
 
@@ -441,6 +453,7 @@ public sealed partial class SetupViewModel : ObservableObject
 
             var settings = await _settings.GetAsync();
             _loadedSettings = settings;
+            _lastInstitutionEmail = settings.InstitutionEmail;
 
             InstitutionName = settings.InstitutionName;
             InstitutionEmail = settings.InstitutionEmail;
@@ -453,6 +466,8 @@ public sealed partial class SetupViewModel : ObservableObject
             WorkHoursEnd = settings.WorkHoursEnd;
             DailyShareTime = settings.DailyShareTime;
             AutoStartEnabled = settings.AutoStartEnabled;
+            SelectedAutoStartMode = AutoStartModeOptions.FirstOrDefault(x => x.Value == settings.AutoStartMode)
+                                    ?? AutoStartModeOptions[0];
             CloseToTray = settings.CloseToTray;
 
             SmtpHost = settings.SmtpHost;
@@ -730,6 +745,8 @@ public sealed partial class SetupViewModel : ObservableObject
         try
         {
             var logoRelative = LogoRelativePath;
+            var hadLogoBefore = !string.IsNullOrWhiteSpace(LogoRelativePath);
+            var logoImportedThisRun = false;
 
             if (_pendingLogoSource is not null)
             {
@@ -743,6 +760,7 @@ public sealed partial class SetupViewModel : ObservableObject
 
                 logoRelative = imported.RelativePath ?? string.Empty;
                 _pendingLogoSource = null;
+                logoImportedThisRun = true;
             }
             else if (_logoRemoved)
             {
@@ -801,6 +819,10 @@ public sealed partial class SetupViewModel : ObservableObject
                     var token = await _auth.CreateRememberTokenAsync();
                     if (!string.IsNullOrWhiteSpace(token))
                         _remembered.Save(token);
+
+                    // "Beni hatırla" ile kayıtlı kimlik varsa eski şifre kalmasın.
+                    if (_remembered.LoadCredentials() is not null)
+                        _remembered.SaveCredentials(AdminUsername, NewPassword);
                 }
             }
 
@@ -808,6 +830,15 @@ public sealed partial class SetupViewModel : ObservableObject
             var saved = await _settings.SaveAsync(settings);
             if (!saved.Success)
             {
+                // Kayıt başarısız olduysa ve önceden logo yoksa, bu çalıştırmada
+                // kopyalanan dosyayı geri al; yarım kalan artık bırakma.
+                if (logoImportedThisRun && !hadLogoBefore)
+                {
+                    _logo.Remove();
+                    LogoPreview = null;
+                    LogoRelativePath = string.Empty;
+                }
+
                 MoveTo(SummaryStep);
                 ErrorMessage = saved.Error;
                 return;
@@ -862,14 +893,18 @@ public sealed partial class SetupViewModel : ObservableObject
             QuietHoursStart = QuietHoursStart.Trim(),
             QuietHoursEnd = QuietHoursEnd.Trim(),
             AutoStartEnabled = AutoStartEnabled,
-            AutoStartMode = AutoStartEnabled ? "tray" : baseline.AutoStartMode,
+            AutoStartMode = AutoStartEnabled
+                ? (SelectedAutoStartMode?.Value ?? "tray")
+                : baseline.AutoStartMode,
             CloseToTray = CloseToTray,
             SmtpHost = SmtpHost.Trim(),
             SmtpPort = int.TryParse(SmtpPort, out var port) ? port : 587,
             SmtpUseSsl = SmtpUseSsl,
             SmtpUsername = SmtpUsername.Trim(),
             SmtpPassword = SmtpPassword,
-            SmtpFromAddress = SmtpFromAddress.Trim(),
+            SmtpFromAddress = string.IsNullOrWhiteSpace(SmtpFromAddress)
+                ? InstitutionEmail.Trim()
+                : SmtpFromAddress.Trim(),
             SmtpFromName = SmtpFromName.Trim(),
             WorkHoursStart = WorkHoursStart.Trim(),
             WorkHoursEnd = WorkHoursEnd.Trim(),
@@ -1145,7 +1180,30 @@ public sealed partial class SetupViewModel : ObservableObject
     partial void OnChangePasswordChanged(bool value) => OnPropertyChanged(nameof(SummaryAdminSecurityText));
 
     partial void OnInstitutionNameChanged(string value) => NotifySummary();
-    partial void OnInstitutionEmailChanged(string value) => NotifySummary();
+    partial void OnInstitutionEmailChanged(string value)
+    {
+        if (!_isLoading)
+        {
+            var email = value?.Trim() ?? string.Empty;
+
+            // Kurum e-postası SMTP gönderen adresinin varsayılanıdır.
+            if (string.IsNullOrWhiteSpace(SmtpFromAddress)
+                || string.Equals(SmtpFromAddress, _lastInstitutionEmail, StringComparison.OrdinalIgnoreCase))
+            {
+                SmtpFromAddress = email;
+            }
+
+            if (string.IsNullOrWhiteSpace(TestEmailAddress)
+                || string.Equals(TestEmailAddress, _lastInstitutionEmail, StringComparison.OrdinalIgnoreCase))
+            {
+                TestEmailAddress = email;
+            }
+
+            _lastInstitutionEmail = email;
+        }
+
+        NotifySummary();
+    }
     partial void OnInstitutionPhoneChanged(string value) => NotifySummary();
     partial void OnInstitutionAddressChanged(string value) => NotifySummary();
     partial void OnAdminUsernameChanged(string value) => NotifySummary();

@@ -113,7 +113,7 @@
                                TextWrapping="Wrap" />
                 </Border>
 
-                <CheckBox Content="Beni hatırla (30 gün)"
+                <CheckBox Content="Beni hatırla (kullanıcı adı ve şifreyi hatırla)"
                           IsChecked="{Binding RememberMe}"
                           Margin="0,14,0,0"
                           AutomationProperties.Name="Beni hatırla" />

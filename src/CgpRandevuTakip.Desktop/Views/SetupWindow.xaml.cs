@@ -8,6 +8,7 @@ public partial class SetupWindow : Window
 {
     private readonly SetupViewModel _viewModel;
     private bool _allowClose;
+    private bool _closeConfirmed;
 
     public SetupWindow(SetupViewModel viewModel)
     {
@@ -35,7 +36,30 @@ public partial class SetupWindow : Window
 
     private void OnClosing(object? sender, CancelEventArgs e)
     {
-        if (!_allowClose)
+        if (!_allowClose && !_closeConfirmed)
+        {
+            var message = _viewModel.IsUpdateMode
+                ? "Değişiklikler kaydedilmedi. Kurulum sihirbazından çıkılsın mı?"
+                : "Kurulum tamamlanmadı. Çıkarsanız yönetici hesabı oluşturulmayacak. Çıkılsın mı?";
+
+            var result = MessageBox.Show(
+                this,
+                message,
+                "Kurulum sihirbazı",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question,
+                MessageBoxResult.No);
+
+            if (result != MessageBoxResult.Yes)
+            {
+                e.Cancel = true;
+                return;
+            }
+
+            _closeConfirmed = true;
+        }
+
+        if (!_allowClose && _closeConfirmed)
             _viewModel.RestoreThemeOnCancel();
 
         _viewModel.SetupSucceeded -= OnSetupSucceeded;

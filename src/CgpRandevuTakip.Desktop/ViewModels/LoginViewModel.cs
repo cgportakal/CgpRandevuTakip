@@ -1,5 +1,6 @@
 using CgpRandevuTakip.Application.Auth;
 using CgpRandevuTakip.Desktop.Services;
+using CgpRandevuTakip.Domain.Common;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -46,6 +47,8 @@ public partial class LoginViewModel : ObservableObject
     public event EventHandler? ForgotPasswordRequested;
 
     public string ProductName => "CGP - Randevu Takip";
+
+    public string VersionText => $"Sürüm {AppConstants.Version}";
 
     public string ProductSubtitle => "Eğitim kurumu randevu yönetimi";
 

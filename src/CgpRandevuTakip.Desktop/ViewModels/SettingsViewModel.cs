@@ -617,6 +617,18 @@ public partial class SettingsViewModel : ObservableObject
         ErrorMessage = null;
         StatusMessage = null;
 
+        var institutionError =
+            InstitutionProfilePolicy.ValidateName(InstitutionName, required: true)
+            ?? InstitutionProfilePolicy.ValidateEmail(InstitutionEmail, required: true)
+            ?? InstitutionProfilePolicy.ValidatePhone(InstitutionPhone, required: true)
+            ?? InstitutionProfilePolicy.ValidateAddress(InstitutionAddress, required: true);
+
+        if (institutionError is not null)
+        {
+            ErrorMessage = institutionError;
+            return;
+        }
+
         if (BackupEncryptionEnabled
             && !string.Equals(BackupPassword, BackupPasswordConfirm, StringComparison.Ordinal))
         {
