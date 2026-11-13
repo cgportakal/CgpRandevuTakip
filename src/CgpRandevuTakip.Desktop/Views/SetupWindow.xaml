@@ -88,7 +88,7 @@
                                                        TextTrimming="CharacterEllipsis" />
 
                                             <TextBlock Grid.Column="2"
-                                                       Text="Atla"
+                                                       Text="{Binding OptionalLabel}"
                                                        Foreground="#99FFFFFF"
                                                        FontSize="10"
                                                        VerticalAlignment="Center"
@@ -360,7 +360,7 @@
                             <StackPanel Visibility="{Binding ChangePassword, Converter={StaticResource BoolToVisibility}}"
                                         Margin="0,10,0,0">
                                 <TextBlock Text="Mevcut şifre" Style="{StaticResource LabelText}" />
-                                <PasswordBox x:Name="CurrentPasswordBox" PasswordChanged="OnCurrentPasswordChanged" />
+                                <PasswordBox x:Name="CurrentPasswordBox" PasswordChanged="OnCurrentPasswordChanged" AutomationProperties.Name="Mevcut şifre" />
 
                                 <Grid Margin="0,14,0,0">
                                     <Grid.ColumnDefinitions>
@@ -371,12 +371,12 @@
 
                                     <StackPanel>
                                         <TextBlock Text="Yeni şifre" Style="{StaticResource LabelText}" />
-                                        <PasswordBox x:Name="NewPasswordBox" PasswordChanged="OnNewPasswordChanged" />
+                                        <PasswordBox x:Name="NewPasswordBox" PasswordChanged="OnNewPasswordChanged" AutomationProperties.Name="Yeni şifre" />
                                     </StackPanel>
 
                                     <StackPanel Grid.Column="2">
                                         <TextBlock Text="Yeni şifre (tekrar)" Style="{StaticResource LabelText}" />
-                                        <PasswordBox x:Name="NewConfirmPasswordBox" PasswordChanged="OnNewConfirmPasswordChanged" />
+                                        <PasswordBox x:Name="NewConfirmPasswordBox" PasswordChanged="OnNewConfirmPasswordChanged" AutomationProperties.Name="Yeni şifre tekrar" />
                                     </StackPanel>
                                 </Grid>
 
@@ -426,17 +426,17 @@
 
                             <StackPanel>
                                 <TextBlock Text="Başlangıç (SS:dd)" Style="{StaticResource LabelText}" />
-                                <TextBox Text="{Binding WorkHoursStart, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding WorkHoursStart, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Çalışma saati başlangıç" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Bitiş (SS:dd)" Style="{StaticResource LabelText}" />
-                                <TextBox Text="{Binding WorkHoursEnd, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding WorkHoursEnd, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Çalışma saati bitiş" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="4">
                                 <TextBlock Text="Günlük paylaşım saati" Style="{StaticResource LabelText}" />
-                                <TextBox Text="{Binding DailyShareTime, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding DailyShareTime, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Günlük paylaşım saati" />
                             </StackPanel>
                         </Grid>
                         <TextBlock Text="Randevu saat seçenekleri çalışma saatlerine göre üretilir. Günlük paylaşım saati WhatsApp listesinin hazırlanma zamanıdır."
@@ -468,14 +468,14 @@
 
                             <StackPanel>
                                 <TextBlock Text="SMTP sunucusu" Style="{StaticResource LabelText}" />
-                                <TextBox Text="{Binding SmtpHost, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding SmtpHost, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="SMTP sunucusu" />
                                 <TextBlock Text="Örn: smtp.gmail.com"
                                            Style="{StaticResource MutedText}" Margin="0,5,0,0" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Port" Style="{StaticResource LabelText}" />
-                                <TextBox Text="{Binding SmtpPort, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding SmtpPort, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="SMTP portu" />
                             </StackPanel>
                         </Grid>
 
@@ -492,12 +492,12 @@
 
                             <StackPanel>
                                 <TextBlock Text="Kullanıcı adı" Style="{StaticResource LabelText}" />
-                                <TextBox Text="{Binding SmtpUsername, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding SmtpUsername, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="SMTP kullanıcı adı" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Parola" Style="{StaticResource LabelText}" />
-                                <PasswordBox x:Name="SmtpPasswordBox" PasswordChanged="OnSmtpPasswordChanged" />
+                                <PasswordBox x:Name="SmtpPasswordBox" PasswordChanged="OnSmtpPasswordChanged" AutomationProperties.Name="SMTP parolası" />
                             </StackPanel>
                         </Grid>
 
@@ -510,12 +510,12 @@
 
                             <StackPanel>
                                 <TextBlock Text="Gönderen adresi" Style="{StaticResource LabelText}" />
-                                <TextBox Text="{Binding SmtpFromAddress, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding SmtpFromAddress, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="SMTP gönderen adresi" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Gönderen adı" Style="{StaticResource LabelText}" />
-                                <TextBox Text="{Binding SmtpFromName, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding SmtpFromName, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="SMTP gönderen adı" />
                             </StackPanel>
                         </Grid>
 
@@ -532,7 +532,7 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <TextBox Text="{Binding TestEmailAddress, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBox Text="{Binding TestEmailAddress, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="SMTP test alıcısı" />
                             <Button Grid.Column="2"
                                     Content="Test e-postası gönder"
                                     Style="{StaticResource SecondaryButton}"
@@ -569,7 +569,7 @@
                             <StackPanel Visibility="{Binding IsNtfyProvider, Converter={StaticResource BoolToVisibility}}"
                                         Margin="0,14,0,0">
                                 <TextBlock Text="ntfy topic" Style="{StaticResource LabelText}" />
-                                <TextBox Text="{Binding PushTopic, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding PushTopic, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Push topic" />
                                 <TextBlock Text="Telefonunuzda ntfy uygulamasını kurun, aynı topic'e abone olun ve test gönderin."
                                            Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,5,0,0" />
                             </StackPanel>
@@ -578,12 +578,12 @@
                             <StackPanel Visibility="{Binding IsTelegramProvider, Converter={StaticResource BoolToVisibility}}"
                                         Margin="0,14,0,0">
                                 <TextBlock Text="Bot token" Style="{StaticResource LabelText}" />
-                                <TextBox Text="{Binding PushToken, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding PushToken, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Telegram bot token" />
                                 <TextBlock Text="@BotFather üzerinden bot oluşturup size verilen token'ı girin."
                                            Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,5,0,0" />
 
                                 <TextBlock Text="Sohbet kimliği (chat id)" Style="{StaticResource LabelText}" Margin="0,12,0,6" />
-                                <TextBox Text="{Binding PushChatId, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding PushChatId, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Telegram chat id" />
                                 <TextBlock Text="Bota bir kez /start mesajı gönderin; chat id sayısal olmalıdır."
                                            Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,5,0,0" />
                             </StackPanel>
@@ -615,12 +615,12 @@
 
                                 <StackPanel>
                                     <TextBlock Text="Başlangıç (SS:dd)" Style="{StaticResource LabelText}" />
-                                    <TextBox Text="{Binding QuietHoursStart, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBox Text="{Binding QuietHoursStart, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Sessiz saat başlangıç" />
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="Bitiş (SS:dd)" Style="{StaticResource LabelText}" />
-                                    <TextBox Text="{Binding QuietHoursEnd, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBox Text="{Binding QuietHoursEnd, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Sessiz saat bitiş" />
                                 </StackPanel>
                             </Grid>
 
@@ -644,7 +644,7 @@
                                 <ColumnDefinition Width="10" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBox Text="{Binding BackupDirectory, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBox Text="{Binding BackupDirectory, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Yedek klasörü" />
                             <Button Grid.Column="2"
                                     Content="Gözat"
                                     Style="{StaticResource SecondaryButton}"
@@ -669,12 +669,12 @@
 
                             <StackPanel>
                                 <TextBlock Text="Yedek parolası" Style="{StaticResource LabelText}" />
-                                <PasswordBox x:Name="BackupPasswordBox" PasswordChanged="OnBackupPasswordChanged" />
+                                <PasswordBox x:Name="BackupPasswordBox" PasswordChanged="OnBackupPasswordChanged" AutomationProperties.Name="Yedek parolası" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Parola (tekrar)" Style="{StaticResource LabelText}" />
-                                <PasswordBox x:Name="BackupPasswordConfirmBox" PasswordChanged="OnBackupPasswordConfirmChanged" />
+                                <PasswordBox x:Name="BackupPasswordConfirmBox" PasswordChanged="OnBackupPasswordConfirmChanged" AutomationProperties.Name="Yedek parolası tekrar" />
                             </StackPanel>
                         </Grid>
                         <TextBlock Text="Parola bu bilgisayara bağlı olarak şifrelenip saklanır. Parolayı kaybederseniz şifreli yedeği geri yükleyemezsiniz."
@@ -695,7 +695,7 @@
                                     <ColumnDefinition Width="8" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBox Text="{Binding GoogleDriveFolder, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBox Text="{Binding GoogleDriveFolder, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Google Drive klasörü" />
                                 <Button Grid.Column="2"
                                         Content="Bul"
                                         Style="{StaticResource SecondaryButton}"

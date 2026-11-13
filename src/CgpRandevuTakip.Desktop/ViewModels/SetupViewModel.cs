@@ -36,9 +36,24 @@ public sealed partial class SetupStepItem : ObservableObject
     [ObservableProperty]
     private bool _isCompleted;
 
-    public string Badge => IsCompleted ? "✓" : Number;
+    [ObservableProperty]
+    private bool _isSkipped;
 
-    partial void OnIsCompletedChanged(bool value) => OnPropertyChanged(nameof(Badge));
+    public string Badge => IsSkipped ? "–" : IsCompleted ? "✓" : Number;
+
+    public string OptionalLabel => IsSkipped ? "Atlandı" : "Atla";
+
+    partial void OnIsCompletedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(Badge));
+        OnPropertyChanged(nameof(OptionalLabel));
+    }
+
+    partial void OnIsSkippedChanged(bool value)
+    {
+        OnPropertyChanged(nameof(Badge));
+        OnPropertyChanged(nameof(OptionalLabel));
+    }
 }
 
 /// <summary>
@@ -68,6 +83,7 @@ public sealed partial class SetupViewModel : ObservableObject
     private readonly ICurrentUser _currentUser;
 
     private AppSettings? _loadedSettings;
+    private readonly HashSet<int> _skippedSteps = new();
     private AppTheme _originalTheme = AppTheme.Auto;
     private string? _pendingLogoSource;
     private bool _logoRemoved;
@@ -377,19 +393,30 @@ public sealed partial class SetupViewModel : ObservableObject
         $"Tema: {SelectedTheme?.Label ?? "Otomatik"} · Hatırlatıcı: {SelectedReminder?.Label ?? "30 dakika önce"} · " +
         $"Çalışma: {WorkHoursStart}–{WorkHoursEnd} · Paylaşım: {DailyShareTime}";
 
-    public string SummarySmtpText => string.IsNullOrWhiteSpace(SmtpHost)
-        ? "Atlandı — Ayarlar > E-posta bölümünden yapılandırılabilir."
-        : $"{SmtpHost}:{SmtpPort} · {SmtpFromAddress}";
+    public string SummarySmtpText => _skippedSteps.Contains(SmtpStep)
+        ? (IsUpdateMode
+            ? "Atlandı — mevcut e-posta ayarları korundu."
+            : "Atlandı — daha sonra Ayarlar > E-posta bölümünden yapılandırılabilir.")
+        : string.IsNullOrWhiteSpace(SmtpHost)
+            ? "Yapılandırılmadı — Ayarlar > E-posta bölümünden tamamlanabilir."
+            : $"{SmtpHost}:{SmtpPort} · {SmtpFromAddress}";
 
-    public string SummaryPushText => !PushEnabled
-        ? "Kapalı — Ayarlar > Bildirimler bölümünden açılabilir."
-        : $"{SelectedPushProvider} · " +
-          (SelectedPushProvider == "telegram" ? $"chat {PushChatId}" : $"topic {PushTopic}");
+    public string SummaryPushText => _skippedSteps.Contains(PushStep)
+        ? (IsUpdateMode
+            ? "Atlandı — mevcut bildirim ayarları korundu."
+            : "Atlandı — daha sonra Ayarlar > Bildirimler bölümünden açılabilir.")
+        : !PushEnabled
+            ? "Kapalı — Ayarlar > Bildirimler bölümünden açılabilir."
+            : $"{SelectedPushProvider} · " +
+              (SelectedPushProvider == "telegram" ? $"chat {PushChatId}" : $"topic {PushTopic}");
 
-    public string SummaryBackupText =>
-        $"{BackupDirectory} · Otomatik yedek {(AutoBackupEnabled ? "açık" : "kapalı")} · " +
-        $"Şifreleme {(BackupEncryptionEnabled ? "açık" : "kapalı")}" +
-        (GoogleDriveEnabled ? $" · Drive: {GoogleDriveFolder}" : string.Empty);
+    public string SummaryBackupText => _skippedSteps.Contains(BackupStep)
+        ? (IsUpdateMode
+            ? $"Atlandı — mevcut yedekleme ayarları korundu ({BackupDirectory})."
+            : $"Atlandı — varsayılan yedek klasörü kullanılacak ({BackupDirectory}).")
+        : $"{BackupDirectory} · Otomatik yedek {(AutoBackupEnabled ? "açık" : "kapalı")} · " +
+          $"Şifreleme {(BackupEncryptionEnabled ? "açık" : "kapalı")}" +
+          (GoogleDriveEnabled ? $" · Drive: {GoogleDriveFolder}" : string.Empty);
 
     public string SummaryAdminSecurityText => IsUpdateMode
         ? (ChangePassword ? "Şifre bu kurulumda güncellenecek." : "Şifre değiştirilmeyecek.")
@@ -523,6 +550,8 @@ public sealed partial class SetupViewModel : ObservableObject
         if (ErrorMessage is not null)
             return;
 
+        _skippedSteps.Remove(CurrentStep);
+        NotifySummary();
         MoveTo(CurrentStep + 1);
     }
 
@@ -543,8 +572,61 @@ public sealed partial class SetupViewModel : ObservableObject
         if (!CanSkipCurrentStep || IsBusy)
             return;
 
+        RestoreStepDefaults(CurrentStep);
+        _skippedSteps.Add(CurrentStep);
         ErrorMessage = null;
+        NotifySummary();
         MoveTo(CurrentStep + 1);
+    }
+
+    /// <summary>
+    /// "Atla" seçilen adımda kullanıcı bir şey girmiş olsa bile mevcut/kayıtlı
+    /// değerler korunur; yarım yapılandırma kaydedilmez.
+    /// </summary>
+    private void RestoreStepDefaults(int step)
+    {
+        var settings = _loadedSettings;
+        if (settings is null)
+            return;
+
+        switch (step)
+        {
+            case SmtpStep:
+                SmtpHost = settings.SmtpHost;
+                SmtpPort = settings.SmtpPort.ToString();
+                SmtpUseSsl = settings.SmtpUseSsl;
+                SmtpUsername = settings.SmtpUsername;
+                SmtpPassword = settings.SmtpPassword;
+                SmtpFromAddress = string.IsNullOrWhiteSpace(settings.SmtpFromAddress)
+                    ? settings.InstitutionEmail
+                    : settings.SmtpFromAddress;
+                SmtpFromName = settings.SmtpFromName;
+                SmtpTestMessage = null;
+                break;
+            case PushStep:
+                PushEnabled = settings.PushEnabled;
+                SelectedPushProvider = settings.PushProvider;
+                PushTopic = settings.PushTopic;
+                PushToken = settings.PushToken;
+                PushChatId = settings.PushChatId;
+                QuietHoursEnabled = settings.QuietHoursEnabled;
+                QuietHoursStart = settings.QuietHoursStart;
+                QuietHoursEnd = settings.QuietHoursEnd;
+                PushTestMessage = null;
+                break;
+            case BackupStep:
+                BackupDirectory = settings.BackupDirectory;
+                AutoBackupEnabled = settings.AutoBackupEnabled;
+                BackupEncryptionEnabled = settings.BackupEncryptionEnabled;
+                BackupPassword = settings.BackupPassword;
+                BackupPasswordConfirm = settings.BackupPassword;
+                GoogleDriveEnabled = settings.GoogleDriveEnabled;
+                GoogleDriveFolder = settings.GoogleDriveFolder;
+                GoogleDriveStatus = string.IsNullOrWhiteSpace(settings.GoogleDriveFolder)
+                    ? "Bağlı değil."
+                    : $"Klasör: {settings.GoogleDriveFolder}";
+                break;
+        }
     }
 
     private void MoveTo(int step)
@@ -1110,7 +1192,8 @@ public sealed partial class SetupViewModel : ObservableObject
         for (var i = 0; i < Steps.Count; i++)
         {
             Steps[i].IsCurrent = i == CurrentStep;
-            Steps[i].IsCompleted = i < CurrentStep;
+            Steps[i].IsSkipped = _skippedSteps.Contains(i);
+            Steps[i].IsCompleted = i < CurrentStep && !Steps[i].IsSkipped;
         }
     }
 }

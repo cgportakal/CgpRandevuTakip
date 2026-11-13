@@ -78,29 +78,17 @@
                             <TextBlock Text="Üst çubukta, kontrol panelinde ve günlük liste görselinde görünür."
                                        Style="{StaticResource MutedText}" Margin="0,5,0,0" />
 
-                            <Grid Margin="0,14,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="10" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
+                            <TextBlock Text="Kurum e-posta adresi" Style="{StaticResource LabelText}" Margin="0,14,0,6" />
+                            <TextBox Text="{Binding InstitutionEmail, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding IsAdmin}"
+                                     AutomationProperties.Name="Kurum e-posta adresi" />
+                            <TextBlock Text="SMTP gönderen adresi ve şifre sıfırlama için kullanılır."
+                                       Style="{StaticResource MutedText}" Margin="0,5,0,0" TextWrapping="Wrap" />
 
-                                <StackPanel>
-                                    <TextBlock Text="Kurum e-posta adresi" Style="{StaticResource LabelText}" />
-                                    <TextBox Text="{Binding InstitutionEmail, UpdateSourceTrigger=PropertyChanged}"
-                                             IsEnabled="{Binding IsAdmin}"
-                                             AutomationProperties.Name="Kurum e-posta adresi" />
-                                    <TextBlock Text="SMTP gönderen adresi ve şifre sıfırlama için kullanılır."
-                                               Style="{StaticResource MutedText}" Margin="0,5,0,0" TextWrapping="Wrap" />
-                                </StackPanel>
-
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Kurum telefonu" Style="{StaticResource LabelText}" />
-                                    <TextBox Text="{Binding InstitutionPhone, UpdateSourceTrigger=PropertyChanged}"
-                                             IsEnabled="{Binding IsAdmin}"
-                                             AutomationProperties.Name="Kurum telefonu" />
-                                </StackPanel>
-                            </Grid>
+                            <TextBlock Text="Kurum telefonu" Style="{StaticResource LabelText}" Margin="0,12,0,6" />
+                            <TextBox Text="{Binding InstitutionPhone, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding IsAdmin}"
+                                     AutomationProperties.Name="Kurum telefonu" />
 
                             <TextBlock Text="Kurum adresi" Style="{StaticResource LabelText}" Margin="0,14,0,6" />
                             <TextBox Text="{Binding InstitutionAddress, UpdateSourceTrigger=PropertyChanged}"

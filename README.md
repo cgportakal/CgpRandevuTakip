@@ -5,8 +5,8 @@
 
 ## İndir
 
-- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.4.0-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.4.0/CGP-RandevuTakip-1.4.0-Setup.exe)
-- **Taşınabilir ZIP:** [CGP-RandevuTakip-1.4.0-portable.zip](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.4.0/CGP-RandevuTakip-1.4.0-portable.zip)
+- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.4.1-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.4.1/CGP-RandevuTakip-1.4.1-Setup.exe)
+- **Taşınabilir ZIP:** [CGP-RandevuTakip-1.4.1-portable.zip](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.4.1/CGP-RandevuTakip-1.4.1-portable.zip)
 - **Tüm sürümler:** [Releases](https://github.com/cgportakal/CgpRandevuTakip/releases/latest)
 
 > Kurulum EXE'si per-user çalışır; yönetici hakkı istemez. Taşınabilir ZIP'i yazılabilir bir klasöre açıp
@@ -17,7 +17,7 @@ Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöne
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
 > Durum: **1.4.0 hazır** — kurulum sihirbazı, kurum profili ve logosu, canlı tema, SMTP/push/yedekleme adımları, güncelleme modu, canlı sistem durumu, kalıcı oturum, elle kilit ve arka plan bildirimleri tamamlandı.
-> Sürüm: 1.4.0 · Tarih: 13.11.2026 · 269 test geçiyor
+> Sürüm: 1.4.1 · Tarih: 14.11.2026 · 269 test geçiyor
 
 ## Neden bu proje?
 
@@ -48,6 +48,7 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 16 | [Sprint 5 Sonuç Raporu](docs/16_Sprint5_Raporu.md) | PNG, WhatsApp, alıcı rehberi, günlük tetikleme |
 | 23 | [Oturum ve Arka Plan](docs/23_Oturum_ve_Arka_Plan.md) | Kalıcı oturum, elle kilit, arka plan bildirimleri |
 | 24 | [Kurulum Sihirbazı](docs/24_Kurulum_Sihirbazi.md) | Adımlar, zorunlu alanlar, logo, güncelleme modu |
+| 25 | [1.4.1 Kurulum UAT](docs/25_UAT_1.4_Kurulum.md) | Kurulum, 1.3.0 → 1.4.1 yükseltme, veri koruma |
 
 ## Alınan temel kararlar
 

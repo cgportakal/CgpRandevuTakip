@@ -3,6 +3,18 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [1.4.1] — 2026-11-14 · Kurulum sihirbazı rötuşları
+
+### Düzeltildi
+- "Atla" ile geçilen adımlar kenar çubuğunda **Atlandı** olarak işaretlenir; o adımda girilen yarım değerler kaydedilmez, mevcut ayarlar korunur.
+- Özet ekranı atlanan SMTP, telefon bildirimi ve yedekleme adımlarını değerlerden bağımsız olarak **Atlandı** gösterir.
+- Ayarlar ekranında kurum e-posta ve telefon alanları tam genişliğe alındı; uzun e-posta adresleri kırpılmıyor.
+- EXE dosya özelliklerinde sürüm bilgisi `1.0.0` yerine **1.4.1** olarak görünüyor (`Directory.Build.props`).
+
+### Test
+- 269/269 test.
+- SMTP adımına değer girip "Atla" ile geçme senaryosu uçtan uca doğrulandı; değerlerin kaydedilmediği veritabanından kontrol edildi.
+
 ## [1.4.0] — 2026-11-13 · Kurulum sihirbazı ve kurum logosu
 
 ### Eklendi
