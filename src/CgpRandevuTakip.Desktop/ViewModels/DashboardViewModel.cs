@@ -1,4 +1,6 @@
+using System.IO;
 using CgpRandevuTakip.Application.Abstractions;
+using CgpRandevuTakip.Application.Appointments;
 using CgpRandevuTakip.Application.Settings;
 using CgpRandevuTakip.Desktop.Messages;
 using CgpRandevuTakip.Domain.Common;
@@ -13,6 +15,7 @@ public partial class DashboardViewModel : ObservableObject
 {
     private readonly ICategoryRepository _categories;
     private readonly IUserRepository _users;
+    private readonly IAppointmentService _appointments;
     private readonly ISettingsService _settings;
     private readonly IAppEnvironment _environment;
     private readonly ICurrentUser _currentUser;
@@ -20,12 +23,14 @@ public partial class DashboardViewModel : ObservableObject
     public DashboardViewModel(
         ICategoryRepository categories,
         IUserRepository users,
+        IAppointmentService appointments,
         ISettingsService settings,
         IAppEnvironment environment,
         ICurrentUser currentUser)
     {
         _categories = categories;
         _users = users;
+        _appointments = appointments;
         _settings = settings;
         _environment = environment;
         _currentUser = currentUser;
@@ -71,6 +76,17 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty]
     private string _lastRefreshedText = "—";
 
+    [ObservableProperty]
+    private string _todaySummary = "Bugünün görüşmeleri yükleniyor…";
+
+    [ObservableProperty]
+    private string _lastBackupText = "Henüz yedek yok";
+
+    [ObservableProperty]
+    private string _notificationsText = "Kapalı";
+
+    public string DataRootText => _environment.RootDirectory;
+
     public string VersionText => $"Sürüm {AppConstants.Version}";
 
     public string SchemaVersionText => $"v{AppConstants.SchemaVersion}";
@@ -85,11 +101,13 @@ public partial class DashboardViewModel : ObservableObject
         var categoriesTask = _categories.GetAllAsync();
         var settingsTask = _settings.GetAsync();
         var userCountTask = _users.CountAsync();
+        var todayTask = _appointments.GetDayAsync(DateTime.Today);
 
-        await Task.WhenAll(categoriesTask, settingsTask, userCountTask);
+        await Task.WhenAll(categoriesTask, settingsTask, userCountTask, todayTask);
 
         var all = await categoriesTask;
         var settings = await settingsTask;
+        var todayCount = (await todayTask).Count;
 
         ActiveCategoryCount = all.Count(x => x.IsActive);
         TotalCategoryCount = all.Count;
@@ -125,6 +143,39 @@ public partial class DashboardViewModel : ObservableObject
         };
 
         LastRefreshedText = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+
+        TodaySummary = todayCount == 0
+            ? $"Bugün görüşme yok · Çalışma saatleri {settings.WorkHoursStart}–{settings.WorkHoursEnd}"
+            : $"Bugün {todayCount} görüşme · Çalışma saatleri {settings.WorkHoursStart}–{settings.WorkHoursEnd}";
+
+        LastBackupText = ResolveLastBackupText(settings.BackupDirectory);
+        NotificationsText = settings.NotificationsEnabled
+            ? settings.PushEnabled
+                ? "Windows ve telefon bildirimleri açık"
+                : "Windows bildirimleri açık, telefon kapalı"
+            : "Bildirimler kapalı";
+    }
+
+    private static string ResolveLastBackupText(string directory)
+    {
+        try
+        {
+            if (!Directory.Exists(directory))
+                return "Henüz yedek yok";
+
+            var newest = new DirectoryInfo(directory)
+                .GetFiles("*.cgpbak", SearchOption.TopDirectoryOnly)
+                .OrderByDescending(x => x.LastWriteTimeUtc)
+                .FirstOrDefault();
+
+            return newest is null
+                ? "Henüz yedek yok"
+                : newest.LastWriteTime.ToString("dd.MM.yyyy HH:mm");
+        }
+        catch
+        {
+            return "Okunamadı";
+        }
     }
 
     [RelayCommand]

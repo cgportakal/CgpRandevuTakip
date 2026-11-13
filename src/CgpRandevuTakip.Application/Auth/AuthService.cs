@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using CgpRandevuTakip.Application.Abstractions;
 using CgpRandevuTakip.Application.Common;
+using CgpRandevuTakip.Application.Users;
 using CgpRandevuTakip.Domain.Entities;
 using CgpRandevuTakip.Domain.Enums;
 
@@ -54,6 +55,12 @@ public sealed class AuthService : IAuthService
         if (displayName.Length > 100)
             return SetupResult.Fail("Ad soyad en fazla 100 karakter olabilir.");
 
+        if (!EmailAddressPolicy.TryNormalize(request.Email, out var email))
+            return SetupResult.Fail("Geçerli bir e-posta adresi girin.");
+
+        if (await _users.FindByEmailAsync(email) is not null)
+            return SetupResult.Fail("Bu e-posta adresi zaten kayıtlı.");
+
         var passwordError = PasswordPolicy.Validate(request.Password);
         if (passwordError is not null)
             return SetupResult.Fail(passwordError);
@@ -66,6 +73,7 @@ public sealed class AuthService : IAuthService
         {
             Username = username,
             DisplayName = displayName,
+            Email = email,
             PasswordHash = hash.Hash,
             PasswordSalt = hash.Salt,
             PasswordIterations = hash.Iterations,
@@ -277,6 +285,32 @@ public sealed class AuthService : IAuthService
         await _users.SaveAsync(user);
 
         await _audit.LogAsync(AuditAction.PasswordChanged, user.Id, nameof(User), user.Id);
+
+        return OperationResult.Ok();
+    }
+
+    public async Task<OperationResult> UpdateAdminEmailAsync(string email)
+    {
+        if (!_currentUser.IsAuthenticated || _currentUser.UserId is null)
+            return OperationResult.Fail("Oturum bulunamadı. Lütfen yeniden giriş yapın.");
+
+        if (!EmailAddressPolicy.TryNormalize(email, out var normalized))
+            return OperationResult.Fail("Geçerli bir e-posta adresi girin.");
+
+        var user = await _users.GetByIdAsync(_currentUser.UserId);
+        if (user is null)
+            return OperationResult.Fail("Kullanıcı kaydı bulunamadı.");
+
+        var existing = await _users.FindByEmailAsync(normalized);
+        if (existing is not null && !string.Equals(existing.Id, user.Id, StringComparison.Ordinal))
+            return OperationResult.Fail("Bu e-posta adresi başka bir kullanıcıda kayıtlı.");
+
+        if (!string.Equals(user.Email, normalized, StringComparison.Ordinal))
+        {
+            user.Email = normalized;
+            await _users.SaveAsync(user);
+            await _audit.LogAsync(AuditAction.UserUpdated, user.Id, nameof(User), user.Id);
+        }
 
         return OperationResult.Ok();
     }

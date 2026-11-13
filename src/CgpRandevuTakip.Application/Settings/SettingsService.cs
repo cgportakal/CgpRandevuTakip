@@ -99,7 +99,11 @@ public sealed class SettingsService : ISettingsService
                                 ?? defaults.GoogleRefreshToken,
             GoogleAccountEmail: Read(values, SettingsKeys.GoogleAccountEmail) ?? defaults.GoogleAccountEmail,
             GoogleFolderName: Read(values, SettingsKeys.GoogleFolderName) ?? defaults.GoogleFolderName,
-            GoogleDriveFolder: Read(values, SettingsKeys.GoogleDriveFolder) ?? defaults.GoogleDriveFolder);
+            GoogleDriveFolder: Read(values, SettingsKeys.GoogleDriveFolder) ?? defaults.GoogleDriveFolder,
+            InstitutionEmail: Read(values, SettingsKeys.InstitutionEmail) ?? defaults.InstitutionEmail,
+            InstitutionPhone: Read(values, SettingsKeys.InstitutionPhone) ?? defaults.InstitutionPhone,
+            InstitutionAddress: Read(values, SettingsKeys.InstitutionAddress) ?? defaults.InstitutionAddress,
+            InstitutionLogoFile: Read(values, SettingsKeys.InstitutionLogoFile) ?? defaults.InstitutionLogoFile);
 
         _cachedSettings = settings;
         return settings;
@@ -175,6 +179,28 @@ public sealed class SettingsService : ISettingsService
             return OperationResult.Fail("SMTP kullanırken gönderen adresi zorunludur.");
         }
 
+        var institutionEmailError = InstitutionProfilePolicy.ValidateEmail(
+            settings.InstitutionEmail,
+            required: false);
+        if (institutionEmailError is not null)
+            return OperationResult.Fail(institutionEmailError);
+
+        var institutionPhoneError = InstitutionProfilePolicy.ValidatePhone(
+            settings.InstitutionPhone,
+            required: false);
+        if (institutionPhoneError is not null)
+            return OperationResult.Fail(institutionPhoneError);
+
+        var institutionAddressError = InstitutionProfilePolicy.ValidateAddress(
+            settings.InstitutionAddress,
+            required: false);
+        if (institutionAddressError is not null)
+            return OperationResult.Fail(institutionAddressError);
+
+        var institutionLogoFile = settings.InstitutionLogoFile?.Trim() ?? string.Empty;
+        if (institutionLogoFile.Length > 300)
+            return OperationResult.Fail("Kurum logosu yolu çok uzun.");
+
         var provider = NormalizeProvider(settings.PushProvider);
         var autoStartMode = NormalizeAutoStartMode(settings.AutoStartMode);
         var previous = await GetAsync();
@@ -219,7 +245,11 @@ public sealed class SettingsService : ISettingsService
             [SettingsKeys.GoogleFolderName] = string.IsNullOrWhiteSpace(settings.GoogleFolderName)
                 ? "CGP Yedekler"
                 : settings.GoogleFolderName.Trim(),
-            [SettingsKeys.GoogleDriveFolder] = settings.GoogleDriveFolder?.Trim() ?? string.Empty
+            [SettingsKeys.GoogleDriveFolder] = settings.GoogleDriveFolder?.Trim() ?? string.Empty,
+            [SettingsKeys.InstitutionEmail] = settings.InstitutionEmail?.Trim() ?? string.Empty,
+            [SettingsKeys.InstitutionPhone] = settings.InstitutionPhone?.Trim() ?? string.Empty,
+            [SettingsKeys.InstitutionAddress] = settings.InstitutionAddress?.Trim() ?? string.Empty,
+            [SettingsKeys.InstitutionLogoFile] = institutionLogoFile
         };
 
         await _repository.SetManyAsync(values);

@@ -20,7 +20,8 @@ public static class ListImageRenderer
     public static BitmapSource RenderDailyList(
         string institutionName,
         DateTime date,
-        IReadOnlyList<AppointmentListItemDto> rows)
+        IReadOnlyList<AppointmentListItemDto> rows,
+        string? logoPath = null)
     {
         var title = AppConstants.ResolveInstitutionName(institutionName);
         var stack = new StackPanel();
@@ -30,6 +31,19 @@ public static class ListImageRenderer
             Padding = new Thickness(40, 32, 40, 36),
             Child = stack
         };
+
+        var logo = TryLoadLogo(logoPath);
+        if (logo is not null)
+        {
+            stack.Children.Add(new Image
+            {
+                Source = logo,
+                Height = 56,
+                Stretch = Stretch.Uniform,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(0, 0, 0, 14)
+            });
+        }
 
         stack.Children.Add(new TextBlock
         {
@@ -138,6 +152,31 @@ public static class ListImageRenderer
 
         using var stream = File.Create(path);
         encoder.Save(stream);
+    }
+
+    private static ImageSource? TryLoadLogo(string? logoPath)
+    {
+        if (string.IsNullOrWhiteSpace(logoPath) || !File.Exists(logoPath))
+            return null;
+
+        try
+        {
+            using var stream = File.OpenRead(logoPath);
+            var image = new BitmapImage();
+            image.BeginInit();
+            image.CacheOption = BitmapCacheOption.OnLoad;
+            // Görsel 2x üretildiği için logo da 2x çözünürlükte yüklenir.
+            image.DecodePixelHeight = 112;
+            image.StreamSource = stream;
+            image.EndInit();
+            image.Freeze();
+            return image;
+        }
+        catch
+        {
+            // Logo okunamazsa liste görseli logosuz üretilir.
+            return null;
+        }
     }
 
     private static AppointmentListItemDto Sample(

@@ -293,7 +293,8 @@ public partial class App : System.Windows.Application
         services.AddSingleton<ICurrentUser>(sp => sp.GetRequiredService<CurrentUser>());
 
         services.AddSingleton<IAuthService, AuthService>();
-        services.AddSingleton<IEmailSender, SmtpEmailSender>();
+        services.AddSingleton<SmtpEmailSender>();
+        services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<SmtpEmailSender>());
         services.AddSingleton<IPasswordResetService, PasswordResetService>();
         services.AddSingleton<IRememberedLoginStore, RememberedLoginStore>();
         services.AddSingleton<ICategoryService, CategoryService>();
@@ -315,6 +316,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IAuditLogService, AuditLogService>();
 
         services.AddSingleton<ThemeService>();
+        services.AddSingleton<InstitutionLogoService>();
         services.AddSingleton<IDialogService, DialogService>();
         services.AddSingleton<ISpikeService, SpikeService>();
         services.AddSingleton<IAppointmentDialogService, AppointmentDialogService>();

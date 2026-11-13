@@ -49,6 +49,10 @@ public class SettingsServiceTests
             Assert.True(settings.AutoStartEnabled);
             Assert.Equal("tray", settings.AutoStartMode);
             Assert.True(settings.CloseToTray);
+            Assert.Equal(string.Empty, settings.InstitutionEmail);
+            Assert.Equal(string.Empty, settings.InstitutionPhone);
+            Assert.Equal(string.Empty, settings.InstitutionAddress);
+            Assert.Equal(string.Empty, settings.InstitutionLogoFile);
         }
     }
 
@@ -111,6 +115,50 @@ public class SettingsServiceTests
             Assert.True(saved.AutoStartEnabled);
             Assert.Equal("tray", saved.AutoStartMode);
             Assert.False(saved.CloseToTray);
+        }
+    }
+
+    [Fact]
+    public async Task Save_PersistsInstitutionProfileAndLogo()
+    {
+        var (service, _, _, environment, db) = CreateSut();
+        using (db)
+        {
+            var update = AppSettings.CreateDefault(environment.DefaultBackupDirectory) with
+            {
+                InstitutionName = "BEK Okulları",
+                InstitutionEmail = "info@bek.example",
+                InstitutionPhone = "0532 123 45 67",
+                InstitutionAddress = "Atatürk Mahallesi Okul Caddesi No: 1, Ankara",
+                InstitutionLogoFile = "branding/institution-logo.png"
+            };
+
+            var result = await service.SaveAsync(update);
+            Assert.True(result.Success, result.Error);
+
+            var saved = await service.GetAsync();
+            Assert.Equal("info@bek.example", saved.InstitutionEmail);
+            Assert.Equal("0532 123 45 67", saved.InstitutionPhone);
+            Assert.StartsWith("Atatürk", saved.InstitutionAddress);
+            Assert.Equal("branding/institution-logo.png", saved.InstitutionLogoFile);
+        }
+    }
+
+    [Fact]
+    public async Task Save_InvalidInstitutionEmail_Fails()
+    {
+        var (service, _, _, environment, db) = CreateSut();
+        using (db)
+        {
+            var update = AppSettings.CreateDefault(environment.DefaultBackupDirectory) with
+            {
+                InstitutionEmail = "gecersiz-adres"
+            };
+
+            var result = await service.SaveAsync(update);
+
+            Assert.False(result.Success);
+            Assert.Contains("Kurum e-posta", result.Error);
         }
     }
 

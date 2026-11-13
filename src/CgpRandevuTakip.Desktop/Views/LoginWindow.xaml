@@ -72,7 +72,7 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <TextBlock Text="Sprint 1 · Giriş, roller, tema ve kategoriler"
+                    <TextBlock Text="{Binding VersionText}"
                                Foreground="#B3FFFFFF"
                                FontSize="11"
                                Margin="0,0,0,0"

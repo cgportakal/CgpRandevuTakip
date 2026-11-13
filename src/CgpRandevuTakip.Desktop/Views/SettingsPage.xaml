@@ -78,6 +78,87 @@
                             <TextBlock Text="Üst çubukta, kontrol panelinde ve günlük liste görselinde görünür."
                                        Style="{StaticResource MutedText}" Margin="0,5,0,0" />
 
+                            <Grid Margin="0,14,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel>
+                                    <TextBlock Text="Kurum e-posta adresi" Style="{StaticResource LabelText}" />
+                                    <TextBox Text="{Binding InstitutionEmail, UpdateSourceTrigger=PropertyChanged}"
+                                             IsEnabled="{Binding IsAdmin}"
+                                             AutomationProperties.Name="Kurum e-posta adresi" />
+                                    <TextBlock Text="SMTP gönderen adresi ve şifre sıfırlama için kullanılır."
+                                               Style="{StaticResource MutedText}" Margin="0,5,0,0" TextWrapping="Wrap" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Kurum telefonu" Style="{StaticResource LabelText}" />
+                                    <TextBox Text="{Binding InstitutionPhone, UpdateSourceTrigger=PropertyChanged}"
+                                             IsEnabled="{Binding IsAdmin}"
+                                             AutomationProperties.Name="Kurum telefonu" />
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Text="Kurum adresi" Style="{StaticResource LabelText}" Margin="0,14,0,6" />
+                            <TextBox Text="{Binding InstitutionAddress, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding IsAdmin}"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     Height="60"
+                                     VerticalScrollBarVisibility="Auto"
+                                     AutomationProperties.Name="Kurum adresi" />
+
+                            <TextBlock Text="Kurum logosu" Style="{StaticResource LabelText}" Margin="0,16,0,6" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Width="72" Height="72"
+                                        CornerRadius="9"
+                                        Background="{DynamicResource SurfaceAltBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1">
+                                    <Grid>
+                                        <Image Source="{Binding LogoPreview}"
+                                               Stretch="Uniform"
+                                               Margin="5"
+                                               Visibility="{Binding HasLogo, Converter={StaticResource BoolToVisibility}}" />
+                                        <TextBlock Text="Logo yok"
+                                                   Style="{StaticResource MutedText}"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Visibility="{Binding HasLogo, Converter={StaticResource InverseBoolToVisibility}}" />
+                                    </Grid>
+                                </Border>
+
+                                <StackPanel Grid.Column="1" Margin="12,0,12,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding LogoFormatsText}"
+                                               Style="{StaticResource MutedText}" TextWrapping="Wrap" />
+                                    <TextBlock Text="Günlük WhatsApp liste görselinin üstünde görünür."
+                                               Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,3,0,0" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                    <Button Content="Logo seç"
+                                            Style="{StaticResource SecondaryButton}"
+                                            Command="{Binding PickInstitutionLogoCommand}"
+                                            IsEnabled="{Binding IsAdmin}"
+                                            MinWidth="90" />
+                                    <Button Content="Kaldır"
+                                            Style="{StaticResource GhostButton}"
+                                            Command="{Binding RemoveInstitutionLogoCommand}"
+                                            IsEnabled="{Binding IsAdmin}"
+                                            Margin="0,6,0,0"
+                                            Visibility="{Binding HasLogo, Converter={StaticResource BoolToVisibility}}" />
+                                </StackPanel>
+                            </Grid>
+
                             <TextBlock Text="Varsayılan hatırlatıcı" Style="{StaticResource LabelText}" Margin="0,16,0,6" />
                             <ComboBox ItemsSource="{Binding ReminderOptions}"
                                       DisplayMemberPath="Label"
@@ -409,8 +490,18 @@
                             Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibility}}">
                         <StackPanel>
                             <TextBlock Text="Araçlar" Style="{StaticResource SectionTitle}" />
-                            <TextBlock Text="Günlük paylaşım ve bildirim testleri."
+                            <TextBlock Text="Kurulum sihirbazı, günlük paylaşım ve bildirim testleri."
                                        Style="{StaticResource MutedText}" Margin="0,0,0,14" />
+
+                            <Button Content="Kurulum sihirbazını yeniden çalıştır"
+                                    Style="{StaticResource PrimaryButton}"
+                                    Command="{Binding OpenSetupWizardCommand}"
+                                    HorizontalAlignment="Stretch"
+                                    Margin="0,0,0,8" />
+                            <TextBlock Text="Kurum bilgilerini, yönetici e-postasını, entegrasyonları ve yedeklemeyi adım adım gözden geçirin."
+                                       Style="{StaticResource MutedText}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,0,0,12" />
 
                             <Button Content="Bugünün listesini paylaş"
                                     Style="{StaticResource SecondaryButton}"

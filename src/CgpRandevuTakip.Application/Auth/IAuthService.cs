@@ -15,4 +15,5 @@ public interface IAuthService
         string currentPassword,
         string newPassword,
         string confirmPassword);
+    Task<Common.OperationResult> UpdateAdminEmailAsync(string email);
 }

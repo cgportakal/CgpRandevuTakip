@@ -11,14 +11,14 @@
 
     <StackPanel Margin="26">
         <Border Style="{StaticResource BadgeBorder}" HorizontalAlignment="Left">
-            <TextBlock Text="S-02 · HATIRLATICI ÖNİZLEME" Style="{StaticResource BadgeText}" />
+            <TextBlock Text="HATIRLATICI ÖNİZLEME" Style="{StaticResource BadgeText}" />
         </Border>
 
         <TextBlock Text="Sıradaki görüşme 30 dakika sonra"
                    FontSize="22"
                    FontWeight="Bold"
                    Margin="0,16,0,0" />
-        <TextBlock Text="Bu pencere Sprint 4'te gerçek hatırlatıcı motoruna bağlanacak."
+        <TextBlock Text="Bu bir önizlemedir; gerçek gönderim, ayarlanan hatırlatıcı süresine göre otomatik yapılır."
                    Style="{StaticResource MutedText}" Margin="0,4,0,0" />
 
         <Border Style="{StaticResource SoftCard}" Margin="0,18,0,0">

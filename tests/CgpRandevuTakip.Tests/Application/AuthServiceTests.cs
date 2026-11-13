@@ -28,6 +28,7 @@ public class AuthServiceTests
     private static SetupRequest ValidSetup() => new(
         "ayse.yilmaz",
         "Ayşe Yılmaz",
+        "ayse@example.com",
         "GizliSifre123",
         "GizliSifre123");
 
@@ -106,7 +107,7 @@ public class AuthServiceTests
         {
             await service.CreateFirstAdminAsync(ValidSetup());
             var second = await service.CreateFirstAdminAsync(new SetupRequest(
-                "ikinci.admin", "İkinci Yönetici", "BaskaSifre123", "BaskaSifre123"));
+                "ikinci.admin", "İkinci Yönetici", "ikinci@example.com", "BaskaSifre123", "BaskaSifre123"));
 
             Assert.False(second.Success);
             Assert.Contains("tamamlanmış", second.Error);
@@ -123,7 +124,7 @@ public class AuthServiceTests
         using (db)
         {
             var result = await service.CreateFirstAdminAsync(new SetupRequest(
-                "admin", "Yönetici", password, password));
+                "admin", "Yönetici", "admin@example.com", password, password));
 
             Assert.False(result.Success);
             Assert.False(currentUser.IsAuthenticated);
@@ -137,7 +138,7 @@ public class AuthServiceTests
         using (db)
         {
             var result = await service.CreateFirstAdminAsync(new SetupRequest(
-                "admin", "Yönetici", "GizliSifre123", "BaskaSifre123"));
+                "admin", "Yönetici", "admin@example.com", "GizliSifre123", "BaskaSifre123"));
 
             Assert.False(result.Success);
             Assert.Contains("eşleşmiyor", result.Error);
@@ -154,7 +155,7 @@ public class AuthServiceTests
         using (db)
         {
             var result = await service.CreateFirstAdminAsync(new SetupRequest(
-                username, "Yönetici", "GizliSifre123", "GizliSifre123"));
+                username, "Yönetici", "admin@example.com", "GizliSifre123", "GizliSifre123"));
 
             Assert.False(result.Success);
         }
@@ -344,6 +345,68 @@ public class AuthServiceTests
             var result = await service.LoginWithRememberTokenAsync(token!);
             Assert.False(result.Success);
             Assert.False(currentUser.IsAuthenticated);
+        }
+    }
+
+    [Fact]
+    public async Task CreateFirstAdmin_RequiresValidEmail()
+    {
+        var (service, _, _, _, db) = CreateSut();
+        using (db)
+        {
+            var invalid = await service.CreateFirstAdminAsync(
+                ValidSetup() with { Email = "gecersiz-adres" });
+            Assert.False(invalid.Success);
+            Assert.Contains("e-posta", invalid.Error, StringComparison.OrdinalIgnoreCase);
+
+            var missing = await service.CreateFirstAdminAsync(
+                ValidSetup() with { Email = "" });
+            Assert.False(missing.Success);
+        }
+    }
+
+    [Fact]
+    public async Task CreateFirstAdmin_SavesNormalizedEmail()
+    {
+        var (service, _, _, _, db) = CreateSut();
+        using (db)
+        {
+            var result = await service.CreateFirstAdminAsync(
+                ValidSetup() with { Email = "Ayse@Example.com" });
+            Assert.True(result.Success, result.Error);
+
+            var user = await new UserRepository(db.Factory).FindByUsernameAsync("ayse.yilmaz");
+            Assert.Equal("ayse@example.com", user!.Email);
+        }
+    }
+
+    [Fact]
+    public async Task UpdateAdminEmail_NormalizesAndSaves()
+    {
+        var (service, _, _, _, db) = CreateSut();
+        using (db)
+        {
+            await service.CreateFirstAdminAsync(ValidSetup());
+
+            var result = await service.UpdateAdminEmailAsync("Yeni@Example.com");
+
+            Assert.True(result.Success, result.Error);
+            var user = await new UserRepository(db.Factory).FindByUsernameAsync("ayse.yilmaz");
+            Assert.Equal("yeni@example.com", user!.Email);
+        }
+    }
+
+    [Fact]
+    public async Task UpdateAdminEmail_RejectsInvalidAddress()
+    {
+        var (service, _, _, _, db) = CreateSut();
+        using (db)
+        {
+            await service.CreateFirstAdminAsync(ValidSetup());
+
+            var result = await service.UpdateAdminEmailAsync("gecersiz");
+
+            Assert.False(result.Success);
         }
     }
 

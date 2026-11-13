@@ -5,8 +5,8 @@
 
 ## İndir
 
-- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.3.0-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.3.0/CGP-RandevuTakip-1.3.0-Setup.exe)
-- **Taşınabilir ZIP:** [CGP-RandevuTakip-1.3.0-portable.zip](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.3.0/CGP-RandevuTakip-1.3.0-portable.zip)
+- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.4.0-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.4.0/CGP-RandevuTakip-1.4.0-Setup.exe)
+- **Taşınabilir ZIP:** [CGP-RandevuTakip-1.4.0-portable.zip](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.4.0/CGP-RandevuTakip-1.4.0-portable.zip)
 - **Tüm sürümler:** [Releases](https://github.com/cgportakal/CgpRandevuTakip/releases/latest)
 
 > Kurulum EXE'si per-user çalışır; yönetici hakkı istemez. Taşınabilir ZIP'i yazılabilir bir klasöre açıp
@@ -16,8 +16,8 @@
 Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöneten, günlük listeyi
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
-> Durum: **Sprint 4 + 4.5 UAT + Sprint 5 tamamlandı** — hatırlatıcılar, Windows toast/push, tepsi, "beni hatırla", e-posta ile şifre sıfırlama, günlük liste PNG'si, WhatsApp paylaşımı ve alıcı rehberi hazır.
-> Sürüm: 1.3.0 · Tarih: 13.11.2026 · 235 test geçiyor
+> Durum: **1.4.0 hazır** — kurulum sihirbazı, kurum profili ve logosu, canlı tema, SMTP/push/yedekleme adımları, güncelleme modu, canlı sistem durumu, kalıcı oturum, elle kilit ve arka plan bildirimleri tamamlandı.
+> Sürüm: 1.4.0 · Tarih: 13.11.2026 · 269 test geçiyor
 
 ## Neden bu proje?
 
@@ -46,6 +46,8 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 14 | [Push Kurulum Rehberi](docs/14_Push_Kurulum_Rehberi.md) | ntfy ve Telegram kurulumu, test |
 | 15 | [E-posta ile Şifre Sıfırlama](docs/15_Email_Sifre_Sifirlama_Rehberi.md) | SMTP ayarları, beni hatırla, kurtarma akışı |
 | 16 | [Sprint 5 Sonuç Raporu](docs/16_Sprint5_Raporu.md) | PNG, WhatsApp, alıcı rehberi, günlük tetikleme |
+| 23 | [Oturum ve Arka Plan](docs/23_Oturum_ve_Arka_Plan.md) | Kalıcı oturum, elle kilit, arka plan bildirimleri |
+| 24 | [Kurulum Sihirbazı](docs/24_Kurulum_Sihirbazi.md) | Adımlar, zorunlu alanlar, logo, güncelleme modu |
 
 ## Alınan temel kararlar
 

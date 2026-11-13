@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Windows.Media.Imaging;
 using CgpRandevuTakip.Application.Abstractions;
 using CgpRandevuTakip.Application.Backups;
 using CgpRandevuTakip.Application.Notifications;
@@ -38,9 +39,11 @@ public partial class SettingsViewModel : ObservableObject
     private readonly IBitLockerService _bitLocker;
     private readonly IGoogleDriveAuthService _googleAuth;
     private readonly IUpdateService _updates;
+    private readonly InstitutionLogoService _logoService;
     private UpdateCheckResult? _lastUpdate;
     private string _googleRefreshToken = string.Empty;
     private string _googleAccountEmail = string.Empty;
+    private bool _logoRemoved;
     private readonly IServiceProvider _services;
 
     private bool _isLoading;
@@ -59,6 +62,7 @@ public partial class SettingsViewModel : ObservableObject
         IBitLockerService bitLocker,
         IGoogleDriveAuthService googleAuth,
         IUpdateService updates,
+        InstitutionLogoService logoService,
         IServiceProvider services)
     {
         _settings = settings;
@@ -74,6 +78,7 @@ public partial class SettingsViewModel : ObservableObject
         _bitLocker = bitLocker;
         _googleAuth = googleAuth;
         _updates = updates;
+        _logoService = logoService;
         _services = services;
 
         ThemeOptions = new ObservableCollection<ThemeOption>
@@ -112,6 +117,25 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private string _institutionName = string.Empty;
+
+    [ObservableProperty]
+    private string _institutionEmail = string.Empty;
+
+    [ObservableProperty]
+    private string _institutionPhone = string.Empty;
+
+    [ObservableProperty]
+    private string _institutionAddress = string.Empty;
+
+    [ObservableProperty]
+    private string _institutionLogoFile = string.Empty;
+
+    [ObservableProperty]
+    private BitmapImage? _logoPreview;
+
+    public bool HasLogo => LogoPreview is not null;
+
+    public string LogoFormatsText => InstitutionLogoService.SupportedFormatsText;
 
     [ObservableProperty]
     private string _backupDirectory = string.Empty;
@@ -275,6 +299,12 @@ public partial class SettingsViewModel : ObservableObject
             var settings = await _settings.GetAsync();
 
             InstitutionName = settings.InstitutionName;
+            InstitutionEmail = settings.InstitutionEmail;
+            InstitutionPhone = settings.InstitutionPhone;
+            InstitutionAddress = settings.InstitutionAddress;
+            InstitutionLogoFile = settings.InstitutionLogoFile;
+            LogoPreview = _logoService.LoadPreview(settings.InstitutionLogoFile);
+            _logoRemoved = false;
             BackupDirectory = settings.BackupDirectory;
             NotificationsEnabled = settings.NotificationsEnabled;
             PushEnabled = settings.PushEnabled;
@@ -394,7 +424,11 @@ public partial class SettingsViewModel : ObservableObject
             _googleRefreshToken,
             _googleAccountEmail,
             GoogleFolderName,
-            GoogleDriveFolder);
+            GoogleDriveFolder,
+            InstitutionEmail,
+            InstitutionPhone,
+            InstitutionAddress,
+            InstitutionLogoFile);
 
     [RelayCommand]
     private async Task ConnectGoogleDriveAsync()
@@ -605,6 +639,12 @@ public partial class SettingsViewModel : ObservableObject
 
             _theme.Apply(settings.Theme);
             _autoStart.SetEnabled(settings.AutoStartEnabled, settings.AutoStartMode);
+
+            if (_logoRemoved)
+            {
+                _logoService.Remove();
+                _logoRemoved = false;
+            }
             WeakReferenceMessenger.Default.Send(new SettingsChangedMessage(settings.CloseToTray));
 
             var institution = AppConstants.ResolveInstitutionName(settings.InstitutionName);
@@ -636,6 +676,56 @@ public partial class SettingsViewModel : ObservableObject
 
         if (dialog.ShowDialog() == true)
             BackupDirectory = dialog.FolderName;
+    }
+
+    [RelayCommand]
+    private void PickInstitutionLogo()
+    {
+        ErrorMessage = null;
+
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Kurum logosunu seçin",
+            Filter = "Görsel dosyaları|*.png;*.jpg;*.jpeg;*.bmp|Tüm dosyalar|*.*",
+            CheckFileExists = true
+        };
+
+        if (dialog.ShowDialog() != true)
+            return;
+
+        var imported = _logoService.Import(dialog.FileName);
+        if (!imported.Success)
+        {
+            ErrorMessage = imported.Error;
+            return;
+        }
+
+        InstitutionLogoFile = imported.RelativePath ?? string.Empty;
+        LogoPreview = _logoService.LoadPreview(InstitutionLogoFile);
+        _logoRemoved = false;
+        StatusMessage = "Logo seçildi. Kalıcı olması için ayarları kaydedin.";
+    }
+
+    [RelayCommand]
+    private void RemoveInstitutionLogo()
+    {
+        InstitutionLogoFile = string.Empty;
+        LogoPreview = null;
+        _logoRemoved = true;
+        StatusMessage = "Logo kaldırılacak. Değişikliği kaydedin.";
+    }
+
+    [RelayCommand]
+    private async Task OpenSetupWizardAsync()
+    {
+        var window = _services.GetRequiredService<Views.SetupWindow>();
+        window.Owner = System.Windows.Application.Current?.MainWindow;
+        var result = window.ShowDialog();
+
+        await LoadAsync();
+
+        if (result == true)
+            StatusMessage = "Kurulum sihirbazı tamamlandı.";
     }
 
     [RelayCommand]
@@ -749,6 +839,8 @@ public partial class SettingsViewModel : ObservableObject
 
     partial void OnSelectedPushProviderChanged(string value)
         => OnPropertyChanged(nameof(IsTelegramProvider));
+
+    partial void OnLogoPreviewChanged(BitmapImage? value) => OnPropertyChanged(nameof(HasLogo));
 
     partial void OnSelectedThemeChanged(ThemeOption? value)
     {

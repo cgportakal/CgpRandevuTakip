@@ -43,26 +43,33 @@ public sealed class DailyShareService : IDailyShareService
     private readonly IShareLogRepository _logs;
     private readonly ICurrentUser _currentUser;
     private readonly IClock _clock;
+    private readonly InstitutionLogoService _logo;
 
     public DailyShareService(
         IAppointmentService appointments,
         ISettingsService settings,
         IShareLogRepository logs,
         ICurrentUser currentUser,
-        IClock clock)
+        IClock clock,
+        InstitutionLogoService logo)
     {
         _appointments = appointments;
         _settings = settings;
         _logs = logs;
         _currentUser = currentUser;
         _clock = clock;
+        _logo = logo;
     }
 
     public async Task<DailySharePreview> BuildAsync(DateTime date)
     {
         var settings = await _settings.GetAsync();
         var rows = await _appointments.GetDayAsync(date);
-        var bitmap = ListImageRenderer.RenderDailyList(settings.InstitutionName, date, rows);
+        var bitmap = ListImageRenderer.RenderDailyList(
+            settings.InstitutionName,
+            date,
+            rows,
+            _logo.ResolvePath(settings.InstitutionLogoFile));
 
         var directory = Path.Combine(Path.GetTempPath(), "CgpRandevuTakip");
         Directory.CreateDirectory(directory);

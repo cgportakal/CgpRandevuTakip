@@ -11,6 +11,7 @@ public sealed record UserSession(
 public sealed record SetupRequest(
     string Username,
     string DisplayName,
+    string Email,
     string Password,
     string ConfirmPassword);
 

@@ -45,7 +45,11 @@ public sealed record AppSettings(
     string GoogleRefreshToken = "",
     string GoogleAccountEmail = "",
     string GoogleFolderName = "CGP Yedekler",
-    string GoogleDriveFolder = "")
+    string GoogleDriveFolder = "",
+    string InstitutionEmail = "",
+    string InstitutionPhone = "",
+    string InstitutionAddress = "",
+    string InstitutionLogoFile = "")
 {
     public static AppSettings CreateDefault(string defaultBackupDirectory) => new(
         AppTheme.Auto,
@@ -84,7 +88,11 @@ public sealed record AppSettings(
         GoogleRefreshToken: string.Empty,
         GoogleAccountEmail: string.Empty,
         GoogleFolderName: "CGP Yedekler",
-        GoogleDriveFolder: string.Empty);
+        GoogleDriveFolder: string.Empty,
+        InstitutionEmail: string.Empty,
+        InstitutionPhone: string.Empty,
+        InstitutionAddress: string.Empty,
+        InstitutionLogoFile: string.Empty);
 }
 
 public static class SettingsKeys
@@ -127,4 +135,8 @@ public static class SettingsKeys
     public const string GoogleAccountEmail = "app.google_account_email";
     public const string GoogleFolderName = "app.google_folder_name";
     public const string GoogleDriveFolder = "app.google_drive_folder";
+    public const string InstitutionEmail = "app.institution_email";
+    public const string InstitutionPhone = "app.institution_phone";
+    public const string InstitutionAddress = "app.institution_address";
+    public const string InstitutionLogoFile = "app.institution_logo";
 }

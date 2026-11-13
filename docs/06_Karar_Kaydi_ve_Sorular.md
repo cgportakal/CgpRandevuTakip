@@ -143,14 +143,18 @@ ilerlenir; cevap gelirse dokümanlar ve kod güncellenir.
 
 ## 5. Sonraki adım
 
-Sprint 0, Sprint 1, Sprint 2, Sprint 3, Sprint 3.5 ve Sprint 4 tamamlandı. Sıradaki adım:
+Sürüm **1.4.0** ile kurulum sihirbazı, kurum profili/logosu ve canlı durum ekranları tamamlandı.
+Açık ürün sorularından Q-03, Q-05, Q-10, Q-14, Q-15 ve Q-17 için ürün sahibi cevabı bekleniyor;
+cevap gelmezse dokümandaki varsayılanlarla ilerlenir.
 
-1. Sprint 5: WhatsApp paylaşımı (PNG, pano, WhatsApp açma), alıcı rehberi, günlük gönderim saati.
-2. OS Action Center toast entegrasyonu ve gerçek WhatsApp yapıştırma doğrulaması.
-2. Kilit ekranında hassas bildirim içeriğinin gizlenmesi (BR-21, NFR-SEC-08).
-3. S-01'in gerçek WhatsApp yapıştırma doğrulaması ve sonucun `docs/08`'e işlenmesi.
-4. Açık sorulardan Q-03, Q-05, Q-10, Q-14, Q-15 ve Q-17 için ürün sahibi cevabı bekleniyor;
-   cevap gelmezse dokümandaki varsayılanlarla ilerlenir.
+## 6. 1.4.0 kararları (13.11.2026)
 
-> Bu noktadan sonra her sprint sonunda bu doküman, gereksinimler ve backlog
+- **D-36** Kurulum sihirbazı 8 adımdan oluşur; SMTP, telefon bildirimleri ve yedekleme adımları isteğe bağlıdır ve atlanabilir.
+- **D-37** Kurum adı, kurum e-postası, telefon ve adres zorunludur; yönetici e-postası da zorunludur ve şifre sıfırlama için kullanılır.
+- **D-38** Tema sihirbaz sırasında canlı uygulanır; sihirbaz iptal edilirse önceki temaya dönülür ve ayarlar yalnızca tamamlanınca kaydedilir.
+- **D-39** Sihirbaz Ayarlar’dan güncelleme modunda yeniden çalıştırılabilir; yönetici e-postası ve isteğe bağlı şifre değiştirilebilir, şifre değişiminde yeni süresiz oturum token’ı üretilir.
+- **D-40** Kurum logosu sihirbazda ve Ayarlar’da seçilebilir; veri kökünde göreli yol olarak saklanır ve günlük WhatsApp liste PNG’sinin üstünde çizilir.
+- **D-41** Geçmiş sprint bilgilendirmeleri arayüzden kaldırıldı; yerine canlı sistem durumu (son yedek, bildirim, veri klasörü, sürüm) gösterilir.
+
+> Bu noktadan sonra her sürüm sonunda bu doküman, gereksinimler ve backlog
 > güncellenir; kararlar **döngüsel** olarak yeniden gözden geçirilir.

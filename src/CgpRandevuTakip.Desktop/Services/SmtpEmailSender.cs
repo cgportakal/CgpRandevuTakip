@@ -23,7 +23,19 @@ public sealed class SmtpEmailSender : IEmailSender
         CancellationToken cancellationToken = default)
     {
         var settings = await _settings.GetAsync();
+        return await SendWithSettingsAsync(settings, toAddress, subject, body, cancellationToken);
+    }
 
+    /// <summary>
+    /// Kurulum sihirbazı gibi henüz kaydedilmemiş ayarlarla test göndermek için.
+    /// </summary>
+    public async Task<OperationResult> SendWithSettingsAsync(
+        AppSettings settings,
+        string toAddress,
+        string subject,
+        string body,
+        CancellationToken cancellationToken = default)
+    {
         if (string.IsNullOrWhiteSpace(settings.SmtpHost)
             || string.IsNullOrWhiteSpace(settings.SmtpFromAddress))
         {

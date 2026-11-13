@@ -3,6 +3,23 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [1.4.0] — 2026-11-13 · Kurulum sihirbazı ve kurum logosu
+
+### Eklendi
+- **8 adımlı kurulum sihirbazı:** Hoş geldiniz → Kurum bilgileri → Yönetici hesabı → Görünüm/tercihler → E-posta (SMTP) → Telefon bildirimleri → Yedekleme → Özet. Zorunlu alanlar tamamlanmadan ilerlenemez; SMTP, push ve yedekleme adımları atlanabilir.
+- **Kurum profili:** Kurum adı, e-posta, telefon ve adres zorunlu; wizard ve Ayarlar aynı doğrulamayı kullanır.
+- **Yönetici e-postası zorunlu:** Şifre sıfırlama ve bilgilendirme için kullanılır; ilk yönetici oluşturulurken kaydedilir.
+- **Canlı tema:** Tema seçildiği anda uygulanır; sihirbaz iptal edilirse önceki temaya dönülür.
+- **Ayarlar’dan yeniden çalıştırma:** Sihirbaz güncelleme modunda açılır; yönetici e-postası ve isteğe bağlı olarak şifresi değiştirilebilir, şifre değişiminde oturum korunur.
+- **Kurum logosu:** Sihirbazda ve Ayarlar’da seçilebilir/kaldırılabilir; veri klasöründe saklanır ve günlük WhatsApp liste PNG’sinin en üstünde görünür.
+- **Canlı durum ekranları:** Eski sprint notları kaldırıldı; kontrol panelinde son yedek, bildirim durumu, veri klasörü ve sürüm bilgisi gösterilir. Ana pencere, giriş ve hatırlatıcı önizlemesi güncel metinlere kavuştu.
+
+### Test
+- 269/269 test.
+- Temiz veriyle ilk kurulum, opsiyonel adımların atlanması, özet ve tamamlama doğrulandı.
+- Güncelleme modu, e-posta değişimi, canlı tema ve iptalde tema geri dönüşü doğrulandı.
+- Logo seçimi, kalıcı kayıt, kaldırma ve günlük liste PNG’sinde logo görünümü doğrulandı.
+
 ## [1.3.0] — 2026-11-13 · Kalıcı oturum ve arka plan bildirimleri
 
 ### Eklendi
