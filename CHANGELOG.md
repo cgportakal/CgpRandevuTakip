@@ -3,6 +3,19 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [Unreleased] — Platform (API + mobil)
+
+### Eklendi
+- **Sunucu API’si** (`src/CgpRandevuTakip.Api`): mevcut `Domain` + `Application` katmanlarını barındırır; JWT erişim (30 dk) + döndürmeli yenileme belirteci (30 gün), AES-GCM sunucu sırları.
+- **Uçlar:** kurulum/giriş/yenileme/çıkış, randevu gün/arama/detay/oluştur/güncelle/sil/geri al, görüşme sonucu, kategori, görüşmeci, sürümlü içerik manifesti (ETag), logo, sağlık.
+- **Mobil (Expo / React Native)** iskeleti: giriş (SecureStore), günlük liste, tarih gezinme, çevrimdışı okuma önbelleği (SQLite), oturum yenileme.
+- **API smoke testleri** (3) ve CI’da mobil TypeScript kontrolü; toplam **309 test**.
+- Dokümanlar: `docs/29_Platform_Mimarisi.md`, `docs/30_Api_ve_Mobil_Kurulum.md`.
+
+### Notlar
+- Masaüstü uygulaması değişmedi; 1.5.1 olarak çalışmaya devam eder.
+- Mobilde yazma kuyruğu (outbox), web uygulaması, SignalR ve FCM/APNs sonraki fazlarda.
+
 ## [1.5.1] — 2026-11-16 · Başlangıç onarımı ve temiz kaldırma
 
 ### Düzeltildi
