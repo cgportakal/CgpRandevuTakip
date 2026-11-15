@@ -32,6 +32,18 @@ WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma �
 | Kaldırma | Program dosyaları, kısayollar, başlangıç kaydı, bildirim kayıtları ve güncelleme anlık görüntüsü silinir |
 | Veriler | Kaldırırken sorulur; **varsayılan olarak korunur**. **Yedekler hiçbir durumda silinmez.** |
 
+### Platformlar
+
+| Platform | Durum | Not |
+|---|---|---|
+| Masaüstü (Windows) | **1.5.1** | Tam özellik, çevrimdışı |
+| Sunucu API’si | **v1** | Ortak iş kuralları, JWT, içerik manifesti |
+| Mobil (Android/iOS) | **İskelet** | Giriş, günlük liste, çevrimdışı okuma (Expo) |
+| Web | Planlı | Faz 3 — Next.js (PWA) |
+
+Ayrıntılar: [docs/29_Platform_Mimarisi.md](docs/29_Platform_Mimarisi.md) ·
+[docs/30_Api_ve_Mobil_Kurulum.md](docs/30_Api_ve_Mobil_Kurulum.md)
+
 ## Neden bu proje?
 
 Görüşmeler hâlâ defter, Excel veya dağınık mesajlarla takip ediliyorsa; kayıt kayboluyor,
@@ -70,6 +82,8 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 26 | [Kullanım Kılavuzu](docs/26_Kullanici_Kilavuzu.md) | Son kullanıcı akışları, bildirim, yedek, güncelleme |
 | 27 | [1.5.0 Güncelleme UAT](docs/27_UAT_1.5_Guncelleme.md) | SHA-256, geri dönüş, kaldırma, taşınabilir UAT |
 | 28 | [1.5.1 Bakım UAT](docs/28_UAT_1.5.1_Bakim.md) | Başlangıç onarımı, kaldırma temizliği, yedek koruma |
+| 29 | [Platform Mimarisi](docs/29_Platform_Mimarisi.md) | Web/mobil, senkronizasyon, içerik, bildirim, fazlar |
+| 30 | [API ve Mobil Kurulum](docs/30_Api_ve_Mobil_Kurulum.md) | Sunucu, Expo, ortam değişkenleri |
 
 ## Alınan temel kararlar
 

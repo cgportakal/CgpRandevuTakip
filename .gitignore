@@ -42,3 +42,7 @@ Desktop.ini
 *.pfx
 secrets.json
 appsettings.*.local.json
+
+# API sunucu verisi ve anahtarları
+src/CgpRandevuTakip.Api/data/
+*.key
