@@ -1,6 +1,6 @@
 # 06 — Karar Kaydı ve Açık Sorular
 
-**Sürüm:** 1.5.0 · **Tarih:** 14.11.2026
+**Sürüm:** 1.5.1 · **Tarih:** 16.11.2026
 
 ---
 
@@ -164,6 +164,10 @@ cevap gelmezse dokümandaki varsayılanlarla ilerlenir.
 - **K-13** Her güncelleme adımı `logs/update.log` dosyasına yazılır; sürüm notları uygulama içinde gösterilir.
 - **K-14** Tanılama paketi kişisel veri içermez; yalnızca günlükler ve sistem/sürüm bilgisi toplanır.
 - **K-15** Desktop katmanı için ayrı test projesi ve performans eşikli testler kullanılır.
+- **K-16** Taşınabilir başlatıcı (VBS) yalnızca hedef EXE varsa çalışır; hedef yoksa sessizce çıkar, hata penceresi göstermez.
+- **K-17** Kaldırma sırasında kullanıcı verisi için onay istenir (varsayılan: koru). **Yedekler hiçbir durumda silinmez.**
+- **K-18** Taşınabilir ZIP yalnızca kararlı sürümlerde üretilir; ara sürümlerde yalnızca Setup EXE yayınlanır.
+- **K-19** Bildirim (AppUserModelId/COM/ikon) kayıtları uygulama tarafından onarılır, kaldırmada tamamen temizlenir.
 
 > Bu noktadan sonra her sürüm sonunda bu doküman, gereksinimler ve backlog
 > güncellenir; kararlar **döngüsel** olarak yeniden gözden geçirilir.

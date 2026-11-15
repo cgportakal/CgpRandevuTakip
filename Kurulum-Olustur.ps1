@@ -1,9 +1,11 @@
 param(
-    [string]$Version = "1.5.0",
+    [string]$Version = "1.5.1",
     [string]$CertificateThumbprint = "",
     [string]$PfxPath = "",
     [string]$PfxPassword = "",
-    [switch]$SkipSigning
+    [switch]$SkipSigning,
+    # Taşınabilir ZIP yalnızca kararlı sürümlerde üretilir; ara sürümlerde varsayılan kapalıdır.
+    [switch]$Portable
 )
 
 $ErrorActionPreference = "Stop"
@@ -85,22 +87,28 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet publish başarısız." }
 
 Sign-File (Join-Path $publish "CgpRandevuTakip.Desktop.exe") $signingCertificate
 
-Write-Host "[CGP] Taşınabilir ZIP oluşturuluyor..."
+Write-Host "[CGP] Taşınabilir ZIP hazırlanıyor..."
 $portableFlag = Join-Path $publish "portable.flag"
 $portableReadme = Join-Path $publish "PORTABLE-BENIOKU.txt"
-New-Item -ItemType File -Force -Path $portableFlag | Out-Null
-@"
+
+if (-not $Portable) {
+    Write-Host "[CGP] Taşınabilir ZIP atlandı (yalnızca -Portable ile üretilir)." -ForegroundColor DarkGray
+} else {
+    New-Item -ItemType File -Force -Path $portableFlag | Out-Null
+    @"
 CGP - Randevu Takip · Taşınabilir Sürüm
 
 - CgpRandevuTakip.Desktop.exe dosyasını çalıştırın.
 - Veriler, bu klasördeki CGP-Data altında tutulur.
 - Başka bir klasöre/bilgisayara taşırken CGP-Data klasörünü de kopyalayın.
-- Bu modda otomatik başlatma (Windows açılışı) kullanılmaz.
+- Başka bir klasöre kopyalarsanız Windows açılışında eski yolu gösteren başlatıcı kalmaz;
+  uygulama açılışta ölü başlatıcıları temizler.
 - Yedekler CGP-Data\Yedekler altında oluşturulur.
 "@ | Set-Content -Path $portableReadme -Encoding UTF8
-Compress-Archive -Path (Join-Path $publish "*") -DestinationPath $zip -CompressionLevel Optimal
-Remove-Item $portableFlag -Force -ErrorAction SilentlyContinue
-Remove-Item $portableReadme -Force -ErrorAction SilentlyContinue
+    Compress-Archive -Path (Join-Path $publish "*") -DestinationPath $zip -CompressionLevel Optimal
+    Remove-Item $portableFlag -Force -ErrorAction SilentlyContinue
+    Remove-Item $portableReadme -Force -ErrorAction SilentlyContinue
+}
 
 $isccCandidates = @(
     "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
@@ -122,30 +130,37 @@ if ($iscc) {
 
     Sign-File (Join-Path $dist "CGP-RandevuTakip-$Version-Setup.exe") $signingCertificate
 } else {
-    Write-Warning "Inno Setup 6 bulunamadı. Kurulum EXE'si oluşturulmadı; taşınabilir ZIP kullanılabilir."
+    Write-Warning "Inno Setup 6 bulunamadı. Kurulum EXE'si oluşturulmadı."
     Write-Host "Kurulum için: https://jrsoftware.org/isdl.php adresinden Inno Setup 6 kurun ve bu betiği yeniden çalıştırın."
 }
 
 Write-Host ""
 Write-Host "[CGP] Çıktılar:"
 Write-Host "  Klasör : $publish"
-Write-Host "  ZIP    : $zip"
+if ($Portable) {
+    Write-Host "  ZIP    : $zip"
+}
 if ($iscc) {
     Get-ChildItem $dist -Filter "CGP-RandevuTakip-$Version-Setup.exe" |
         ForEach-Object { Write-Host "  Setup  : $($_.FullName)" }
 }
 
 # Güncelleme paketleri için SHA-256 özetleri (uygulama bunları GitHub digest alanından doğrular).
-$checksumFiles = @($zip)
+$checksumFiles = @()
+if ($Portable -and (Test-Path $zip)) {
+    $checksumFiles += $zip
+}
 $setupPath = Join-Path $dist "CGP-RandevuTakip-$Version-Setup.exe"
 if ($iscc -and (Test-Path $setupPath)) {
     $checksumFiles += $setupPath
 }
 
 $checksumPath = Join-Path $dist "SHA256SUMS.txt"
-$checksumLines = foreach ($file in $checksumFiles) {
-    $hash = (Get-FileHash -Path $file -Algorithm SHA256).Hash.ToLowerInvariant()
-    "$hash  $(Split-Path $file -Leaf)"
+if ($checksumFiles.Count -gt 0) {
+    $checksumLines = foreach ($file in $checksumFiles) {
+        $hash = (Get-FileHash -Path $file -Algorithm SHA256).Hash.ToLowerInvariant()
+        "$hash  $(Split-Path $file -Leaf)"
+    }
+    $checksumLines | Set-Content -Path $checksumPath -Encoding ASCII
+    Write-Host "  SHA256 : $checksumPath"
 }
-$checksumLines | Set-Content -Path $checksumPath -Encoding ASCII
-Write-Host "  SHA256 : $checksumPath"

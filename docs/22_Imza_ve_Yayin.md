@@ -29,13 +29,17 @@ CA'dan alınan PFX dosyasıyla:
 veya sertifika `Cert:\CurrentUser\My` içine kurulduysa:
 
 ```powershell
-.\Kurulum-Olustur.ps1 -Version 1.2.1 -CertificateThumbprint "ABCDEF..."
+# Ara sürüm (yalnızca Setup)
+.\Kurulum-Olustur.ps1 -Version 1.5.1 -CertificateThumbprint "ABCDEF..."
+
+# Kararlı sürüm (Setup + taşınabilir ZIP)
+.\Kurulum-Olustur.ps1 -Version 1.6.0 -Portable -CertificateThumbprint "ABCDEF..."
 ```
 
 İmzalama sırası:
 1. `dotnet publish`
 2. Uygulama EXE imzalanır
-3. Taşınabilir ZIP oluşturulur (imzalı EXE ile)
+3. Taşınabilir ZIP oluşturulur (yalnızca -Portable ile; imzalı EXE ile)
 4. Inno Setup EXE üretilir
 5. Setup EXE imzalanır
 
@@ -46,14 +50,17 @@ veya sertifika `Cert:\CurrentUser\My` içine kurulduysa:
 - Ana sayfa: README “İndir” bölümü.
 - Sürüm sayfası: <https://github.com/cgportakal/CgpRandevuTakip/releases/latest>
 - Yüklenen dosyalar:
-  - `CGP-RandevuTakip-<sürüm>-Setup.exe`
-  - `CGP-RandevuTakip-<sürüm>-portable.zip`
+  - `CGP-RandevuTakip-<sürüm>-Setup.exe` (her sürüm)
+  - `CGP-RandevuTakip-<sürüm>-portable.zip` (yalnızca kararlı sürümler)
+  - `SHA256SUMS.txt`
+  - `CGP-RandevuTakip-Dev.cer`
 
 Yeni sürüm yayınlarken:
 ```powershell
-gh release create v1.2.1 --title "CGP - Randevu Takip 1.2.1" --notes-file release.md `
-  "dist\CGP-RandevuTakip-1.2.1-portable.zip" `
-  "dist\CGP-RandevuTakip-1.2.1-Setup.exe"
+gh release create v1.5.1 --title "CGP - Randevu Takip 1.5.1" --notes-file release.md `
+  "dist\CGP-RandevuTakip-1.5.1-Setup.exe" `
+  "dist\CGP-RandevuTakip-Dev.cer" `
+  "dist\SHA256SUMS.txt"
 ```
 
 ## 4. Doğrulama

@@ -29,6 +29,10 @@
 - Windows açılışında uygulama **`--tray`** ile gizli başlar.
 - Kurulu sürüm: `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` kaydı.
 - Taşınabilir sürüm: Başlangıç klasöründe `CGP - Randevu Takip.vbs` başlatıcısı.
+- VBS yalnızca hedef EXE varsa çalışır (`On Error Resume Next` + `FileExists`); kopya silinir/taşınırsa
+  Windows Script Host penceresi çıkmaz.
+- Açılışta hedefi bulunmayan başlatıcılar ve boş `Run` değeri otomatik temizlenir; tek otomatik
+  başlatma girdisi tutulur.
 - Varsayılan olarak açıktır; Ayarlar > Uygulama’dan kapatılabilir.
 - Tepside çalışırken `ReminderDispatcher`, toast/push, otomatik yedek ve saklama servisleri çalışmaya devam eder.
 - Pencereyi kapatmak uygulamayı kapatmaz; tepsiye küçültür.

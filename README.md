@@ -5,9 +5,12 @@
 
 ## İndir
 
-- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.5.0-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.5.0/CGP-RandevuTakip-1.5.0-Setup.exe)
-- **Taşınabilir ZIP:** [CGP-RandevuTakip-1.5.0-portable.zip](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.5.0/CGP-RandevuTakip-1.5.0-portable.zip)
+> **Son sürüm: 1.5.1** · 16.11.2026 · 306 test geçiyor
+
+- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.5.1-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.5.1/CGP-RandevuTakip-1.5.1-Setup.exe)
 - **Tüm sürümler:** [Releases](https://github.com/cgportakal/CgpRandevuTakip/releases/latest)
+- **Taşınabilir ZIP:** Yalnızca kararlı sürümlerde yayınlanır. Son taşınabilir paket:
+  [1.5.0 portable](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.5.0/CGP-RandevuTakip-1.5.0-portable.zip).
 
 > Kurulum EXE'si per-user çalışır; yönetici hakkı istemez. Taşınabilir ZIP'i yazılabilir bir klasöre açıp
 > `CgpRandevuTakip.Desktop.exe` dosyasını çalıştırın. Dijital imza ayrıntıları:
@@ -16,8 +19,18 @@
 Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöneten, günlük listeyi
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
-> Durum: **1.4.0 hazır** — kurulum sihirbazı, kurum profili ve logosu, canlı tema, SMTP/push/yedekleme adımları, güncelleme modu, canlı sistem durumu, kalıcı oturum, elle kilit ve arka plan bildirimleri tamamlandı.
-> Sürüm: 1.5.0 · Tarih: 14.11.2026 · 295 test geçiyor
+> Durum: **1.5.1 hazır** — kurulum sihirbazı, kurum profili ve logosu, güvenli güncelleme (SHA-256),
+> otomatik/elle geri dönüş, kalıcı oturum, elle kilit, arka plan bildirimleri ve temiz kaldırma tamamlandı.
+
+### Kurulum ve kaldırma
+
+| Konu | Davranış |
+|---|---|
+| Kurulum türü | Kullanıcı bazlı (`%LOCALAPPDATA%\Programs\CGP Randevu Takip`), yönetici hakkı gerekmez |
+| Veri | `%LOCALAPPDATA%\CgpRandevuTakip` (veritabanı, ayarlar, günlükler) |
+| Yedekler | `Belgeler\CgpRandevuTakip\Yedekler` |
+| Kaldırma | Program dosyaları, kısayollar, başlangıç kaydı, bildirim kayıtları ve güncelleme anlık görüntüsü silinir |
+| Veriler | Kaldırırken sorulur; **varsayılan olarak korunur**. **Yedekler hiçbir durumda silinmez.** |
 
 ## Neden bu proje?
 
@@ -56,6 +69,7 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 25 | [1.4.1 Kurulum UAT](docs/25_UAT_1.4_Kurulum.md) | Kurulum, 1.3.0 → 1.4.1 yükseltme, veri koruma |
 | 26 | [Kullanım Kılavuzu](docs/26_Kullanici_Kilavuzu.md) | Son kullanıcı akışları, bildirim, yedek, güncelleme |
 | 27 | [1.5.0 Güncelleme UAT](docs/27_UAT_1.5_Guncelleme.md) | SHA-256, geri dönüş, kaldırma, taşınabilir UAT |
+| 28 | [1.5.1 Bakım UAT](docs/28_UAT_1.5.1_Bakim.md) | Başlangıç onarımı, kaldırma temizliği, yedek koruma |
 
 ## Alınan temel kararlar
 

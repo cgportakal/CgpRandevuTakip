@@ -39,10 +39,13 @@ Normal kurulumda veriler `%LOCALAPPDATA%\CgpRandevuTakip` altında kalır.
 
 ## 4. Sınırlamalar
 
-- Taşınabilir modda **Windows açılışında otomatik başlatma kullanılmaz**.
+- Taşınabilir modda otomatik başlatma, Başlangıç klasöründeki `CGP - Randevu Takip.vbs` ile yapılır.
+  Hedef EXE yoksa betik sessizce çıkar; kopya silindiğinde/taşındığında hata penceresi göstermez.
+  Yeni konumdaki kopya açılışta başlatıcıyı kendine göre yeniler.
 - Tek örnek kilidi klasöre özeldir; normal kurulum ile taşınabilir sürüm aynı anda açılabilir.
 - Aynı `CGP-Data` klasörünü iki uygulama aynı anda kullanmamalıdır.
-- Windows toast bildirimi uygulama kimliğine bağlıdır; taşınabilir klasör taşındığında ilk bildirimde yeniden kayıt gerekebilir.
+- Windows toast bildirimi uygulama kimliğine bağlıdır; taşınabilir klasör taşındığında ilk bildirimde yeniden kayıt gerekebilir. Silinmiş kopyaların kayıtları açılışta temizlenir.
+- Taşınabilir ZIP yalnızca kararlı sürümlerde yayınlanır; ara sürümlerde yalnızca Setup EXE çıkar.
 
 ## 5. Yedekleme
 

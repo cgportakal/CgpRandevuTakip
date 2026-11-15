@@ -66,12 +66,13 @@ Yarı zamanlı çalışmada 18-22 hafta öngörülür. Efor: ~95-115 adam-gün.
 **Toplam:** ~138 SP (Sprint 3.5 dahil). Hız (velocity) ilk sprintte ölçülür; 18-22 SP/sprint
 varsayımı gerçekleşmezse kapsam değil **tarih** esnetilir (MVP sabit tutulur).
 
-> **Güncel durum (14.11.2026):** Sprint 0-6 ve Faz 2 özellikleri (şifreli yedek, Google Drive,
-> Excel/CSV/PDF/yazdırma, BitLocker göstergesi) tamamlandı. Sürüm **1.5.0**, **295/295 test** geçiyor,
+> **Güncel durum (16.11.2026):** Sprint 0-6 ve Faz 2 özellikleri (şifreli yedek, Google Drive,
+> Excel/CSV/PDF/yazdırma, BitLocker göstergesi) tamamlandı. Sürüm **1.5.1**, **306/306 test** geçiyor,
 > derleme 0 uyarı / 0 hata. Kurulum sihirbazı, kurum logosu, kalıcı oturum, elle kilit, arka plan
-> bildirimleri, güvenli güncelleme ve geri dönüş eklendi. Kurulum/kaldırma ve taşınabilir mod test edildi;
-> ayrıntılar [docs/27_UAT_1.5_Guncelleme.md](27_UAT_1.5_Guncelleme.md) ve
-> [docs/20_Portable_Kullanim.md](20_Portable_Kullanim.md) dosyalarında.
+> bildirimleri, güvenli güncelleme ve geri dönüş eklendi. Başlangıç onarımı ve temiz kaldırma 1.5.1’de
+> tamamlandı; ayrıntılar [docs/28_UAT_1.5.1_Bakim.md](28_UAT_1.5.1_Bakim.md) ve
+> [docs/27_UAT_1.5_Guncelleme.md](27_UAT_1.5_Guncelleme.md) dosyalarında.
+> Taşınabilir ZIP yalnızca kararlı sürümlerde üretilir.
 
 ### 2.1 Sprint 0 — ayrıntılı
 

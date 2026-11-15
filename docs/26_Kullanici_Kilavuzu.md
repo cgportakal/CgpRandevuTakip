@@ -54,6 +54,15 @@
 - Kurulum tamamlanamazsa uygulama açılışta otomatik olarak önceki sürüme döner.
 - **Önceki sürüme dön** düğmesiyle elle geri dönülebilir.
 - **Güncelleme günlüğü** düğmesi adımları ve hataları gösterir; **Sürüm notları** yenilikleri gösterir.
+- Ara sürümlerde yalnızca Setup EXE yayınlanır; taşınabilir ZIP kararlı sürümlerde çıkar.
+
+## 6.1 Kaldırma
+
+- Windows **Ayarlar > Uygulamalar** üzerinden veya Başlat menüsünden kaldırın.
+- Program dosyaları, kısayollar, başlangıç kaydı ve bildirim kayıtları temizlenir.
+- Kaldırma sırasında **“Uygulama verileri de silinsin mi?”** sorulur; varsayılan **Hayır**’dır.
+- **Yedekleriniz (`Belgeler\CgpRandevuTakip`) hiçbir durumda silinmez.**
+- Sessiz kaldırmada veriler korunur.
 
 ## 7. Sorun giderme
 

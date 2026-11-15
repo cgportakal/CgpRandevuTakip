@@ -3,6 +3,27 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [1.5.1] — 2026-11-16 · Başlangıç onarımı ve temiz kaldırma
+
+### Düzeltildi
+- **Windows Script Host hatası:** Taşınabilir başlatıcı (VBS) hedef EXE yoksa sessizce çıkıyor; `On Error Resume Next` ve `FileExists` kontrolü eklendi. Silinen/taşınan portable kopyalar artık açılışta hata penceresi göstermiyor.
+- **Ölü başlangıç girdileri:** Açılışta hedefi bulunmayan VBS ve boş/geçersiz `Run` değeri otomatik temizleniyor; kurulu sürüm kendi kaydını onarıyor. Tek otomatik başlatma girdisi kuralı uygulanıyor.
+- **Bildirim kayıtları:** `HKCU\Software\Classes\AppUserModelId` altında biriken CGP kayıtları, ilişkili COM sınıfı ve ikon klasörleri temizleniyor (açılışta ölü olanlar, kaldırmada tümü).
+- **VBS kodlaması:** Türkçe karakterli yollarda bozulmaması için UTF-16 LE (BOM) yazılıyor; tırnak kaçışı düzeltildi.
+
+### Kaldırma
+- Program dosyaları, kısayollar, `Run` kaydı, başlangıç VBS/LNK, bildirim kayıtları ve `updates` anlık görüntüsü temizleniyor.
+- Kaldırma sırasında **veri silme onayı** eklendi (varsayılan: koru). Sessiz kaldırmada veri korunur.
+- **Yedekler hiçbir durumda silinmiyor** (`Belgeler\CgpRandevuTakip`).
+- Installer artık boş `Run` değeri oluşturmuyor.
+
+### Süreç
+- **Taşınabilir ZIP yalnızca kararlı sürümlerde** üretiliyor; `Kurulum-Olustur.ps1` varsayılan olarak ZIP oluşturmuyor, `-Portable` ile açılıyor.
+- README indirme bölümü sürüm ve kaldırma davranışıyla güncellendi.
+
+### Test
+- **306 test** (280 uygulama + 26 Desktop). Yeni: başlangıç betiği içeriği, portable/kurulu mod, ölü hedef onarımı, boş `Run` temizliği, yol ayrıştırma.
+
 ## [1.5.0] — 2026-11-14 · Güncelleme güvenliği, geri dönüş ve kalite
 
 ### Güncelleme

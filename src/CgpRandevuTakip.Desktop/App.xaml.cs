@@ -81,9 +81,11 @@ public partial class App : System.Windows.Application
 
             try
             {
+                ToastRegistrationCleanup.CleanupStale();
+
                 var startupSettings = await _host.Services.GetRequiredService<ISettingsService>().GetAsync();
                 _host.Services.GetRequiredService<AutoStartService>()
-                    .SetEnabled(startupSettings.AutoStartEnabled, startupSettings.AutoStartMode);
+                    .Repair(startupSettings.AutoStartEnabled, startupSettings.AutoStartMode);
             }
             catch
             {
