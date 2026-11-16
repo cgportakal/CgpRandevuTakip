@@ -52,6 +52,7 @@ Bu depo iki bilgisayarda iki ajanla geliştiriliyor. Çakışmayı önlemek içi
 - **Durum:** [coordination/CURRENT.md](coordination/CURRENT.md)
 - **Protokol:** [coordination/PROTOCOL.md](coordination/PROTOCOL.md)
 - **Kilit:** `node coordination/lock.mjs status` · `acquire --machine <ad> --task "..."`
+- **Akış:** `agent/<makine>/<konu>` dalı → PR → yeşil CI → squash merge (`master` korumalı).
 
 Ajanlar için giriş kuralları: [AGENTS.md](AGENTS.md).
 

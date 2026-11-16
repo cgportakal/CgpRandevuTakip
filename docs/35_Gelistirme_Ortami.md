@@ -117,9 +117,9 @@ node coordination/lock.mjs release --machine <makine>
 
 ## 8. CI ve dal koruması
 
-- CI üç iş çalıştırır: .NET, Web (Next.js), Mobil (TypeScript).
-- `master` korumalıdır: **force-push kapalı**, silme kapalı, üç kontrol zorunlu.
-- Doğrudan push'ta bile önce `git pull --rebase` ve yeşil CI hedeflenir; riskli işler PR ile.
+- **CI** üç iş çalıştırır: .NET, Web (Next.js), Mobil (TypeScript).
+- `master` korumalıdır: **doğrudan push reddedilir**, force-push/silme kapalı, üç kontrol zorunlu.
+- Akış: `agent/<makine>/<konu>` dalı → PR → `gh pr checks --watch` → squash merge.
 
 ## 9. Sorun giderme
 
