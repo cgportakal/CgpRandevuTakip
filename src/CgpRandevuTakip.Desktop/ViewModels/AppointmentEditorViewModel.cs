@@ -17,6 +17,15 @@ public sealed record MethodOption(AppointmentMethod Value, string Label);
 
 public sealed record DurationOption(int Minutes, string Label);
 
+public sealed record SeriesFrequencyOption(SeriesFrequency Value, string Label);
+
+public sealed record SeriesSlotView(
+    string PositionText,
+    string DateText,
+    string TimeText,
+    string StateText,
+    bool WillCreate);
+
 public partial class AppointmentEditorViewModel : ObservableObject
 {
     private readonly IAppointmentService _appointments;
@@ -80,6 +89,18 @@ public partial class AppointmentEditorViewModel : ObservableObject
 
         ReminderHourOptions = new ObservableCollection<int>(Enumerable.Range(0, 169));
         ReminderMinuteOptions = new ObservableCollection<int>(Enumerable.Range(0, 60));
+
+        SeriesFrequencyOptions = new ObservableCollection<SeriesFrequencyOption>
+        {
+            new(SeriesFrequency.Weekly, "Her hafta"),
+            new(SeriesFrequency.Biweekly, "2 haftada bir"),
+            new(SeriesFrequency.Monthly, "Her ay")
+        };
+
+        SeriesCountOptions = new ObservableCollection<int>(
+            Enumerable.Range(SeriesScheduleCalculator.MinCount, SeriesScheduleCalculator.MaxCount - 1));
+
+        _selectedSeriesFrequency = SeriesFrequencyOptions[0];
     }
 
     public RangeObservableCollection<CategoryDto> Categories { get; } = new();
@@ -95,6 +116,12 @@ public partial class AppointmentEditorViewModel : ObservableObject
     public ObservableCollection<MethodOption> Methods { get; }
 
     public ObservableCollection<DurationOption> Durations { get; }
+
+    public ObservableCollection<SeriesFrequencyOption> SeriesFrequencyOptions { get; }
+
+    public ObservableCollection<int> SeriesCountOptions { get; }
+
+    public RangeObservableCollection<SeriesSlotView> SeriesPreview { get; } = new();
 
     [ObservableProperty]
     private string _title = "Yeni görüşme";
@@ -173,6 +200,23 @@ public partial class AppointmentEditorViewModel : ObservableObject
 
     [ObservableProperty]
     private string _outcomeSummary = string.Empty;
+
+    [ObservableProperty]
+    private bool _seriesEnabled;
+
+    [ObservableProperty]
+    private SeriesFrequencyOption? _selectedSeriesFrequency;
+
+    [ObservableProperty]
+    private int _seriesCount = 4;
+
+    [ObservableProperty]
+    private string? _seriesSummary;
+
+    [ObservableProperty]
+    private bool _isSeriesPreviewLoading;
+
+    public bool ShowSeriesPanel => !IsEdit;
 
     public bool CanEnterOutcome => IsEdit && !IsBusy;
 
@@ -387,19 +431,10 @@ public partial class AppointmentEditorViewModel : ObservableObject
     {
         ErrorMessage = null;
 
-        if (Date is null)
-        {
-            ErrorMessage = "Tarih seçilmelidir.";
+        if (!TryBuildInput(out var input))
             return;
-        }
 
-        if (!TryParseTime(TimeText, out var time))
-        {
-            ErrorMessage = "Saat SS:dd biçiminde olmalıdır (ör. 14:30).";
-            return;
-        }
-
-        var startsAtLocal = Date.Value.Date.Add(time);
+        var startsAtLocal = input.StartsAtLocal;
 
         // Geçmiş tarih/saat uyarısı: yeni görüşmede her zaman, düzenlemede yalnızca
         // saat değiştirilip geçmişe alındığında sorulur.
@@ -424,43 +459,15 @@ public partial class AppointmentEditorViewModel : ObservableObject
             _closedWarningConfirmed = true;
         }
 
-        var offsets = new List<int>();
-        if (ReminderOneDay)
-            offsets.Add(1440);
-        if (ReminderOneHour)
-            offsets.Add(60);
-        if (ReminderThirtyMinutes)
-            offsets.Add(30);
-
-        if (ReminderCustom)
-        {
-            var customOffset = (ReminderCustomHours * 60) + ReminderCustomMinutes;
-            if (customOffset is < 1 or > 10080)
-            {
-                ErrorMessage = "Özel hatırlatıcı 1 dakika ile 7 gün arasında olmalıdır.";
-                return;
-            }
-
-            offsets.Add(customOffset);
-        }
-
-        var input = new AppointmentInput(
-            FirstName,
-            LastName,
-            Phone,
-            startsAtLocal,
-            SelectedDuration?.Minutes ?? 60,
-            SelectedHost?.Id ?? string.Empty,
-            SelectedCategory?.Id ?? string.Empty,
-            SelectedMethod?.Value ?? AppointmentMethod.FaceToFace,
-            Description,
-            StudentFirstName,
-            StudentLastName,
-            offsets);
-
         IsBusy = true;
         try
         {
+            if (!IsEdit && SeriesEnabled)
+            {
+                await SaveSeriesAsync(input);
+                return;
+            }
+
             var result = IsEdit
                 ? await _appointments.UpdateAsync(_appointmentId!, input)
                 : await _appointments.CreateAsync(input);
@@ -492,6 +499,130 @@ public partial class AppointmentEditorViewModel : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task PreviewSeriesAsync()
+    {
+        ErrorMessage = null;
+        SeriesPreview.Clear();
+        SeriesSummary = null;
+
+        if (!TryBuildInput(out var input))
+            return;
+
+        IsSeriesPreviewLoading = true;
+        try
+        {
+            var plan = await _appointments.PreviewSeriesAsync(input, BuildSeriesRequest());
+            SeriesPreview.ReplaceWith(plan.Slots.Select(ToSlotView));
+            SeriesSummary = plan.Summary;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Seri önizlenemedi: {ex.Message}";
+        }
+        finally
+        {
+            IsSeriesPreviewLoading = false;
+        }
+    }
+
+    private async Task SaveSeriesAsync(AppointmentInput input)
+    {
+        var request = BuildSeriesRequest();
+        var plan = await _appointments.PreviewSeriesAsync(input, request);
+        if (!plan.CanSave)
+        {
+            ErrorMessage = plan.Error ?? "Seride oluşturulabilecek uygun tarih yok.";
+            return;
+        }
+
+        if (plan.SkippedCount > 0
+            && !_dialogs.Confirm(
+                $"{plan.Summary}{Environment.NewLine}{Environment.NewLine}Devam edilsin mi?",
+                "Tekrarlayan seri"))
+        {
+            return;
+        }
+
+        var result = await _appointments.CreateSeriesAsync(input, request);
+        if (!result.Success)
+        {
+            ErrorMessage = result.Error;
+            return;
+        }
+
+        _dialogs.Info(result.Summary, "Seri oluşturuldu");
+        Saved?.Invoke(this, EventArgs.Empty);
+    }
+
+    private SeriesRequest BuildSeriesRequest()
+        => new(SelectedSeriesFrequency?.Value ?? SeriesFrequency.Weekly, SeriesCount);
+
+    private static SeriesSlotView ToSlotView(SeriesSlotDto slot)
+        => new(slot.PositionText, slot.DateText, slot.TimeText, slot.StateText, slot.WillCreate);
+
+    private bool TryBuildInput(out AppointmentInput input)
+    {
+        input = null!;
+
+        if (Date is null)
+        {
+            ErrorMessage = "Tarih seçilmelidir.";
+            return false;
+        }
+
+        if (!TryParseTime(TimeText, out var time))
+        {
+            ErrorMessage = "Saat SS:dd biçiminde olmalıdır (ör. 14:30).";
+            return false;
+        }
+
+        var startsAtLocal = Date.Value.Date.Add(time);
+
+        var offsets = new List<int>();
+        if (ReminderOneDay)
+            offsets.Add(1440);
+        if (ReminderOneHour)
+            offsets.Add(60);
+        if (ReminderThirtyMinutes)
+            offsets.Add(30);
+
+        if (ReminderCustom)
+        {
+            var customOffset = (ReminderCustomHours * 60) + ReminderCustomMinutes;
+            if (customOffset is < 1 or > 10080)
+            {
+                ErrorMessage = "Özel hatırlatıcı 1 dakika ile 7 gün arasında olmalıdır.";
+                return false;
+            }
+
+            offsets.Add(customOffset);
+        }
+
+        input = new AppointmentInput(
+            FirstName,
+            LastName,
+            Phone,
+            startsAtLocal,
+            SelectedDuration?.Minutes ?? 60,
+            SelectedHost?.Id ?? string.Empty,
+            SelectedCategory?.Id ?? string.Empty,
+            SelectedMethod?.Value ?? AppointmentMethod.FaceToFace,
+            Description,
+            StudentFirstName,
+            StudentLastName,
+            offsets);
+
+        return true;
+    }
+
+    partial void OnIsEditChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShowSeriesPanel));
+        OnPropertyChanged(nameof(CanEnterOutcome));
+        EnterOutcomeCommand.NotifyCanExecuteChanged();
     }
 
     [RelayCommand]
@@ -571,11 +702,5 @@ public partial class AppointmentEditorViewModel : ObservableObject
         SaveCommand.NotifyCanExecuteChanged();
         EnterOutcomeCommand.NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(CanEnterOutcome));
-    }
-
-    partial void OnIsEditChanged(bool value)
-    {
-        OnPropertyChanged(nameof(CanEnterOutcome));
-        EnterOutcomeCommand.NotifyCanExecuteChanged();
     }
 }

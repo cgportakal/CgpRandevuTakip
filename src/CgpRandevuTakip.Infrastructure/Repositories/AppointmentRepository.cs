@@ -316,6 +316,28 @@ public sealed class AppointmentRepository : IAppointmentRepository
         await db.SaveChangesAsync();
     }
 
+    public async Task AddRangeAsync(IReadOnlyList<Appointment> appointments)
+    {
+        if (appointments.Count == 0)
+            return;
+
+        await using var db = await _factory.CreateDbContextAsync();
+        db.Appointments.AddRange(appointments);
+        await db.SaveChangesAsync();
+    }
+
+    public async Task<IReadOnlyList<Appointment>> GetSeriesAsync(string seriesId)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        return await db.Appointments.AsNoTracking()
+            .Include(x => x.Person)
+            .Include(x => x.HostUser)
+            .Include(x => x.Category)
+            .Where(x => x.SeriesId == seriesId)
+            .OrderBy(x => x.StartsAtUtc)
+            .ToListAsync();
+    }
+
     public async Task SaveAsync(
         Appointment appointment,
         IReadOnlyList<ReminderDispatch>? newReminders,

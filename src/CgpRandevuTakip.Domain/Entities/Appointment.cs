@@ -26,6 +26,15 @@ public class Appointment : EntityBase
     public bool IsDeleted { get; set; }
     public DateTime? DeletedAtUtc { get; set; }
 
+    /// <summary>Tekrarlayan seri kimliği; tekil randevularda boştur.</summary>
+    public string? SeriesId { get; set; }
+
+    /// <summary>Seri içindeki sıra (1 tabanlı).</summary>
+    public int? SeriesIndex { get; set; }
+
+    /// <summary>Serideki toplam randevu sayısı.</summary>
+    public int? SeriesCount { get; set; }
+
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
     public string? CreatedByUserId { get; set; }
     public string? UpdatedByUserId { get; set; }

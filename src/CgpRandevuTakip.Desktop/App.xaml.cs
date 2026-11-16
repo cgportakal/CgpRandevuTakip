@@ -12,6 +12,7 @@ using CgpRandevuTakip.Application.Hosts;
 using CgpRandevuTakip.Application.Notifications;
 using CgpRandevuTakip.Application.Recipients;
 using CgpRandevuTakip.Application.Reminders;
+using CgpRandevuTakip.Application.Reports;
 using CgpRandevuTakip.Application.Settings;
 using CgpRandevuTakip.Application.Users;
 using CgpRandevuTakip.Desktop.Services;
@@ -300,6 +301,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IPersonRepository, PersonRepository>();
         services.AddSingleton<IRecipientRepository, RecipientRepository>();
         services.AddSingleton<IShareLogRepository, ShareLogRepository>();
+        services.AddSingleton<IReportQueries, ReportQueries>();
 
         services.AddSingleton<CurrentUser>();
         services.AddSingleton<ICurrentUser>(sp => sp.GetRequiredService<CurrentUser>());
@@ -312,12 +314,14 @@ public partial class App : System.Windows.Application
         services.AddSingleton<ICategoryService, CategoryService>();
         services.AddSingleton<ISettingsService, SettingsService>();
         services.AddSingleton<IAppointmentService, AppointmentService>();
+        services.AddSingleton<IReportService, ReportService>();
         services.AddSingleton<IHostService, HostService>();
         services.AddSingleton<IAppointmentOutcomeService, AppointmentOutcomeService>();
         services.AddSingleton<IUserService, UserService>();
         services.AddSingleton<IRecipientService, RecipientService>();
         services.AddSingleton<IDailyShareService, DailyShareService>();
         services.AddSingleton<IAppointmentExportService, AppointmentExportService>();
+        services.AddSingleton<IReportExportService, ReportExportService>();
         services.AddSingleton<IUpdateService, UpdateService>();
         services.AddSingleton<UpdateRollbackService>();
         services.AddSingleton<UpdateService>(sp => (UpdateService)sp.GetRequiredService<IUpdateService>());
@@ -363,6 +367,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<BulkMoveViewModel>();
         services.AddTransient<BackupsViewModel>();
         services.AddTransient<AuditLogViewModel>();
+        services.AddTransient<ReportsViewModel>();
 
         services.AddTransient<LoginWindow>();
         services.AddTransient<ForgotPasswordWindow>();
@@ -385,6 +390,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<BulkMoveWindow>();
         services.AddTransient<BackupsPage>();
         services.AddTransient<AuditLogPage>();
+        services.AddTransient<ReportsPage>();
     }
 
     private async Task InitializeDatabaseAsync()

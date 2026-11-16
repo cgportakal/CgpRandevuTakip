@@ -162,9 +162,18 @@ public sealed record AppointmentDetailDto(
     DateTime UpdatedAtLocal,
     AppointmentOutcomeDto? Outcome,
     string? ClosedByName,
-    DateTime? ClosedAtLocal)
+    DateTime? ClosedAtLocal,
+    string? SeriesId = null,
+    int? SeriesIndex = null,
+    int? SeriesCount = null)
 {
     public bool HasOutcome => Outcome is not null;
+
+    public bool HasSeries => !string.IsNullOrWhiteSpace(SeriesId);
+
+    public string SeriesText => HasSeries
+        ? $"Seri {SeriesIndex ?? 0}/{SeriesCount ?? 0}"
+        : "Tek görüşme";
 
     public string ClosedAtText => ClosedAtLocal is null
         ? "—"

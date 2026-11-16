@@ -161,6 +161,94 @@
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource Card}" Margin="0,16,0,0"
+                            Visibility="{Binding ShowSeriesPanel, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel>
+                            <TextBlock Text="Tekrarlayan seri" Style="{StaticResource SectionTitle}" />
+                            <TextBlock Text="Aynı görüşmeyi haftalık, 2 haftada bir veya aylık planlayın. Çakışan veya geçmiş tarihler atlanır."
+                                       Style="{StaticResource MutedText}" Margin="0,-6,0,12" TextWrapping="Wrap" />
+
+                            <CheckBox Content="Bu görüşmeyi seri olarak planla"
+                                      IsChecked="{Binding SeriesEnabled}"
+                                      Margin="0,0,0,10" />
+
+                            <Grid IsEnabled="{Binding SeriesEnabled}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="120" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Sıklık" Style="{StaticResource LabelText}" />
+                                    <ComboBox ItemsSource="{Binding SeriesFrequencyOptions}"
+                                              SelectedItem="{Binding SelectedSeriesFrequency}"
+                                              DisplayMemberPath="Label"
+                                              AutomationProperties.Name="Seri sıklığı" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Kayıt sayısı" Style="{StaticResource LabelText}" />
+                                    <ComboBox ItemsSource="{Binding SeriesCountOptions}"
+                                              SelectedItem="{Binding SeriesCount}"
+                                              AutomationProperties.Name="Seri kayıt sayısı" />
+                                </StackPanel>
+                            </Grid>
+
+                            <Button Content="Önizle"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding PreviewSeriesCommand}"
+                                    IsEnabled="{Binding SeriesEnabled}"
+                                    HorizontalAlignment="Left"
+                                    Margin="0,10,0,0" />
+
+                            <TextBlock Text="{Binding SeriesSummary}"
+                                       Style="{StaticResource MutedText}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,8,0,0" />
+
+                            <ItemsControl ItemsSource="{Binding SeriesPreview}" Margin="0,4,0,0">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,3,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock Text="{Binding DateText}"
+                                                       FontSize="12"
+                                                       FontWeight="SemiBold" />
+
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding TimeText}"
+                                                       Style="{StaticResource MutedText}"
+                                                       Margin="10,0,0,0" />
+
+                                            <TextBlock Grid.Column="2"
+                                                       Text="{Binding StateText}"
+                                                       FontSize="11"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       MaxWidth="110">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding WillCreate}" Value="True">
+                                                                <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Margin="0,16,0,0"
                             Visibility="{Binding IsEdit, Converter={StaticResource BoolToVisibility}}">
                         <StackPanel>
                             <TextBlock Text="Görüşme sonucu" Style="{StaticResource SectionTitle}" />

@@ -118,5 +118,15 @@ public enum AuditAction
     PasswordResetCompleted = 27,
     PasswordResetFailed = 28,
     RememberLoginUsed = 29,
-    AppointmentAnonymized = 30
+    AppointmentAnonymized = 30,
+    SeriesCreated = 31,
+    SeriesCancelled = 32
+}
+
+/// <summary>Tekrarlayan görüşme serisinin sıklığı.</summary>
+public enum SeriesFrequency
+{
+    Weekly = 0,
+    Biweekly = 1,
+    Monthly = 2
 }

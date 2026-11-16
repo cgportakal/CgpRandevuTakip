@@ -3,6 +3,30 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [1.6.0] — 2026-11-16 · Raporlar ve tekrarlayan görüşme serisi
+
+### Eklendi
+- **Raporlar sayfası:** tarih aralığı (bu ay, geçen ay, bu yıl, son 30 gün veya özel), KPI kartları
+  (toplam, tamamlanma, gelmedi, iptal, ortalama süre), günlük/aylık dağılım grafiği, kategori ve
+  görüşmeci tabloları, saat dağılımı. Silinmiş görüşmeler rapora girmez.
+- **Rol kapsamı:** yönetici ve sekreter tüm veriyi, görüşmeci yalnızca kendi görüşmelerini görür;
+  kapsam servis katmanında zorlanır.
+- **Rapor dışa aktarma:** `;` ayraçlı UTF-8 BOM CSV ve A4 PDF (özet + kategori/görüşmeci tabloları).
+- **Tekrarlayan görüşme serisi:** haftalık, 2 haftada bir veya aylık; 2–12 kayıt. Çakışan/geçmiş
+  tarihler onay sonrası atlanır ve seri kısmi oluşturulur. Aylık seride ay sonu kırpması uygulanır
+  (31 Ocak → 28 Şubat → 31 Mart).
+- **Seri iptali:** görüşme detayından yalnızca gelecek tarihli ve planlanmış seri kayıtlarını iptal
+  eder; geçmiş/kapalı kayıtlar korunur.
+- **Veri modeli:** `Appointments` tablosuna `SeriesId`, `SeriesIndex`, `SeriesCount` sütunları ve
+  `SeriesId` indeksi (migration: `AppointmentSeries`).
+- **Denetim kaydı:** `SeriesCreated` (31) ve `SeriesCancelled` (32).
+- Dokümanlar: `docs/31_Raporlar.md`, `docs/32_Tekrarlayan_Seri.md`.
+- **Testler:** 333 test (304 uygulama + 26 Desktop + 3 API). Yeni: seri takvimi, seri oluşturma/iptal
+  kapsamı, rapor oranları, host kapsamı, gün/ay kovaları ve yerel gün sınırı.
+
+### Sürüm
+- Masaüstü sürümü **1.6.0**; derleme, installer ve güncelleme akışı aynı sürüme çekildi.
+
 ## [Unreleased] — Platform (API + mobil)
 
 ### Eklendi

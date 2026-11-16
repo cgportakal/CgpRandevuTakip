@@ -82,6 +82,8 @@ public class AppDbContext : DbContext
             entity.HasIndex(x => x.PersonId);
             entity.HasIndex(x => new { x.HostUserId, x.StartsAtUtc });
             entity.HasIndex(x => x.CategoryId);
+            entity.HasIndex(x => x.SeriesId);
+            entity.Property(x => x.SeriesId).HasMaxLength(100);
 
             entity.HasOne(x => x.Person)
                   .WithMany(x => x.Appointments)

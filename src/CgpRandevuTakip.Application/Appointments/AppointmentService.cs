@@ -162,11 +162,219 @@ public sealed class AppointmentService : IAppointmentService
             validation.PhoneE164!);
 
         var now = _clock.UtcNow;
+        var appointment = BuildEntity(person, input, startsAtUtc, now);
+
+        await _appointments.AddAsync(appointment);
+
+        await _audit.LogAsync(
+            AuditAction.AppointmentCreated,
+            _currentUser.UserId,
+            nameof(Appointment),
+            appointment.Id,
+            BuildAuditDetails(appointment));
+
+        return AppointmentSaveResult.Ok(appointment.Id);
+    }
+
+    public async Task<SeriesPlanDto> PreviewSeriesAsync(AppointmentInput input, SeriesRequest request)
+    {
+        if (!CanManageAppointments())
+            return new SeriesPlanDto(Array.Empty<SeriesSlotDto>(), "Seri oluşturma yetkiniz yok.");
+
+        if (!request.IsValid)
+            return new SeriesPlanDto(
+                Array.Empty<SeriesSlotDto>(),
+                $"Seri {SeriesScheduleCalculator.MinCount}–{SeriesScheduleCalculator.MaxCount} randevu arasında olmalıdır.");
+
+        var validation = await ValidateAsync(input, currentAppointmentId: null);
+        if (validation.Error is not null)
+            return new SeriesPlanDto(Array.Empty<SeriesSlotDto>(), validation.Error);
+
+        var slots = await BuildSeriesSlotsAsync(input, validation, request);
+        return new SeriesPlanDto(slots);
+    }
+
+    public async Task<SeriesCreateResult> CreateSeriesAsync(AppointmentInput input, SeriesRequest request)
+    {
+        if (!CanManageAppointments())
+            return SeriesCreateResult.Fail("Seri oluşturma yetkiniz yok.");
+
+        if (!request.IsValid)
+            return SeriesCreateResult.Fail(
+                $"Seri {SeriesScheduleCalculator.MinCount}–{SeriesScheduleCalculator.MaxCount} randevu arasında olmalıdır.");
+
+        var validation = await ValidateAsync(input, currentAppointmentId: null);
+        if (validation.Error is not null)
+            return SeriesCreateResult.Fail(validation.Error);
+
+        var slots = await BuildSeriesSlotsAsync(input, validation, request);
+        var creatable = slots.Where(x => x.WillCreate).ToList();
+        if (creatable.Count == 0)
+            return SeriesCreateResult.Fail(
+                "Seride oluşturulabilecek uygun tarih yok. Çakışan veya geçmiş tarihleri düzeltin.",
+                slots);
+
+        var person = await ResolvePersonAsync(
+            validation.FirstName!,
+            validation.LastName!,
+            validation.PhoneE164!);
+
+        var now = _clock.UtcNow;
+        var seriesId = Guid.NewGuid().ToString("N");
+        var entities = new List<Appointment>(creatable.Count);
+
+        foreach (var slot in creatable)
+        {
+            var startsAtUtc = _clock.ToUtc(slot.StartsAtLocal);
+            entities.Add(BuildEntity(
+                person,
+                input,
+                startsAtUtc,
+                now,
+                seriesId,
+                slot.Index,
+                slots.Count));
+        }
+
+        await _appointments.AddRangeAsync(entities);
+
+        await _audit.LogAsync(
+            AuditAction.SeriesCreated,
+            _currentUser.UserId,
+            nameof(Appointment),
+            seriesId,
+            JsonSerializer.Serialize(new
+            {
+                frequency = request.Frequency.ToString(),
+                requested = request.Count,
+                created = entities.Count,
+                skipped = slots.Count - entities.Count,
+                startsAtLocal = input.StartsAtLocal,
+                hostUserId = input.HostUserId,
+                categoryId = input.CategoryId
+            }));
+
+        return SeriesCreateResult.Ok(
+            seriesId,
+            entities.Count,
+            slots.Count - entities.Count,
+            slots);
+    }
+
+    public async Task<SeriesCancelResult> CancelSeriesAsync(string seriesId)
+    {
+        if (!CanManageAppointments())
+            return SeriesCancelResult.Fail("Seriyi iptal etme yetkiniz yok.");
+
+        if (string.IsNullOrWhiteSpace(seriesId))
+            return SeriesCancelResult.Fail("Seri bulunamadı.");
+
+        var rows = await _appointments.GetSeriesAsync(seriesId);
+        if (rows.Count == 0)
+            return SeriesCancelResult.Fail("Seri bulunamadı.");
+
+        var now = _clock.UtcNow;
+        var cancelled = 0;
+        var skipped = 0;
+
+        foreach (var appointment in rows)
+        {
+            if (appointment.IsDeleted
+                || appointment.IsClosed
+                || appointment.Status != AppointmentStatus.Scheduled
+                || appointment.StartsAtUtc <= now)
+            {
+                skipped++;
+                continue;
+            }
+
+            appointment.Cancel(now, _currentUser.UserId);
+            await _appointments.SaveAsync(appointment, newReminders: null, cancelPendingReminders: true);
+            cancelled++;
+        }
+
+        if (cancelled == 0)
+            return SeriesCancelResult.Fail("İptal edilecek gelecek tarihli planlanmış görüşme bulunamadı.");
+
+        await _audit.LogAsync(
+            AuditAction.SeriesCancelled,
+            _currentUser.UserId,
+            nameof(Appointment),
+            seriesId,
+            JsonSerializer.Serialize(new { cancelled, skipped }));
+
+        return SeriesCancelResult.Ok(cancelled, skipped);
+    }
+
+    private async Task<IReadOnlyList<SeriesSlotDto>> BuildSeriesSlotsAsync(
+        AppointmentInput input,
+        ValidationResult validation,
+        SeriesRequest request)
+    {
+        var now = _clock.UtcNow;
+        var dates = SeriesScheduleCalculator.Build(input.StartsAtLocal, request.Frequency, request.Count);
+        var slots = new List<SeriesSlotDto>(dates.Count);
+
+        for (var index = 0; index < dates.Count; index++)
+        {
+            var startsAtLocal = dates[index];
+            var endsAtLocal = startsAtLocal.AddMinutes(input.DurationMinutes);
+            var startsAtUtc = _clock.ToUtc(startsAtLocal);
+            var endsAtUtc = startsAtUtc.AddMinutes(input.DurationMinutes);
+
+            if (startsAtUtc <= now)
+            {
+                slots.Add(new SeriesSlotDto(
+                    index + 1,
+                    startsAtLocal,
+                    endsAtLocal,
+                    SeriesSlotState.Past,
+                    "Geçmiş tarih; oluşturulmaz.",
+                    Array.Empty<AppointmentConflictDto>()));
+                continue;
+            }
+
+            var conflicts = await FindConflictsAsync(
+                validation.PhoneE164!,
+                validation.HostUserId!,
+                startsAtUtc,
+                endsAtUtc,
+                excludeAppointmentId: null);
+
+            slots.Add(conflicts.Count == 0
+                ? new SeriesSlotDto(
+                    index + 1,
+                    startsAtLocal,
+                    endsAtLocal,
+                    SeriesSlotState.Create,
+                    null,
+                    conflicts)
+                : new SeriesSlotDto(
+                    index + 1,
+                    startsAtLocal,
+                    endsAtLocal,
+                    SeriesSlotState.Conflict,
+                    BuildConflictMessage(conflicts),
+                    conflicts));
+        }
+
+        return slots;
+    }
+
+    private Appointment BuildEntity(
+        Person person,
+        AppointmentInput input,
+        DateTime startsAtUtc,
+        DateTime now,
+        string? seriesId = null,
+        int? seriesIndex = null,
+        int? seriesCount = null)
+    {
         var appointment = new Appointment
         {
             PersonId = person.Id,
-            HostUserId = validation.HostUserId!,
-            CategoryId = validation.CategoryId!,
+            HostUserId = input.HostUserId,
+            CategoryId = input.CategoryId,
             StartsAtUtc = startsAtUtc,
             DurationMinutes = input.DurationMinutes,
             Method = input.Method,
@@ -177,7 +385,10 @@ public sealed class AppointmentService : IAppointmentService
             UpdatedAtUtc = now,
             CreatedByUserId = _currentUser.UserId,
             UpdatedByUserId = _currentUser.UserId,
-            RowVersion = 1
+            RowVersion = 1,
+            SeriesId = seriesId,
+            SeriesIndex = seriesIndex,
+            SeriesCount = seriesCount
         };
 
         foreach (var plan in ReminderScheduleCalculator.Calculate(
@@ -222,16 +433,7 @@ public sealed class AppointmentService : IAppointmentService
             });
         }
 
-        await _appointments.AddAsync(appointment);
-
-        await _audit.LogAsync(
-            AuditAction.AppointmentCreated,
-            _currentUser.UserId,
-            nameof(Appointment),
-            appointment.Id,
-            BuildAuditDetails(appointment));
-
-        return AppointmentSaveResult.Ok(appointment.Id);
+        return appointment;
     }
 
     public async Task<AppointmentSaveResult> UpdateAsync(string id, AppointmentInput input)
@@ -758,7 +960,10 @@ public sealed class AppointmentService : IAppointmentService
             _clock.ToLocal(appointment.UpdatedAtUtc),
             outcome,
             closedByName,
-            appointment.ClosedAtUtc is null ? null : _clock.ToLocal(appointment.ClosedAtUtc.Value));
+            appointment.ClosedAtUtc is null ? null : _clock.ToLocal(appointment.ClosedAtUtc.Value),
+            appointment.SeriesId,
+            appointment.SeriesIndex,
+            appointment.SeriesCount);
     }
 
     private async Task<string?> ResolveClosedByNameAsync(string? closedByUserId)

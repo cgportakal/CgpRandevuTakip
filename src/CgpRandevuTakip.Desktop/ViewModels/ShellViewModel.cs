@@ -56,6 +56,9 @@ public partial class ShellViewModel : ObservableObject, IDisposable
     private bool _isHostsSelected;
 
     [ObservableProperty]
+    private bool _isReportsSelected;
+
+    [ObservableProperty]
     private bool _isDashboardSelected;
 
     [ObservableProperty]
@@ -168,6 +171,7 @@ public partial class ShellViewModel : ObservableObject, IDisposable
         _suppressNavigation = true;
         IsAppointmentsSelected = key == "appointments";
         IsHostsSelected = key == "hosts";
+        IsReportsSelected = key == "reports";
         IsDashboardSelected = key == "dashboard";
         IsCategoriesSelected = key == "categories";
         IsUsersSelected = key == "users";
@@ -179,6 +183,7 @@ public partial class ShellViewModel : ObservableObject, IDisposable
         CurrentPage = key switch
         {
             "hosts" => _services.GetRequiredService<HostsPage>(),
+            "reports" => _services.GetRequiredService<ReportsPage>(),
             "categories" => _services.GetRequiredService<CategoriesPage>(),
             "users" => _services.GetRequiredService<UsersPage>(),
             "settings" => _services.GetRequiredService<SettingsPage>(),
@@ -191,6 +196,7 @@ public partial class ShellViewModel : ObservableObject, IDisposable
         (PageTitle, PageSubtitle) = key switch
         {
             "hosts" => ("Görüşmeciler", "Görüşme yapılacak kişiler ve giriş bilgileri"),
+            "reports" => ("Raporlar", "Görüşme istatistikleri, kategori ve görüşmeci dağılımı"),
             "categories" => ("Kategoriler", "Görüşme konularını ekleyin, düzenleyin ve sıralayın"),
             "users" => ("Kullanıcılar", "Roller, giriş izinleri ve şifre yönetimi"),
             "settings" => ("Ayarlar", "Tema, bildirim, yedekleme ve tanılama"),
@@ -211,6 +217,12 @@ public partial class ShellViewModel : ObservableObject, IDisposable
     {
         if (value && !_suppressNavigation)
             NavigateTo("hosts");
+    }
+
+    partial void OnIsReportsSelectedChanged(bool value)
+    {
+        if (value && !_suppressNavigation)
+            NavigateTo("reports");
     }
 
     partial void OnIsDashboardSelectedChanged(bool value)

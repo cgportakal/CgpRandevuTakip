@@ -17,6 +17,9 @@ public interface IAppointmentService
     Task<AppointmentListItemDto?> GetNextAppointmentAsync();
     Task<IReadOnlyList<DeletedAppointmentDto>> GetDeletedAsync();
     Task<AppointmentSaveResult> CreateAsync(AppointmentInput input);
+    Task<SeriesPlanDto> PreviewSeriesAsync(AppointmentInput input, SeriesRequest request);
+    Task<SeriesCreateResult> CreateSeriesAsync(AppointmentInput input, SeriesRequest request);
+    Task<SeriesCancelResult> CancelSeriesAsync(string seriesId);
     Task<AppointmentSaveResult> UpdateAsync(string id, AppointmentInput input);
     Task<OperationResult> DeleteAsync(string id);
     Task<BulkDeleteResult> DeleteManyAsync(IReadOnlyList<string> ids);

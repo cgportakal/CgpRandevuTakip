@@ -47,6 +47,11 @@ public partial class AppointmentDetailViewModel : ObservableObject
 
     public bool CanRepeat => CanEdit && Detail?.Outcome?.WillRepeat == true;
 
+    public bool CanCancelSeries
+        => CanEdit
+           && Detail is { HasSeries: true, Status: AppointmentStatus.Scheduled }
+           && Detail.StartsAtLocal > DateTime.Now;
+
     public bool CanShare => Detail is not null;
 
     public string OutcomeTitle => Detail?.Outcome is null
@@ -117,6 +122,31 @@ public partial class AppointmentDetailViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanRepeat))]
     private void Repeat() => RepeatRequested?.Invoke(this, EventArgs.Empty);
 
+    [RelayCommand(CanExecute = nameof(CanCancelSeries))]
+    private async Task CancelSeriesAsync()
+    {
+        if (Detail?.SeriesId is null)
+            return;
+
+        if (!_dialogs.Confirm(
+                $"Seri {Detail.SeriesIndex}/{Detail.SeriesCount} · {Detail.PersonFullName}{Environment.NewLine}{Environment.NewLine}" +
+                "Bu serideki gelecek tarihli planlanmış görüşmeler iptal edilecek. Geçmiş ve kapanmış kayıtlar korunur." +
+                $"{Environment.NewLine}{Environment.NewLine}Devam edilsin mi?",
+                "Seriyi iptal et"))
+            return;
+
+        var result = await _appointments.CancelSeriesAsync(Detail.SeriesId);
+        if (!result.Success)
+        {
+            _dialogs.Error(result.Error ?? "Seri iptal edilemedi.", "Seri iptal edilemedi");
+            return;
+        }
+
+        _dialogs.Info(result.Summary, "Seri iptal edildi");
+        NeedsRefresh = true;
+        await LoadAsync(Detail.Id);
+    }
+
     [RelayCommand(CanExecute = nameof(CanShare))]
     private async Task ShareAsync()
     {
@@ -163,11 +193,13 @@ public partial class AppointmentDetailViewModel : ObservableObject
         OnPropertyChanged(nameof(StudentText));
         OnPropertyChanged(nameof(CanEnterOutcome));
         OnPropertyChanged(nameof(CanRepeat));
+        OnPropertyChanged(nameof(CanCancelSeries));
         OnPropertyChanged(nameof(CanShare));
         OnPropertyChanged(nameof(OutcomeTitle));
         OnPropertyChanged(nameof(OutcomeClosedText));
         EnterOutcomeCommand.NotifyCanExecuteChanged();
         RepeatCommand.NotifyCanExecuteChanged();
+        CancelSeriesCommand.NotifyCanExecuteChanged();
         ShareCommand.NotifyCanExecuteChanged();
         EditCommand.NotifyCanExecuteChanged();
     }

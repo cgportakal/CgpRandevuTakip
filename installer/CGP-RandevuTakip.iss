@@ -2,7 +2,7 @@
 ; Build: dotnet publish + ISCC (see Kurulum-Olustur.ps1)
 
 #define MyAppName "CGP - Randevu Takip"
-#define MyAppVersion "1.5.1"
+#define MyAppVersion "1.6.0"
 #define MyAppPublisher "CGP"
 #define MyAppExeName "CgpRandevuTakip.Desktop.exe"
 

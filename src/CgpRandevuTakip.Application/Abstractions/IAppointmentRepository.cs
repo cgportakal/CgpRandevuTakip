@@ -52,6 +52,8 @@ public interface IAppointmentRepository
     Task<IReadOnlyList<Appointment>> GetDeletedAsync();
     Task<IReadOnlyDictionary<string, int>> GetHostUsageCountsAsync();
     Task AddAsync(Appointment appointment);
+    Task AddRangeAsync(IReadOnlyList<Appointment> appointments);
+    Task<IReadOnlyList<Appointment>> GetSeriesAsync(string seriesId);
     Task SaveAsync(
         Appointment appointment,
         IReadOnlyList<ReminderDispatch>? newReminders,

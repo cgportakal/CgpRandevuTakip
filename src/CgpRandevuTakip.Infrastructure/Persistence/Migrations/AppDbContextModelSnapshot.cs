@@ -69,6 +69,16 @@ namespace CgpRandevuTakip.Infrastructure.Persistence.Migrations
                     b.Property<int>("RowVersion")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("SeriesCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SeriesId")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("SeriesIndex")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("StartsAtUtc")
                         .HasColumnType("TEXT");
 
@@ -94,6 +104,8 @@ namespace CgpRandevuTakip.Infrastructure.Persistence.Migrations
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("PersonId");
+
+                    b.HasIndex("SeriesId");
 
                     b.HasIndex("StartsAtUtc");
 
