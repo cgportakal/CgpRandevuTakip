@@ -10,7 +10,7 @@
 - **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.6.0-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.6.0/CGP-RandevuTakip-1.6.0-Setup.exe)
 - **Tüm sürümler:** [Releases](https://github.com/cgportakal/CgpRandevuTakip/releases/latest)
 - **Taşınabilir ZIP:** Yalnızca kararlı sürümlerde yayınlanır. Son taşınabilir paket:
-  [1.5.0 portable](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.5.0/CGP-RandevuTakip-1.5.0-portable.zip).
+  [1.6.0 portable](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.6.0/CGP-RandevuTakip-1.6.0-portable.zip).
 
 > Kurulum EXE'si per-user çalışır; yönetici hakkı istemez. Taşınabilir ZIP'i yazılabilir bir klasöre açıp
 > `CgpRandevuTakip.Desktop.exe` dosyasını çalıştırın. Dijital imza ayrıntıları:
