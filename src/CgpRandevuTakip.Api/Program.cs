@@ -3,12 +3,16 @@ using System.Text.Json.Serialization;
 using CgpRandevuTakip.Api.Auth;
 using CgpRandevuTakip.Api.Endpoints;
 using CgpRandevuTakip.Api.Infrastructure;
+using CgpRandevuTakip.Api.Notifications;
+using CgpRandevuTakip.Api.Realtime;
 using CgpRandevuTakip.Application.Abstractions;
 using CgpRandevuTakip.Application.Appointments;
 using CgpRandevuTakip.Application.Auth;
 using CgpRandevuTakip.Application.Categories;
 using CgpRandevuTakip.Application.Common;
 using CgpRandevuTakip.Application.Hosts;
+using CgpRandevuTakip.Application.Notifications;
+using CgpRandevuTakip.Application.Reminders;
 using CgpRandevuTakip.Application.Reports;
 using CgpRandevuTakip.Application.Settings;
 using CgpRandevuTakip.Infrastructure.Auditing;
@@ -66,6 +70,13 @@ builder.Services.AddScoped<ISettingsService, SettingsService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IAppointmentOutcomeService, AppointmentOutcomeService>();
 builder.Services.AddScoped<IHostService, HostService>();
+builder.Services.AddScoped<IReminderService, ReminderService>();
+
+builder.Services.AddSingleton<IRealtimeNotifier, RealtimeNotifier>();
+builder.Services.AddSingleton<IPushNotifier, ServerPushNotifier>();
+builder.Services.Configure<PushOptions>(builder.Configuration.GetSection("Push"));
+builder.Services.AddHostedService<ReminderWorker>();
+builder.Services.AddSignalR();
 builder.Services.AddSingleton<IReportQueries, ReportQueries>();
 builder.Services.AddScoped<IReportService, ReportService>();
 
@@ -80,6 +91,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         options.MapInboundClaims = false;
         options.TokenValidationParameters = jwtService.CreateValidationParameters();
+
+        // SignalR WebSocket taşıyıcısı başlık gönderemez; belirteç query string ile gelir.
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                if (!string.IsNullOrWhiteSpace(accessToken)
+                    && context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization(options =>
@@ -159,6 +186,7 @@ app.MapSeriesEndpoints();
 app.MapReportEndpoints();
 app.MapCatalogEndpoints();
 app.MapContentEndpoints();
+app.MapHub<NotificationsHub>("/hubs/events");
 
 app.Run();
 

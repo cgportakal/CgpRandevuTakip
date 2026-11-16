@@ -48,6 +48,10 @@ class ApiClient {
   setTokens(accessToken: string | null, refreshToken: string | null) {
     this.accessToken = accessToken;
     this.refreshToken = refreshToken;
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cgp:tokens', { detail: accessToken }));
+    }
   }
 
   loadSession(): AuthTokens | null {

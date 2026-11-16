@@ -1,15 +1,16 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { api } from './src/api/client';
 import type { AppointmentListItem, AuthTokens, ContentManifest } from './src/api/types';
+import { startRealtime, stopRealtime, subscribeRealtime } from './src/realtime';
 import { AddAppointmentScreen } from './src/screens/AddAppointmentScreen';
 import { DetailScreen } from './src/screens/DetailScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { ReportsScreen } from './src/screens/ReportsScreen';
 import { TodayScreen } from './src/screens/TodayScreen';
 import { clearSession, loadSession, saveSession } from './src/storage/session';
-import { colors } from './src/theme';
+import { colors, radius, spacing } from './src/theme';
 
 type Screen =
   | { name: 'today' }
@@ -17,11 +18,15 @@ type Screen =
   | { name: 'add' }
   | { name: 'reports' };
 
+type Banner = { title: string; body: string };
+
 export default function App() {
   const [booting, setBooting] = useState(true);
   const [user, setUser] = useState<AuthTokens['user'] | null>(null);
   const [manifest, setManifest] = useState<ContentManifest | null>(null);
   const [screen, setScreen] = useState<Screen>({ name: 'today' });
+  const [banner, setBanner] = useState<Banner | null>(null);
+  const bannerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -33,6 +38,30 @@ export default function App() {
       setBooting(false);
     })();
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      void stopRealtime();
+      return;
+    }
+
+    void startRealtime();
+
+    const unsubscribe = subscribeRealtime((event) => {
+      if (event.type !== 'reminderDue') return;
+
+      setBanner({ title: event.payload.title, body: event.payload.body });
+
+      if (bannerTimer.current) clearTimeout(bannerTimer.current);
+      bannerTimer.current = setTimeout(() => setBanner(null), 9000);
+    });
+
+    return () => {
+      unsubscribe();
+      if (bannerTimer.current) clearTimeout(bannerTimer.current);
+      void stopRealtime();
+    };
+  }, [user]);
 
   const onSignedIn = async (tokens: AuthTokens) => {
     api.setTokens(tokens.accessToken, tokens.refreshToken);
@@ -50,6 +79,7 @@ export default function App() {
     await clearSession();
     setUser(null);
     setManifest(null);
+    setBanner(null);
     setScreen({ name: 'today' });
   };
 
@@ -103,6 +133,13 @@ export default function App() {
     <>
       <StatusBar style="dark" />
       {user ? renderSignedIn() : <LoginScreen onSignedIn={onSignedIn} />}
+
+      {banner ? (
+        <TouchableOpacity style={styles.banner} onPress={() => setBanner(null)} activeOpacity={0.9}>
+          <Text style={styles.bannerTitle}>{banner.title}</Text>
+          <Text style={styles.bannerBody}>{banner.body}</Text>
+        </TouchableOpacity>
+      ) : null}
     </>
   );
 }
@@ -113,5 +150,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.background,
+  },
+  banner: {
+    position: 'absolute',
+    left: spacing.md,
+    right: spacing.md,
+    bottom: 28,
+    backgroundColor: colors.surface,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  bannerTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  bannerBody: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 3,
   },
 });

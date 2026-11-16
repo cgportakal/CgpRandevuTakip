@@ -1,4 +1,5 @@
 using CgpRandevuTakip.Api.Contracts;
+using CgpRandevuTakip.Api.Realtime;
 using CgpRandevuTakip.Application.Appointments;
 using CgpRandevuTakip.Domain.Enums;
 
@@ -57,21 +58,56 @@ public static class AppointmentEndpoints
             return detail is null ? Results.NotFound() : Results.Ok(detail);
         });
 
-        group.MapPost("/", async (AppointmentInput input, IAppointmentService appointments) =>
-            ToResult(await appointments.CreateAsync(input)));
-
-        group.MapPut("/{id}", async (string id, AppointmentInput input, IAppointmentService appointments) =>
-            ToResult(await appointments.UpdateAsync(id, input)));
-
-        group.MapDelete("/{id}", async (string id, IAppointmentService appointments) =>
+        group.MapPost("/", async (
+            AppointmentInput input,
+            IAppointmentService appointments,
+            IRealtimeNotifier notifier) =>
         {
+            var result = await appointments.CreateAsync(input);
+            if (result.Success && result.AppointmentId is not null)
+                await notifier.AppointmentChangedAsync(result.AppointmentId, "created", input.StartsAtLocal);
+
+            return ToResult(result);
+        });
+
+        group.MapPut("/{id}", async (
+            string id,
+            AppointmentInput input,
+            IAppointmentService appointments,
+            IRealtimeNotifier notifier) =>
+        {
+            var result = await appointments.UpdateAsync(id, input);
+            if (result.Success)
+                await notifier.AppointmentChangedAsync(id, "updated", input.StartsAtLocal);
+
+            return ToResult(result);
+        });
+
+        group.MapDelete("/{id}", async (
+            string id,
+            IAppointmentService appointments,
+            IRealtimeNotifier notifier) =>
+        {
+            var detail = await appointments.GetDetailAsync(id);
             var result = await appointments.DeleteAsync(id);
+
+            if (result.Success && detail is not null)
+                await notifier.AppointmentChangedAsync(id, "deleted", detail.StartsAtLocal);
+
             return result.Success ? Results.NoContent() : Results.BadRequest(new ErrorResponse(result.Error ?? "Silinemedi."));
         });
 
-        group.MapPost("/{id}/restore", async (string id, IAppointmentService appointments) =>
+        group.MapPost("/{id}/restore", async (
+            string id,
+            IAppointmentService appointments,
+            IRealtimeNotifier notifier) =>
         {
+            var detail = await appointments.GetDetailAsync(id);
             var result = await appointments.RestoreAsync(id);
+
+            if (result.Success && detail is not null)
+                await notifier.AppointmentChangedAsync(id, "restored", detail.StartsAtLocal);
+
             return result.Success ? Results.NoContent() : Results.BadRequest(new ErrorResponse(result.Error ?? "Geri alınamadı."));
         });
 
@@ -84,9 +120,16 @@ public static class AppointmentEndpoints
         group.MapPut("/{id}/outcome", async (
             string id,
             AppointmentOutcomeInput input,
-            IAppointmentOutcomeService outcomes) =>
+            IAppointmentOutcomeService outcomes,
+            IAppointmentService appointments,
+            IRealtimeNotifier notifier) =>
         {
+            var detail = await appointments.GetDetailAsync(id);
             var result = await outcomes.SaveAsync(id, input);
+
+            if (result.Success && detail is not null)
+                await notifier.AppointmentChangedAsync(id, "outcome", detail.StartsAtLocal);
+
             return result.Success
                 ? Results.NoContent()
                 : Results.BadRequest(new ErrorResponse(result.Error ?? "Görüşme sonucu kaydedilemedi."));

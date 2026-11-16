@@ -35,6 +35,10 @@ class ApiClient {
     return Boolean(this.accessToken && this.refreshToken);
   }
 
+  getAccessToken(): string | null {
+    return this.accessToken;
+  }
+
   async login(username: string, password: string, deviceName: string): Promise<AuthTokens> {
     const tokens = await this.request<AuthTokens>(
       '/v1/auth/login',

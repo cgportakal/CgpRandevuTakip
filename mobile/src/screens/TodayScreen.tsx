@@ -11,6 +11,7 @@ import {
 import { useNetInfo } from '@react-native-community/netinfo';
 import { api } from '../api/client';
 import type { AppointmentListItem, ContentManifest } from '../api/types';
+import { subscribeRealtime } from '../realtime';
 import { pendingCount } from '../db/outbox';
 import { pullDay, flushOutbox } from '../sync/sync';
 import { MANIFEST_CACHE_KEY, readCache, writeCache } from '../storage/cache';import { colors, radius, spacing } from '../theme';
@@ -99,6 +100,23 @@ export function TodayScreen({ displayName, onLogout, onOpenAppointment, onAdd, o
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const unsubscribe = subscribeRealtime((event) => {
+      if (event.type === 'reminderDue') return;
+      if (event.type === 'appointmentChanged' && event.payload.dateKey !== key) return;
+
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => void load(date, true), 800);
+    });
+
+    return () => {
+      unsubscribe();
+      if (timer) clearTimeout(timer);
+    };
+  }, [key, date, load]);
 
   const shiftDay = (offset: number) => {
     const next = new Date(date);

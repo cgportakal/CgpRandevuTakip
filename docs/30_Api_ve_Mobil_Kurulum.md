@@ -83,9 +83,39 @@ npm run dev
 - Üretim: `npm run build` + `npm run start`; HTTPS’i ters proxy sonlandırmalı ve
   `Cors:AllowedOrigins` web adresine kısıtlanmalı.
 
-## 4. Sonraki adımlar
+## 4. SignalR ve bildirimler
 
-- SignalR ile anlık içerik/olay yayını.
-- Mobilde FCM/APNs, web’de Web Push.
+- Hub: `http://127.0.0.1:5199/hubs/events` (JWT; WebSocket query `access_token`).
+- Olaylar: `appointmentChanged`, `seriesChanged`, `reminderDue`.
+- Web/mobil bağlıyken günlük liste ve raporlar otomatik yenilenir; hatırlatma baloncuğu gösterilir.
+
+Sunucu push’u (`appsettings.json` veya ortam değişkeni):
+
+```json
+"Push": {
+  "Enabled": true,
+  "Provider": "ntfy",
+  "Topic": "cgp-bildirim",
+  "Token": "",
+  "ChatId": ""
+}
+```
+
+```powershell
+$env:Push__Enabled='true'
+$env:Push__Provider='telegram'
+$env:Push__Token='123456:ABC...'
+$env:Push__ChatId='123456789'
+```
+
+- Worker 15 saniyede bir çalışır; sessiz saatlerde push göndermez, uygulama içi olay sessiz iletilir.
+- `Push:Enabled=false` ise veritabanındaki `PushEnabled` ayarı kullanılır.
+- Push gönderilemezse hatırlatma yine SignalR ile iletilir ve sonraki turda yeniden denenir.
+
+## 5. Sonraki adımlar
+
+- FCM/APNs (mobil) ve Web Push/VAPID.
 - İçerik yönetim konsolu ve zorunlu güncelleme ekranı.
+- Mobil cihaz UAT’i (çevrimdışı kuyruk + canlı olay).
+
 

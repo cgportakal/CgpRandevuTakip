@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
 import { dayCacheKey, readCache, writeCache } from '@/lib/cache';
 import { shiftDateKey, todayKey } from '@/lib/dates';
+import { realtimeEvents } from '@/lib/realtime';
 import type { AppointmentDetail, AppointmentListItem, ContentManifest } from '@/lib/types';
 import { AppointmentForm } from '@/components/AppointmentForm';
 import { DetailView } from '@/components/DetailView';
@@ -59,6 +60,32 @@ export function TodayView({ manifest, online }: Props) {
   useEffect(() => {
     if (search.trim()) return;
     void load(dateKey);
+  }, [dateKey, load, search]);
+
+  // SignalR: yalnızca görüntülenen günü veya seriyi etkileyen olaylarda yenile.
+  useEffect(() => {
+    let timer: number | undefined;
+
+    const handler = (event: Event) => {
+      if (search.trim()) return;
+
+      const detail = (event as CustomEvent<{ dateKey?: string }>).detail;
+      const isSeries = event.type === 'seriesChanged';
+
+      if (!isSeries && detail?.dateKey && detail.dateKey !== dateKey) return;
+
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => void load(dateKey), 600);
+    };
+
+    realtimeEvents.addEventListener('appointmentChanged', handler);
+    realtimeEvents.addEventListener('seriesChanged', handler);
+
+    return () => {
+      window.clearTimeout(timer);
+      realtimeEvents.removeEventListener('appointmentChanged', handler);
+      realtimeEvents.removeEventListener('seriesChanged', handler);
+    };
   }, [dateKey, load, search]);
 
   useEffect(() => {

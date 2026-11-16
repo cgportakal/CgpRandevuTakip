@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '@/lib/api';
 import { thisYearRange, lastDaysRange, lastMonthRange, firstNameMonthRange } from '@/lib/dates';
+import { realtimeEvents } from '@/lib/realtime';
 import type { ContentManifest, ReportKind, ReportResult, ReportSummary } from '@/lib/types';
 
 type Props = {
@@ -30,6 +31,25 @@ export function ReportsView({ online }: Props) {
   const [report, setReport] = useState<ReportResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    let timer: number | undefined;
+
+    const handler = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => setRefreshKey((value) => value + 1), 800);
+    };
+
+    realtimeEvents.addEventListener('appointmentChanged', handler);
+    realtimeEvents.addEventListener('seriesChanged', handler);
+
+    return () => {
+      window.clearTimeout(timer);
+      realtimeEvents.removeEventListener('appointmentChanged', handler);
+      realtimeEvents.removeEventListener('seriesChanged', handler);
+    };
+  }, []);
 
   useEffect(() => {
     if (!online) return;
@@ -58,7 +78,7 @@ export function ReportsView({ online }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [from, to, kind, personSearch, online]);
+  }, [from, to, kind, personSearch, online, refreshKey]);
 
   const applyPreset = (range: { from: string; to: string }) => {
     setFrom(range.from);

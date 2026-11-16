@@ -6,10 +6,16 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 ## [Yayınlanmamış]
 
 ### Eklendi
+- **SignalR:** `/hubs/events` hub’ı (JWT, WebSocket `access_token`); `appointmentChanged`, `seriesChanged`, `reminderDue` olayları. Web ve mobil bağlıyken günlük liste/raporlar otomatik yenilenir.
+- **Sunucu bildirim worker’ı:** 15 sn’de bir due hatırlatmaları işler; sessiz saatleri uygular; **ntfy/Telegram** push gönderir (`Push` yapılandırması). Push başarısızsa SignalR olayı yine iletilir.
+- **Web canlı bildirim:** sağ altta hatırlatma baloncuğu, “Canlı” bağlantı durumu.
+- **Mobil canlı olay:** SignalR bağlantısı (TextEncoder polyfill), gün listesi otomatik yenileme, hatırlatma banner’ı.
+- API testlerine hub kimlik doğrulaması ve canlı bağlantı kontrolü eklendi (**10 API testi**).
 - **Web uygulaması (`web/`, Next.js 16):** giriş, günlük liste (tarih/arama), yeni görüşme ve tekrarlayan seri, detay + görüşme sonucu, silme/seri iptali, 7 rapor türü, çevrimdışı okuma önbelleği.
 - **CI:** web için `npm ci` + `npm run build` işi.
 
 ### Düzeltildi
+- **SignalR CORS:** istemci `withCredentials: false` kullanıyor; `AllowAnyOrigin` ile preflight hatası giderildi.
 - **Rapor uçları çakışması:** `GET /v1/reports/{kind}` ile `GET /v1/reports/summary` aynı yola düşüyordu; tür uçları `/v1/reports/kind/{kind}` olarak ayrıldı. Mobil ve web istemcileri güncellendi.
 - Web rapor ekranında eksik `summary` koruması ve “Günlük dağılım dağılım” başlığı düzeltildi.
 

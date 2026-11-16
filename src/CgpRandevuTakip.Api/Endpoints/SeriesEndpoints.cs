@@ -1,4 +1,5 @@
 using CgpRandevuTakip.Api.Contracts;
+using CgpRandevuTakip.Api.Realtime;
 using CgpRandevuTakip.Application.Appointments;
 using CgpRandevuTakip.Domain.Enums;
 
@@ -28,11 +29,15 @@ public static class SeriesEndpoints
 
         group.MapPost("/", async (
             SeriesCreateRequest request,
-            IAppointmentService appointments) =>
+            IAppointmentService appointments,
+            IRealtimeNotifier notifier) =>
         {
             var result = await appointments.CreateSeriesAsync(
                 request.Input,
                 new SeriesRequest(request.Frequency, request.Count));
+
+            if (result.Success && result.SeriesId is not null)
+                await notifier.SeriesChangedAsync(result.SeriesId, "created");
 
             if (result.Success)
                 return Results.Ok(result);
@@ -44,9 +49,13 @@ public static class SeriesEndpoints
 
         group.MapPost("/{seriesId}/cancel", async (
             string seriesId,
-            IAppointmentService appointments) =>
+            IAppointmentService appointments,
+            IRealtimeNotifier notifier) =>
         {
             var result = await appointments.CancelSeriesAsync(seriesId);
+            if (result.Success)
+                await notifier.SeriesChangedAsync(seriesId, "cancelled");
+
             return result.Success
                 ? Results.Ok(result)
                 : Results.BadRequest(new ErrorResponse(result.Error ?? "Seri iptal edilemedi."));

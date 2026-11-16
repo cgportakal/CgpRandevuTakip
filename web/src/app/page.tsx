@@ -3,6 +3,14 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { MANIFEST_CACHE_KEY, readCache, writeCache } from '@/lib/cache';
+import {
+  realtimeEvents,
+  setRealtimeToken,
+  startRealtime,
+  stopRealtime,
+  type RealtimeStatus,
+  type ReminderEvent,
+} from '@/lib/realtime';
 import type { AuthTokens, ContentManifest } from '@/lib/types';
 import { LoginView } from '@/components/LoginView';
 import { TodayView } from '@/components/TodayView';
@@ -10,12 +18,16 @@ import { ReportsView } from '@/components/ReportsView';
 
 type View = 'today' | 'reports';
 
+type Toast = { id: string; title: string; body: string };
+
 export default function Page() {
   const [booting, setBooting] = useState(true);
   const [session, setSession] = useState<AuthTokens | null>(null);
   const [manifest, setManifest] = useState<ContentManifest | null>(null);
   const [view, setView] = useState<View>('today');
   const [online, setOnline] = useState(true);
+  const [realtimeStatus, setRealtimeStatus] = useState<RealtimeStatus>('disconnected');
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
   useEffect(() => {
     const tokens = api.loadSession();
@@ -49,6 +61,61 @@ export default function Page() {
       }
     })();
   }, [session]);
+
+  useEffect(() => {
+    if (!session) {
+      setRealtimeStatus('disconnected');
+      void stopRealtime();
+      return;
+    }
+
+    setRealtimeToken(session.accessToken);
+    void startRealtime(setRealtimeStatus);
+
+    const onReminder = (event: Event) => {
+      const payload = (event as CustomEvent<ReminderEvent>).detail;
+      const toast: Toast = {
+        id: crypto.randomUUID(),
+        title: payload.title,
+        body: payload.body,
+      };
+
+      setToasts((current) => [...current.slice(-2), toast]);
+      window.setTimeout(() => {
+        setToasts((current) => current.filter((item) => item.id !== toast.id));
+      }, 10000);
+    };
+
+    const onContent = () => {
+      void (async () => {
+        try {
+          const content = await api.getManifest();
+          setManifest(content);
+          writeCache(MANIFEST_CACHE_KEY, content);
+        } catch {
+          // Mevcut içerik kullanılmaya devam eder.
+        }
+      })();
+    };
+
+    realtimeEvents.addEventListener('reminderDue', onReminder);
+    realtimeEvents.addEventListener('contentChanged', onContent);
+
+    return () => {
+      realtimeEvents.removeEventListener('reminderDue', onReminder);
+      realtimeEvents.removeEventListener('contentChanged', onContent);
+      void stopRealtime();
+    };
+  }, [session]);
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      setRealtimeToken((event as CustomEvent<string | null>).detail);
+    };
+
+    window.addEventListener('cgp:tokens', handler);
+    return () => window.removeEventListener('cgp:tokens', handler);
+  }, []);
 
   const onLogin = (tokens: AuthTokens) => {
     setSession(tokens);
@@ -104,6 +171,17 @@ export default function Page() {
           <div className="user-chip">
             <span className={`online-dot ${online ? '' : 'offline'}`} />
             {online ? 'Çevrimiçi' : 'Çevrimdışı'}
+            <span
+              className={`badge ${
+                realtimeStatus === 'connected' ? 'live' : realtimeStatus === 'connecting' ? 'warn' : ''
+              }`}
+            >
+              {realtimeStatus === 'connected'
+                ? 'Canlı'
+                : realtimeStatus === 'connecting'
+                  ? 'Bağlanıyor'
+                  : 'Canlı değil'}
+            </span>
           </div>
           <button className="btn btn-sm" onClick={() => void onLogout()}>
             Çıkış
@@ -118,6 +196,19 @@ export default function Page() {
           )}
         </div>
       </main>
+
+      <div className="toast-stack">
+        {toasts.map((toast) => (
+          <button
+            key={toast.id}
+            className="toast"
+            onClick={() => setToasts((current) => current.filter((item) => item.id !== toast.id))}
+          >
+            <strong>{toast.title}</strong>
+            <span>{toast.body}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

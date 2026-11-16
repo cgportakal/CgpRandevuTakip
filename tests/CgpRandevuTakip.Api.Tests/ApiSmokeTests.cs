@@ -76,6 +76,16 @@ public class ApiSmokeTests : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task RealtimeHub_RequiresAuthentication()
+    {
+        var client = _factory.CreateClient();
+
+        var response = await client.PostAsync("/hubs/events/negotiate?negotiateVersion=1", null);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
     public async Task SetupLoginAndManifest_WorkEndToEnd()
     {
         var client = _factory.CreateClient();
@@ -121,6 +131,12 @@ public class ApiSmokeTests : IClassFixture<ApiFactory>
             JsonOptions);
         Assert.True(flatSummary.TryGetProperty("total", out _));
         Assert.False(flatSummary.TryGetProperty("summary", out _));
+
+        var negotiate = await client.PostAsync("/hubs/events/negotiate?negotiateVersion=1", null);
+        Assert.Equal(HttpStatusCode.OK, negotiate.StatusCode);
+
+        var negotiatePayload = await negotiate.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        Assert.False(string.IsNullOrWhiteSpace(negotiatePayload.GetProperty("connectionToken").GetString()));
     }
 
     private static async Task<AuthTokensResponse> SetupAsync(HttpClient client)

@@ -79,10 +79,12 @@ Ortak protokol (uygulanacak):
 
 ## 6. Bildirimler
 
-- Bugün: masaüstü `ReminderDispatcher` + ntfy/Telegram (`PushNotifier`).
-- Faz 2: sunucu worker (Quartz) merkezî hatırlatma; cihaz tablosu + teslim kaydı (çift gönderim yok).
-- Faz 4: **FCM** (Android), **APNs** (iOS), **Web Push/VAPID** (web), **SignalR → toast** (masaüstü).
-- Tercihler kullanıcı/cihaz bazlı; mevcut sessiz saatler korunur.
+- **SignalR (uygulandı):** `/hubs/events` — randevu/seri değişiklikleri ve hatırlatmalar bağlı
+  istemcilere anlık iletilir. Web ve mobil açıkken liste otomatik yenilenir, hatırlatma baloncuğu çıkar.
+- **Sunucu hatırlatma worker’ı (uygulandı):** 15 saniyede bir due hatırlatmaları işler; sessiz saatlerde
+  push göndermez. Push kanalları: **ntfy** ve **Telegram** (`Push` bölümü / ortam değişkenleri).
+- **Kapalı uygulama:** ntfy/Telegram push ile telefona bildirim gider. FCM/APNs ve Web Push sonraki adım.
+- **Masaüstü:** kendi yerel veritabanı ve `ReminderDispatcher`’ı ile çalışmaya devam eder.
 - iOS için Apple Developer ($99/yıl) ve APNs anahtarı gerekir.
 
 ## 7. Güncelleme stratejisi
@@ -120,7 +122,7 @@ yine .NET API’de kalır.
 | 2 | Çift yönlü senkron + outbox + çakışma + sunucu hatırlatma | **Tamamlandı (mobil)** |
 | 3 | Web (Next.js PWA) tam CRUD | **Beta (v1)** |
 | 4 | Mobil tam CRUD + çevrimdışı yazma + FCM/APNs + mağaza | Planlı |
-| 5 | İçerik konsolu + SignalR + bildirim worker | Planlı |
+| 5 | İçerik konsolu + SignalR + bildirim worker | **SignalR + push (v1) tamam** |
 | 6 | Pilot, izleme, KVKK, yedekleme | Planlı |
 
 ## 10. Riskler
