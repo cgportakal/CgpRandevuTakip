@@ -77,40 +77,36 @@ jobs:
         run: choco install innosetup --no-progress -y
 
       - name: Prepare signing certificate
-        id: signing
         shell: pwsh
         env:
           SIGNING_PFX_BASE64: ${{ secrets.SIGNING_PFX_BASE64 }}
+          SIGNING_PFX_PASSWORD: ${{ secrets.SIGNING_PFX_PASSWORD }}
         run: |
           $pfx = Join-Path $env:RUNNER_TEMP 'signing.pfx'
           if (-not [string]::IsNullOrWhiteSpace($env:SIGNING_PFX_BASE64)) {
             [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:SIGNING_PFX_BASE64))
-            "use_pfx=true" >> $env:GITHUB_OUTPUT
-            Write-Host 'CA/üretim sertifikası kullanılacak.'
+
+            $secure = if ([string]::IsNullOrEmpty($env:SIGNING_PFX_PASSWORD)) {
+              New-Object System.Security.SecureString
+            } else {
+              ConvertTo-SecureString $env:SIGNING_PFX_PASSWORD -AsPlainText -Force
+            }
+
+            $cert = Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $secure
+            Set-Content -Path 'signing.thumbprint' -Value $cert.Thumbprint -Encoding ASCII
+
+            New-Item -ItemType Directory -Force -Path dist | Out-Null
+            Export-Certificate -Cert $cert -FilePath (Join-Path 'dist' 'CGP-RandevuTakip-Dev.cer') -Type CERT | Out-Null
+            Write-Host 'CA/üretim sertifikası içe aktarıldı.'
           } else {
             Write-Host 'Sertifika secret yok; geliştirme (self-signed) sertifikası üretilecek.'
             ./Imza-Sertifikasi-Olustur.ps1
-            "use_pfx=false" >> $env:GITHUB_OUTPUT
           }
 
       - name: Build installer
         shell: pwsh
-        env:
-          SIGNING_PFX_PASSWORD: ${{ secrets.SIGNING_PFX_PASSWORD }}
         run: |
-          $scriptArgs = @(
-            '-Version', '${{ steps.version.outputs.version }}',
-            '-Portable'
-          )
-
-          if ('${{ steps.signing.outputs.use_pfx }}' -eq 'true') {
-            $scriptArgs += '-PfxPath'
-            $scriptArgs += (Join-Path $env:RUNNER_TEMP 'signing.pfx')
-            $scriptArgs += '-PfxPassword'
-            $scriptArgs += $env:SIGNING_PFX_PASSWORD
-          }
-
-          ./Kurulum-Olustur.ps1 @scriptArgs
+          ./Kurulum-Olustur.ps1 -Version '${{ steps.version.outputs.version }}' -Portable
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
