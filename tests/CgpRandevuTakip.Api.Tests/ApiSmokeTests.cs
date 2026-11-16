@@ -103,6 +103,24 @@ public class ApiSmokeTests : IClassFixture<ApiFactory>
         var refreshed = await refresh.Content.ReadFromJsonAsync<AuthTokensResponse>(JsonOptions);
         Assert.NotNull(refreshed);
         Assert.NotEqual(tokens.RefreshToken, refreshed!.RefreshToken);
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", refreshed.AccessToken);
+
+        var kindResponse = await client.GetAsync(
+            $"/v1/reports/kind/Summary?from={DateTime.Today:yyyy-MM-dd}&to={DateTime.Today:yyyy-MM-dd}");
+        Assert.Equal(HttpStatusCode.OK, kindResponse.StatusCode);
+
+        var kindPayload = await kindResponse.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
+        Assert.Equal("Summary", kindPayload.GetProperty("kind").GetString());
+        Assert.True(kindPayload.TryGetProperty("summary", out var summaryPayload));
+        Assert.True(summaryPayload.TryGetProperty("total", out _));
+
+        var flatSummary = await client.GetFromJsonAsync<JsonElement>(
+            $"/v1/reports/summary?from={DateTime.Today:yyyy-MM-dd}&to={DateTime.Today:yyyy-MM-dd}",
+            JsonOptions);
+        Assert.True(flatSummary.TryGetProperty("total", out _));
+        Assert.False(flatSummary.TryGetProperty("summary", out _));
     }
 
     private static async Task<AuthTokensResponse> SetupAsync(HttpClient client)

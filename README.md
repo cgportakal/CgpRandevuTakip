@@ -40,7 +40,7 @@ WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma �
 | Masaüstü (Windows) | **1.7.0** | Tam özellik, çevrimdışı |
 | Sunucu API’si | **v1** | Ortak iş kuralları, JWT, içerik manifesti |
 | Mobil (Android/iOS) | **0.2** | Giriş, günlük liste, detay, yeni görüşme/seri, raporlar, çevrimdışı kuyruk (Expo) |
-| Web | Planlı | Faz 3 — Next.js (PWA) |
+| Web | **Beta** | Giriş, günlük liste, yeni görüşme/seri, detay/sonuç, 7 rapor türü (Next.js) |
 
 Ayrıntılar: [docs/29_Platform_Mimarisi.md](docs/29_Platform_Mimarisi.md) ·
 [docs/30_Api_ve_Mobil_Kurulum.md](docs/30_Api_ve_Mobil_Kurulum.md)

@@ -67,7 +67,25 @@ Mevcut ekranlar:
 Sonraki adımlar: randevu oluşturma/düzenleme/sonuç, çevrimdışı yazma kuyruğu,
 bildirim izni ve FCM/APNs.
 
-## 3. Web
+## 3. Web (Next.js)
 
-Faz 3’te `web/` altında Next.js (PWA) uygulaması eklenecek. Aynı API ve
-`/v1/content/manifest` sözleşmesi kullanılacak.
+```powershell
+cd web
+npm install
+$env:NEXT_PUBLIC_API_URL='http://127.0.0.1:5199'
+npm run dev
+```
+
+- `http://127.0.0.1:3000` adresinde açılır.
+- Giriş, günlük liste (tarih/arama), yeni görüşme + tekrarlayan seri, detay + görüşme sonucu,
+  silme/seri iptali ve 7 rapor türü hazırdır.
+- Çevrimdışıyken son gün listesi `localStorage` önbelleğinden gösterilir.
+- Üretim: `npm run build` + `npm run start`; HTTPS’i ters proxy sonlandırmalı ve
+  `Cors:AllowedOrigins` web adresine kısıtlanmalı.
+
+## 4. Sonraki adımlar
+
+- SignalR ile anlık içerik/olay yayını.
+- Mobilde FCM/APNs, web’de Web Push.
+- İçerik yönetim konsolu ve zorunlu güncelleme ekranı.
+

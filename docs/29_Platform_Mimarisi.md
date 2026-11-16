@@ -117,8 +117,8 @@ yine .NET API’de kalır.
 |---|---|---|
 | 0 | Mimari, sözleşme, API iskeleti | **Tamamlandı** |
 | 1 | Kimlik/JWT, randevu/katalog/içerik uçları, mobil iskelet | **Tamamlandı (v1)** |
-| 2 | Çift yönlü senkron + outbox + çakışma + sunucu hatırlatma | Sırada |
-| 3 | Web (Next.js PWA) tam CRUD | Planlı |
+| 2 | Çift yönlü senkron + outbox + çakışma + sunucu hatırlatma | **Tamamlandı (mobil)** |
+| 3 | Web (Next.js PWA) tam CRUD | **Beta (v1)** |
 | 4 | Mobil tam CRUD + çevrimdışı yazma + FCM/APNs + mağaza | Planlı |
 | 5 | İçerik konsolu + SignalR + bildirim worker | Planlı |
 | 6 | Pilot, izleme, KVKK, yedekleme | Planlı |

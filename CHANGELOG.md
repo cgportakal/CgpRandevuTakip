@@ -5,7 +5,15 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 
 ## [Yayınlanmamış]
 
+### Eklendi
+- **Web uygulaması (`web/`, Next.js 16):** giriş, günlük liste (tarih/arama), yeni görüşme ve tekrarlayan seri, detay + görüşme sonucu, silme/seri iptali, 7 rapor türü, çevrimdışı okuma önbelleği.
+- **CI:** web için `npm ci` + `npm run build` işi.
+
 ### Düzeltildi
+- **Rapor uçları çakışması:** `GET /v1/reports/{kind}` ile `GET /v1/reports/summary` aynı yola düşüyordu; tür uçları `/v1/reports/kind/{kind}` olarak ayrıldı. Mobil ve web istemcileri güncellendi.
+- Web rapor ekranında eksik `summary` koruması ve “Günlük dağılım dağılım” başlığı düzeltildi.
+
+### Düzeltildi (önceki)
 - Dependabot NuGet grubu yalnızca minor/patch güncellemeleri alacak şekilde ayrıldı; net10 gerektiren major sürümler beklemede.
 - `Swashbuckle.AspNetCore` 10.3.1'e yükseltildi; OpenAPI v2 güvenlik şeması `OpenApiSecuritySchemeReference` ile uyarlandı. Swagger UI ve şema üretimi doğrulandı.
 

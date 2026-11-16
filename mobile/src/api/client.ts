@@ -129,7 +129,7 @@ class ApiClient {
     personSearch?: string,
   ): Promise<ReportResult> {
     const search = personSearch ? `&personSearch=${encodeURIComponent(personSearch)}` : '';
-    return this.request<ReportResult>(`/v1/reports/${kind}?from=${from}&to=${to}${search}`);
+    return this.request<ReportResult>(`/v1/reports/kind/${kind}?from=${from}&to=${to}${search}`);
   }
 
   private async refreshTokens(): Promise<boolean> {

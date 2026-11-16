@@ -188,7 +188,7 @@ public class SeriesReportApiTests : IClassFixture<SeriesReportApiFactory>
         var client = await CreateAuthenticatedClientAsync();
 
         var result = await client.GetFromJsonAsync<ReportResultDto>(
-            $"/v1/reports/HostPerformance?from={DateTime.Today:yyyy-MM-dd}&to={DateTime.Today.AddDays(40):yyyy-MM-dd}",
+            $"/v1/reports/kind/HostPerformance?from={DateTime.Today:yyyy-MM-dd}&to={DateTime.Today.AddDays(40):yyyy-MM-dd}",
             JsonOptions);
 
         Assert.NotNull(result);
@@ -200,7 +200,7 @@ public class SeriesReportApiTests : IClassFixture<SeriesReportApiFactory>
     {
         var client = await CreateAuthenticatedClientAsync();
 
-        var response = await client.GetAsync("/v1/reports/bilinmeyen");
+        var response = await client.GetAsync("/v1/reports/kind/bilinmeyen");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }

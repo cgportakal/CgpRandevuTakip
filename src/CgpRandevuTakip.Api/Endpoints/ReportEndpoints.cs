@@ -29,7 +29,7 @@ public static class ReportEndpoints
             return Results.Ok(await reports.GetSummaryAsync(query));
         });
 
-        group.MapGet("/{kind}", async (
+        group.MapGet("/kind/{kind}", async (
             string kind,
             DateTime? from,
             DateTime? to,

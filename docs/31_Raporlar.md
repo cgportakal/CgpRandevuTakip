@@ -61,7 +61,7 @@ Sayfadaki **Rapor türü** seçicisiyle aynı tarih aralığında farklı raporl
 | Kişi geçmişi | Ad/telefon aramasıyla kişilerin tüm görüşme geçmişi |
 | Denetim / aktivite | Aksiyon bazında adetler ve son 100 denetim kaydı (yalnızca yönetici verisi) |
 
-API karşılığı: `GET /v1/reports/summary` ve `GET /v1/reports/{kind}` (kind: `Summary`,
+API karşılığı: `GET /v1/reports/summary` ve `GET /v1/reports/kind/{kind}` (kind: `Summary`,
 `HostPerformance`, `CategoryTrend`, `Attendance`, `Repeat`, `PersonHistory`, `AuditActivity`).
 Görüşmeci rolü her iki uçta da yalnızca kendi verisini görür.
 
