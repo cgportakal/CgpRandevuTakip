@@ -74,6 +74,9 @@ builder.Services.AddScoped<IReminderService, ReminderService>();
 
 builder.Services.AddSingleton<IRealtimeNotifier, RealtimeNotifier>();
 builder.Services.AddSingleton<IPushNotifier, ServerPushNotifier>();
+builder.Services.AddSingleton<VapidKeyProvider>();
+builder.Services.AddSingleton<DeviceStore>();
+builder.Services.AddSingleton<IDevicePushSender, DevicePushSender>();
 builder.Services.Configure<PushOptions>(builder.Configuration.GetSection("Push"));
 builder.Services.AddHostedService<ReminderWorker>();
 builder.Services.AddSignalR();
@@ -186,6 +189,7 @@ app.MapSeriesEndpoints();
 app.MapReportEndpoints();
 app.MapCatalogEndpoints();
 app.MapContentEndpoints();
+app.MapPushEndpoints();
 app.MapHub<NotificationsHub>("/hubs/events");
 
 app.Run();

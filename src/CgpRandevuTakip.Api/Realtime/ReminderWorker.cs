@@ -70,6 +70,7 @@ public sealed class ReminderWorker : BackgroundService
         var clock = scope.ServiceProvider.GetRequiredService<IClock>();
         var notifier = scope.ServiceProvider.GetRequiredService<IRealtimeNotifier>();
         var push = scope.ServiceProvider.GetRequiredService<IPushNotifier>();
+        var devicePush = scope.ServiceProvider.GetRequiredService<IDevicePushSender>();
 
         var nowUtc = clock.UtcNow;
         await reminders.RequeueExpiredAsync(nowUtc, RepeatDelay, MaxRepeats);
@@ -107,8 +108,27 @@ public sealed class ReminderWorker : BackgroundService
 
             if (!context.PushNotified && !quiet)
             {
+                var delivered = false;
+
                 var request = BuildPushRequest(context, settings);
                 if (request is not null && await push.SendAsync(request, cancellationToken))
+                    delivered = true;
+
+                var title = context.Kind == Domain.Enums.ReminderKind.Call
+                    ? "Sıradaki kişiyi arama zamanı"
+                    : "Sıradaki görüşme yaklaşıyor";
+
+                var data = new Dictionary<string, string>
+                {
+                    ["type"] = "reminder",
+                    ["reminderId"] = context.ReminderId,
+                    ["appointmentId"] = context.AppointmentId
+                };
+
+                if (await devicePush.SendAsync(title, context.NotificationBody, data, cancellationToken) > 0)
+                    delivered = true;
+
+                if (delivered)
                     await reminders.MarkPushNotifiedAsync(context.ReminderId, nowUtc);
             }
 

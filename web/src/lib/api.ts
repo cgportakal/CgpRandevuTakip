@@ -121,6 +121,34 @@ class ApiClient {
     return this.request('/v1/content/manifest');
   }
 
+  getPushPublicKey(): Promise<{ publicKey: string; subject: string }> {
+    return this.request('/v1/push/public-key');
+  }
+
+  registerDevice(request: {
+    platform: 'web' | 'android' | 'ios';
+    token?: string;
+    endpoint?: string;
+    p256dh?: string;
+    auth?: string;
+    appVersion?: string;
+  }): Promise<{ id: string; platform: string }> {
+    return this.request('/v1/devices', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  unregisterDevice(endpoint: string): Promise<void> {
+    return this.request(`/v1/devices?endpoint=${encodeURIComponent(endpoint)}`, {
+      method: 'DELETE',
+    });
+  }
+
+  sendTestPush(): Promise<{ sent: number; deviceCount: number }> {
+    return this.request('/v1/push/test', { method: 'POST' });
+  }
+
   getDetail(id: string): Promise<AppointmentDetail> {
     return this.request(`/v1/appointments/${id}`);
   }

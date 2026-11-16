@@ -137,6 +137,26 @@ public class ApiSmokeTests : IClassFixture<ApiFactory>
 
         var negotiatePayload = await negotiate.Content.ReadFromJsonAsync<JsonElement>(JsonOptions);
         Assert.False(string.IsNullOrWhiteSpace(negotiatePayload.GetProperty("connectionToken").GetString()));
+
+        var publicKey = await client.GetFromJsonAsync<JsonElement>("/v1/push/public-key", JsonOptions);
+        Assert.False(string.IsNullOrWhiteSpace(publicKey.GetProperty("publicKey").GetString()));
+
+        var registration = new DeviceRegistrationRequest(
+            "web",
+            Endpoint: "https://example.invalid/push/1",
+            P256dh: "p256dh",
+            Auth: "auth",
+            AppVersion: "test");
+
+        var register = await client.PostAsJsonAsync("/v1/devices", registration, JsonOptions);
+        Assert.Equal(HttpStatusCode.OK, register.StatusCode);
+
+        var devices = await client.GetFromJsonAsync<List<DeviceDto>>("/v1/devices", JsonOptions);
+        Assert.NotNull(devices);
+        Assert.Contains(devices!, device => device.Platform == "web");
+
+        var delete = await client.DeleteAsync("/v1/devices?endpoint=https%3A%2F%2Fexample.invalid%2Fpush%2F1");
+        Assert.Equal(HttpStatusCode.NoContent, delete.StatusCode);
     }
 
     private static async Task<AuthTokensResponse> SetupAsync(HttpClient client)

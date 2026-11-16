@@ -82,10 +82,13 @@ Ortak protokol (uygulanacak):
 - **SignalR (uygulandı):** `/hubs/events` — randevu/seri değişiklikleri ve hatırlatmalar bağlı
   istemcilere anlık iletilir. Web ve mobil açıkken liste otomatik yenilenir, hatırlatma baloncuğu çıkar.
 - **Sunucu hatırlatma worker’ı (uygulandı):** 15 saniyede bir due hatırlatmaları işler; sessiz saatlerde
-  push göndermez. Push kanalları: **ntfy** ve **Telegram** (`Push` bölümü / ortam değişkenleri).
-- **Kapalı uygulama:** ntfy/Telegram push ile telefona bildirim gider. FCM/APNs ve Web Push sonraki adım.
+  push göndermez. Kanallar:
+  - **Web Push (VAPID)** — tarayıcı service worker’ı; üst çubuktaki “Bildirimleri aç”.
+  - **Expo Push (FCM/APNs köprüsü)** — mobil cihaz belirteci; EAS geliştirme/mağaza derlemesi gerekir.
+  - **ntfy / Telegram** — yedek/opsiyonel kanal (`Push` yapılandırması).
+- **Cihaz kayıtları:** `POST /v1/devices` (web/mobil), çıkışta silinir; süresi dolan web abonelikleri otomatik temizlenir.
 - **Masaüstü:** kendi yerel veritabanı ve `ReminderDispatcher`’ı ile çalışmaya devam eder.
-- iOS için Apple Developer ($99/yıl) ve APNs anahtarı gerekir.
+- iOS için Apple Developer ($99/yıl); Expo kullanıldığında APNs anahtarı EAS tarafından yönetilir.
 
 ## 7. Güncelleme stratejisi
 
@@ -121,7 +124,7 @@ yine .NET API’de kalır.
 | 1 | Kimlik/JWT, randevu/katalog/içerik uçları, mobil iskelet | **Tamamlandı (v1)** |
 | 2 | Çift yönlü senkron + outbox + çakışma + sunucu hatırlatma | **Tamamlandı (mobil)** |
 | 3 | Web (Next.js PWA) tam CRUD | **Beta (v1)** |
-| 4 | Mobil tam CRUD + çevrimdışı yazma + FCM/APNs + mağaza | Planlı |
+| 4 | Mobil tam CRUD + çevrimdışı yazma + FCM/APNs + mağaza | **Push hazır; mağaza/UAT sürüyor** |
 | 5 | İçerik konsolu + SignalR + bildirim worker | **SignalR + push (v1) tamam** |
 | 6 | Pilot, izleme, KVKK, yedekleme | Planlı |
 

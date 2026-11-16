@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { api } from './src/api/client';
 import type { AppointmentListItem, AuthTokens, ContentManifest } from './src/api/types';
+import { registerForPushAsync, unregisterPushAsync } from './src/push';
 import { startRealtime, stopRealtime, subscribeRealtime } from './src/realtime';
 import { AddAppointmentScreen } from './src/screens/AddAppointmentScreen';
 import { DetailScreen } from './src/screens/DetailScreen';
@@ -27,6 +28,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'today' });
   const [banner, setBanner] = useState<Banner | null>(null);
   const bannerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pushToken = useRef<string | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -46,6 +48,10 @@ export default function App() {
     }
 
     void startRealtime();
+
+    void registerForPushAsync().then((token) => {
+      pushToken.current = token;
+    });
 
     const unsubscribe = subscribeRealtime((event) => {
       if (event.type !== 'reminderDue') return;
@@ -75,6 +81,8 @@ export default function App() {
   };
 
   const onLogout = async () => {
+    await unregisterPushAsync(pushToken.current);
+    pushToken.current = null;
     await api.logout();
     await clearSession();
     setUser(null);

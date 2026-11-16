@@ -11,6 +11,13 @@ import {
   type RealtimeStatus,
   type ReminderEvent,
 } from '@/lib/realtime';
+import {
+  getPushPermission,
+  registerWebPush,
+  sendTestPush,
+  unregisterWebPush,
+  type PushPermission,
+} from '@/lib/push';
 import type { AuthTokens, ContentManifest } from '@/lib/types';
 import { LoginView } from '@/components/LoginView';
 import { TodayView } from '@/components/TodayView';
@@ -28,6 +35,7 @@ export default function Page() {
   const [online, setOnline] = useState(true);
   const [realtimeStatus, setRealtimeStatus] = useState<RealtimeStatus>('disconnected');
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [pushPermission, setPushPermission] = useState<PushPermission>('unsupported');
 
   useEffect(() => {
     const tokens = api.loadSession();
@@ -37,6 +45,7 @@ export default function Page() {
     if (cached) setManifest(cached.value);
 
     setOnline(typeof navigator === 'undefined' ? true : navigator.onLine);
+    setPushPermission(getPushPermission());
     const update = () => setOnline(navigator.onLine);
     window.addEventListener('online', update);
     window.addEventListener('offline', update);
@@ -122,8 +131,28 @@ export default function Page() {
   };
 
   const onLogout = async () => {
+    await unregisterWebPush();
     await api.logout();
     setSession(null);
+  };
+
+  const showToast = (title: string, body: string) => {
+    const toast: Toast = { id: crypto.randomUUID(), title, body };
+    setToasts((current) => [...current.slice(-2), toast]);
+    window.setTimeout(() => {
+      setToasts((current) => current.filter((item) => item.id !== toast.id));
+    }, 9000);
+  };
+
+  const enablePush = async () => {
+    const result = await registerWebPush();
+    setPushPermission(getPushPermission());
+    showToast('Bildirimler', result.message);
+  };
+
+  const testPush = async () => {
+    const result = await sendTestPush();
+    showToast('Test bildirimi', result.message);
   };
 
   if (booting) {
@@ -183,6 +212,18 @@ export default function Page() {
                   : 'Canlı değil'}
             </span>
           </div>
+
+          {pushPermission === 'default' ? (
+            <button className="btn btn-sm" onClick={() => void enablePush()}>
+              Bildirimleri aç
+            </button>
+          ) : pushPermission === 'granted' ? (
+            <button className="btn btn-sm" onClick={() => void testPush()}>
+              Test bildirimi
+            </button>
+          ) : pushPermission === 'denied' ? (
+            <span className="badge warn">Bildirim kapalı</span>
+          ) : null}
           <button className="btn btn-sm" onClick={() => void onLogout()}>
             Çıkış
           </button>
