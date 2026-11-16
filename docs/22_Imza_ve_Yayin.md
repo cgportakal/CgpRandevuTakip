@@ -45,6 +45,22 @@ veya sertifika `Cert:\CurrentUser\My` içine kurulduysa:
 
 İmza parolasını komut geçmişine yazmamak için ortam değişkeni/CI secret kullanın.
 
+### 2.1 Otomatik yayın (GitHub Actions)
+
+`v*` etiketi push edildiğinde `.github/workflows/release.yml` çalışır:
+
+1. `AppConstants.Version` ile etiket sürümü karşılaştırılır (uyuşmazsa durur).
+2. Release derlemesi + tüm testler çalıştırılır.
+3. Inno Setup kurulur; `Kurulum-Olustur.ps1 -Portable` ile paketler üretilir.
+4. GitHub Release oluşturulur ve Setup/ZIP/SHA256/Dev.cer yüklenir.
+
+İmzalama:
+- `SIGNING_PFX_BASE64` ve `SIGNING_PFX_PASSWORD` secret'ları tanımlıysa CA/üretim sertifikasıyla imzalanır.
+- Tanımlı değilse self-signed geliştirme sertifikası üretilir (SmartScreen uyarısı sürebilir).
+
+Manuel deneme: Actions > Release > Run workflow (`version` girin, `publish` kapalıyken yalnızca paket üretir).
+Etiketler `v1.7.0` biçiminde olmalıdır; `-rc1` içeren sürümler **prerelease** olarak yayınlanır.
+
 ## 3. GitHub üzerinden indirme
 
 - Ana sayfa: README “İndir” bölümü.

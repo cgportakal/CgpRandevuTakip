@@ -3,6 +3,22 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [Unreleased] — 1.7.0 · Rapor türleri, seri yönetimi, API ve mobil
+
+### Eklendi
+- **Rapor türleri:** görüşmeci performansı, kategori trendi, günlük katılım, tekrar görüşme, kişi geçmişi (ad/telefon arama) ve denetim/aktivite raporu.
+- **Excel dışa aktarma:** rapor türüne özel sayfalarla `.xlsx` çıktısı (ClosedXML).
+- **Seri yönetimi:** seriye 1–12 kayıt ekleme ve gelecek kayıtları düzenleme (görüşmeci, kategori, süre, yöntem, saat, açıklama). Çakışan saatler atlanır, geçmiş/kapalı kayıtlar korunur.
+- **Seri çapası ve sıklığı:** `SeriesAnchorLocal` + `SeriesFrequency` alanları (`SeriesAnchorFrequency` migration) ve `SeriesUpdated`/`SeriesExtended` denetim kayıtları.
+- **API:** `GET /v1/reports/{kind}`, `POST /v1/appointments/series/preview`, `POST /v1/appointments/series`, `POST /v1/appointments/series/{id}/cancel`.
+- **Mobil:** yerel SQLite şeması (appointments/outbox/sync_state), gün senkronizasyonu, çevrimdışı yazma kuyruğu (create/update/outcome/series-cancel), detay, yeni görüşme (seri dahil) ve rapor ekranları.
+- **UI testleri:** tüm XAML dosyaları için kaynak/tür tutarlılık testleri (Desktop.Tests) + FlaUI/UIA3 uçtan uca giriş testi (UiTests, `CGP_UI_TESTS=1`).
+- **Release otomasyonu:** `v*` etiketinde Windows runner'da build + test + Inno Setup + GitHub Release (opsiyonel PFX secret'ları ile imzalama).
+
+### Değişti
+- Rapor sorguları için `(Status, StartsAtUtc)` ve `(CategoryId, StartsAtUtc)` indeksleri (`ReportIndexes` migration).
+- Rapor performans testi: 2.000 satırlık aralık üst süre sınırıyla doğrulanır.
+
 ## [1.6.0] — 2026-11-16 · Raporlar ve tekrarlayan görüşme serisi
 
 ### Eklendi

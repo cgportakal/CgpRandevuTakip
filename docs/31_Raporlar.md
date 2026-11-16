@@ -47,10 +47,38 @@ gösterilir. Tekrar talebi, görüşme sonucundaki **WillRepeat** alanından gel
 - **Saat dağılımı:** görüşmelerin başlangıç saatine göre yoğunluğu (kutucuklar).
 - Aralıkta hiç görüşme yoksa boş durum mesajı gösterilir.
 
+## Rapor türleri
+
+Sayfadaki **Rapor türü** seçicisiyle aynı tarih aralığında farklı raporlar üretilir:
+
+| Tür | İçerik |
+|---|---|
+| Özet | KPI'lar, günlük/aylık dağılım, kategori/görüşmeci/saat tabloları |
+| Görüşmeci performansı | Görüşmeci başına toplam, tamamlanan, gelmedi, iptal, tamamlanma/gelmedi oranı, ortalama süre |
+| Kategori trendi | Kategori başına toplam ve dönem kovaları |
+| Katılım | Gün bazında geldi, tamamlandı, gelmedi, iptal, ertelendi, planlandı |
+| Tekrar görüşme | Birden fazla gelen veya "tekrar" işaretli kişiler, son görüşme ve aralık |
+| Kişi geçmişi | Ad/telefon aramasıyla kişilerin tüm görüşme geçmişi |
+| Denetim / aktivite | Aksiyon bazında adetler ve son 100 denetim kaydı (yalnızca yönetici verisi) |
+
+API karşılığı: `GET /v1/reports/summary` ve `GET /v1/reports/{kind}` (kind: `Summary`,
+`HostPerformance`, `CategoryTrend`, `Attendance`, `Repeat`, `PersonHistory`, `AuditActivity`).
+Görüşmeci rolü her iki uçta da yalnızca kendi verisini görür.
+
+## Performans
+
+- `Appointments` tablosuna `(Status, StartsAtUtc)` ve `(CategoryId, StartsAtUtc)` bileşik
+  indeksleri eklendi.
+- Rapor sorgusu tek geçişte hafif satırlar okur; kategori/görüşmeci/saat kırılımları bellekte
+  doğrusal olarak hesaplanır (ek N+1 sorgu yok).
+- 2.000 satırlık performans testi (`ReportServiceTests`) süreyi üst sınırla doğrular.
+- Rapor aralığı API'de en fazla 10 yıl ile sınırlıdır.
+
 ## Dışa aktarma
 
 | Biçim | Ayrıntı |
 |---|---|
+| Excel | `Özet`, `Kategori`, `Görüşmeci`, `Saat` ve rapor türüne özel sayfalar (performans, katılım, tekrar, kişi geçmişi, denetim) |
 | CSV | `;` ayraçlı, UTF-8 BOM (Excel'de Türkçe karakterler doğru açılır) |
 | PDF | A4 dikey, QuestPDF; özet, dağılım, kategori ve görüşmeci tabloları, saat özeti, sayfa numarası |
 

@@ -5,7 +5,7 @@
 
 ## İndir
 
-> **Son sürüm: 1.6.0** · 16.11.2026 · 333 test geçiyor
+> **Son sürüm: 1.6.0** · 16.11.2026 · 357 test geçiyor
 
 - **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.6.0-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.6.0/CGP-RandevuTakip-1.6.0-Setup.exe)
 - **Tüm sürümler:** [Releases](https://github.com/cgportakal/CgpRandevuTakip/releases/latest)
@@ -39,7 +39,7 @@ WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma �
 |---|---|---|
 | Masaüstü (Windows) | **1.6.0** | Tam özellik, çevrimdışı |
 | Sunucu API’si | **v1** | Ortak iş kuralları, JWT, içerik manifesti |
-| Mobil (Android/iOS) | **İskelet** | Giriş, günlük liste, çevrimdışı okuma (Expo) |
+| Mobil (Android/iOS) | **0.2** | Giriş, günlük liste, detay, yeni görüşme/seri, raporlar, çevrimdışı kuyruk (Expo) |
 | Web | Planlı | Faz 3 — Next.js (PWA) |
 
 Ayrıntılar: [docs/29_Platform_Mimarisi.md](docs/29_Platform_Mimarisi.md) ·
@@ -87,6 +87,7 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 30 | [API ve Mobil Kurulum](docs/30_Api_ve_Mobil_Kurulum.md) | Sunucu, Expo, ortam değişkenleri |
 | 31 | [Raporlar](docs/31_Raporlar.md) | Rol kapsamı, KPI'lar, grafikler, CSV/PDF |
 | 32 | [Tekrarlayan Seri](docs/32_Tekrarlayan_Seri.md) | Sıklıklar, ay sonu kırpması, iptal kapsamı |
+| 33 | [1.6.0 UAT](docs/33_UAT_1.6.0.md) | Kurulum, migration, rapor/seri senaryoları, geri dönüş |
 
 ## Alınan temel kararlar
 
