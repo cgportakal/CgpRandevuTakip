@@ -3,6 +3,14 @@
 Bu depo iki bilgisayarda iki ajan tarafından geliştiriliyor. Amaç: aynı dosyaya
 aynı anda yazmamak, kaybolan iş bırakmamak ve `master`'ı her zaman yeşil tutmak.
 
+## 0. Ortam
+
+- İlk kurulum: `node scripts/bootstrap.mjs` (eksikler: `--check`, kurulum: `--install`).
+- Ayrıntılar: `docs/35_Gelistirme_Ortami.md`.
+- `node_modules`, `bin`, `obj`, veritabanı ve anahtarlar git ile taşınmaz; `npm ci` /
+  `dotnet restore` ile yeniden üretilir.
+- Masaüstü (WPF) yalnızca Windows’ta derlenir; macOS’ta API, web ve mobil geliştirilir.
+
 ## 1. Altın kurallar
 
 1. **Başlamadan önce çek:** `git pull --ff-only`. Uyuşmazsa çözmeden işe başlama.
@@ -10,16 +18,18 @@ aynı anda yazmamak, kaybolan iş bırakmamak ve `master`'ı her zaman yeşil tu
    kilidi varsa o konuya/dosyalara dokunma.
 3. **Küçük commit:** tek konu, anlaşılır mesaj, sır yok.
 4. **Push öncesi:** `git pull --rebase`, testler, `CURRENT.md` güncellemesi, kilit bırakma.
-5. **`master`'a force-push yok.** Geçmişi geri yazma; düzeltmeyi yeni commit ile yap.
+5. **`master` korumalı:** doğrudan push reddedilir (GH006). Tüm değişiklikler dal + PR + yeşil CI.
+   Force-push ve dal silme kapalıdır.
 6. **Başkasının dosyasını silme:** çakışmada iki tarafı oku, birleştir; emin değilsen dur ve not bırak.
 
 ## 2. Dal stratejisi
 
 | Durum | Dal |
 |---|---|
-| Tek küçük düzeltme (≤1 commit) | doğrudan `master` |
-| Çok dosyalı / çok commit’lik iş | `agent/<makine>/<konu>` + PR |
+| Her değişiklik (küçük düzeltme dahil) | `agent/<makine>/<konu>` + PR |
 | Deneysel/riskli iş | `experiment/<konu>` (merge edilmezse silinir) |
+
+`master` korumalı olduğu için doğrudan push `GH006` ile reddedilir; PR zorunludur.
 
 PR akışı:
 
@@ -33,6 +43,7 @@ gh pr merge --squash --delete-branch
 ```
 
 CI üç işi de çalıştırır: .NET, Web (Next.js), Mobil (Expo/TS). Kırmızıysa merge yok.
+`master` korumalıdır: force-push kapalı, silme kapalı, üç kontrol zorunlu.
 
 ## 3. Kilit yaşam döngüsü
 
@@ -55,7 +66,14 @@ node coordination/lock.mjs release --machine cafer-desktop
 - [ ] `cd mobile && npx tsc --noEmit`
 - [ ] `coordination/CURRENT.md` güncel: son commit, yapılanlar, sıradaki iş, aktif kilit, tuzaklar
 - [ ] `node coordination/lock.mjs release --machine <makine>`
-- [ ] `git add -A && git commit && git push`
+- [ ] Dalı push et, PR aç, kontrolleri bekle, squash merge:
+  ```bash
+  git push -u origin agent/<makine>/<konu>
+  gh pr create --fill
+  gh pr checks --watch
+  gh pr merge --squash --delete-branch
+  git switch master && git pull --ff-only
+  ```
 - [ ] CI yeşil (`gh run list --limit 1`)
 
 ## 5. Çakışma çözümü
