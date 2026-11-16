@@ -1,6 +1,6 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-17 01:10 (UTC+3)
+**Son güncelleme:** 2026-11-17 01:22 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
 **Durum:** Yeşil — 359 test, CI 3/3
@@ -10,8 +10,10 @@
 - **Ortam yeniden üretimi:** `scripts/bootstrap.mjs` (Windows + macOS; `--check`, `--install`),
   `global.json` (.NET 8), `.nvmrc` (Node 22), `.editorconfig`, VS Code önerileri,
   `docs/35_Gelistirme_Ortami.md`, `.env.example` dosyaları, `mobile/eas.json`.
-- **Branch protection:** `master` için force-push/silme kapalı, üç CI kontrolü zorunlu.
-  Doğrudan push reddedilir; tüm değişiklikler dal + PR + squash merge ile.
+- **Branch protection → rulesets:** `master-koruma` (silme/force-push kapalı, doğrusal geçmiş,
+  PR zorunlu, 3 kontrol + dal güncel, yalnızca squash, bypass yok) ve `etiket-koruma`
+  (`v*` etiketleri silinemez/taşınamaz). Klasik branch protection kaldırıldı; tek kaynak rulesets.
+  Ayrıntı: `PROTOCOL.md` → “GitHub koruması (rulesets)”.
 - **Devir düzeni:** `coordination/` (CURRENT, PROTOCOL, Node kilit aracı), kök `AGENTS.md`
   ve README bağlantıları; iki bilgisayarda çakışmasız çalışma akışı.
 - **SignalR:** `/hubs/events` (JWT, WebSocket `access_token`); `appointmentChanged`,
@@ -39,7 +41,9 @@ Yok. (Kontrol: `node coordination/lock.mjs status`)
 ## Dikkat edilecekler
 
 - **`master` korumalı:** doğrudan push `GH006` ile reddedilir. `agent/<makine>/<konu>` dalı aç,
-  PR gönder, `gh pr checks --watch`, sonra `gh pr merge --squash --delete-branch`.
+  PR gönder, `gh pr checks --watch`, sonra `gh pr merge <no> --squash --delete-branch`.
+  Yalnızca squash merge kabul edilir (merge commit ve rebase reddedilir). PR `BEHIND` ise
+  önce `gh pr update-branch <no>`.
 - **Ortam:** Yeni makinede `node scripts/bootstrap.mjs`; `node_modules`/`bin`/`obj` taşınmaz.
   Masaüstü (WPF) yalnızca Windows’ta derlenir; macOS’ta API/web/mobil geliştirilir.
 - **Masaüstü verisi ayrıdır:** desktop `%LOCALAPPDATA%` SQLite, sunucu `CGP_API_DATA/cgp.db`.
