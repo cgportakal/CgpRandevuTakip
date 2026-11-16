@@ -3,6 +3,12 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [Yayınlanmamış]
+
+### Düzeltildi
+- Dependabot NuGet grubu yalnızca minor/patch güncellemeleri alacak şekilde ayrıldı; net10 gerektiren major sürümler beklemede.
+- `Swashbuckle.AspNetCore` 10.3.1'e yükseltildi; OpenAPI v2 güvenlik şeması `OpenApiSecuritySchemeReference` ile uyarlandı. Swagger UI ve şema üretimi doğrulandı.
+
 ## [1.7.0] — 2026-11-16 · Rapor türleri, seri yönetimi, API ve mobil
 
 ### Eklendi

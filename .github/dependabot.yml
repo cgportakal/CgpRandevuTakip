@@ -10,12 +10,15 @@ updates:
     commit-message:
       prefix: "deps"
     groups:
-      dotnet:
+      dotnet-minor-patch:
         patterns:
           - "*"
-    # net8.0 hedefi ve mevcut API kodu nedeniyle major sürüm atlamaları geçici olarak
-    # devre dışı. Örnek: Swashbuckle 11 → Microsoft.OpenApi v2 kırılması,
-    # Microsoft.Extensions 11 → net8 uyumsuzluğu. net10 geçişinde birlikte ele alınacak.
+        update-types:
+          - "minor"
+          - "patch"
+    # net8.0 hedefi nedeniyle major sürüm atlamaları net10 geçişine kadar kapalı.
+    # Swashbuckle 10.3.1 net8 ile uyumlu; 11.x net10, Hosting/ProtectedData 11.x
+    # de net10 gerektirdiği için bu paketlerin major bump'ları bilinçli olarak beklemede.
     ignore:
       - dependency-name: "*"
         update-types:
