@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using CgpRandevuTakip.Domain.Entities;
 using CgpRandevuTakip.Domain.Enums;
@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore;
 namespace CgpRandevuTakip.UiTests;
 
 /// <summary>
-/// Uçtan uca masaüstü UI testleri (FlaUI / UIA3). Yayınlanmış EXE'yi taşınabilir modda
-/// çalıştırır. Varsayılan olarak kapalıdır: <c>CGP_UI_TESTS=1</c> ve yayın çıktısı gerekir.
+/// U├ğtan uca masa├╝st├╝ UI testleri (FlaUI / UIA3). Yay─▒nlanm─▒┼ş EXE'yi ta┼ş─▒nabilir modda
+/// ├ğal─▒┼şt─▒r─▒r. Varsay─▒lan olarak kapal─▒d─▒r: <c>CGP_UI_TESTS=1</c> ve yay─▒n ├ğ─▒kt─▒s─▒ gerekir.
 /// Yerelde: <c>dotnet test tests\CgpRandevuTakip.UiTests --filter Category=Ui</c>
 /// </summary>
 [Trait("Category", "Ui")]
@@ -27,12 +27,12 @@ public class LoginFlowTests
     {
         "Raporlar",
         "Kategoriler",
-        "Kullanıcılar",
+        "Kullan─▒c─▒lar",
         "Kontrol Paneli",
         "Yedekleme",
-        "Denetim Kaydı",
+        "Denetim Kayd─▒",
         "Ayarlar",
-        "Günlük Liste"
+        "G├╝nl├╝k Liste"
     };
 
     [Fact]
@@ -56,12 +56,12 @@ public class LoginFlowTests
                         .And(cf.ByName(item)))?
                     .AsRadioButton();
 
-                Assert.True(nav is not null, $"Menü öğesi bulunamadı: {item}");
+                Assert.True(nav is not null, $"Men├╝ ├Â─şesi bulunamad─▒: {item}");
 
                 nav!.Patterns.SelectionItem.Pattern.Select();
                 Thread.Sleep(700);
 
-                Assert.False(main.IsOffscreen, $"Sayfa açılırken pencere kapandı: {item}");
+                Assert.False(main.IsOffscreen, $"Sayfa a├ğ─▒l─▒rken pencere kapand─▒: {item}");
             }
         });
     }
@@ -93,11 +93,11 @@ public class LoginFlowTests
         {
             var app = FlaUI.Core.Application.Attach(process!);
             var login = WaitForWindow(app, automation, w =>
-                w.Title.Contains("Giriş", StringComparison.OrdinalIgnoreCase));
+                w.Title.Contains("Giri┼ş", StringComparison.OrdinalIgnoreCase));
 
             if (login is null)
             {
-                // İlk çalıştırma sihirbazı açılmış olabilir; en azından pencere açılmalı.
+                // ─░lk ├ğal─▒┼şt─▒rma sihirbaz─▒ a├ğ─▒lm─▒┼ş olabilir; en az─▒ndan pencere a├ğ─▒lmal─▒.
                 var setup = WaitForWindow(app, automation, w =>
                     w.Title.Contains("Kurulum", StringComparison.OrdinalIgnoreCase));
                 Assert.NotNull(setup);
@@ -110,28 +110,28 @@ public class LoginFlowTests
 
             var username = login
                 .FindFirstDescendant(cf => cf.ByControlType(ControlType.Edit)
-                    .And(cf.ByName("Kullanıcı adı")))?
+                    .And(cf.ByName("Kullan─▒c─▒ ad─▒")))?
                 .AsTextBox();
             Assert.NotNull(username);
             username!.Text = AdminUsername;
 
             var password = login
                 .FindFirstDescendant(cf => cf.ByControlType(ControlType.Edit)
-                    .And(cf.ByName("Şifre")))?
+                    .And(cf.ByName("┼Şifre")))?
                 .AsTextBox();
             Assert.NotNull(password);
             password!.Patterns.Value.Pattern.SetValue(AdminPassword);
 
             var loginButton = login
                 .FindFirstDescendant(cf => cf.ByControlType(ControlType.Button)
-                    .And(cf.ByName("Giriş yap")))?
+                    .And(cf.ByName("Giri┼ş yap")))?
                 .AsButton();
             Assert.NotNull(loginButton);
             loginButton!.Invoke();
 
             var main = WaitForWindow(app, automation, w =>
                 w.Title.Contains("CGP - Randevu Takip", StringComparison.OrdinalIgnoreCase)
-                && !w.Title.Contains("Giriş", StringComparison.OrdinalIgnoreCase));
+                && !w.Title.Contains("Giri┼ş", StringComparison.OrdinalIgnoreCase));
 
             Assert.NotNull(main);
             assertMain(main!, automation);
@@ -185,7 +185,7 @@ public class LoginFlowTests
         db.Users.Add(new User
         {
             Username = AdminUsername,
-            DisplayName = "UI Test Yönetici",
+            DisplayName = "UI Test Y├Ânetici",
             Email = "ui@example.com",
             Role = UserRole.Admin,
             IsActive = true,
@@ -229,7 +229,7 @@ public class LoginFlowTests
             directory = directory.Parent;
         }
 
-        throw new InvalidOperationException("Depo kökü bulunamadı.");
+        throw new InvalidOperationException("Depo k├Âk├╝ bulunamad─▒.");
     }
 
     private static void TryDelete(string path)
@@ -241,7 +241,7 @@ public class LoginFlowTests
         }
         catch
         {
-            // Test temizliği başarısız olsa da sonucu etkilemez.
+            // Test temizli─şi ba┼şar─▒s─▒z olsa da sonucu etkilemez.
         }
     }
 
@@ -279,7 +279,7 @@ public class LoginFlowTests
             }
             catch
             {
-                // Süreç zaten kapanmış olabilir.
+                // S├╝re├ğ zaten kapanm─▒┼ş olabilir.
             }
         }
     }

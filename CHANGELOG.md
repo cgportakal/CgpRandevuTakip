@@ -3,7 +3,7 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
-## [Unreleased] — 1.7.0 · Rapor türleri, seri yönetimi, API ve mobil
+## [1.7.0] — 2026-11-16 · Rapor türleri, seri yönetimi, API ve mobil
 
 ### Eklendi
 - **Rapor türleri:** görüşmeci performansı, kategori trendi, günlük katılım, tekrar görüşme, kişi geçmişi (ad/telefon arama) ve denetim/aktivite raporu.
