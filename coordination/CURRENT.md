@@ -1,7 +1,7 @@
 # CURRENT — Devir Durumu
 
 **Son güncelleme:** 2026-11-17 00:55 (UTC+3)
-**Son commit:** `a2396c7` — `chore(coordination): iki ajan devir protokolu ve kilit`
+**Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
 **Durum:** Yeşil — 359 test, CI 3/3
 
