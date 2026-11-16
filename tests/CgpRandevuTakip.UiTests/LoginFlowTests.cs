@@ -4,7 +4,6 @@ using CgpRandevuTakip.Domain.Entities;
 using CgpRandevuTakip.Domain.Enums;
 using CgpRandevuTakip.Infrastructure.Persistence;
 using CgpRandevuTakip.Infrastructure.Security;
-using FlaUI.Core;
 using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Definitions;
 using FlaUI.UIA3;
@@ -24,8 +23,50 @@ public class LoginFlowTests
     private const string AdminPassword = "UiTest12345!";
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(40);
 
+    private static readonly string[] NavItems =
+    {
+        "Raporlar",
+        "Kategoriler",
+        "Kullanıcılar",
+        "Kontrol Paneli",
+        "Yedekleme",
+        "Denetim Kaydı",
+        "Ayarlar",
+        "Günlük Liste"
+    };
+
     [Fact]
     public void Login_OpensMainWindow()
+    {
+        RunLoggedIn((main, _) =>
+        {
+            Assert.Contains("CGP - Randevu Takip", main.Title, StringComparison.OrdinalIgnoreCase);
+        });
+    }
+
+    [Fact]
+    public void MainNavigation_OpensEveryPage()
+    {
+        RunLoggedIn((main, _) =>
+        {
+            foreach (var item in NavItems)
+            {
+                var nav = main
+                    .FindFirstDescendant(cf => cf.ByControlType(ControlType.RadioButton)
+                        .And(cf.ByName(item)))?
+                    .AsRadioButton();
+
+                Assert.True(nav is not null, $"Menü öğesi bulunamadı: {item}");
+
+                nav!.Patterns.SelectionItem.Pattern.Select();
+                Thread.Sleep(700);
+
+                Assert.False(main.IsOffscreen, $"Sayfa açılırken pencere kapandı: {item}");
+            }
+        });
+    }
+
+    private static void RunLoggedIn(Action<Window, UIA3Automation> assertMain)
     {
         if (Environment.GetEnvironmentVariable("CGP_UI_TESTS") != "1")
             return;
@@ -51,10 +92,10 @@ public class LoginFlowTests
         try
         {
             var app = FlaUI.Core.Application.Attach(process!);
-            var window = WaitForWindow(app, automation, w =>
+            var login = WaitForWindow(app, automation, w =>
                 w.Title.Contains("Giriş", StringComparison.OrdinalIgnoreCase));
 
-            if (window is null)
+            if (login is null)
             {
                 // İlk çalıştırma sihirbazı açılmış olabilir; en azından pencere açılmalı.
                 var setup = WaitForWindow(app, automation, w =>
@@ -64,25 +105,25 @@ public class LoginFlowTests
                 return;
             }
 
-            window.SetForeground();
+            login.SetForeground();
             Thread.Sleep(500);
 
-            var username = window
-                .FindFirstDescendant(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Edit)
+            var username = login
+                .FindFirstDescendant(cf => cf.ByControlType(ControlType.Edit)
                     .And(cf.ByName("Kullanıcı adı")))?
                 .AsTextBox();
             Assert.NotNull(username);
             username!.Text = AdminUsername;
 
-            var password = window
-                .FindFirstDescendant(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Edit)
+            var password = login
+                .FindFirstDescendant(cf => cf.ByControlType(ControlType.Edit)
                     .And(cf.ByName("Şifre")))?
                 .AsTextBox();
             Assert.NotNull(password);
             password!.Patterns.Value.Pattern.SetValue(AdminPassword);
 
-            var loginButton = window
-                .FindFirstDescendant(cf => cf.ByControlType(FlaUI.Core.Definitions.ControlType.Button)
+            var loginButton = login
+                .FindFirstDescendant(cf => cf.ByControlType(ControlType.Button)
                     .And(cf.ByName("Giriş yap")))?
                 .AsButton();
             Assert.NotNull(loginButton);
@@ -93,6 +134,7 @@ public class LoginFlowTests
                 && !w.Title.Contains("Giriş", StringComparison.OrdinalIgnoreCase));
 
             Assert.NotNull(main);
+            assertMain(main!, automation);
             main!.Close();
         }
         finally
@@ -100,6 +142,7 @@ public class LoginFlowTests
             if (!process!.HasExited && !process.WaitForExit(5000))
                 process.Kill(entireProcessTree: true);
 
+            KillLeftoverProcesses();
             TryDelete(dataRoot);
         }
     }
@@ -123,8 +166,8 @@ public class LoginFlowTests
 
     private static void PrepareDatabase(string dataRoot)
     {
-        if (Directory.Exists(dataRoot))
-            Directory.Delete(dataRoot, recursive: true);
+        KillLeftoverProcesses();
+        DeleteWithRetry(dataRoot);
 
         Directory.CreateDirectory(dataRoot);
         var databasePath = Path.Combine(dataRoot, "data.db");
@@ -199,6 +242,45 @@ public class LoginFlowTests
         catch
         {
             // Test temizliği başarısız olsa da sonucu etkilemez.
+        }
+    }
+
+    private static void DeleteWithRetry(string path)
+    {
+        for (var attempt = 0; attempt < 10; attempt++)
+        {
+            if (!Directory.Exists(path))
+                return;
+
+            try
+            {
+                Directory.Delete(path, recursive: true);
+                return;
+            }
+            catch (IOException)
+            {
+                Thread.Sleep(400);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Thread.Sleep(400);
+            }
+        }
+    }
+
+    private static void KillLeftoverProcesses()
+    {
+        foreach (var process in Process.GetProcessesByName("CgpRandevuTakip.Desktop"))
+        {
+            try
+            {
+                process.Kill(entireProcessTree: true);
+                process.WaitForExit(3000);
+            }
+            catch
+            {
+                // Süreç zaten kapanmış olabilir.
+            }
         }
     }
 }

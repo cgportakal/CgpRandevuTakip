@@ -5,7 +5,7 @@
 
 ## İndir
 
-> **Son sürüm: 1.6.0** · 16.11.2026 · 357 test geçiyor
+> **Son sürüm: 1.6.0** · 16.11.2026 · 358 test geçiyor
 
 - **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.6.0-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.6.0/CGP-RandevuTakip-1.6.0-Setup.exe)
 - **Tüm sürümler:** [Releases](https://github.com/cgportakal/CgpRandevuTakip/releases/latest)
