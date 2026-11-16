@@ -3,6 +3,14 @@
 Bu depo iki bilgisayarda iki ajan tarafından geliştiriliyor. Amaç: aynı dosyaya
 aynı anda yazmamak, kaybolan iş bırakmamak ve `master`'ı her zaman yeşil tutmak.
 
+## 0. Ortam
+
+- İlk kurulum: `node scripts/bootstrap.mjs` (eksikler: `--check`, kurulum: `--install`).
+- Ayrıntılar: `docs/35_Gelistirme_Ortami.md`.
+- `node_modules`, `bin`, `obj`, veritabanı ve anahtarlar git ile taşınmaz; `npm ci` /
+  `dotnet restore` ile yeniden üretilir.
+- Masaüstü (WPF) yalnızca Windows’ta derlenir; macOS’ta API, web ve mobil geliştirilir.
+
 ## 1. Altın kurallar
 
 1. **Başlamadan önce çek:** `git pull --ff-only`. Uyuşmazsa çözmeden işe başlama.
@@ -33,6 +41,7 @@ gh pr merge --squash --delete-branch
 ```
 
 CI üç işi de çalıştırır: .NET, Web (Next.js), Mobil (Expo/TS). Kırmızıysa merge yok.
+`master` korumalıdır: force-push kapalı, silme kapalı, üç kontrol zorunlu.
 
 ## 3. Kilit yaşam döngüsü
 

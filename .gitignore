@@ -6,7 +6,8 @@ obj/
 *.suo
 *.userosscache
 *.sln.docstates
-.vscode/
+.vscode/*
+!.vscode/extensions.json
 .idea/
 
 # Yayın çıktıları

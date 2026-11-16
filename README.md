@@ -99,6 +99,7 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 32 | [Tekrarlayan Seri](docs/32_Tekrarlayan_Seri.md) | Sıklıklar, ay sonu kırpması, iptal kapsamı |
 | 33 | [1.6.0 UAT](docs/33_UAT_1.6.0.md) | Kurulum, migration, rapor/seri senaryoları, geri dönüş |
 | 34 | [1.7.0 UAT](docs/34_UAT_1.7.0.md) | Rapor türleri, Excel, seri yönetimi, API/mobil, UI testleri |
+| 35 | [Geliştirme Ortamı](docs/35_Gelistirme_Ortami.md) | Windows + macOS kurulum, bağımlılıklar, ortam değişkenleri |
 
 ## Alınan temel kararlar
 

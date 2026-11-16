@@ -1,12 +1,16 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-17 00:55 (UTC+3)
+**Son güncelleme:** 2026-11-17 01:05 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
 **Durum:** Yeşil — 359 test, CI 3/3
 
 ## Bu turda tamamlanan
 
+- **Ortam yeniden üretimi:** `scripts/bootstrap.mjs` (Windows + macOS; `--check`, `--install`),
+  `global.json` (.NET 8), `.nvmrc` (Node 22), `.editorconfig`, VS Code önerileri,
+  `docs/35_Gelistirme_Ortami.md`, `.env.example` dosyaları, `mobile/eas.json`.
+- **Branch protection:** `master` için force-push/silme kapalı, üç CI kontrolü zorunlu.
 - **Devir düzeni:** `coordination/` (CURRENT, PROTOCOL, Node kilit aracı), kök `AGENTS.md`
   ve README bağlantıları; iki bilgisayarda çakışmasız çalışma akışı.
 - **SignalR:** `/hubs/events` (JWT, WebSocket `access_token`); `appointmentChanged`,
@@ -33,6 +37,8 @@ Yok. (Kontrol: `node coordination/lock.mjs status`)
 
 ## Dikkat edilecekler
 
+- **Ortam:** Yeni makinede `node scripts/bootstrap.mjs`; `node_modules`/`bin`/`obj` taşınmaz.
+  Masaüstü (WPF) yalnızca Windows’ta derlenir; macOS’ta API/web/mobil geliştirilir.
 - **Masaüstü verisi ayrıdır:** desktop `%LOCALAPPDATA%` SQLite, sunucu `CGP_API_DATA/cgp.db`.
   Desktop senkronizasyonu henüz yok; SignalR/push sunucu tarafını etkilemez.
 - **Rapor yolu:** `/v1/reports/kind/{kind}` kullan. `/v1/reports/Summary` yanlışlıkla
@@ -47,6 +53,10 @@ Yok. (Kontrol: `node coordination/lock.mjs status`)
 ## Çalıştırma
 
 ```powershell
+# İlk kurulum / doğrulama
+node scripts/bootstrap.mjs          # --check / --install / --force
+node scripts/bootstrap.mjs --check
+
 # API (Windows)
 $env:CGP_API_DATA="$PWD\src\CgpRandevuTakip.Api\data"
 dotnet run --project src\CgpRandevuTakip.Api --urls http://0.0.0.0:5199
@@ -74,4 +84,5 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-`43963401634` — .NET, Web (Next.js), Mobil (Expo) üçü de başarılı.
+`43964810757` — .NET, Web (Next.js), Mobil (Expo) üçü de başarılı.
+`master` korumalı: force-push ve silme kapalı; üç kontrol zorunlu (CI yeşil olmadan birleştirme yok).
