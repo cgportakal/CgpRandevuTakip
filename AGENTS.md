@@ -7,6 +7,7 @@ her oturumun başında ve sonunda bu akış zorunludur.
 
 1. `git pull --ff-only`
 2. Ortam eksikse: `node scripts/bootstrap.mjs --check` (kurulum: `--install`, ayrıntı: `docs/35_Gelistirme_Ortami.md`).
+   Hızlı hazırlık: macOS `bash basla.command`, Windows `basla.cmd` (pull + bootstrap + durum).
 3. [`coordination/CURRENT.md`](coordination/CURRENT.md) dosyasını oku.
 4. `node coordination/lock.mjs status`
    - Başka makinenin **8 saatten yeni** kilidi varsa o makinenin konusuna/dosyalarına dokunma.

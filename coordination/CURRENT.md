@@ -1,12 +1,14 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-17 01:22 (UTC+3)
+**Son güncelleme:** 2026-11-17 01:29 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
 **Durum:** Yeşil — 359 test, CI 3/3
 
 ## Bu turda tamamlanan
 
+- **Hızlı başlangıç:** `BASLANGIC.md`, macOS `basla.command`, Windows `basla.cmd` /
+  `scripts/basla.ps1` (temiz ağaç kontrolü → pull → Node kontrolü → bootstrap → durum).
 - **Ortam yeniden üretimi:** `scripts/bootstrap.mjs` (Windows + macOS; `--check`, `--install`),
   `global.json` (.NET 8), `.nvmrc` (Node 22), `.editorconfig`, VS Code önerileri,
   `docs/35_Gelistirme_Ortami.md`, `.env.example` dosyaları, `mobile/eas.json`.
@@ -63,6 +65,8 @@ Yok. (Kontrol: `node coordination/lock.mjs status`)
 # İlk kurulum / doğrulama
 node scripts/bootstrap.mjs          # --check / --install / --force
 node scripts/bootstrap.mjs --check
+bash basla.command                  # macOS (veya çift tık)
+basla.cmd                           # Windows
 
 # API (Windows)
 $env:CGP_API_DATA="$PWD\src\CgpRandevuTakip.Api\data"
