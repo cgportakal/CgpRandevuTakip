@@ -13,6 +13,13 @@ updates:
       dotnet:
         patterns:
           - "*"
+    # net8.0 hedefi ve mevcut API kodu nedeniyle major sürüm atlamaları geçici olarak
+    # devre dışı. Örnek: Swashbuckle 11 → Microsoft.OpenApi v2 kırılması,
+    # Microsoft.Extensions 11 → net8 uyumsuzluğu. net10 geçişinde birlikte ele alınacak.
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
 
   - package-ecosystem: "github-actions"
     directory: "/"
