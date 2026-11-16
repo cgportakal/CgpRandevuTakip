@@ -45,6 +45,16 @@ WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma �
 Ayrıntılar: [docs/29_Platform_Mimarisi.md](docs/29_Platform_Mimarisi.md) ·
 [docs/30_Api_ve_Mobil_Kurulum.md](docs/30_Api_ve_Mobil_Kurulum.md)
 
+### Geliştirici devri (iki bilgisayar)
+
+Bu depo iki bilgisayarda iki ajanla geliştiriliyor. Çakışmayı önlemek için:
+
+- **Durum:** [coordination/CURRENT.md](coordination/CURRENT.md)
+- **Protokol:** [coordination/PROTOCOL.md](coordination/PROTOCOL.md)
+- **Kilit:** `node coordination/lock.mjs status` · `acquire --machine <ad> --task "..."`
+
+Ajanlar için giriş kuralları: [AGENTS.md](AGENTS.md).
+
 ## Neden bu proje?
 
 Görüşmeler hâlâ defter, Excel veya dağınık mesajlarla takip ediliyorsa; kayıt kayboluyor,
