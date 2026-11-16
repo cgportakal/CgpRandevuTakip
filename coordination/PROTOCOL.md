@@ -19,7 +19,8 @@ aynı anda yazmamak, kaybolan iş bırakmamak ve `master`'ı her zaman yeşil tu
 3. **Küçük commit:** tek konu, anlaşılır mesaj, sır yok.
 4. **Push öncesi:** `git pull --rebase`, testler, `CURRENT.md` güncellemesi, kilit bırakma.
 5. **`master` korumalı:** doğrudan push reddedilir (GH006). Tüm değişiklikler dal + PR + yeşil CI.
-   Force-push ve dal silme kapalıdır.
+   Force-push ve dal silme kapalıdır. Merge yalnızca **squash**; PR dalı merge öncesi
+   `master` ile güncel olmalıdır.
 6. **Başkasının dosyasını silme:** çakışmada iki tarafı oku, birleştir; emin değilsen dur ve not bırak.
 
 ## 2. Dal stratejisi
@@ -44,6 +45,32 @@ gh pr merge --squash --delete-branch
 
 CI üç işi de çalıştırır: .NET, Web (Next.js), Mobil (Expo/TS). Kırmızıysa merge yok.
 `master` korumalıdır: force-push kapalı, silme kapalı, üç kontrol zorunlu.
+
+### GitHub koruması (rulesets)
+
+Koruma iki ruleset ile yönetilir; **klasik branch protection kapalıdır** (tek kaynak).
+Bypass listesi boştur: yönetici/ajan dahil kimse kuralları atlayamaz.
+
+| Ruleset | Kapsam | Kurallar |
+|---|---|---|
+| `master-koruma` (27413016) | `master` + varsayılan dal | silme yok, force-push yok, doğrusal geçmiş, PR zorunlu (0 onay, yorumlar çözülmüş), 3 kontrol zorunlu + dal güncel, yalnızca squash |
+| `etiket-koruma` (27415115) | `v*` etiketleri | etiket silinemez, taşınamaz |
+
+Zorunlu kontroller (GitHub Actions): `Build and test (.NET 8)`, `Web (Next.js)`,
+`Mobile (Expo / TypeScript)`. Yeni bir job eklerseniz bu listeye de ekleyin, aksi halde
+merge yine bekler.
+
+PR `BEHIND` ise dalı güncelleyin, sonra squash merge:
+
+```bash
+gh pr update-branch <no>
+gh pr merge <no> --squash --delete-branch
+# veya beklemeden: gh pr merge <no> --squash --auto --delete-branch
+```
+
+Acil durumda (CI altyapısı çöktü, hatalı `v*` etiketi): Settings → Rulesets → ilgili
+ruleset → **Disabled** → işi yap → tekrar **Active**. Kalıcı bypass eklemeyin; nedenini
+`CURRENT.md`'ye yazın.
 
 ## 3. Kilit yaşam döngüsü
 
