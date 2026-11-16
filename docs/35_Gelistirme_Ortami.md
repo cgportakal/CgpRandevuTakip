@@ -57,6 +57,22 @@ node scripts/bootstrap.mjs --install   # eksikleri winget/brew ile kur
 node scripts/bootstrap.mjs --force     # node_modules'ü yeniden kur
 ```
 
+### Hızlı başlangıç dosyaları
+
+```bash
+# macOS (çift tık da olur)
+bash basla.command          # --yes / --check
+```
+
+```bat
+:: Windows
+basla.cmd                   :: --yes / --check
+```
+
+Bu dosyalar sırayla: temiz çalışma ağacı kontrolü → `git pull --ff-only` →
+(Node yoksa kurulum teklifi) → `bootstrap.mjs` → `CURRENT.md` özeti → aktif kilit.
+Elle kullanım: `BASLANGIC.md`.
+
 ## 4. Günlük akış
 
 ```bash
