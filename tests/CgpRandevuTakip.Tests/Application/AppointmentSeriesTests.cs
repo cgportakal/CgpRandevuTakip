@@ -283,4 +283,234 @@ public class AppointmentSeriesTests
         Assert.False(new SeriesRequest(SeriesFrequency.Weekly, 13).IsValid);
         Assert.False(new SeriesRequest((SeriesFrequency)42, 4).IsValid);
     }
+
+    [Fact]
+    public async Task CreateSeries_StoresFrequencyAndAnchor()
+    {
+        using var sut = await CreateAsync();
+        var anchor = new DateTime(2026, 11, 10, 10, 0, 0);
+
+        var created = await sut.Service.CreateSeriesAsync(
+            sut.Input(anchor),
+            new SeriesRequest(SeriesFrequency.Biweekly, 2));
+
+        Assert.True(created.Success, created.Error);
+
+        using var db = sut.Db.CreateContext();
+        var rows = db.Appointments.Where(x => x.SeriesId == created.SeriesId).ToList();
+        Assert.All(rows, x => Assert.Equal(SeriesFrequency.Biweekly, x.SeriesFrequency));
+        Assert.All(rows, x => Assert.Equal(anchor, x.SeriesAnchorLocal));
+    }
+
+    [Fact]
+    public async Task AppendSeries_AddsNextSlotsAndUpdatesSeriesCount()
+    {
+        using var sut = await CreateAsync();
+
+        var created = await sut.Service.CreateSeriesAsync(
+            sut.Input(new DateTime(2026, 11, 10, 10, 0, 0)),
+            new SeriesRequest(SeriesFrequency.Weekly, 2));
+        Assert.True(created.Success, created.Error);
+
+        var plan = await sut.Service.PreviewAppendAsync(created.SeriesId!, 2);
+        Assert.Equal(2, plan.CreateCount);
+        Assert.Equal(4, plan.NewSeriesCount);
+
+        var result = await sut.Service.AppendSeriesAsync(created.SeriesId!, 2);
+
+        Assert.True(result.Success, result.Error);
+        Assert.Equal(2, result.CreatedCount);
+        Assert.Equal(0, result.SkippedCount);
+        Assert.Equal(4, result.NewSeriesCount);
+        Assert.Contains(AuditAction.SeriesExtended, sut.Audit.Actions);
+
+        using var db = sut.Db.CreateContext();
+        var rows = db.Appointments
+            .Where(x => x.SeriesId == created.SeriesId)
+            .OrderBy(x => x.SeriesIndex)
+            .ToList();
+
+        Assert.Equal(4, rows.Count);
+        Assert.All(rows, x => Assert.Equal(4, x.SeriesCount));
+        Assert.Equal(new int?[] { 1, 2, 3, 4 }, rows.Select(x => x.SeriesIndex));
+        Assert.Equal(
+            new DateTime(2026, 11, 24, 7, 0, 0),
+            rows[2].StartsAtUtc);
+        Assert.Equal(
+            new DateTime(2026, 12, 1, 7, 0, 0),
+            rows[3].StartsAtUtc);
+    }
+
+    [Fact]
+    public async Task AppendSeries_MonthlyUsesAnchorDayNotLastSlot()
+    {
+        using var sut = await CreateAsync();
+
+        // 31 Aralık 2026 → 31 Ocak 2027; sonraki kayıt 28 Şubat olmalı (çapa 31. gün).
+        var created = await sut.Service.CreateSeriesAsync(
+            sut.Input(new DateTime(2026, 12, 31, 9, 0, 0)),
+            new SeriesRequest(SeriesFrequency.Monthly, 2));
+        Assert.True(created.Success, created.Error);
+
+        var result = await sut.Service.AppendSeriesAsync(created.SeriesId!, 1);
+
+        Assert.True(result.Success, result.Error);
+        Assert.Equal(3, result.CreatedCount + 2); // 2 mevcut + 1 yeni
+
+        using var db = sut.Db.CreateContext();
+        var last = db.Appointments
+            .Where(x => x.SeriesId == created.SeriesId)
+            .OrderBy(x => x.SeriesIndex)
+            .Last();
+
+        Assert.Equal(3, last.SeriesIndex);
+        var local = last.StartsAtUtc.AddHours(3);
+        Assert.Equal(new DateTime(2027, 2, 28, 9, 0, 0), local);
+    }
+
+    [Fact]
+    public async Task AppendSeries_SkipsConflictingNextSlot()
+    {
+        using var sut = await CreateAsync();
+
+        var created = await sut.Service.CreateSeriesAsync(
+            sut.Input(new DateTime(2026, 11, 10, 10, 0, 0)),
+            new SeriesRequest(SeriesFrequency.Weekly, 2));
+        Assert.True(created.Success, created.Error);
+
+        // Eklenecek ilk slot (3. görüşme) dolu.
+        await sut.Service.CreateAsync(sut.Input(new DateTime(2026, 11, 24, 10, 0, 0)));
+
+        var result = await sut.Service.AppendSeriesAsync(created.SeriesId!, 2);
+
+        Assert.True(result.Success, result.Error);
+        Assert.Equal(1, result.CreatedCount);
+        Assert.Equal(1, result.SkippedCount);
+        Assert.Equal(4, result.NewSeriesCount);
+
+        using var db = sut.Db.CreateContext();
+        var indexes = db.Appointments
+            .Where(x => x.SeriesId == created.SeriesId)
+            .OrderBy(x => x.SeriesIndex)
+            .Select(x => x.SeriesIndex)
+            .ToList();
+
+        Assert.Equal(new int?[] { 1, 2, 4 }, indexes);
+    }
+
+    [Fact]
+    public async Task UpdateSeries_AppliesOnlyToFutureScheduledRows()
+    {
+        using var sut = await CreateAsync();
+
+        var created = await sut.Service.CreateSeriesAsync(
+            sut.Input(new DateTime(2026, 11, 10, 10, 0, 0)),
+            new SeriesRequest(SeriesFrequency.Weekly, 3));
+        Assert.True(created.Success, created.Error);
+
+        using (var db = sut.Db.CreateContext())
+        {
+            var first = db.Appointments.Single(
+                x => x.SeriesId == created.SeriesId && x.SeriesIndex == 1);
+            first.StartsAtUtc = NowUtc.AddDays(-3);
+            await db.SaveChangesAsync();
+        }
+
+        var input = new SeriesUpdateInput(
+            sut.Host.Id,
+            sut.Category.Id,
+            45,
+            AppointmentMethod.Online,
+            "Seri güncellendi",
+            "Öğrenci",
+            "Bir",
+            new TimeSpan(15, 0, 0),
+            new[] { 60 });
+
+        var result = await sut.Service.UpdateSeriesAsync(created.SeriesId!, input);
+
+        Assert.True(result.Success, result.Error);
+        Assert.Equal(2, result.UpdatedCount);
+        Assert.Equal(0, result.SkippedCount);
+        Assert.Contains(AuditAction.SeriesUpdated, sut.Audit.Actions);
+
+        using var verify = sut.Db.CreateContext();
+        var rows = verify.Appointments
+            .Where(x => x.SeriesId == created.SeriesId)
+            .OrderBy(x => x.SeriesIndex)
+            .ToList();
+
+        // Geçmiş kayıt değişmedi.
+        Assert.Equal(30, rows[0].DurationMinutes);
+        Assert.Equal(AppointmentMethod.FaceToFace, rows[0].Method);
+
+        // Gelecek kayıtlar güncellendi ve saat 15:00'e taşındı.
+        foreach (var row in rows.Skip(1))
+        {
+            Assert.Equal(45, row.DurationMinutes);
+            Assert.Equal(AppointmentMethod.Online, row.Method);
+            Assert.Equal("Seri güncellendi", row.Description);
+            var local = row.StartsAtUtc.AddHours(3);
+            Assert.Equal(15, local.Hour);
+            Assert.Equal(0, local.Minute);
+        }
+    }
+
+    [Fact]
+    public async Task UpdateSeries_RequiresFutureScheduledRows()
+    {
+        using var sut = await CreateAsync();
+
+        var created = await sut.Service.CreateSeriesAsync(
+            sut.Input(new DateTime(2026, 11, 10, 10, 0, 0)),
+            new SeriesRequest(SeriesFrequency.Weekly, 2));
+        Assert.True(created.Success, created.Error);
+
+        using (var db = sut.Db.CreateContext())
+        {
+            foreach (var row in db.Appointments.Where(x => x.SeriesId == created.SeriesId))
+                row.StartsAtUtc = NowUtc.AddDays(-1);
+            await db.SaveChangesAsync();
+        }
+
+        var result = await sut.Service.UpdateSeriesAsync(
+            created.SeriesId!,
+            new SeriesUpdateInput(
+                sut.Host.Id,
+                sut.Category.Id,
+                30,
+                AppointmentMethod.FaceToFace,
+                null,
+                null,
+                null,
+                null,
+                Array.Empty<int>()));
+
+        Assert.False(result.Success);
+        Assert.Equal(0, result.UpdatedCount);
+    }
+
+    [Fact]
+    public async Task SeriesAppendAndUpdate_RequireManagementRole()
+    {
+        using var sut = await CreateAsync();
+        sut.SignInAsRole(UserRole.Host);
+
+        var append = await sut.Service.AppendSeriesAsync("any", 2);
+        var update = await sut.Service.UpdateSeriesAsync(
+            "any",
+            new SeriesUpdateInput(
+                sut.Host.Id,
+                sut.Category.Id,
+                30,
+                AppointmentMethod.FaceToFace,
+                null,
+                null,
+                null,
+                null,
+                Array.Empty<int>()));
+
+        Assert.False(append.Success);
+        Assert.False(update.Success);
+    }
 }

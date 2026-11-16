@@ -2,6 +2,7 @@ using CgpRandevuTakip.Application.Auth;
 using CgpRandevuTakip.Application.Reports;
 using CgpRandevuTakip.Domain.Entities;
 using CgpRandevuTakip.Domain.Enums;
+using CgpRandevuTakip.Infrastructure.Auditing;
 using CgpRandevuTakip.Infrastructure.Repositories;
 using CgpRandevuTakip.Tests.Support;
 
@@ -92,6 +93,7 @@ public class ReportServiceTests
 
         var service = new ReportService(
             new ReportQueries(db.Factory),
+            new AuditLogRepository(db.Factory),
             new FixedClock(NowUtc),
             currentUser);
 
@@ -301,5 +303,172 @@ public class ReportServiceTests
         Assert.Equal(new DateTime(2026, 11, 1), summary.FromLocalDate);
         Assert.Equal(new DateTime(2026, 11, 30), summary.ToLocalDate);
         Assert.Equal(4, summary.Total);
+    }
+
+    [Fact]
+    public async Task GetReport_HostPerformance_ComputesRates()
+    {
+        using var sut = await CreateSeededAsync();
+
+        var result = await sut.Service.GetReportAsync(
+            ReportKind.HostPerformance,
+            new ReportQuery(new DateTime(2026, 11, 1), new DateTime(2026, 11, 30)));
+
+        Assert.Equal(ReportKind.HostPerformance, result.Kind);
+        Assert.Equal(2, result.HostPerformance.Count);
+
+        var hostA = result.HostPerformance.Single(x => x.HostUserId == sut.HostA.Id);
+        Assert.Equal(2, hostA.Total);
+        Assert.Equal(1, hostA.Completed);
+        Assert.Equal(1, hostA.NoShow);
+        Assert.Equal(50, hostA.CompletionRate, 3);
+        Assert.Equal(50, hostA.NoShowRate, 3);
+
+        var hostB = result.HostPerformance.Single(x => x.HostUserId == sut.HostB.Id);
+        Assert.Equal(1, hostB.Cancelled);
+    }
+
+    [Fact]
+    public async Task GetReport_Attendance_ReturnsDailyBreakdown()
+    {
+        using var sut = await CreateSeededAsync();
+
+        var result = await sut.Service.GetReportAsync(
+            ReportKind.Attendance,
+            new ReportQuery(new DateTime(2026, 11, 1), new DateTime(2026, 11, 30)));
+
+        Assert.Equal(30, result.Attendance.Count);
+        var day2 = result.Attendance.Single(x => x.DateLocal.Day == 2);
+        Assert.Equal(1, day2.Completed);
+        Assert.Equal(1, day2.NoShow);
+        Assert.Equal(2, day2.Total);
+    }
+
+    [Fact]
+    public async Task GetReport_Repeat_ListsFrequentPersons()
+    {
+        using var sut = await CreateSeededAsync();
+
+        var result = await sut.Service.GetReportAsync(
+            ReportKind.Repeat,
+            new ReportQuery(new DateTime(2026, 11, 1), new DateTime(2026, 11, 30)));
+
+        Assert.Equal(2, result.RepeatPersons.Count);
+        Assert.All(result.RepeatPersons, x => Assert.Equal(2, x.VisitCount));
+        Assert.Contains(result.RepeatPersons, x => x.PersonName.Contains("Ali"));
+    }
+
+    [Fact]
+    public async Task GetReport_PersonHistory_FiltersByNameAndPhone()
+    {
+        using var sut = await CreateSeededAsync();
+        var query = new ReportQuery(new DateTime(2026, 11, 1), new DateTime(2026, 11, 30));
+
+        var byName = await sut.Service.GetReportAsync(ReportKind.PersonHistory, query, "Ali");
+        Assert.Single(byName.PersonHistory);
+        Assert.Equal(2, byName.PersonHistory[0].Entries.Count);
+
+        var byPhone = await sut.Service.GetReportAsync(ReportKind.PersonHistory, query, "9876543");
+        Assert.Single(byPhone.PersonHistory);
+        Assert.Contains("Ayşe", byPhone.PersonHistory[0].PersonName);
+
+        var none = await sut.Service.GetReportAsync(ReportKind.PersonHistory, query, "zzz-yok");
+        Assert.Empty(none.PersonHistory);
+    }
+
+    [Fact]
+    public async Task GetReport_CategoryTrend_IncludesBuckets()
+    {
+        using var sut = await CreateSeededAsync();
+
+        var result = await sut.Service.GetReportAsync(
+            ReportKind.CategoryTrend,
+            new ReportQuery(new DateTime(2026, 11, 1), new DateTime(2026, 11, 30)));
+
+        Assert.Equal(2, result.CategoryTrends.Count);
+        Assert.All(result.CategoryTrends, x => Assert.Equal(30, x.Points.Count));
+        Assert.Equal(2, result.CategoryTrends.Single(x => x.CategoryId == sut.CategoryA.Id).Total);
+    }
+
+    [Fact]
+    public async Task GetReport_AuditActivity_GroupsActions()
+    {
+        using var sut = await CreateSeededAsync();
+
+        using (var db = sut.Db.CreateContext())
+        {
+            db.AuditLogs.AddRange(
+                new AuditLog
+                {
+                    CreatedAtUtc = NowUtc,
+                    UserId = sut.HostA.Id,
+                    Action = AuditAction.LoginSucceeded
+                },
+                new AuditLog
+                {
+                    CreatedAtUtc = NowUtc.AddMinutes(-5),
+                    UserId = sut.HostA.Id,
+                    Action = AuditAction.LoginSucceeded
+                },
+                new AuditLog
+                {
+                    CreatedAtUtc = NowUtc.AddMinutes(-10),
+                    UserId = sut.HostA.Id,
+                    Action = AuditAction.AppointmentCreated
+                });
+
+            await db.SaveChangesAsync();
+        }
+
+        var result = await sut.Service.GetReportAsync(
+            ReportKind.AuditActivity,
+            new ReportQuery(new DateTime(2026, 11, 1), new DateTime(2026, 11, 30)));
+
+        Assert.NotNull(result.AuditActivity);
+        Assert.Equal(3, result.AuditActivity!.Total);
+        Assert.Equal(2, result.AuditActivity.Actions.Single(x => x.ActionName.Contains("Giriş")).Count);
+    }
+
+    [Fact]
+    public async Task GetSummary_HandlesTwoThousandRowsQuickly()
+    {
+        using var sut = await CreateAsync();
+
+        using (var db = sut.Db.CreateContext())
+        {
+            var start = new DateTime(2026, 11, 1, 8, 0, 0);
+            var statuses = new[]
+            {
+                AppointmentStatus.Scheduled,
+                AppointmentStatus.Completed,
+                AppointmentStatus.NoShow,
+                AppointmentStatus.Cancelled
+            };
+
+            for (var index = 0; index < 2000; index++)
+            {
+                db.Appointments.Add(new Appointment
+                {
+                    PersonId = index % 2 == 0 ? sut.PersonOne.Id : sut.PersonTwo.Id,
+                    HostUserId = index % 2 == 0 ? sut.HostA.Id : sut.HostB.Id,
+                    CategoryId = index % 2 == 0 ? sut.CategoryA.Id : sut.CategoryB.Id,
+                    StartsAtUtc = start.AddMinutes(index * 20).AddHours(-3),
+                    DurationMinutes = 30,
+                    Status = statuses[index % statuses.Length],
+                    UpdatedAtUtc = NowUtc
+                });
+            }
+
+            await db.SaveChangesAsync();
+        }
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var summary = await sut.Service.GetSummaryAsync(
+            new ReportQuery(new DateTime(2026, 11, 1), new DateTime(2026, 12, 31)));
+        watch.Stop();
+
+        Assert.Equal(2000, summary.Total);
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(10),
+            $"Rapor 2000 satırda {watch.Elapsed.TotalSeconds:0.0} sn sürdü.");
     }
 }

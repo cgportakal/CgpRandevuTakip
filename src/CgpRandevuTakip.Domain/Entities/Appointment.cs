@@ -35,6 +35,12 @@ public class Appointment : EntityBase
     /// <summary>Serideki toplam randevu sayısı.</summary>
     public int? SeriesCount { get; set; }
 
+    /// <summary>Serinin sıklığı; tekil randevularda boştur.</summary>
+    public SeriesFrequency? SeriesFrequency { get; set; }
+
+    /// <summary>Serinin çapa başlangıcı (yerel); aylık kırpma bu tarihten hesaplanır.</summary>
+    public DateTime? SeriesAnchorLocal { get; set; }
+
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
     public string? CreatedByUserId { get; set; }
     public string? UpdatedByUserId { get; set; }

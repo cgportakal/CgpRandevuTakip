@@ -13,19 +13,22 @@ public partial class AppointmentDetailViewModel : ObservableObject
     private readonly IDailyShareService _share;
     private readonly Application.Abstractions.ICurrentUser _currentUser;
     private readonly IDialogService _dialogs;
+    private readonly ISeriesDialogService _seriesDialogs;
 
     public AppointmentDetailViewModel(
         IAppointmentService appointments,
         IAppointmentOutcomeDialogService outcomeDialogs,
         IDailyShareService share,
         Application.Abstractions.ICurrentUser currentUser,
-        IDialogService dialogs)
+        IDialogService dialogs,
+        ISeriesDialogService seriesDialogs)
     {
         _appointments = appointments;
         _outcomeDialogs = outcomeDialogs;
         _share = share;
         _currentUser = currentUser;
         _dialogs = dialogs;
+        _seriesDialogs = seriesDialogs;
     }
 
     [ObservableProperty]
@@ -51,6 +54,8 @@ public partial class AppointmentDetailViewModel : ObservableObject
         => CanEdit
            && Detail is { HasSeries: true, Status: AppointmentStatus.Scheduled }
            && Detail.StartsAtLocal > DateTime.Now;
+
+    public bool CanManageSeries => CanEdit && Detail is { HasSeries: true };
 
     public bool CanShare => Detail is not null;
 
@@ -147,6 +152,20 @@ public partial class AppointmentDetailViewModel : ObservableObject
         await LoadAsync(Detail.Id);
     }
 
+    [RelayCommand(CanExecute = nameof(CanManageSeries))]
+    private async Task ManageSeriesAsync()
+    {
+        if (Detail is null)
+            return;
+
+        var changed = await _seriesDialogs.ShowManageAsync(Detail);
+        if (!changed)
+            return;
+
+        NeedsRefresh = true;
+        await LoadAsync(Detail.Id);
+    }
+
     [RelayCommand(CanExecute = nameof(CanShare))]
     private async Task ShareAsync()
     {
@@ -194,12 +213,14 @@ public partial class AppointmentDetailViewModel : ObservableObject
         OnPropertyChanged(nameof(CanEnterOutcome));
         OnPropertyChanged(nameof(CanRepeat));
         OnPropertyChanged(nameof(CanCancelSeries));
+        OnPropertyChanged(nameof(CanManageSeries));
         OnPropertyChanged(nameof(CanShare));
         OnPropertyChanged(nameof(OutcomeTitle));
         OnPropertyChanged(nameof(OutcomeClosedText));
         EnterOutcomeCommand.NotifyCanExecuteChanged();
         RepeatCommand.NotifyCanExecuteChanged();
         CancelSeriesCommand.NotifyCanExecuteChanged();
+        ManageSeriesCommand.NotifyCanExecuteChanged();
         ShareCommand.NotifyCanExecuteChanged();
         EditCommand.NotifyCanExecuteChanged();
     }

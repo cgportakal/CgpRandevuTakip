@@ -233,7 +233,9 @@ public sealed class AppointmentService : IAppointmentService
                 now,
                 seriesId,
                 slot.Index,
-                slots.Count));
+                slots.Count,
+                request.Frequency,
+                input.StartsAtLocal));
         }
 
         await _appointments.AddRangeAsync(entities);
@@ -306,6 +308,404 @@ public sealed class AppointmentService : IAppointmentService
         return SeriesCancelResult.Ok(cancelled, skipped);
     }
 
+    public async Task<SeriesAppendPlanDto> PreviewAppendAsync(string seriesId, int count)
+    {
+        if (!CanManageAppointments())
+            return new SeriesAppendPlanDto(Array.Empty<SeriesSlotDto>(), 0, "Seri düzenleme yetkiniz yok.");
+
+        if (!new SeriesAppendRequest(count).IsValid)
+            return new SeriesAppendPlanDto(
+                Array.Empty<SeriesSlotDto>(),
+                0,
+                $"İşlem başına 1–{SeriesScheduleCalculator.MaxCount} kayıt eklenebilir.");
+
+        var rows = await _appointments.GetSeriesAsync(seriesId);
+        if (rows.Count == 0)
+            return new SeriesAppendPlanDto(Array.Empty<SeriesSlotDto>(), 0, "Seri bulunamadı.");
+
+        var context = ResolveSeriesContext(rows);
+        var slots = await BuildAppendSlotsAsync(rows, context, count);
+
+        return new SeriesAppendPlanDto(slots, context.RequestedCount + count);
+    }
+
+    public async Task<SeriesAppendResult> AppendSeriesAsync(string seriesId, int count)
+    {
+        if (!CanManageAppointments())
+            return SeriesAppendResult.Fail("Seri düzenleme yetkiniz yok.");
+
+        if (!new SeriesAppendRequest(count).IsValid)
+            return SeriesAppendResult.Fail(
+                $"İşlem başına 1–{SeriesScheduleCalculator.MaxCount} kayıt eklenebilir.");
+
+        var rows = await _appointments.GetSeriesAsync(seriesId);
+        if (rows.Count == 0)
+            return SeriesAppendResult.Fail("Seri bulunamadı.");
+
+        var context = ResolveSeriesContext(rows);
+        await EnsureSeriesMetadataAsync(rows, context);
+
+        var slots = await BuildAppendSlotsAsync(rows, context, count);
+        var creatable = slots.Where(x => x.WillCreate).ToList();
+        if (creatable.Count == 0)
+            return SeriesAppendResult.Fail(
+                "Eklenecek uygun tarih yok. Çakışan veya geçmiş tarihleri düzeltin.",
+                slots);
+
+        var person = rows[0].Person;
+        if (person is null)
+            return SeriesAppendResult.Fail("Seri kişisi bulunamadı.");
+
+        var reminders = await _appointments.GetRemindersAsync(rows[0].Id);
+        var offsets = reminders
+            .Where(x => x.Kind == ReminderKind.Appointment)
+            .Select(x => x.OffsetMinutes)
+            .Distinct()
+            .ToArray();
+
+        var request = new AppointmentInput(
+            person.FirstName,
+            person.LastName,
+            person.PhoneE164,
+            _clock.ToLocal(rows[0].StartsAtUtc),
+            rows[0].DurationMinutes,
+            rows[0].HostUserId,
+            rows[0].CategoryId,
+            rows[0].Method,
+            rows[0].Description,
+            rows[0].StudentFirstName,
+            rows[0].StudentLastName,
+            offsets);
+
+        var newSeriesCount = context.RequestedCount + count;
+        var now = _clock.UtcNow;
+        var entities = new List<Appointment>(creatable.Count);
+
+        foreach (var slot in creatable)
+        {
+            entities.Add(BuildEntity(
+                person,
+                request,
+                _clock.ToUtc(slot.StartsAtLocal),
+                now,
+                seriesId,
+                slot.Index,
+                newSeriesCount,
+                context.Frequency,
+                context.AnchorLocal));
+        }
+
+        await _appointments.AddRangeAsync(entities);
+        await _appointments.UpdateSeriesCountAsync(seriesId, newSeriesCount);
+
+        await _audit.LogAsync(
+            AuditAction.SeriesExtended,
+            _currentUser.UserId,
+            nameof(Appointment),
+            seriesId,
+            JsonSerializer.Serialize(new
+            {
+                requested = count,
+                created = entities.Count,
+                skipped = slots.Count - entities.Count,
+                newSeriesCount
+            }));
+
+        return SeriesAppendResult.Ok(
+            entities.Count,
+            slots.Count - entities.Count,
+            newSeriesCount,
+            slots);
+    }
+
+    public async Task<SeriesUpdateResult> UpdateSeriesAsync(string seriesId, SeriesUpdateInput input)
+    {
+        if (!CanManageAppointments())
+            return SeriesUpdateResult.Fail("Seri düzenleme yetkiniz yok.");
+
+        if (input.DurationMinutes is < MinDurationMinutes or > MaxDurationMinutes)
+            return SeriesUpdateResult.Fail(
+                $"Süre {MinDurationMinutes}–{MaxDurationMinutes} dakika arasında olmalıdır.");
+
+        if (!Enum.IsDefined(input.Method))
+            return SeriesUpdateResult.Fail("Geçersiz görüşme yöntemi.");
+
+        if (input.ReminderOffsetsMinutes.Any(x => !ReminderScheduleCalculator.IsAllowedOffset(x)))
+            return SeriesUpdateResult.Fail(
+                $"Hatırlatıcı aralığı 1–{ReminderScheduleCalculator.MaxOffsetMinutes} dakika arasında olmalıdır.");
+
+        var host = await _users.GetByIdAsync(input.HostUserId);
+        if (host is null || !host.IsActive)
+            return SeriesUpdateResult.Fail("Görüşmeci bulunamadı veya pasif.");
+
+        var category = await _categories.GetByIdAsync(input.CategoryId);
+        if (category is null)
+            return SeriesUpdateResult.Fail("Kategori bulunamadı.");
+
+        var rows = await _appointments.GetSeriesAsync(seriesId);
+        if (rows.Count == 0)
+            return SeriesUpdateResult.Fail("Seri bulunamadı.");
+
+        var context = ResolveSeriesContext(rows);
+        await EnsureSeriesMetadataAsync(rows, context);
+
+        var now = _clock.UtcNow;
+        var targets = rows
+            .Where(x => !x.IsDeleted
+                        && !x.IsClosed
+                        && x.Status == AppointmentStatus.Scheduled
+                        && x.StartsAtUtc > now)
+            .ToList();
+
+        if (targets.Count == 0)
+            return SeriesUpdateResult.Fail("Güncellenecek gelecek tarihli planlanmış görüşme bulunamadı.");
+
+        var phone = rows[0].Person?.PhoneE164;
+        var updated = 0;
+        var skipped = 0;
+        var warnings = new List<string>();
+
+        foreach (var appointment in targets)
+        {
+            var startsAtUtc = appointment.StartsAtUtc;
+
+            if (input.TimeOfDay is not null)
+            {
+                var localDate = _clock.ToLocal(appointment.StartsAtUtc).Date;
+                startsAtUtc = _clock.ToUtc(localDate.Add(input.TimeOfDay.Value));
+            }
+
+            var endsAtUtc = startsAtUtc.AddMinutes(input.DurationMinutes);
+
+            var conflicts = await FindConflictsAsync(
+                phone ?? appointment.Person?.PhoneE164 ?? string.Empty,
+                input.HostUserId,
+                startsAtUtc,
+                endsAtUtc,
+                excludeAppointmentId: appointment.Id);
+
+            if (conflicts.Count > 0)
+            {
+                skipped++;
+                if (warnings.Count < 5)
+                {
+                    warnings.Add(
+                        $"{_clock.ToLocal(appointment.StartsAtUtc):dd/MM/yyyy HH:mm}: {BuildConflictMessage(conflicts)}");
+                }
+
+                continue;
+            }
+
+            var existingReminders = await _appointments.GetRemindersAsync(appointment.Id);
+            var blockedAppointmentOffsets = existingReminders
+                .Where(x => x.Kind == ReminderKind.Appointment && AlreadyNotifiedStates.Contains(x.State))
+                .Select(x => x.OffsetMinutes)
+                .ToHashSet();
+
+            var blockedCallOffsets = existingReminders
+                .Where(x => x.Kind == ReminderKind.Call && AlreadyNotifiedStates.Contains(x.State))
+                .Select(x => x.OffsetMinutes)
+                .ToHashSet();
+
+            appointment.HostUserId = input.HostUserId;
+            appointment.CategoryId = input.CategoryId;
+            appointment.StartsAtUtc = startsAtUtc;
+            appointment.DurationMinutes = input.DurationMinutes;
+            appointment.Method = input.Method;
+            appointment.Description = NormalizeOptional(input.Description);
+            appointment.StudentFirstName = NormalizeOptional(input.StudentFirstName);
+            appointment.StudentLastName = NormalizeOptional(input.StudentLastName);
+            appointment.UpdatedAtUtc = now;
+            appointment.UpdatedByUserId = _currentUser.UserId;
+            appointment.RowVersion++;
+
+            var newAppointmentReminders = ReminderScheduleCalculator
+                .Calculate(startsAtUtc, input.ReminderOffsetsMinutes, now)
+                .Where(plan => !blockedAppointmentOffsets.Contains(plan.OffsetMinutes))
+                .Select(plan => new ReminderDispatch
+                {
+                    AppointmentId = appointment.Id,
+                    Kind = ReminderKind.Appointment,
+                    OffsetMinutes = plan.OffsetMinutes,
+                    DueAtUtc = plan.DueAtUtc,
+                    State = ReminderState.Pending,
+                    DedupKey = ReminderScheduleCalculator.BuildDedupKey(
+                        appointment.Id,
+                        ReminderKind.Appointment,
+                        plan.OffsetMinutes,
+                        appointment.RowVersion)
+                })
+                .ToList();
+
+            var newCallReminders = ReminderScheduleCalculator
+                .CalculateCallReminders(startsAtUtc, now)
+                .Where(plan => !blockedCallOffsets.Contains(plan.OffsetMinutes))
+                .Where(plan => plan.OffsetMinutes != 30 || !input.ReminderOffsetsMinutes.Contains(30))
+                .Select(plan => new ReminderDispatch
+                {
+                    AppointmentId = appointment.Id,
+                    Kind = ReminderKind.Call,
+                    OffsetMinutes = plan.OffsetMinutes,
+                    DueAtUtc = plan.DueAtUtc,
+                    State = ReminderState.Pending,
+                    DedupKey = ReminderScheduleCalculator.BuildDedupKey(
+                        appointment.Id,
+                        ReminderKind.Call,
+                        plan.OffsetMinutes,
+                        appointment.RowVersion)
+                })
+                .ToList();
+
+            newAppointmentReminders.AddRange(newCallReminders);
+
+            await _appointments.SaveAsync(
+                appointment,
+                newAppointmentReminders,
+                cancelPendingReminders: true);
+
+            updated++;
+        }
+
+        if (updated == 0)
+            return SeriesUpdateResult.Fail(
+                warnings.Count == 0
+                    ? "Seri güncellenemedi."
+                    : $"Hiçbir kayıt güncellenemedi. {warnings[0]}");
+
+        await _audit.LogAsync(
+            AuditAction.SeriesUpdated,
+            _currentUser.UserId,
+            nameof(Appointment),
+            seriesId,
+            JsonSerializer.Serialize(new
+            {
+                updated,
+                skipped,
+                hostUserId = input.HostUserId,
+                categoryId = input.CategoryId,
+                durationMinutes = input.DurationMinutes,
+                timeOfDay = input.TimeOfDay?.ToString()
+            }));
+
+        return SeriesUpdateResult.Ok(updated, skipped, warnings);
+    }
+
+    private sealed record SeriesContext(
+        DateTime AnchorLocal,
+        SeriesFrequency Frequency,
+        int MaxIndex,
+        int RequestedCount);
+
+    private SeriesContext ResolveSeriesContext(IReadOnlyList<Appointment> rows)
+    {
+        var anchor = rows
+            .Where(x => x.SeriesAnchorLocal is not null)
+            .Select(x => x.SeriesAnchorLocal!.Value)
+            .FirstOrDefault();
+
+        if (anchor == default)
+            anchor = rows.Min(x => _clock.ToLocal(x.StartsAtUtc));
+
+        var frequency = rows
+            .Where(x => x.SeriesFrequency is not null)
+            .Select(x => x.SeriesFrequency!.Value)
+            .FirstOrDefault();
+
+        if (!Enum.IsDefined(frequency) || frequency == default && rows.All(x => x.SeriesFrequency is null))
+        {
+            var localDates = rows
+                .OrderBy(x => x.StartsAtUtc)
+                .Select(x => _clock.ToLocal(x.StartsAtUtc))
+                .ToList();
+
+            frequency = localDates.Count >= 2
+                ? (localDates[1].Date - localDates[0].Date).Days switch
+                {
+                    7 => SeriesFrequency.Weekly,
+                    14 => SeriesFrequency.Biweekly,
+                    _ => SeriesFrequency.Monthly
+                }
+                : SeriesFrequency.Weekly;
+        }
+
+        var maxIndex = rows.Max(x => x.SeriesIndex ?? 1);
+        var requested = rows.Max(x => x.SeriesCount ?? maxIndex);
+
+        return new SeriesContext(anchor, frequency, maxIndex, Math.Max(requested, maxIndex));
+    }
+
+    private async Task EnsureSeriesMetadataAsync(
+        IReadOnlyList<Appointment> rows,
+        SeriesContext context)
+    {
+        if (rows.All(x => x.SeriesFrequency is not null && x.SeriesAnchorLocal is not null))
+            return;
+
+        var seriesId = rows[0].SeriesId;
+        if (string.IsNullOrWhiteSpace(seriesId))
+            return;
+
+        await _appointments.SetSeriesMetadataAsync(seriesId, context.Frequency, context.AnchorLocal);
+    }
+
+    private async Task<IReadOnlyList<SeriesSlotDto>> BuildAppendSlotsAsync(
+        IReadOnlyList<Appointment> rows,
+        SeriesContext context,
+        int count)
+    {
+        var now = _clock.UtcNow;
+        var phone = rows[0].Person?.PhoneE164 ?? string.Empty;
+        var hostUserId = rows[0].HostUserId;
+        var duration = rows[0].DurationMinutes;
+        var slots = new List<SeriesSlotDto>(count);
+
+        for (var offset = 1; offset <= count; offset++)
+        {
+            var index = context.MaxIndex + offset;
+            var startsAtLocal = SeriesScheduleCalculator.Slot(context.AnchorLocal, context.Frequency, index);
+            var endsAtLocal = startsAtLocal.AddMinutes(duration);
+            var startsAtUtc = _clock.ToUtc(startsAtLocal);
+            var endsAtUtc = startsAtUtc.AddMinutes(duration);
+
+            if (startsAtUtc <= now)
+            {
+                slots.Add(new SeriesSlotDto(
+                    index,
+                    startsAtLocal,
+                    endsAtLocal,
+                    SeriesSlotState.Past,
+                    "Geçmiş tarih; oluşturulmaz.",
+                    Array.Empty<AppointmentConflictDto>()));
+                continue;
+            }
+
+            var conflicts = await FindConflictsAsync(
+                phone,
+                hostUserId,
+                startsAtUtc,
+                endsAtUtc,
+                excludeAppointmentId: null);
+
+            slots.Add(conflicts.Count == 0
+                ? new SeriesSlotDto(
+                    index,
+                    startsAtLocal,
+                    endsAtLocal,
+                    SeriesSlotState.Create,
+                    null,
+                    conflicts)
+                : new SeriesSlotDto(
+                    index,
+                    startsAtLocal,
+                    endsAtLocal,
+                    SeriesSlotState.Conflict,
+                    BuildConflictMessage(conflicts),
+                    conflicts));
+        }
+
+        return slots;
+    }
+
     private async Task<IReadOnlyList<SeriesSlotDto>> BuildSeriesSlotsAsync(
         AppointmentInput input,
         ValidationResult validation,
@@ -368,7 +768,9 @@ public sealed class AppointmentService : IAppointmentService
         DateTime now,
         string? seriesId = null,
         int? seriesIndex = null,
-        int? seriesCount = null)
+        int? seriesCount = null,
+        SeriesFrequency? seriesFrequency = null,
+        DateTime? seriesAnchorLocal = null)
     {
         var appointment = new Appointment
         {
@@ -388,7 +790,9 @@ public sealed class AppointmentService : IAppointmentService
             RowVersion = 1,
             SeriesId = seriesId,
             SeriesIndex = seriesIndex,
-            SeriesCount = seriesCount
+            SeriesCount = seriesCount,
+            SeriesFrequency = seriesFrequency,
+            SeriesAnchorLocal = seriesAnchorLocal
         };
 
         foreach (var plan in ReminderScheduleCalculator.Calculate(

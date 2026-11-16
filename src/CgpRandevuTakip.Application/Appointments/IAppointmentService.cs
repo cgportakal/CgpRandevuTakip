@@ -20,6 +20,9 @@ public interface IAppointmentService
     Task<SeriesPlanDto> PreviewSeriesAsync(AppointmentInput input, SeriesRequest request);
     Task<SeriesCreateResult> CreateSeriesAsync(AppointmentInput input, SeriesRequest request);
     Task<SeriesCancelResult> CancelSeriesAsync(string seriesId);
+    Task<SeriesAppendPlanDto> PreviewAppendAsync(string seriesId, int count);
+    Task<SeriesAppendResult> AppendSeriesAsync(string seriesId, int count);
+    Task<SeriesUpdateResult> UpdateSeriesAsync(string seriesId, SeriesUpdateInput input);
     Task<AppointmentSaveResult> UpdateAsync(string id, AppointmentInput input);
     Task<OperationResult> DeleteAsync(string id);
     Task<BulkDeleteResult> DeleteManyAsync(IReadOnlyList<string> ids);

@@ -1,0 +1,219 @@
+<Window x:Class="CgpRandevuTakip.Desktop.Views.SeriesManageWindow"
+        Icon="/Assets/CGPRandevuTakip.ico"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="{Binding Title}"
+        Width="780"
+        Height="760"
+        MinWidth="700"
+        MinHeight="640"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource WindowBackgroundBrush}">
+    <Grid Margin="26">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,14">
+            <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" FontSize="22" />
+            <TextBlock Text="{Binding SeriesText}" Style="{StaticResource PageSubtitle}" />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <Border Background="{DynamicResource DangerSoftBrush}"
+                        BorderBrush="{DynamicResource DangerBrush}"
+                        BorderThickness="1"
+                        CornerRadius="9"
+                        Padding="12,10"
+                        Margin="0,0,0,14"
+                        Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}">
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="{DynamicResource DangerBrush}"
+                               FontSize="12"
+                               TextWrapping="Wrap" />
+                </Border>
+
+                <!-- Kayıt ekleme -->
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="Seriye kayıt ekle" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Text="Serinin çapasına göre sonraki tarihler hesaplanır. Çakışan veya geçmiş tarihler atlanır."
+                                   Style="{StaticResource MutedText}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,-6,0,12" />
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="160" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel>
+                                <TextBlock Text="Eklenecek kayıt" Style="{StaticResource LabelText}" />
+                                <ComboBox ItemsSource="{Binding AppendCountOptions}"
+                                          SelectedItem="{Binding AppendCount}"
+                                          AutomationProperties.Name="Eklenecek seri kaydı" />
+                            </StackPanel>
+
+                            <Button Grid.Column="1"
+                                    Content="Önizle"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding PreviewAppendCommand}"
+                                    VerticalAlignment="Bottom"
+                                    Margin="12,0,0,0" />
+                        </Grid>
+
+                        <TextBlock Text="{Binding AppendSummary}"
+                                   Style="{StaticResource MutedText}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,8,0,0" />
+
+                        <ItemsControl ItemsSource="{Binding AppendPreview}" Margin="0,4,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,3,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Text="{Binding DateText}" FontSize="12" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding TimeText}"
+                                                   Style="{StaticResource MutedText}" Margin="10,0,0,0" />
+                                        <TextBlock Grid.Column="2" Text="{Binding StateText}"
+                                                   FontSize="11" MaxWidth="130"
+                                                   TextTrimming="CharacterEllipsis">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding WillCreate}" Value="True">
+                                                            <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Button Content="Seçilen kayıtları ekle"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding AppendCommand}"
+                                HorizontalAlignment="Left"
+                                Margin="0,12,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Düzenleme -->
+                <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                    <StackPanel>
+                        <TextBlock Text="Seriyi düzenle" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Text="Yalnızca gelecek tarihli ve planlanmış görüşmeler etkilenir. Geçmiş/kapalı kayıtlar korunur."
+                                   Style="{StaticResource MutedText}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,-6,0,12" />
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,10">
+                                <TextBlock Text="Görüşmeci" Style="{StaticResource LabelText}" />
+                                <ComboBox ItemsSource="{Binding Hosts}"
+                                          SelectedItem="{Binding SelectedHost}"
+                                          DisplayMemberPath="DisplayName"
+                                          AutomationProperties.Name="Seri görüşmecisi" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,10">
+                                <TextBlock Text="Kategori" Style="{StaticResource LabelText}" />
+                                <ComboBox ItemsSource="{Binding Categories}"
+                                          SelectedItem="{Binding SelectedCategory}"
+                                          DisplayMemberPath="Name"
+                                          AutomationProperties.Name="Seri kategorisi" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,10">
+                                <TextBlock Text="Süre" Style="{StaticResource LabelText}" />
+                                <ComboBox ItemsSource="{Binding Durations}"
+                                          SelectedItem="{Binding SelectedDuration}"
+                                          DisplayMemberPath="Label"
+                                          AutomationProperties.Name="Seri süresi" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,10">
+                                <TextBlock Text="Yöntem" Style="{StaticResource LabelText}" />
+                                <ComboBox ItemsSource="{Binding Methods}"
+                                          SelectedItem="{Binding SelectedMethod}"
+                                          DisplayMemberPath="Label"
+                                          AutomationProperties.Name="Seri yöntemi" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,12,0">
+                                <TextBlock Text="Saat (SS:dd)" Style="{StaticResource LabelText}" />
+                                <TextBox Text="{Binding TimeText, UpdateSourceTrigger=PropertyChanged}"
+                                         AutomationProperties.Name="Seri saati" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2" Grid.Column="2">
+                                <TextBlock Text="Açıklama" Style="{StaticResource LabelText}" />
+                                <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         MinHeight="52" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Öğrenci adı" Style="{StaticResource LabelText}" />
+                                <TextBox Text="{Binding StudentFirstName, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Öğrenci soyadı" Style="{StaticResource LabelText}" />
+                                <TextBox Text="{Binding StudentLastName, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Button Content="Seriyi güncelle"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding UpdateCommand}"
+                                HorizontalAlignment="Left"
+                                Margin="0,14,0,0" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Button Grid.Row="2"
+                Content="Kapat"
+                Style="{StaticResource SecondaryButton}"
+                Command="{Binding CancelCommand}"
+                HorizontalAlignment="Right"
+                MinWidth="110"
+                Margin="0,16,0,0" />
+    </Grid>
+</Window>

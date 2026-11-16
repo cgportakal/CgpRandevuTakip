@@ -105,3 +105,87 @@ public sealed record SeriesCancelResult(
             : $"{CancelledCount} görüşme iptal edildi · {SkippedCount} kayıt değişmedi."
         : Error ?? "Seri iptal edilemedi.";
 }
+
+/// <summary>Seriye sonradan kayıt ekleme isteği (işlem başına 1–12).</summary>
+public sealed record SeriesAppendRequest(int Count)
+{
+    public bool IsValid => Count is >= 1 and <= SeriesScheduleCalculator.MaxCount;
+}
+
+public sealed record SeriesAppendPlanDto(
+    IReadOnlyList<SeriesSlotDto> Slots,
+    int NewSeriesCount,
+    string? Error = null)
+{
+    public int CreateCount => Slots.Count(x => x.WillCreate);
+
+    public int SkippedCount => Slots.Count - CreateCount;
+
+    public bool CanSave => Error is null && CreateCount > 0;
+
+    public string Summary => Error is not null
+        ? Error
+        : SkippedCount == 0
+            ? $"{CreateCount} yeni görüşme eklenecek."
+            : $"{CreateCount} yeni görüşme eklenecek · {SkippedCount} tarih atlanacak.";
+}
+
+public sealed record SeriesAppendResult(
+    bool Success,
+    string? Error,
+    int CreatedCount,
+    int SkippedCount,
+    int NewSeriesCount,
+    IReadOnlyList<SeriesSlotDto> Slots)
+{
+    public static SeriesAppendResult Fail(string error, IReadOnlyList<SeriesSlotDto>? slots = null)
+        => new(false, error, 0, 0, 0, slots ?? Array.Empty<SeriesSlotDto>());
+
+    public static SeriesAppendResult Ok(
+        int created,
+        int skipped,
+        int newSeriesCount,
+        IReadOnlyList<SeriesSlotDto> slots)
+        => new(true, null, created, skipped, newSeriesCount, slots);
+
+    public string Summary => Success
+        ? SkippedCount == 0
+            ? $"{CreatedCount} görüşme eklendi. Seri artık {NewSeriesCount} kayıt."
+            : $"{CreatedCount} görüşme eklendi · {SkippedCount} tarih atlandı. Seri artık {NewSeriesCount} kayıt."
+        : Error ?? "Seriye kayıt eklenemedi.";
+}
+
+/// <summary>
+/// Seri düzenleme isteği. Yalnızca gelecekteki planlanmış kayıtlar etkilenir;
+/// geçmiş, kapanmış ve iptal edilmiş kayıtlar korunur.
+/// </summary>
+public sealed record SeriesUpdateInput(
+    string HostUserId,
+    string CategoryId,
+    int DurationMinutes,
+    AppointmentMethod Method,
+    string? Description,
+    string? StudentFirstName,
+    string? StudentLastName,
+    TimeSpan? TimeOfDay,
+    IReadOnlyList<int> ReminderOffsetsMinutes);
+
+public sealed record SeriesUpdateResult(
+    bool Success,
+    string? Error,
+    int UpdatedCount,
+    int SkippedCount,
+    IReadOnlyList<string> Warnings)
+{
+    public static SeriesUpdateResult Fail(string error)
+        => new(false, error, 0, 0, Array.Empty<string>());
+
+    public static SeriesUpdateResult Ok(int updated, int skipped, IReadOnlyList<string> warnings)
+        => new(true, null, updated, skipped, warnings);
+
+    public string Summary => Success
+        ? SkippedCount == 0
+            ? $"{UpdatedCount} görüşme güncellendi."
+            : $"{UpdatedCount} görüşme güncellendi · {SkippedCount} kayıt atlandı."
+        : Error ?? "Seri güncellenemedi.";
+}

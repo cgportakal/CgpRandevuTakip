@@ -11,12 +11,17 @@ import {
 import { useNetInfo } from '@react-native-community/netinfo';
 import { api } from '../api/client';
 import type { AppointmentListItem, ContentManifest } from '../api/types';
-import { dayCacheKey, MANIFEST_CACHE_KEY, readCache, writeCache } from '../storage/cache';
-import { colors, radius, spacing } from '../theme';
+import { pendingCount } from '../db/outbox';
+import { pullDay, flushOutbox } from '../sync/sync';
+import { MANIFEST_CACHE_KEY, readCache, writeCache } from '../storage/cache';import { colors, radius, spacing } from '../theme';
 
 type Props = {
   displayName: string;
   onLogout: () => Promise<void>;
+  onOpenAppointment: (item: AppointmentListItem) => void;
+  onAdd: () => void;
+  onReports: () => void;
+  onManifest: (manifest: ContentManifest) => void;
 };
 
 const weekDays = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
@@ -35,7 +40,7 @@ function formatDate(date: Date): string {
   return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}, ${weekDays[date.getDay()]}`;
 }
 
-export function TodayScreen({ displayName, onLogout }: Props) {
+export function TodayScreen({ displayName, onLogout, onOpenAppointment, onAdd, onReports, onManifest }: Props) {
   const netInfo = useNetInfo();
   const [date, setDate] = useState(() => new Date());
   const [items, setItems] = useState<AppointmentListItem[]>([]);
@@ -44,55 +49,47 @@ export function TodayScreen({ displayName, onLogout }: Props) {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastSync, setLastSync] = useState<string | null>(null);
+  const [pending, setPending] = useState(0);
 
   const key = dateKey(date);
   const offline = netInfo.isConnected === false;
 
   const load = useCallback(async (target: Date, isRefresh: boolean) => {
-    const cacheKey = dayCacheKey(dateKey(target));
+    const dateKeyValue = dateKey(target);
 
-    if (!isRefresh) {
-      const cached = await readCache<AppointmentListItem[]>(cacheKey);
-      if (cached) {
-        setItems(cached.value);
-        setLastSync(cached.updatedAt);
+    if (isRefresh) {
+      const flushed = await flushOutbox();
+      if (flushed.sent > 0) {
+        setPending(await pendingCount());
       }
-    }
-
-    if (netInfo.isConnected === false) {
-      setError(null);
-      return;
     }
 
     setLoading(!isRefresh);
     setError(null);
 
-    try {
-      const [day, content] = await Promise.all([
-        api.getDay(dateKey(target)),
-        api.getManifest().catch(() => null),
-      ]);
+    const result = await pullDay(dateKeyValue, netInfo.isConnected !== false);
+    setItems(result.items);
+    setPending(result.pending);
+    setLastSync(new Date().toISOString());
 
-      setItems(day);
-      await writeCache(cacheKey, day);
-      setLastSync(new Date().toISOString());
-
-      if (content) {
-        setManifest(content);
-        await writeCache(MANIFEST_CACHE_KEY, content);
-      }
-    } catch (err) {
-      const cached = await readCache<AppointmentListItem[]>(cacheKey);
-      if (cached) {
-        setItems(cached.value);
-        setLastSync(cached.updatedAt);
-      }
-      setError(err instanceof Error ? err.message : 'Veriler yüklenemedi.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+    if (result.error) {
+      setError(result.error);
     }
-  }, [netInfo.isConnected]);
+
+    if (netInfo.isConnected !== false) {
+      try {
+        const content = await api.getManifest();
+        setManifest(content);
+        onManifest(content);
+        await writeCache(MANIFEST_CACHE_KEY, content);
+      } catch {
+        // Manifest alınamazsa eldeki içerik korunur.
+      }
+    }
+
+    setLoading(false);
+    setRefreshing(false);
+  }, [netInfo.isConnected, onManifest]);
 
   useEffect(() => {
     void (async () => {
@@ -136,6 +133,7 @@ export function TodayScreen({ displayName, onLogout }: Props) {
           <Text style={styles.dateText}>{formatDate(date)}</Text>
           <Text style={styles.countText}>
             {items.length} görüşme
+            {pending > 0 ? ` · ${pending} bekleyen` : ''}
             {lastSync ? ` · ${new Date(lastSync).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}` : ''}
           </Text>
         </View>
@@ -169,7 +167,7 @@ export function TodayScreen({ displayName, onLogout }: Props) {
             </View>
           }
           renderItem={({ item }) => (
-            <View style={styles.card}>
+            <TouchableOpacity style={styles.card} onPress={() => onOpenAppointment(item)}>
               <View style={[styles.timeBadge, { backgroundColor: item.categoryColorHex }]}>
                 <Text style={styles.timeText}>{item.timeLabel}</Text>
                 <Text style={styles.timeEnd}>{item.endTimeLabel}</Text>
@@ -191,10 +189,19 @@ export function TodayScreen({ displayName, onLogout }: Props) {
               <View style={styles.statusPill}>
                 <Text style={styles.statusText}>{item.statusText}</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           )}
         />
       )}
+
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.footerButton} onPress={onAdd}>
+          <Text style={styles.footerText}>+ Yeni görüşme</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerButton} onPress={onReports}>
+          <Text style={styles.footerText}>Raporlar</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -264,4 +271,12 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', marginTop: spacing.xl },
   emptyTitle: { fontSize: 16, fontWeight: '600', color: colors.text },
   emptyText: { fontSize: 13, color: colors.textMuted, marginTop: spacing.sm, textAlign: 'center' },
+  footer: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  footerButton: { flex: 1, alignItems: 'center', paddingVertical: spacing.md },
+  footerText: { color: colors.primary, fontWeight: '700', fontSize: 13 },
 });

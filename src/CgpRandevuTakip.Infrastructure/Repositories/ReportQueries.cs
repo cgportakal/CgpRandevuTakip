@@ -37,6 +37,8 @@ public sealed class ReportQueries : IReportQueries
             .Select(x => new ReportRow(
                 x.Id,
                 x.PersonId,
+                x.Person != null ? x.Person.FirstName + " " + x.Person.LastName : string.Empty,
+                x.Person != null ? x.Person.PhoneE164 : string.Empty,
                 x.HostUserId,
                 x.HostUser != null ? x.HostUser.DisplayName : string.Empty,
                 x.CategoryId,

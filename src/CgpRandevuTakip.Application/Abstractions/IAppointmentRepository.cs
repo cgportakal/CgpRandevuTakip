@@ -54,6 +54,8 @@ public interface IAppointmentRepository
     Task AddAsync(Appointment appointment);
     Task AddRangeAsync(IReadOnlyList<Appointment> appointments);
     Task<IReadOnlyList<Appointment>> GetSeriesAsync(string seriesId);
+    Task<int> UpdateSeriesCountAsync(string seriesId, int count);
+    Task SetSeriesMetadataAsync(string seriesId, SeriesFrequency frequency, DateTime anchorLocal);
     Task SaveAsync(
         Appointment appointment,
         IReadOnlyList<ReminderDispatch>? newReminders,

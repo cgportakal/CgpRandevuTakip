@@ -41,6 +41,8 @@ public sealed record ReportHostRowVm(
 
 public sealed record ReportHourVm(string Label, int Total, double Width, string Tooltip);
 
+public sealed record ReportKindOption(ReportKind Value, string Label);
+
 /// <summary>Rapor sayfası: hazır aralıklar, KPI'lar, grafikler ve CSV/PDF dışa aktarma.</summary>
 public partial class ReportsViewModel : ObservableObject
 {
@@ -84,10 +86,39 @@ public partial class ReportsViewModel : ObservableObject
         _selectedCategoryFilter = CategoryFilters[0];
         _selectedHostFilter = HostFilters[0];
 
+        ReportKinds = new RangeObservableCollection<ReportKindOption>
+        {
+            new(ReportKind.Summary, "Özet raporu"),
+            new(ReportKind.HostPerformance, "Görüşmeci performansı"),
+            new(ReportKind.CategoryTrend, "Kategori trendi"),
+            new(ReportKind.Attendance, "Katılım raporu"),
+            new(ReportKind.Repeat, "Tekrar görüşme"),
+            new(ReportKind.PersonHistory, "Kişi geçmişi"),
+            new(ReportKind.AuditActivity, "Denetim / aktivite")
+        };
+
+        _selectedKind = ReportKinds[0];
+
         var today = DateTime.Today;
         _fromDate = new DateTime(today.Year, today.Month, 1);
         _toDate = today;
     }
+
+    public RangeObservableCollection<ReportKindOption> ReportKinds { get; }
+
+    public RangeObservableCollection<HostPerformanceDto> HostPerformanceRows { get; } = new();
+
+    public RangeObservableCollection<CategoryTrendDto> CategoryTrendRows { get; } = new();
+
+    public RangeObservableCollection<AttendanceDayDto> AttendanceRows { get; } = new();
+
+    public RangeObservableCollection<RepeatPersonDto> RepeatRows { get; } = new();
+
+    public RangeObservableCollection<PersonHistoryPersonDto> PersonHistoryRows { get; } = new();
+
+    public RangeObservableCollection<AuditActivityCountDto> AuditActionRows { get; } = new();
+
+    public RangeObservableCollection<AuditActivityEntryDto> AuditEntryRows { get; } = new();
 
     public RangeObservableCollection<CategoryFilterOption> CategoryFilters { get; }
 
@@ -117,6 +148,15 @@ public partial class ReportsViewModel : ObservableObject
     private ReportSummaryDto? _summary;
 
     [ObservableProperty]
+    private ReportResultDto? _report;
+
+    [ObservableProperty]
+    private ReportKindOption? _selectedKind;
+
+    [ObservableProperty]
+    private string? _personSearch;
+
+    [ObservableProperty]
     private string _rangeText = string.Empty;
 
     [ObservableProperty]
@@ -132,6 +172,22 @@ public partial class ReportsViewModel : ObservableObject
     private string _lastUpdatedText = "—";
 
     public bool ShowHostFilter => !_currentUser.IsInRole(UserRole.Host);
+
+    public bool IsSummaryKind => (SelectedKind?.Value ?? ReportKind.Summary) == ReportKind.Summary;
+
+    public bool IsHostPerformanceKind => SelectedKind?.Value == ReportKind.HostPerformance;
+
+    public bool IsCategoryTrendKind => SelectedKind?.Value == ReportKind.CategoryTrend;
+
+    public bool IsAttendanceKind => SelectedKind?.Value == ReportKind.Attendance;
+
+    public bool IsRepeatKind => SelectedKind?.Value == ReportKind.Repeat;
+
+    public bool IsPersonHistoryKind => SelectedKind?.Value == ReportKind.PersonHistory;
+
+    public bool IsAuditKind => SelectedKind?.Value == ReportKind.AuditActivity;
+
+    public string KindTitle => SelectedKind?.Label ?? "Rapor";
 
     public bool HasSummary => Summary is { IsEmpty: false };
 
@@ -208,7 +264,12 @@ public partial class ReportsViewModel : ObservableObject
                 SelectedCategoryFilter?.Id,
                 ShowHostFilter ? SelectedHostFilter?.Id : null);
 
-            Summary = await _reports.GetSummaryAsync(query);
+            Report = await _reports.GetReportAsync(
+                SelectedKind?.Value ?? ReportKind.Summary,
+                query,
+                PersonSearch);
+
+            Summary = Report.Summary;
             RangeText = Summary.RangeText;
             BucketTitle = Summary.BucketLabel;
             LastUpdatedText = $"Son güncelleme: {DateTime.Now:dd/MM/yyyy HH:mm}";
@@ -308,6 +369,39 @@ public partial class ReportsViewModel : ObservableObject
 
     private bool CanExport() => Summary is { IsEmpty: false };
 
+    [RelayCommand(CanExecute = nameof(CanExport))]
+    private async Task ExportExcelAsync()
+    {
+        if (Report is null)
+            return;
+
+        var institution = await ResolveInstitutionAsync();
+        var dialog = new SaveFileDialog
+        {
+            Title = "Raporu Excel olarak kaydet",
+            Filter = "Excel çalışma kitabı (*.xlsx)|*.xlsx",
+            DefaultExt = ".xlsx",
+            AddExtension = true,
+            FileName = $"CGP_Rapor_{Report.Kind}_{Report.Summary.FromLocalDate:yyyy-MM-dd}_{Report.Summary.ToLocalDate:yyyy-MM-dd}.xlsx"
+        };
+
+        if (dialog.ShowDialog() != true)
+            return;
+
+        try
+        {
+            _exports.ExportExcel(dialog.FileName, institution, Report);
+            _dialogs.Info($"Dosya kaydedildi:{Environment.NewLine}{dialog.FileName}", "Dışa aktar");
+        }
+        catch (Exception ex)
+        {
+            _dialogs.Error($"Rapor kaydedilemedi: {ex.Message}", "Dışa aktar");
+        }
+    }
+
+    [RelayCommand]
+    private Task SearchPersonsAsync() => LoadAsync();
+
     private void RefreshVisuals()
     {
         if (Summary is null)
@@ -354,8 +448,17 @@ public partial class ReportsViewModel : ObservableObject
             Scale(x.Total, maxHour),
             $"{x.Label} · {x.Total} görüşme")));
 
+        HostPerformanceRows.ReplaceWith(Report?.HostPerformance ?? Array.Empty<HostPerformanceDto>());
+        CategoryTrendRows.ReplaceWith(Report?.CategoryTrends ?? Array.Empty<CategoryTrendDto>());
+        AttendanceRows.ReplaceWith(Report?.Attendance ?? Array.Empty<AttendanceDayDto>());
+        RepeatRows.ReplaceWith(Report?.RepeatPersons ?? Array.Empty<RepeatPersonDto>());
+        PersonHistoryRows.ReplaceWith(Report?.PersonHistory ?? Array.Empty<PersonHistoryPersonDto>());
+        AuditActionRows.ReplaceWith(Report?.AuditActivity?.Actions ?? Array.Empty<AuditActivityCountDto>());
+        AuditEntryRows.ReplaceWith(Report?.AuditActivity?.Entries ?? Array.Empty<AuditActivityEntryDto>());
+
         ExportCsvCommand.NotifyCanExecuteChanged();
         ExportPdfCommand.NotifyCanExecuteChanged();
+        ExportExcelCommand.NotifyCanExecuteChanged();
     }
 
     private static double Scale(int value, int max)
@@ -383,4 +486,18 @@ public partial class ReportsViewModel : ObservableObject
     partial void OnSelectedCategoryFilterChanged(CategoryFilterOption? value) => _ = LoadAsync();
 
     partial void OnSelectedHostFilterChanged(HostFilterOption? value) => _ = LoadAsync();
+
+    partial void OnSelectedKindChanged(ReportKindOption? value)
+    {
+        OnPropertyChanged(nameof(IsSummaryKind));
+        OnPropertyChanged(nameof(IsHostPerformanceKind));
+        OnPropertyChanged(nameof(IsCategoryTrendKind));
+        OnPropertyChanged(nameof(IsAttendanceKind));
+        OnPropertyChanged(nameof(IsRepeatKind));
+        OnPropertyChanged(nameof(IsPersonHistoryKind));
+        OnPropertyChanged(nameof(IsAuditKind));
+        OnPropertyChanged(nameof(KindTitle));
+
+        _ = LoadAsync();
+    }
 }

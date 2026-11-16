@@ -9,6 +9,8 @@ namespace CgpRandevuTakip.Application.Abstractions;
 public sealed record ReportRow(
     string AppointmentId,
     string PersonId,
+    string PersonFullName,
+    string PhoneE164,
     string HostUserId,
     string HostName,
     string CategoryId,

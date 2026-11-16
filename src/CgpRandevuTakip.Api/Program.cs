@@ -9,6 +9,7 @@ using CgpRandevuTakip.Application.Auth;
 using CgpRandevuTakip.Application.Categories;
 using CgpRandevuTakip.Application.Common;
 using CgpRandevuTakip.Application.Hosts;
+using CgpRandevuTakip.Application.Reports;
 using CgpRandevuTakip.Application.Settings;
 using CgpRandevuTakip.Infrastructure.Auditing;
 using CgpRandevuTakip.Infrastructure.Persistence;
@@ -65,6 +66,8 @@ builder.Services.AddScoped<ISettingsService, SettingsService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IAppointmentOutcomeService, AppointmentOutcomeService>();
 builder.Services.AddScoped<IHostService, HostService>();
+builder.Services.AddSingleton<IReportQueries, ReportQueries>();
+builder.Services.AddScoped<IReportService, ReportService>();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -162,6 +165,8 @@ if (app.Environment.IsDevelopment() || builder.Configuration.GetValue("EnableSwa
 app.MapPublicEndpoints();
 app.MapAuthEndpoints();
 app.MapAppointmentEndpoints();
+app.MapSeriesEndpoints();
+app.MapReportEndpoints();
 app.MapCatalogEndpoints();
 app.MapContentEndpoints();
 

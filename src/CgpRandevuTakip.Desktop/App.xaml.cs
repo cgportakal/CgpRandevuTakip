@@ -339,6 +339,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<ISpikeService, SpikeService>();
         services.AddSingleton<IAppointmentDialogService, AppointmentDialogService>();
         services.AddSingleton<IAppointmentOutcomeDialogService, AppointmentOutcomeDialogService>();
+        services.AddSingleton<ISeriesDialogService, SeriesDialogService>();
         services.AddHostedService<DeletedAppointmentCleanupService>();
         services.AddHostedService<ReminderDispatcher>();
         services.AddHostedService<DailyShareScheduler>();
@@ -357,6 +358,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<AppointmentListViewModel>();
         services.AddTransient<AppointmentEditorViewModel>();
         services.AddTransient<AppointmentDetailViewModel>();
+        services.AddTransient<SeriesManageViewModel>();
         services.AddTransient<AppointmentOutcomeViewModel>();
         services.AddTransient<HostsViewModel>();
         services.AddTransient<UsersViewModel>();
@@ -382,6 +384,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<UsersPage>();
         services.AddTransient<AppointmentEditorWindow>();
         services.AddTransient<AppointmentDetailWindow>();
+        services.AddTransient<SeriesManageWindow>();
         services.AddTransient<AppointmentOutcomeWindow>();
         services.AddTransient<LockWindow>();
         services.AddTransient<DeletedAppointmentsWindow>();

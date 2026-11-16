@@ -27,16 +27,31 @@ public static class SeriesScheduleCalculator
         var dates = new List<DateTime>(count);
         for (var index = 0; index < count; index++)
         {
-            dates.Add(frequency switch
-            {
-                SeriesFrequency.Weekly => firstStartLocal.AddDays(7 * index),
-                SeriesFrequency.Biweekly => firstStartLocal.AddDays(14 * index),
-                SeriesFrequency.Monthly => AddMonthsClamped(firstStartLocal, index),
-                _ => throw new ArgumentOutOfRangeException(nameof(frequency), frequency, null)
-            });
+            dates.Add(Slot(firstStartLocal, frequency, index + 1));
         }
 
         return dates;
+    }
+
+    /// <summary>
+    /// Serinin <paramref name="index"/>. tarihi (1 tabanlı). Sayaç sınırı yoktur;
+    /// seriye sonradan kayıt eklendiğinde de kullanılır.
+    /// </summary>
+    public static DateTime Slot(DateTime firstStartLocal, SeriesFrequency frequency, int index)
+    {
+        if (index < 1)
+            throw new ArgumentOutOfRangeException(nameof(index), index, "Seri sırası 1'den başlar.");
+
+        if (!Enum.IsDefined(frequency))
+            throw new ArgumentOutOfRangeException(nameof(frequency), frequency, "Geçersiz seri sıklığı.");
+
+        return frequency switch
+        {
+            SeriesFrequency.Weekly => firstStartLocal.AddDays(7 * (index - 1)),
+            SeriesFrequency.Biweekly => firstStartLocal.AddDays(14 * (index - 1)),
+            SeriesFrequency.Monthly => AddMonthsClamped(firstStartLocal, index - 1),
+            _ => throw new ArgumentOutOfRangeException(nameof(frequency), frequency, null)
+        };
     }
 
     /// <summary>Gün numarasını koruyarak ay ekler; hedef ayda o gün yoksa ayın sonuna kırpar.</summary>

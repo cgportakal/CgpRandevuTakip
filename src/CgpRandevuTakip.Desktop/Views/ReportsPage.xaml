@@ -17,6 +17,10 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="Excel"
+                            Style="{StaticResource SecondaryButton}"
+                            Command="{Binding ExportExcelCommand}"
+                            Margin="0,0,8,0" />
                     <Button Content="CSV"
                             Style="{StaticResource SecondaryButton}"
                             Command="{Binding ExportCsvCommand}"
@@ -102,6 +106,40 @@
                     <TextBlock Text="{Binding LastUpdatedText}"
                                Style="{StaticResource MutedText}"
                                Margin="0,10,0,0" />
+
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="2*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Rapor türü" Style="{StaticResource LabelText}" />
+                            <ComboBox ItemsSource="{Binding ReportKinds}"
+                                      SelectedItem="{Binding SelectedKind}"
+                                      DisplayMemberPath="Label"
+                                      AutomationProperties.Name="Rapor türü" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2"
+                                    Visibility="{Binding IsPersonHistoryKind, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="Kişi ara (ad veya telefon)" Style="{StaticResource LabelText}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding PersonSearch, UpdateSourceTrigger=PropertyChanged}"
+                                         AutomationProperties.Name="Rapor kişi araması" />
+                                <Button Grid.Column="1"
+                                        Content="Ara"
+                                        Style="{StaticResource SecondaryButton}"
+                                        Command="{Binding SearchPersonsCommand}"
+                                        Margin="8,0,0,0" />
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
                 </StackPanel>
             </Border>
 
@@ -360,6 +398,262 @@
                     <TextBlock Text="Farklı bir tarih aralığı seçin veya filtreleri temizleyin."
                                Style="{StaticResource MutedText}"
                                Margin="0,4,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- Rapor türüne özel bölümler -->
+            <Border Style="{StaticResource Card}" Margin="0,16,0,0"
+                    Visibility="{Binding IsHostPerformanceKind, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel>
+                    <TextBlock Text="Görüşmeci performansı" Style="{StaticResource SectionTitle}" />
+                    <Grid Margin="0,10,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="52" />
+                            <ColumnDefinition Width="52" />
+                            <ColumnDefinition Width="52" />
+                            <ColumnDefinition Width="60" />
+                            <ColumnDefinition Width="60" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="GÖRÜŞMECİ" Style="{StaticResource LabelText}" />
+                        <TextBlock Grid.Column="1" Text="TOPLAM" Style="{StaticResource LabelText}" />
+                        <TextBlock Grid.Column="2" Text="TAMAM." Style="{StaticResource LabelText}" />
+                        <TextBlock Grid.Column="3" Text="GELMEDİ" Style="{StaticResource LabelText}" />
+                        <TextBlock Grid.Column="4" Text="TAMAM. %" Style="{StaticResource LabelText}" />
+                        <TextBlock Grid.Column="5" Text="ORT. SÜRE" Style="{StaticResource LabelText}" />
+                    </Grid>
+                    <ItemsControl ItemsSource="{Binding HostPerformanceRows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,4,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="52" />
+                                        <ColumnDefinition Width="52" />
+                                        <ColumnDefinition Width="52" />
+                                        <ColumnDefinition Width="60" />
+                                        <ColumnDefinition Width="60" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding HostName}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Total}" FontSize="12" FontWeight="SemiBold" />
+                                    <TextBlock Grid.Column="2" Text="{Binding Completed}" FontSize="12" />
+                                    <TextBlock Grid.Column="3" Text="{Binding NoShow}" FontSize="12" />
+                                    <TextBlock Grid.Column="4" Text="{Binding CompletionRateText}" FontSize="12" />
+                                    <TextBlock Grid.Column="5" Text="{Binding AverageDurationText}" FontSize="12" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,16,0,0"
+                    Visibility="{Binding IsCategoryTrendKind, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel>
+                    <TextBlock Text="Kategori trendi" Style="{StaticResource SectionTitle}" />
+                    <ItemsControl ItemsSource="{Binding CategoryTrendRows}" Margin="0,8,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,4,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="60" />
+                                        <ColumnDefinition Width="120" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Width="9" Height="9" CornerRadius="5" Margin="0,0,7,0"
+                                                VerticalAlignment="Center"
+                                                Background="{Binding ColorHex, Converter={StaticResource HexToBrush}}" />
+                                        <TextBlock Text="{Binding CategoryName}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{Binding Total}" FontSize="12" FontWeight="SemiBold" />
+                                    <TextBlock Grid.Column="2" FontSize="12" Text="{Binding Points.Count}" Style="{StaticResource MutedText}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,16,0,0"
+                    Visibility="{Binding IsAttendanceKind, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel>
+                    <TextBlock Text="Günlük katılım" Style="{StaticResource SectionTitle}" />
+                    <Grid Margin="0,10,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="90" />
+                            <ColumnDefinition Width="60" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="50" />
+                            <ColumnDefinition Width="50" />
+                            <ColumnDefinition Width="50" />
+                            <ColumnDefinition Width="50" />
+                            <ColumnDefinition Width="50" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="TARİH" Style="{StaticResource LabelText}" />
+                        <TextBlock Grid.Column="1" Text="GÜN" Style="{StaticResource LabelText}" />
+                        <TextBlock Grid.Column="3" Text="GELDİ" Style="{StaticResource LabelText}" />
+                        <TextBlock Grid.Column="4" Text="TAMAM." Style="{StaticResource LabelText}" />
+                        <TextBlock Grid.Column="5" Text="GELMEDİ" Style="{StaticResource LabelText}" />
+                        <TextBlock Grid.Column="6" Text="İPTAL" Style="{StaticResource LabelText}" />
+                        <TextBlock Grid.Column="7" Text="TOPLAM" Style="{StaticResource LabelText}" />
+                    </Grid>
+                    <ItemsControl ItemsSource="{Binding AttendanceRows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,3,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="90" />
+                                        <ColumnDefinition Width="60" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="50" />
+                                        <ColumnDefinition Width="50" />
+                                        <ColumnDefinition Width="50" />
+                                        <ColumnDefinition Width="50" />
+                                        <ColumnDefinition Width="50" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding DateText}" FontSize="12" />
+                                    <TextBlock Grid.Column="1" Text="{Binding WeekdayText}" FontSize="12" Style="{StaticResource MutedText}" />
+                                    <TextBlock Grid.Column="3" Text="{Binding Arrived}" FontSize="12" />
+                                    <TextBlock Grid.Column="4" Text="{Binding Completed}" FontSize="12" />
+                                    <TextBlock Grid.Column="5" Text="{Binding NoShow}" FontSize="12" />
+                                    <TextBlock Grid.Column="6" Text="{Binding Cancelled}" FontSize="12" />
+                                    <TextBlock Grid.Column="7" Text="{Binding Total}" FontSize="12" FontWeight="SemiBold" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,16,0,0"
+                    Visibility="{Binding IsRepeatKind, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel>
+                    <TextBlock Text="Tekrar görüşen kişiler" Style="{StaticResource SectionTitle}" />
+                    <Grid Margin="0,10,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="130" />
+                            <ColumnDefinition Width="60" />
+                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="80" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="KİŞİ" Style="{StaticResource LabelText}" />
+                        <TextBlock Grid.Column="1" Text="TELEFON" Style="{StaticResource LabelText}" />
+                        <TextBlock Grid.Column="2" Text="GÖRÜŞME" Style="{StaticResource LabelText}" />
+                        <TextBlock Grid.Column="3" Text="SON GÖRÜŞME" Style="{StaticResource LabelText}" />
+                        <TextBlock Grid.Column="4" Text="ARALIK" Style="{StaticResource LabelText}" />
+                    </Grid>
+                    <ItemsControl ItemsSource="{Binding RepeatRows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,4,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="130" />
+                                        <ColumnDefinition Width="60" />
+                                        <ColumnDefinition Width="100" />
+                                        <ColumnDefinition Width="80" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding PersonName}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Phone}" FontSize="12" Style="{StaticResource MutedText}" />
+                                    <TextBlock Grid.Column="2" Text="{Binding VisitCount}" FontSize="12" FontWeight="SemiBold" />
+                                    <TextBlock Grid.Column="3" Text="{Binding LastVisitText}" FontSize="12" />
+                                    <TextBlock Grid.Column="4" Text="{Binding IntervalText}" FontSize="12" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,16,0,0"
+                    Visibility="{Binding IsPersonHistoryKind, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel>
+                    <TextBlock Text="Kişi geçmişi" Style="{StaticResource SectionTitle}" />
+                    <ItemsControl ItemsSource="{Binding PersonHistoryRows}" Margin="0,8,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource SoftCard}" Margin="0,0,0,10" Padding="12,10">
+                                    <StackPanel>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding PersonName}" FontWeight="SemiBold" FontSize="13" />
+                                            <TextBlock Grid.Column="1" Text="{Binding SummaryText}" Style="{StaticResource MutedText}" />
+                                        </Grid>
+                                        <TextBlock Text="{Binding Phone}" Style="{StaticResource MutedText}" FontSize="11" Margin="0,2,0,4" />
+                                        <ItemsControl ItemsSource="{Binding Entries}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Margin="0,2,0,0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="130" />
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="120" />
+                                                            <ColumnDefinition Width="90" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{Binding DateText}" FontSize="11" />
+                                                        <TextBlock Grid.Column="1" Text="{Binding HostName}" FontSize="11" Style="{StaticResource MutedText}" />
+                                                        <TextBlock Grid.Column="2" Text="{Binding CategoryName}" FontSize="11" Style="{StaticResource MutedText}" TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock Grid.Column="3" Text="{Binding StatusText}" FontSize="11" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Margin="0,16,0,0"
+                    Visibility="{Binding IsAuditKind, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel>
+                    <TextBlock Text="Denetim / aktivite" Style="{StaticResource SectionTitle}" />
+                    <TextBlock Text="Aksiyon özeti" Style="{StaticResource LabelText}" Margin="0,8,0,4" />
+                    <ItemsControl ItemsSource="{Binding AuditActionRows}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource SoftCard}" CornerRadius="6" Padding="10,6" Margin="0,0,8,8">
+                                    <TextBlock FontSize="11">
+                                        <Run Text="{Binding ActionName, Mode=OneWay}" FontWeight="SemiBold" />
+                                        <Run Text=" · " Foreground="{DynamicResource TextMutedBrush}" />
+                                        <Run Text="{Binding Count, Mode=OneWay}" />
+                                    </TextBlock>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock Text="Son kayıtlar" Style="{StaticResource LabelText}" Margin="0,8,0,4" />
+                    <ItemsControl ItemsSource="{Binding AuditEntryRows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,2,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="110" />
+                                        <ColumnDefinition Width="150" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="110" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding CreatedAtText}" FontSize="11" Style="{StaticResource MutedText}" />
+                                    <TextBlock Grid.Column="1" Text="{Binding UserName}" FontSize="11" />
+                                    <TextBlock Grid.Column="2" Text="{Binding ActionName}" FontSize="11" />
+                                    <TextBlock Grid.Column="3" Text="{Binding EntityText}" FontSize="11" Style="{StaticResource MutedText}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
             </Border>
         </StackPanel>

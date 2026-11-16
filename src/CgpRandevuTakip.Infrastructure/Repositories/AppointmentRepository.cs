@@ -338,6 +338,24 @@ public sealed class AppointmentRepository : IAppointmentRepository
             .ToListAsync();
     }
 
+    public async Task<int> UpdateSeriesCountAsync(string seriesId, int count)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        return await db.Appointments
+            .Where(x => x.SeriesId == seriesId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.SeriesCount, count));
+    }
+
+    public async Task SetSeriesMetadataAsync(string seriesId, SeriesFrequency frequency, DateTime anchorLocal)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        await db.Appointments
+            .Where(x => x.SeriesId == seriesId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.SeriesFrequency, frequency)
+                .SetProperty(x => x.SeriesAnchorLocal, anchorLocal));
+    }
+
     public async Task SaveAsync(
         Appointment appointment,
         IReadOnlyList<ReminderDispatch>? newReminders,

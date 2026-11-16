@@ -2,15 +2,26 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { api } from './src/api/client';
-import type { AuthTokens } from './src/api/types';
+import type { AppointmentListItem, AuthTokens, ContentManifest } from './src/api/types';
+import { AddAppointmentScreen } from './src/screens/AddAppointmentScreen';
+import { DetailScreen } from './src/screens/DetailScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
+import { ReportsScreen } from './src/screens/ReportsScreen';
 import { TodayScreen } from './src/screens/TodayScreen';
 import { clearSession, loadSession, saveSession } from './src/storage/session';
 import { colors } from './src/theme';
 
+type Screen =
+  | { name: 'today' }
+  | { name: 'detail'; item: AppointmentListItem }
+  | { name: 'add' }
+  | { name: 'reports' };
+
 export default function App() {
   const [booting, setBooting] = useState(true);
   const [user, setUser] = useState<AuthTokens['user'] | null>(null);
+  const [manifest, setManifest] = useState<ContentManifest | null>(null);
+  const [screen, setScreen] = useState<Screen>({ name: 'today' });
 
   useEffect(() => {
     void (async () => {
@@ -31,12 +42,15 @@ export default function App() {
       user: tokens.user,
     });
     setUser(tokens.user);
+    setScreen({ name: 'today' });
   };
 
   const onLogout = async () => {
     await api.logout();
     await clearSession();
     setUser(null);
+    setManifest(null);
+    setScreen({ name: 'today' });
   };
 
   if (booting) {
@@ -48,14 +62,47 @@ export default function App() {
     );
   }
 
+  const renderSignedIn = () => {
+    switch (screen.name) {
+      case 'detail':
+        return (
+          <DetailScreen
+            item={screen.item}
+            onBack={() => setScreen({ name: 'today' })}
+            onChanged={() => setScreen({ name: 'today' })}
+          />
+        );
+
+      case 'add':
+        return (
+          <AddAppointmentScreen
+            manifest={manifest}
+            onBack={() => setScreen({ name: 'today' })}
+            onSaved={() => setScreen({ name: 'today' })}
+          />
+        );
+
+      case 'reports':
+        return <ReportsScreen onBack={() => setScreen({ name: 'today' })} />;
+
+      default:
+        return (
+          <TodayScreen
+            displayName={user!.displayName}
+            onLogout={onLogout}
+            onOpenAppointment={(item) => setScreen({ name: 'detail', item })}
+            onAdd={() => setScreen({ name: 'add' })}
+            onReports={() => setScreen({ name: 'reports' })}
+            onManifest={setManifest}
+          />
+        );
+    }
+  };
+
   return (
     <>
       <StatusBar style="dark" />
-      {user ? (
-        <TodayScreen displayName={user.displayName} onLogout={onLogout} />
-      ) : (
-        <LoginScreen onSignedIn={onSignedIn} />
-      )}
+      {user ? renderSignedIn() : <LoginScreen onSignedIn={onSignedIn} />}
     </>
   );
 }

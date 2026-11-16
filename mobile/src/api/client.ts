@@ -1,9 +1,18 @@
 import { API_URL } from '../config';
 import type {
+  AppointmentDetail,
+  AppointmentInput,
   AppointmentListItem,
   AppointmentOutcomeInput,
   AuthTokens,
   ContentManifest,
+  ReportKind,
+  ReportResult,
+  ReportSummary,
+  SeriesCancelResult,
+  SeriesCreateResult,
+  SeriesPlan,
+  SeriesRequest,
 } from './types';
 
 export class ApiError extends Error {
@@ -69,6 +78,58 @@ class ApiClient {
       method: 'PUT',
       body: JSON.stringify(input),
     });
+  }
+
+  async getDetail(id: string): Promise<AppointmentDetail> {
+    return this.request<AppointmentDetail>(`/v1/appointments/${id}`);
+  }
+
+  async createAppointment(input: AppointmentInput): Promise<{ success: boolean; error: string | null; appointmentId: string | null }> {
+    return this.request('/v1/appointments', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  }
+
+  async updateAppointment(id: string, input: AppointmentInput): Promise<void> {
+    await this.request(`/v1/appointments/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    });
+  }
+
+  async previewSeries(input: AppointmentInput, request: SeriesRequest): Promise<SeriesPlan> {
+    return this.request<SeriesPlan>('/v1/appointments/series/preview', {
+      method: 'POST',
+      body: JSON.stringify({ input, frequency: request.frequency, count: request.count }),
+    });
+  }
+
+  async createSeries(input: AppointmentInput, request: SeriesRequest): Promise<SeriesCreateResult> {
+    return this.request<SeriesCreateResult>('/v1/appointments/series', {
+      method: 'POST',
+      body: JSON.stringify({ input, frequency: request.frequency, count: request.count }),
+    });
+  }
+
+  async cancelSeries(seriesId: string): Promise<SeriesCancelResult> {
+    return this.request<SeriesCancelResult>(`/v1/appointments/series/${seriesId}/cancel`, {
+      method: 'POST',
+    });
+  }
+
+  async getReportSummary(from: string, to: string): Promise<ReportSummary> {
+    return this.request<ReportSummary>(`/v1/reports/summary?from=${from}&to=${to}`);
+  }
+
+  async getReport(
+    kind: ReportKind,
+    from: string,
+    to: string,
+    personSearch?: string,
+  ): Promise<ReportResult> {
+    const search = personSearch ? `&personSearch=${encodeURIComponent(personSearch)}` : '';
+    return this.request<ReportResult>(`/v1/reports/${kind}?from=${from}&to=${to}${search}`);
   }
 
   private async refreshTokens(): Promise<boolean> {

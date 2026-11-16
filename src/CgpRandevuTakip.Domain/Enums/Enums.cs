@@ -120,7 +120,9 @@ public enum AuditAction
     RememberLoginUsed = 29,
     AppointmentAnonymized = 30,
     SeriesCreated = 31,
-    SeriesCancelled = 32
+    SeriesCancelled = 32,
+    SeriesUpdated = 33,
+    SeriesExtended = 34
 }
 
 /// <summary>Tekrarlayan görüşme serisinin sıklığı.</summary>

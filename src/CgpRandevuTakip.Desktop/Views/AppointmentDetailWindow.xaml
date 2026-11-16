@@ -260,6 +260,11 @@
                         Command="{Binding EditCommand}"
                         Margin="0,0,8,0"
                         Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibility}}" />
+                <Button Content="Seri yönetimi"
+                        Style="{StaticResource SecondaryButton}"
+                        Command="{Binding ManageSeriesCommand}"
+                        Margin="0,0,8,0"
+                        Visibility="{Binding CanManageSeries, Converter={StaticResource BoolToVisibility}}" />
                 <Button Content="Seriyi iptal et"
                         Style="{StaticResource SubtleButton}"
                         Command="{Binding CancelSeriesCommand}"
