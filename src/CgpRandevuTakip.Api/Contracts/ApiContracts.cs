@@ -48,7 +48,8 @@ public sealed record VersionPolicyDto(
     string MinMobileVersion,
     string MinWebVersion,
     string LatestDesktopVersion,
-    string LatestMobileVersion);
+    string LatestMobileVersion,
+    string LatestWebVersion);
 
 public sealed record ContentManifestDto(
     string Version,

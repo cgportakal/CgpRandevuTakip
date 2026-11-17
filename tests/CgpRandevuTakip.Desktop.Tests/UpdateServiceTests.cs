@@ -61,6 +61,19 @@ public sealed class UpdateServiceTests : IDisposable
         Assert.Equal(new string('a', 64), result.SetupSha256);
         Assert.Equal(new string('b', 64), result.PortableSha256);
         Assert.Contains("Yenilikler", result.ReleaseNotes);
+        Assert.False(result.Mandatory);
+    }
+
+    [Fact]
+    public async Task CheckAsync_ParsesMandatoryVersionPolicy()
+    {
+        var service = CreateService("9.9.9", null, null, policyMin: "9.9.9");
+
+        var result = await service.CheckAsync();
+
+        Assert.True(result.Mandatory);
+        Assert.Equal("9.9.9", result.MinVersion);
+        Assert.True(result.UpdateAvailable);
     }
 
     [Fact]
@@ -97,8 +110,15 @@ public sealed class UpdateServiceTests : IDisposable
             ReleaseUrl: null,
             SetupSha256: digest);
 
-    private UpdateService CreateService(string tag, string? setupDigest, string? portableDigest)
-        => new(_rollback, _client, $"{BaseUrl}/releases/latest?tag={tag}&setup={setupDigest}&portable={portableDigest}");
+    private UpdateService CreateService(
+        string tag,
+        string? setupDigest,
+        string? portableDigest,
+        string? policyMin = null)
+        => new(
+            _rollback,
+            _client,
+            $"{BaseUrl}/releases/latest?tag={tag}&setup={setupDigest}&portable={portableDigest}&policyMin={Uri.EscapeDataString(policyMin ?? "0.0.0")}");
 
     private async Task ServeAsync(TcpListener listener, CancellationToken token)
     {
@@ -137,9 +157,19 @@ public sealed class UpdateServiceTests : IDisposable
                         var setupDigest = query.GetValueOrDefault("setup");
                         var portableDigest = query.GetValueOrDefault("portable");
                         var tag = query.GetValueOrDefault("tag") ?? "9.9.9";
+                        var policyMin = query.GetValueOrDefault("policyMin");
 
                         var setupDigestJson = setupDigest is null ? "null" : $"\"sha256:{setupDigest}\"";
                         var portableDigestJson = portableDigest is null ? "null" : $"\"sha256:{portableDigest}\"";
+                        var policyAsset = policyMin is null
+                            ? string.Empty
+                            : $$"""
+                                ,{
+                                  "name": "version-policy.json",
+                                  "browser_download_url": "{{BaseUrl}}/policy?min={{policyMin}}",
+                                  "digest": null
+                                }
+                                """;
 
                         var json = $$"""
                             {
@@ -156,8 +186,25 @@ public sealed class UpdateServiceTests : IDisposable
                                   "name": "CGP-RandevuTakip-{{tag}}-portable.zip",
                                   "browser_download_url": "{{BaseUrl}}/asset",
                                   "digest": {{portableDigestJson}}
-                                }
+                                }{{policyAsset}}
                               ]
+                            }
+                            """;
+
+                        await WriteResponseAsync(stream, Encoding.UTF8.GetBytes(json), "application/json");
+                    }
+                    else if (path.StartsWith("/policy", StringComparison.Ordinal))
+                    {
+                        var query = ParseQuery(path);
+                        var minimum = query.GetValueOrDefault("min") ?? "0.0.0";
+                        var json = $$"""
+                            {
+                              "minDesktopVersion": "{{minimum}}",
+                              "minMobileVersion": "0.0.0",
+                              "minWebVersion": "0.0.0",
+                              "latestDesktopVersion": "{{minimum}}",
+                              "latestMobileVersion": "0.0.0",
+                              "latestWebVersion": "0.0.0"
                             }
                             """;
 

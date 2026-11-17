@@ -18,11 +18,13 @@ import {
   unregisterWebPush,
   type PushPermission,
 } from '@/lib/push';
-import type { AuthTokens, ContentManifest } from '@/lib/types';
+import type { AuthTokens, ContentManifest, VersionPolicy } from '@/lib/types';
+import { APP_VERSION, isVersionOlder } from '@/lib/version';
 import { LoginView } from '@/components/LoginView';
 import { TodayView } from '@/components/TodayView';
 import { ReportsView } from '@/components/ReportsView';
 import { ContentAdminView } from '@/components/ContentAdminView';
+import { ForcedUpdateView } from '@/components/ForcedUpdateView';
 
 type View = 'today' | 'reports' | 'content';
 
@@ -32,6 +34,7 @@ export default function Page() {
   const [booting, setBooting] = useState(true);
   const [session, setSession] = useState<AuthTokens | null>(null);
   const [manifest, setManifest] = useState<ContentManifest | null>(null);
+  const [publicPolicy, setPublicPolicy] = useState<VersionPolicy | null>(null);
   const [view, setView] = useState<View>('today');
   const [online, setOnline] = useState(true);
   const [realtimeStatus, setRealtimeStatus] = useState<RealtimeStatus>('disconnected');
@@ -56,6 +59,16 @@ export default function Page() {
       window.removeEventListener('online', update);
       window.removeEventListener('offline', update);
     };
+  }, []);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        setPublicPolicy(await api.getVersionPolicy());
+      } catch {
+        // Genel politika alınamazsa oturum sonrası manifest politikası kullanılır.
+      }
+    })();
   }, []);
 
   useEffect(() => {
@@ -162,8 +175,24 @@ export default function Page() {
     showToast('Test bildirimi', result.message);
   };
 
+  const activePolicy = publicPolicy ?? manifest?.versionPolicy;
+  const forceUpdate = activePolicy
+    ? isVersionOlder(APP_VERSION, activePolicy.minWebVersion)
+    : false;
+
   if (booting) {
     return <div className="splash">Yükleniyor…</div>;
+  }
+
+  if (forceUpdate && activePolicy) {
+    return (
+      <ForcedUpdateView
+        currentVersion={APP_VERSION}
+        requiredVersion={activePolicy.minWebVersion}
+        latestVersion={activePolicy.latestWebVersion}
+        onRetry={() => window.location.reload()}
+      />
+    );
   }
 
   if (!session) {

@@ -21,7 +21,9 @@ public sealed record UpdateCheckResult(
     string? Error = null,
     string? SetupSha256 = null,
     string? PortableSha256 = null,
-    string? ReleaseNotes = null)
+    string? ReleaseNotes = null,
+    string? MinVersion = null,
+    bool Mandatory = false)
 {
     public static UpdateCheckResult Fail(string error)
         => new(false, AppConstants.Version, null, null, null, null, error);
@@ -41,6 +43,9 @@ public sealed class UpdateService : IUpdateService
 {
     private const string LatestReleaseApi =
         "https://api.github.com/repos/cgportakal/CgpRandevuTakip/releases/latest";
+
+    private const string VersionPolicyFallbackUrl =
+        "https://raw.githubusercontent.com/cgportakal/CgpRandevuTakip/master/version-policy.json";
 
     private static readonly HttpClient SharedClient = CreateClient();
     private readonly UpdateRollbackService _rollback;
@@ -93,6 +98,7 @@ public sealed class UpdateService : IUpdateService
             string? portableUrl = null;
             string? setupDigest = null;
             string? portableDigest = null;
+            string? policyUrl = null;
 
             if (root.TryGetProperty("assets", out var assets))
             {
@@ -112,7 +118,11 @@ public sealed class UpdateService : IUpdateService
                         ? UpdateIntegrity.NormalizeDigest(digestElement.GetString())
                         : null;
 
-                    if (name.EndsWith("-Setup.exe", StringComparison.OrdinalIgnoreCase))
+                    if (name.Equals("version-policy.json", StringComparison.OrdinalIgnoreCase))
+                    {
+                        policyUrl = url;
+                    }
+                    else if (name.EndsWith("-Setup.exe", StringComparison.OrdinalIgnoreCase))
                     {
                         setupUrl = url;
                         setupDigest = digest;
@@ -125,22 +135,33 @@ public sealed class UpdateService : IUpdateService
                 }
             }
 
-            var available = AppVersionComparer.IsNewer(tag, AppConstants.Version);
-            UpdateLog.Write(available
-                ? $"Yeni sürüm bulundu: {tag} (mevcut {AppConstants.Version})."
-                : $"Güncel sürüm: {AppConstants.Version}.");
+            var policy = await TryReadVersionPolicyAsync(policyUrl, cancellationToken);
+            var mandatory = VersionPolicyEvaluator.IsForcedDesktopUpdate(AppConstants.Version, policy);
+            var latestVersion = tag
+                                ?? policy?.LatestDesktopVersion
+                                ?? policy?.MinDesktopVersion;
+
+            var available = AppVersionComparer.IsNewer(tag, AppConstants.Version) || mandatory;
+
+            UpdateLog.Write(mandatory
+                ? $"Zorunlu güncelleme: en az {policy?.MinDesktopVersion}, mevcut {AppConstants.Version}."
+                : available
+                    ? $"Yeni sürüm bulundu: {latestVersion} (mevcut {AppConstants.Version})."
+                    : $"Güncel sürüm: {AppConstants.Version}.");
 
             return new UpdateCheckResult(
                 available,
                 AppConstants.Version,
-                tag,
+                latestVersion,
                 setupUrl,
                 portableUrl,
                 releaseUrl,
                 Error: null,
                 SetupSha256: setupDigest,
                 PortableSha256: portableDigest,
-                ReleaseNotes: releaseNotes);
+                ReleaseNotes: releaseNotes,
+                MinVersion: policy?.MinDesktopVersion,
+                Mandatory: mandatory);
         }
         catch (Exception ex)
         {
@@ -148,6 +169,42 @@ public sealed class UpdateService : IUpdateService
             UpdateLog.Write(error);
             return UpdateCheckResult.Fail(error);
         }
+    }
+
+    private async Task<VersionPolicy?> TryReadVersionPolicyAsync(
+        string? assetUrl,
+        CancellationToken cancellationToken)
+    {
+        var urls = new[] { assetUrl, VersionPolicyFallbackUrl }
+            .Where(url => !string.IsNullOrWhiteSpace(url))
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var url in urls)
+        {
+            try
+            {
+                using var response = await _client.GetAsync(url, cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                {
+                    UpdateLog.Write($"Sürüm politikası alınamadı ({(int)response.StatusCode}): {url}");
+                    continue;
+                }
+
+                var json = await response.Content.ReadAsStringAsync(cancellationToken);
+                var policy = JsonSerializer.Deserialize<VersionPolicy>(
+                    json,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (policy is not null)
+                    return policy;
+            }
+            catch (Exception ex)
+            {
+                UpdateLog.Write($"Sürüm politikası okunamadı ({url}): {ex.Message}");
+            }
+        }
+
+        return null;
     }
 
     public async Task<OperationResult> InstallAsync(

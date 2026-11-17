@@ -96,6 +96,7 @@ export type VersionPolicy = {
   minWebVersion: string;
   latestDesktopVersion: string;
   latestMobileVersion: string;
+  latestWebVersion: string;
 };
 
 export type ContentManifest = {

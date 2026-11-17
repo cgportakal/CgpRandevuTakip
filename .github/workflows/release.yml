@@ -130,7 +130,8 @@ jobs:
           $files = @(
             "dist/CGP-RandevuTakip-$version-Setup.exe",
             "dist/CGP-RandevuTakip-$version-portable.zip",
-            "dist/SHA256SUMS.txt"
+            "dist/SHA256SUMS.txt",
+            "version-policy.json"
           )
           $cer = 'dist/CGP-RandevuTakip-Dev.cer'
           if (Test-Path $cer) { $files += $cer }

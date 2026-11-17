@@ -77,6 +77,12 @@ public partial class App : System.Windows.Application
             _host.Services.GetRequiredService<UpdateService>().ReportPortableResult();
             DiagnosticsService.CleanupOldLogs();
 
+            if (!await EnsureSupportedDesktopVersionAsync())
+            {
+                Shutdown();
+                return;
+            }
+
             _tray = _host.Services.GetRequiredService<TrayService>();
             _tray.Initialize();
 
@@ -177,6 +183,30 @@ public partial class App : System.Windows.Application
         });
     }
 
+    private async Task<bool> EnsureSupportedDesktopVersionAsync()
+    {
+        if (_host is null)
+            return true;
+
+        try
+        {
+            var updates = _host.Services.GetRequiredService<IUpdateService>();
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(6));
+            var result = await updates.CheckAsync(timeout.Token);
+            if (!result.Mandatory)
+                return true;
+
+            var forced = new ForcedUpdateWindow(updates, result);
+            forced.ShowDialog();
+            return false;
+        }
+        catch
+        {
+            // Ağ/politika hatası uygulamanın açılmasını engellemez.
+            return true;
+        }
+    }
+
     private void ScheduleUpdateCheck()
     {
         _ = Task.Run(async () =>
@@ -189,6 +219,18 @@ public partial class App : System.Windows.Application
 
                 var updates = _host.Services.GetRequiredService<IUpdateService>();
                 var result = await updates.CheckAsync();
+
+                if (result.Mandatory)
+                {
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        var forced = new ForcedUpdateWindow(updates, result);
+                        forced.ShowDialog();
+                        Shutdown();
+                    });
+                    return;
+                }
+
                 if (!result.UpdateAvailable)
                     return;
 

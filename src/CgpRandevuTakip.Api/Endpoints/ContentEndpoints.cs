@@ -56,8 +56,7 @@ public static class ContentEndpoints
             var features = configuration.GetSection("Features").Get<Dictionary<string, bool>>()
                            ?? new Dictionary<string, bool>();
 
-            var policy = configuration.GetSection("VersionPolicy").Get<VersionPolicyDto>()
-                         ?? new VersionPolicyDto("1.5.0", "1.0.0", "1.0.0", "1.5.1", "1.0.0");
+            var policy = ReadVersionPolicy(configuration);
 
             var core = new
             {
@@ -129,7 +128,24 @@ public static class ContentEndpoints
             }))
             .AllowAnonymous();
 
+        app.MapGet("/v1/version-policy", (IConfiguration configuration) =>
+                Results.Ok(ReadVersionPolicy(configuration)))
+            .AllowAnonymous()
+            .WithTags("System");
+
         return app;
+    }
+
+    private static VersionPolicyDto ReadVersionPolicy(IConfiguration configuration)
+    {
+        var section = configuration.GetSection("VersionPolicy");
+        return new VersionPolicyDto(
+            section["minDesktopVersion"] ?? "1.5.0",
+            section["minMobileVersion"] ?? "1.0.0",
+            section["minWebVersion"] ?? "1.0.0",
+            section["latestDesktopVersion"] ?? "1.7.0",
+            section["latestMobileVersion"] ?? "1.0.0",
+            section["latestWebVersion"] ?? "1.7.0");
     }
 
     private static string? ResolveLogoUrl(string logoFile)
