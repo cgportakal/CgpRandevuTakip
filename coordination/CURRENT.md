@@ -1,10 +1,10 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-17 23:05 (UTC+3)
+**Son güncelleme:** 2026-11-17 23:20 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — **1.8.2 yayında** (Setup-only); Android emülatör kuruldu ve mobil UAT
-tamamlandı; iki mobil düzeltme yayınlanmayı bekliyor.
+**Durum:** Yeşil — **1.8.2 yayında** (Setup-only); Android UAT tamamlandı; sürüm notları ve
+README güncel. Mobil push/iOS testleri ortam gereksinimi nedeniyle sırada.
 
 ## Bu turda tamamlanan
 
@@ -21,6 +21,8 @@ tamamlandı; iki mobil düzeltme yayınlanmayı bekliyor.
   süresiz üstel geri çekilme eklendi (`mobile/src/realtime.ts`).
 - **Mobil zorunlu güncelleme ekranı:** çift kodlanmış Türkçe metinler düzeltildi
   (`ForcedUpdateScreen.tsx`).
+- **Dokümantasyon:** `docs/35` Android SDK/emülatör kurulumu ve emülatör tuzakları; `docs/39`
+  Android UAT; README durum satırı ve belge tablosu güncellendi.
 
 - **Zorunlu güncelleme UAT’i (web + masaüstü):** web istemcisi 1.0.0 / `minWebVersion` 9.9.9 →
   bloklayıcı ekran mevcut–gerekli–son sürümü doğru gösterdi; masaüstü 1.0.0 test derlemesi
@@ -91,6 +93,9 @@ Yok. (CFR-LENOVO 1.8.0 release tamamlandı; kilit bırakıldı. Kontrol: `node c
   (API 35, 3 GB, pencere açık `-gpu auto`). `-no-window` modunda emülatör iki kez Windows
   `RADAR_PRE_LEAK_64` kaydıyla kapandı; pencereli mod daha kararlı. Emülatör ana makineye
   `10.0.2.2` ile erişir; `mobile/.env` yerine `EXPO_PUBLIC_API_URL` ortam değişkeni kullanın.
+- **Devir:** Android SDK/JDK yalnızca `cafer-desktop` makinesinde `D:\Android` altında kurulu.
+  Diğer makinede zorunlu değildir; web/API/masaüstü için `node scripts/bootstrap.mjs` yeterlidir.
+  Android UAT gerekirse `docs/35` bölüm 7’deki adımlar izlenir.
 - **Mobil push:** Expo Go Android’de SDK 53+ uzak bildirimleri desteklemez; FCM/APNs testi için
   EAS dev build gerekir.
 - **Rapor yolu:** `/v1/reports/kind/{kind}` kullan. `/v1/reports/Summary` yanlışlıkla
