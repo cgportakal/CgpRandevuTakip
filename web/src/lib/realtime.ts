@@ -20,6 +20,12 @@ export type SeriesEvent = {
   change: string;
 };
 
+export type ContentEvent = {
+  version: string;
+  action: string;
+  atUtc: string;
+};
+
 export type ReminderEvent = {
   reminderId: string;
   appointmentId: string;
@@ -61,15 +67,18 @@ export async function startRealtime(
     .configureLogging(LogLevel.Warning)
     .build();
 
-  hub.on('appointmentChanged', (payload: AppointmentEvent) =>
-    realtimeEvents.dispatchEvent(new CustomEvent('appointmentChanged', { detail: payload })),
-  );
-  hub.on('seriesChanged', (payload: SeriesEvent) =>
-    realtimeEvents.dispatchEvent(new CustomEvent('seriesChanged', { detail: payload })),
-  );
-  hub.on('reminderDue', (payload: ReminderEvent) =>
-    realtimeEvents.dispatchEvent(new CustomEvent('reminderDue', { detail: payload })),
-  );
+  hub.on('appointmentChanged', (payload: AppointmentEvent) => {
+    realtimeEvents.dispatchEvent(new CustomEvent('appointmentChanged', { detail: payload }));
+  });
+  hub.on('seriesChanged', (payload: SeriesEvent) => {
+    realtimeEvents.dispatchEvent(new CustomEvent('seriesChanged', { detail: payload }));
+  });
+  hub.on('contentChanged', (payload: ContentEvent) => {
+    realtimeEvents.dispatchEvent(new CustomEvent('contentChanged', { detail: payload }));
+  });
+  hub.on('reminderDue', (payload: ReminderEvent) => {
+    realtimeEvents.dispatchEvent(new CustomEvent('reminderDue', { detail: payload }));
+  });
 
   hub.onreconnecting(() => onStatus('connecting'));
   hub.onreconnected(() => onStatus('connected'));

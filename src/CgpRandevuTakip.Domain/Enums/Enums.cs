@@ -122,7 +122,9 @@ public enum AuditAction
     SeriesCreated = 31,
     SeriesCancelled = 32,
     SeriesUpdated = 33,
-    SeriesExtended = 34
+    SeriesExtended = 34,
+    ContentPublished = 35,
+    ContentRestored = 36
 }
 
 /// <summary>Tekrarlayan görüşme serisinin sıklığı.</summary>

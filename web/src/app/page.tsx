@@ -22,8 +22,9 @@ import type { AuthTokens, ContentManifest } from '@/lib/types';
 import { LoginView } from '@/components/LoginView';
 import { TodayView } from '@/components/TodayView';
 import { ReportsView } from '@/components/ReportsView';
+import { ContentAdminView } from '@/components/ContentAdminView';
 
-type View = 'today' | 'reports';
+type View = 'today' | 'reports' | 'content';
 
 type Toast = { id: string; title: string; body: string };
 
@@ -126,6 +127,12 @@ export default function Page() {
     return () => window.removeEventListener('cgp:tokens', handler);
   }, []);
 
+  useEffect(() => {
+    if (session && session.user.role !== 'Admin' && view === 'content') {
+      setView('today');
+    }
+  }, [session, view]);
+
   const onLogin = (tokens: AuthTokens) => {
     setSession(tokens);
   };
@@ -185,6 +192,14 @@ export default function Page() {
           >
             Raporlar
           </button>
+          {session.user.role === 'Admin' ? (
+            <button
+              className={`nav-item ${view === 'content' ? 'active' : ''}`}
+              onClick={() => setView('content')}
+            >
+              İçerik Yönetimi
+            </button>
+          ) : null}
         </nav>
 
         <div className="sidebar-footer">
@@ -195,7 +210,9 @@ export default function Page() {
 
       <main className="main">
         <header className="topbar">
-          <h1>{view === 'today' ? 'Günlük Liste' : 'Raporlar'}</h1>
+          <h1>
+            {view === 'today' ? 'Günlük Liste' : view === 'reports' ? 'Raporlar' : 'İçerik Yönetimi'}
+          </h1>
           <div className="spacer" />
           <div className="user-chip">
             <span className={`online-dot ${online ? '' : 'offline'}`} />
@@ -232,8 +249,10 @@ export default function Page() {
         <div className="content">
           {view === 'today' ? (
             <TodayView manifest={manifest} online={online} />
-          ) : (
+          ) : view === 'reports' ? (
             <ReportsView manifest={manifest} online={online} />
+          ) : (
+            <ContentAdminView online={online} />
           )}
         </div>
       </main>

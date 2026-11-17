@@ -4,7 +4,13 @@ import type {
   AppointmentListItem,
   AppointmentOutcomeInput,
   AuthTokens,
+  CategoryInput,
+  ContentAdminData,
   ContentManifest,
+  ContentSettingsInput,
+  ContentVersion,
+  HostCreateInput,
+  HostUpdateInput,
   ReportKind,
   ReportResult,
   ReportSummary,
@@ -210,6 +216,74 @@ class ApiClient {
   getReport(kind: ReportKind, from: string, to: string, personSearch?: string): Promise<ReportResult> {
     const search = personSearch ? `&personSearch=${encodeURIComponent(personSearch)}` : '';
     return this.request(`/v1/reports/kind/${kind}?from=${from}&to=${to}${search}`);
+  }
+
+  getContentAdmin(): Promise<ContentAdminData> {
+    return this.request('/v1/admin/content');
+  }
+
+  saveContentSettings(input: ContentSettingsInput): Promise<void> {
+    return this.request('/v1/admin/content/settings', {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    });
+  }
+
+  createCategory(input: CategoryInput): Promise<void> {
+    return this.request('/v1/admin/content/categories', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  }
+
+  updateCategory(id: string, input: CategoryInput): Promise<void> {
+    return this.request(`/v1/admin/content/categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    });
+  }
+
+  setCategoryActive(id: string, isActive: boolean): Promise<void> {
+    return this.request(`/v1/admin/content/categories/${id}/active`, {
+      method: 'POST',
+      body: JSON.stringify({ isActive }),
+    });
+  }
+
+  moveCategory(id: string, direction: -1 | 1): Promise<void> {
+    return this.request(`/v1/admin/content/categories/${id}/move`, {
+      method: 'POST',
+      body: JSON.stringify({ direction }),
+    });
+  }
+
+  deleteCategory(id: string): Promise<void> {
+    return this.request(`/v1/admin/content/categories/${id}`, { method: 'DELETE' });
+  }
+
+  createHost(input: HostCreateInput): Promise<void> {
+    return this.request('/v1/admin/content/hosts', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  }
+
+  updateHost(id: string, input: HostUpdateInput): Promise<void> {
+    return this.request(`/v1/admin/content/hosts/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    });
+  }
+
+  publishContent(note?: string): Promise<ContentVersion> {
+    return this.request('/v1/admin/content/publish', {
+      method: 'POST',
+      body: JSON.stringify({ note: note?.trim() || null }),
+    });
+  }
+
+  restoreContentVersion(id: string): Promise<ContentVersion> {
+    return this.request(`/v1/admin/content/versions/${id}/restore`, { method: 'POST' });
   }
 
   private async refreshTokens(): Promise<boolean> {
