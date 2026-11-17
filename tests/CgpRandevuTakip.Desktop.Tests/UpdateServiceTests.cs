@@ -77,6 +77,22 @@ public sealed class UpdateServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task InstallAsync_ReportsDownloadProgress()
+    {
+        var service = CreateService("9.9.9", new string('0', 64), null);
+        var update = BuildSetupUpdate(new string('0', 64));
+        var progress = new InlineProgress<UpdateDownloadProgress>();
+
+        var result = await service.InstallAsync(update, progress);
+
+        Assert.False(result.Success);
+        Assert.Contains(progress.Values, item =>
+            item.Phase == UpdateProgressPhase.Downloading && item.Percent > 0);
+        Assert.Contains(progress.Values, item =>
+            item.Phase == UpdateProgressPhase.Verifying);
+    }
+
+    [Fact]
     public async Task InstallAsync_RejectsDigestMismatch()
     {
         var service = CreateService("9.9.9", new string('0', 64), null);
@@ -245,6 +261,12 @@ public sealed class UpdateServiceTests : IDisposable
         }
 
         return result;
+    }
+
+    private sealed class InlineProgress<T> : IProgress<T>
+    {
+        public List<T> Values { get; } = new();
+        public void Report(T value) => Values.Add(value);
     }
 
     private static int GetFreePort()

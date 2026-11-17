@@ -261,21 +261,13 @@ public partial class App : System.Windows.Application
                     if (answer != MessageBoxResult.Yes)
                         return;
 
-                    _ = Dispatcher.InvokeAsync(async () =>
+                    var progress = new UpdateProgressWindow(updates, result)
                     {
-                        var install = await updates.InstallAsync(result);
-                        if (install.Success)
-                        {
-                            Shutdown();
-                            return;
-                        }
+                        Owner = MainWindow
+                    };
 
-                        MessageBox.Show(
-                            install.Error ?? "Güncelleme başlatılamadı.",
-                            "CGP güncelleme",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Error);
-                    });
+                    if (progress.ShowDialog() == true)
+                        Shutdown();
                 });
             }
             catch

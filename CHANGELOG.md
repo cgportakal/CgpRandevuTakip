@@ -18,6 +18,7 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 - **Web içerik yönetim konsolu:** kategori, görüşmeci, kurum profili ve genel ayarları düzenleme; yayın notu ile sürüm oluşturma, son 20 sürümü görme ve seçilen sürüme geri dönme.
 - **İçerik yayınlama:** `POST /v1/admin/content/publish` ve `/versions/{id}/restore`; `ContentVersions` tablosu ve `ContentPublishing` migration'ı; yayın/geri alma sonrası `contentChanged` SignalR olayı.
 - **Zorunlu güncelleme ekranı:** API `GET /v1/version-policy` (anonim) ve manifest `versionPolicy`; web/mobil minimum sürümün altındaysa bloklayıcı güncelleme ekranı, masaüstünde giriş öncesi `ForcedUpdateWindow`.
+- **Güncelleme indirme ilerlemesi:** ortak `UpdateProgressWindow`; yüzdelik `ProgressBar`, indirilen/toplam MB, doğrulama, paket açma ve kurulum başlatma aşama metinleri. Zorunlu ve isteğe bağlı güncelleme akışlarında kullanılır.
 - **Sürüm politikası:** `version-policy.json` release asset'i; masaüstü güncelleyici minimum sürümü bu dosyadan okur (release asset yoksa `master` dosyasına düşer). Web/mobil sürüm sabitleri (`NEXT_PUBLIC_APP_VERSION`, `APP_VERSION`) politika ile karşılaştırılır.
 - **CI:** web için `npm ci` + `npm run build` işi.
 

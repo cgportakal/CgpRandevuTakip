@@ -74,7 +74,11 @@
 ## 6. Güncelleme
 
 - **Ayarlar > Güncelleme > Kontrol et** yeni sürümü denetler.
-- “Güncelle” paketi indirir, **SHA-256** ile doğrular, önceki sürümün kopyasını saklar ve kurar.
+- "Güncelle" paketi indirir, **SHA-256** ile doğrular, önceki sürümün kopyasını saklar ve kurar.
+- İndirme sırasında yüzdelik ilerleme penceresi açılır; indirilen/toplam boyut, doğrulama,
+  paket açma ve kurulum başlatma adımları gösterilir.
+- Zorunlu güncellemede aynı ilerleme penceresi giriş öncesinde açılır; kullanıcı güncellemeden
+  devam edemez.
 - Kurulum tamamlanamazsa uygulama açılışta otomatik olarak önceki sürüme döner.
 - **Önceki sürüme dön** düğmesiyle elle geri dönülebilir.
 - **Güncelleme günlüğü** düğmesi adımları ve hataları gösterir; **Sürüm notları** yenilikleri gösterir.
