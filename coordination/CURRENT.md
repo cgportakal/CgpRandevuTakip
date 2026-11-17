@@ -17,6 +17,7 @@
 - **Web içerik yönetim konsolu:** `/v1/admin/content` (yalnızca Admin); kategori ekleme/düzenleme/sıralama/pasifleştirme/silme, görüşmeci ekleme/düzenleme, kurum profili ve genel ayarlar.
 - **Yayınlama ve geri alma:** `ContentVersions` tablosu (`ContentPublishing` migration), yayın notu ile sürüm oluşturma, son 20 sürüm, seçilen sürüme geri dönme. Yayın/geri alma sonrası `contentChanged` SignalR olayı.
 - **Web SignalR:** `contentChanged` aboneliği eklendi; işleyiciler sunucuya yanlış sonuç döndürmeyecek şekilde düzeltildi.
+- **Güncelleme ilerleme UAT’i:** gerçek `v1.8.0` Setup indirmesiyle doğrulandı (63,7 MB, %1→%98, MB/ilerleme çubuğu, “İndirme doğrulanıyor”, “Kurulum başlatılıyor”; veri korundu). Doğrulama/geri dönüş UI thread’ini bloke ediyordu; `Task.Run` + `Task.Yield` + kısa son aşama beklemesiyle düzeltildi ([docs/37](docs/37_UAT_1.8.0_Guncelleme_Ilerleme.md)).
 - **Hızlı başlangıç:** `BASLANGIC.md`, macOS `basla.command`, Windows `basla.cmd` /
   `scripts/basla.ps1` (temiz ağaç kontrolü → pull → Node kontrolü → bootstrap → durum).
 - **Ortam yeniden üretimi:** `scripts/bootstrap.mjs` (Windows + macOS; `--check`, `--install`),
@@ -39,8 +40,7 @@
 
 ## Sıradaki iş (öncelik sırası)
 
-1. **Güncelleme ilerleme penceresi UAT’i** — gerçek Setup indirmesinde yüzde/MB/aşama metinleri,
-   doğrulama ve kurulum başlatma adımları.
+1. **1.8.1 yayını** — güncelleme ilerleme düzeltmesini yayınla (Setup-only; portablesiz).
 2. **Mobil cihaz UAT’i** — çevrimdışı kuyruk, canlı olay, push (EAS dev build gerekir).
 3. **Zorunlu güncelleme UAT’i** — web/mobil için eski sürüm simülasyonu, masaüstü için
    `version-policy.json` min sürüm testi.

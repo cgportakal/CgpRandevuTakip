@@ -257,8 +257,11 @@ public sealed class UpdateService : IUpdateService
 
             progress?.Report(new UpdateDownloadProgress(
                 UpdateProgressPhase.Verifying, 0, null));
+            await Task.Yield();
 
-            if (!UpdateIntegrity.Matches(setupPath, update.SetupSha256))
+            if (!await Task.Run(
+                    () => UpdateIntegrity.Matches(setupPath, update.SetupSha256),
+                    cancellationToken))
             {
                 SafeDelete(setupPath);
                 UpdateLog.Write("Kurulum paketi SHA-256 doğrulaması başarısız.");
@@ -269,11 +272,19 @@ public sealed class UpdateService : IUpdateService
 
             progress?.Report(new UpdateDownloadProgress(
                 UpdateProgressPhase.PreparingRollback, 0, null));
-            if (!_rollback.Prepare(update.LatestVersion!, portable: false))
+            await Task.Yield();
+
+            if (!await Task.Run(
+                    () => _rollback.Prepare(update.LatestVersion!, portable: false),
+                    cancellationToken))
+            {
                 return OperationResult.Fail("Geri dönüş dosyaları hazırlanamadı; güvenlik için güncelleme durduruldu.");
+            }
 
             progress?.Report(new UpdateDownloadProgress(
                 UpdateProgressPhase.StartingInstaller, 0, null));
+            await Task.Yield();
+
             Process.Start(new ProcessStartInfo(setupPath)
             {
                 Arguments = "/SILENT /SUPPRESSMSGBOXES /NORESTART",
@@ -281,6 +292,7 @@ public sealed class UpdateService : IUpdateService
             });
 
             UpdateLog.Write("Kurulum başlatıldı; uygulama kapanacak.");
+            await WaitForProgressPaintAsync(cancellationToken);
             return OperationResult.Ok();
         }
         catch (Exception ex)
@@ -316,8 +328,11 @@ public sealed class UpdateService : IUpdateService
 
             progress?.Report(new UpdateDownloadProgress(
                 UpdateProgressPhase.Verifying, 0, null));
+            await Task.Yield();
 
-            if (!UpdateIntegrity.Matches(zipPath, update.PortableSha256))
+            if (!await Task.Run(
+                    () => UpdateIntegrity.Matches(zipPath, update.PortableSha256),
+                    cancellationToken))
             {
                 SafeDelete(zipPath);
                 UpdateLog.Write("Taşınabilir paket SHA-256 doğrulaması başarısız.");
@@ -328,13 +343,23 @@ public sealed class UpdateService : IUpdateService
 
             progress?.Report(new UpdateDownloadProgress(
                 UpdateProgressPhase.Extracting, 0, null));
+            await Task.Yield();
+
             var extractPath = Path.Combine(updateRoot, "files");
-            ZipFile.ExtractToDirectory(zipPath, extractPath);
+            await Task.Run(
+                () => ZipFile.ExtractToDirectory(zipPath, extractPath),
+                cancellationToken);
 
             progress?.Report(new UpdateDownloadProgress(
                 UpdateProgressPhase.PreparingRollback, 0, null));
-            if (!_rollback.Prepare(update.LatestVersion!, portable: true))
+            await Task.Yield();
+
+            if (!await Task.Run(
+                    () => _rollback.Prepare(update.LatestVersion!, portable: true),
+                    cancellationToken))
+            {
                 return OperationResult.Fail("Geri dönüş dosyaları hazırlanamadı; güvenlik için güncelleme durduruldu.");
+            }
 
             var appDir = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar);
             var scriptPath = Path.Combine(updateRoot, "apply-update.cmd");
@@ -375,6 +400,7 @@ public sealed class UpdateService : IUpdateService
             });
 
             UpdateLog.Write("Taşınabilir güncelleme betiği başlatıldı; uygulama kapanacak.");
+            await WaitForProgressPaintAsync(cancellationToken);
             return OperationResult.Ok();
         }
         catch (Exception ex)
@@ -415,6 +441,22 @@ public sealed class UpdateService : IUpdateService
         catch
         {
             // Sonuç dosyası okunamazsa güncelleme akışı etkilenmez.
+        }
+    }
+
+    /// <summary>
+    /// Son aşama metninin pencere kapanmadan önce çizilmesi için kısa bekleme.
+    /// Kurulum zaten başlatılmıştır; bu gecikme yalnızca geri bildirim içindir.
+    /// </summary>
+    private static async Task WaitForProgressPaintAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(700, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            // İptal edilse bile kurulum süreci başlatılmıştır.
         }
     }
 

@@ -23,6 +23,7 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 - **CI:** web için `npm ci` + `npm run build` işi.
 
 ### Düzeltildi
+- **Güncelleme ilerleme penceresi:** SHA-256 doğrulaması, geri dönüş anlık görüntüsü ve ZIP çıkarma arka plana alındı; pencere donmuyor ve “İndirme doğrulanıyor / Kurulum başlatılıyor” aşamaları görünüyor. Gerçek `v1.8.0` Setup indirmesiyle UAT tamamlandı ([docs/37](docs/37_UAT_1.8.0_Guncelleme_Ilerleme.md)).
 - **SignalR CORS:** istemci `withCredentials: false` kullanıyor; `AllowAnyOrigin` ile preflight hatası giderildi.
 - **Rapor uçları çakışması:** `GET /v1/reports/{kind}` ile `GET /v1/reports/summary` aynı yola düşüyordu; tür uçları `/v1/reports/kind/{kind}` olarak ayrıldı. Mobil ve web istemcileri güncellendi.
 - Web rapor ekranında eksik `summary` koruması ve “Günlük dağılım dağılım” başlığı düzeltildi.

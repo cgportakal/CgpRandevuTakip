@@ -102,7 +102,8 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 33 | [1.6.0 UAT](docs/33_UAT_1.6.0.md) | Kurulum, migration, rapor/seri senaryoları, geri dönüş |
 | 34 | [1.7.0 UAT](docs/34_UAT_1.7.0.md) | Rapor türleri, Excel, seri yönetimi, API/mobil, UI testleri |
 | 35 | [Geliştirme Ortamı](docs/35_Gelistirme_Ortami.md) | Windows + macOS kurulum, bağımlılıklar, ortam değişkenleri |
-| 36 | [1.8.0 UAT](docs/36_UAT_1.8.0.md) | İçerik konsolu, yayın/geri alma, zorunlu güncelleme, ilerleme penceresi |
+| 36 | [1.8.0 UAT](docs/36_UAT_1.8.0.md) | İçerik konsolu, yayın/geri alma, zorunlu güncelleme, ilerleme penceresi |
+| 37 | [Güncelleme İlerleme UAT](docs/37_UAT_1.8.0_Guncelleme_Ilerleme.md) | Gerçek Setup indirmesi, yüzde/MB, doğrulama, kurulum |
 
 ## Alınan temel kararlar
 

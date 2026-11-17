@@ -105,6 +105,25 @@ public sealed class UpdateServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task InstallAsync_ReportsDownloadAndVerificationPhases()
+    {
+        var service = CreateService("9.9.9", new string('0', 64), null);
+        var update = BuildSetupUpdate(new string('0', 64));
+        var progress = new InlineProgress<UpdateDownloadProgress>();
+
+        var result = await service.InstallAsync(update, progress);
+
+        Assert.False(result.Success);
+
+        var phases = progress.Values.Select(item => item.Phase).ToList();
+        Assert.Contains(UpdateProgressPhase.Downloading, phases);
+        Assert.Contains(UpdateProgressPhase.Verifying, phases);
+        Assert.Contains(
+            progress.Values,
+            item => item.Phase == UpdateProgressPhase.Downloading && item.TotalBytes is > 0);
+    }
+
+    [Fact]
     public async Task InstallAsync_RejectsMissingDigest()
     {
         var service = CreateService("9.9.9", null, null);
@@ -265,8 +284,23 @@ public sealed class UpdateServiceTests : IDisposable
 
     private sealed class InlineProgress<T> : IProgress<T>
     {
-        public List<T> Values { get; } = new();
-        public void Report(T value) => Values.Add(value);
+        private readonly object _gate = new();
+        private readonly List<T> _values = new();
+
+        public IReadOnlyList<T> Values
+        {
+            get
+            {
+                lock (_gate)
+                    return _values.ToList();
+            }
+        }
+
+        public void Report(T value)
+        {
+            lock (_gate)
+                _values.Add(value);
+        }
     }
 
     private static int GetFreePort()
