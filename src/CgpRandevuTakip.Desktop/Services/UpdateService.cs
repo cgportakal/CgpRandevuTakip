@@ -32,7 +32,10 @@ public sealed record UpdateCheckResult(
 public interface IUpdateService
 {
     Task<UpdateCheckResult> CheckAsync(CancellationToken cancellationToken = default);
-    Task<OperationResult> InstallAsync(UpdateCheckResult update, CancellationToken cancellationToken = default);
+    Task<OperationResult> InstallAsync(
+        UpdateCheckResult update,
+        IProgress<UpdateDownloadProgress>? progress = null,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -209,6 +212,7 @@ public sealed class UpdateService : IUpdateService
 
     public async Task<OperationResult> InstallAsync(
         UpdateCheckResult update,
+        IProgress<UpdateDownloadProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
         if (!update.UpdateAvailable)
@@ -217,13 +221,17 @@ public sealed class UpdateService : IUpdateService
         if (string.IsNullOrWhiteSpace(update.LatestVersion))
             return OperationResult.Fail("Güncelleme sürümü belirlenemedi.");
 
+        progress?.Report(new UpdateDownloadProgress(
+            UpdateProgressPhase.Preparing, 0, null));
+
         return AppPaths.IsPortable
-            ? await InstallPortableAsync(update, cancellationToken)
-            : await InstallSetupAsync(update, cancellationToken);
+            ? await InstallPortableAsync(update, progress, cancellationToken)
+            : await InstallSetupAsync(update, progress, cancellationToken);
     }
 
     private async Task<OperationResult> InstallSetupAsync(
         UpdateCheckResult update,
+        IProgress<UpdateDownloadProgress>? progress,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(update.SetupUrl))
@@ -243,7 +251,12 @@ public sealed class UpdateService : IUpdateService
             Directory.CreateDirectory(Path.GetDirectoryName(setupPath)!);
 
             UpdateLog.Write($"Kurulum paketi indiriliyor: {update.SetupUrl}");
-            await DownloadAsync(update.SetupUrl, setupPath, cancellationToken);
+            progress?.Report(new UpdateDownloadProgress(
+                UpdateProgressPhase.Downloading, 0, null));
+            await DownloadAsync(update.SetupUrl, setupPath, progress, cancellationToken);
+
+            progress?.Report(new UpdateDownloadProgress(
+                UpdateProgressPhase.Verifying, 0, null));
 
             if (!UpdateIntegrity.Matches(setupPath, update.SetupSha256))
             {
@@ -254,9 +267,13 @@ public sealed class UpdateService : IUpdateService
 
             UpdateLog.Write("Kurulum paketi doğrulandı.");
 
+            progress?.Report(new UpdateDownloadProgress(
+                UpdateProgressPhase.PreparingRollback, 0, null));
             if (!_rollback.Prepare(update.LatestVersion!, portable: false))
                 return OperationResult.Fail("Geri dönüş dosyaları hazırlanamadı; güvenlik için güncelleme durduruldu.");
 
+            progress?.Report(new UpdateDownloadProgress(
+                UpdateProgressPhase.StartingInstaller, 0, null));
             Process.Start(new ProcessStartInfo(setupPath)
             {
                 Arguments = "/SILENT /SUPPRESSMSGBOXES /NORESTART",
@@ -275,6 +292,7 @@ public sealed class UpdateService : IUpdateService
 
     private async Task<OperationResult> InstallPortableAsync(
         UpdateCheckResult update,
+        IProgress<UpdateDownloadProgress>? progress,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(update.PortableUrl))
@@ -292,7 +310,12 @@ public sealed class UpdateService : IUpdateService
 
             var zipPath = Path.Combine(updateRoot, $"portable-{update.LatestVersion}.zip");
             UpdateLog.Write($"Taşınabilir paket indiriliyor: {update.PortableUrl}");
-            await DownloadAsync(update.PortableUrl, zipPath, cancellationToken);
+            progress?.Report(new UpdateDownloadProgress(
+                UpdateProgressPhase.Downloading, 0, null));
+            await DownloadAsync(update.PortableUrl, zipPath, progress, cancellationToken);
+
+            progress?.Report(new UpdateDownloadProgress(
+                UpdateProgressPhase.Verifying, 0, null));
 
             if (!UpdateIntegrity.Matches(zipPath, update.PortableSha256))
             {
@@ -303,9 +326,13 @@ public sealed class UpdateService : IUpdateService
 
             UpdateLog.Write("Taşınabilir paket doğrulandı.");
 
+            progress?.Report(new UpdateDownloadProgress(
+                UpdateProgressPhase.Extracting, 0, null));
             var extractPath = Path.Combine(updateRoot, "files");
             ZipFile.ExtractToDirectory(zipPath, extractPath);
 
+            progress?.Report(new UpdateDownloadProgress(
+                UpdateProgressPhase.PreparingRollback, 0, null));
             if (!_rollback.Prepare(update.LatestVersion!, portable: true))
                 return OperationResult.Fail("Geri dönüş dosyaları hazırlanamadı; güvenlik için güncelleme durduruldu.");
 
@@ -339,6 +366,8 @@ public sealed class UpdateService : IUpdateService
 
             File.WriteAllText(scriptPath, script);
 
+            progress?.Report(new UpdateDownloadProgress(
+                UpdateProgressPhase.StartingInstaller, 0, null));
             Process.Start(new ProcessStartInfo("cmd.exe", $"/c \"{scriptPath}\"")
             {
                 UseShellExecute = true,
@@ -392,14 +421,34 @@ public sealed class UpdateService : IUpdateService
     private async Task DownloadAsync(
         string url,
         string destination,
+        IProgress<UpdateDownloadProgress>? progress,
         CancellationToken cancellationToken)
     {
         using var response = await _client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
 
+        var totalBytes = response.Content.Headers.ContentLength;
+        var buffer = new byte[81920];
+        long receivedBytes = 0;
+
         await using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
         await using var target = File.Create(destination);
-        await source.CopyToAsync(target, cancellationToken);
+
+        int read;
+        while ((read = await source.ReadAsync(buffer.AsMemory(), cancellationToken)) > 0)
+        {
+            await target.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+            receivedBytes += read;
+            progress?.Report(new UpdateDownloadProgress(
+                UpdateProgressPhase.Downloading,
+                receivedBytes,
+                totalBytes));
+        }
+
+        progress?.Report(new UpdateDownloadProgress(
+            UpdateProgressPhase.Downloading,
+            receivedBytes,
+            totalBytes > 0 ? totalBytes : receivedBytes));
     }
 
     private static void SafeDelete(string path)

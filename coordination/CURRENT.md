@@ -1,12 +1,13 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-17 13:05 (UTC+3)
+**Son güncelleme:** 2026-11-17 14:10 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `agent/cfr-lenovo/forced-update` (PR bekliyor)
-**Durum:** Yeşil — 369 test, web build ve mobil tsc başarılı; zorunlu güncelleme eklendi.
+**Dal:** `agent/cfr-lenovo/update-progress` (PR bekliyor)
+**Durum:** Yeşil — 370 test, web build ve mobil tsc başarılı.
 
 ## Bu turda tamamlanan
 
+- **Güncelleme indirme ilerlemesi:** `UpdateProgressWindow`; yüzdelik ProgressBar, MB bilgisi ve aşama metinleri. İsteğe bağlı ve zorunlu güncelleme akışları bu pencereyi kullanıyor.
 - **Zorunlu güncelleme ekranı:** anonim `GET /v1/version-policy`; web ve mobilde minimum sürüm altındaysa bloklayıcı ekran; masaüstünde giriş öncesi `ForcedUpdateWindow`.
 - **Sürüm politikası kaynağı:** `version-policy.json` release asset'i + `master` yedeği; API `VersionPolicy` ve `latestWebVersion`; web `NEXT_PUBLIC_APP_VERSION`, mobil `APP_VERSION`.
 - **İçerik konsolu manuel UAT (API + web):** kategori ekleme/düzenleme/sıralama/pasifleştirme/silme, görüşmeci ekleme/güncelleme/pasifleştirme, giriş hesaplı görüşmeci, kurum/ayar kaydı, v1→v2 yayın, v1'e geri alma, manifest doğrulama, görüşmeci rolünde `/v1/admin/content` → 403, `contentChanged` ile web başlığının otomatik yenilenmesi.
@@ -36,15 +37,17 @@
 
 ## Sıradaki iş (öncelik sırası)
 
-1. **Mobil cihaz UAT’i** — çevrimdışı kuyruk, canlı olay, push (EAS dev build gerekir).
-2. **Zorunlu güncelleme UAT’i** — web/mobil için eski sürüm simülasyonu, masaüstü için
+1. **Güncelleme ilerleme penceresi UAT’i** — gerçek Setup indirmesinde yüzde/MB/aşama metinleri,
+   doğrulama ve kurulum başlatma adımları.
+2. **Mobil cihaz UAT’i** — çevrimdışı kuyruk, canlı olay, push (EAS dev build gerekir).
+3. **Zorunlu güncelleme UAT’i** — web/mobil için eski sürüm simülasyonu, masaüstü için
    `version-policy.json` min sürüm testi.
-3. **İçerik logosu yükleme** — konsoldan kurum logosu değiştirme (şimdilik mevcut logo korunur).
-4. **İçerik konsolu UAT notları** — gerçek kurum verisiyle son bir tur (opsiyonel).
+4. **İçerik logosu yükleme** — konsoldan kurum logosu değiştirme (şimdilik mevcut logo korunur).
+5. **İçerik konsolu UAT notları** — gerçek kurum verisiyle son bir tur (opsiyonel).
 
 ## Aktif kilit
 
-Yok. (CFR-LENOVO içerik konsolu tamamlandı; kilit bırakıldı. Kontrol: `node coordination/lock.mjs status`)
+Yok. (CFR-LENOVO güncelleme ilerleme çalışması tamamlandı; kilit bırakıldı. Kontrol: `node coordination/lock.mjs status`)
 
 ## Dikkat edilecekler
 
@@ -114,6 +117,6 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-Zorunlu güncelleme dalı: yerel **369/369** test, web build, mobil `tsc --noEmit` başarılı.
+Güncelleme ilerleme dalı: yerel **370/370** test, web build, mobil `tsc --noEmit` başarılı.
 PR kontrolleri merge öncesi `gh pr checks --watch` ile doğrulanacak.
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol zorunlu.

@@ -595,7 +595,7 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand(CanExecute = nameof(IsUpdateAvailable))]
-    private async Task InstallUpdateAsync()
+    private void InstallUpdate()
     {
         if (_lastUpdate is null || !_lastUpdate.UpdateAvailable)
             return;
@@ -608,15 +608,13 @@ public partial class SettingsViewModel : ObservableObject
         IsCheckingUpdate = true;
         try
         {
-            var result = await _updates.InstallAsync(_lastUpdate);
-            if (!result.Success)
+            var window = new Views.UpdateProgressWindow(_updates, _lastUpdate)
             {
-                _dialogs.Error(result.Error ?? "Güncelleme başlatılamadı.", "Güncelleme");
-                return;
-            }
+                Owner = System.Windows.Application.Current?.MainWindow
+            };
 
-            _dialogs.Info("Güncelleme başlatıldı. Uygulama yeniden başlayacak.", "Güncelleme");
-            System.Windows.Application.Current?.Shutdown();
+            if (window.ShowDialog() == true)
+                System.Windows.Application.Current?.Shutdown();
         }
         finally
         {

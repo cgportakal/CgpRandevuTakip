@@ -27,7 +27,7 @@ public partial class ForcedUpdateWindow : Window
             ReleaseNotesText.Text = "Bu sürüm için ayrıntılı not bulunmuyor.";
     }
 
-    private async void OnUpdateClick(object sender, RoutedEventArgs e)
+    private void OnUpdateClick(object sender, RoutedEventArgs e)
     {
         if (_busy)
             return;
@@ -36,31 +36,28 @@ public partial class ForcedUpdateWindow : Window
         UpdateButton.IsEnabled = false;
         ExitButton.IsEnabled = false;
         ErrorPanel.Visibility = Visibility.Collapsed;
-        StatusText.Text = "Güncelleme indiriliyor ve hazırlanıyor…";
-        StatusText.Visibility = Visibility.Visible;
 
         try
         {
-            var result = await _updates.InstallAsync(_update);
-            if (result.Success)
+            var progress = new UpdateProgressWindow(_updates, _update)
+            {
+                Owner = this
+            };
+
+            if (progress.ShowDialog() == true)
             {
                 _allowClose = true;
                 DialogResult = true;
                 return;
             }
 
-            ShowError(result.Error ?? "Güncelleme başlatılamadı.");
-        }
-        catch (Exception ex)
-        {
-            ShowError($"Güncelleme başlatılamadı: {ex.Message}");
+            ShowError("Güncelleme tamamlanamadı. Lütfen tekrar deneyin.");
         }
         finally
         {
             _busy = false;
             UpdateButton.IsEnabled = true;
             ExitButton.IsEnabled = true;
-            StatusText.Visibility = Visibility.Collapsed;
         }
     }
 
