@@ -89,7 +89,21 @@ npm run dev
 - Olaylar: `appointmentChanged`, `seriesChanged`, `reminderDue`.
 - Web/mobil bağlıyken günlük liste ve raporlar otomatik yenilenir; hatırlatma baloncuğu gösterilir.
 
-Sunucu push’u (`appsettings.json` veya ortam değişkeni):
+### 4.1 Web Push (tarayıcı)
+
+- VAPID anahtarları ilk açılışta `data/vapid.json` içinde üretilir; `GET /v1/push/public-key` ile istemciye verilir.
+- Web’de üst çubuktaki **“Bildirimleri aç”** düğmesi izin ister, service worker’ı (`/sw.js`) kaydeder ve aboneliği `POST /v1/devices` ile sunucuya yazar.
+- Chrome’da izin daha önce reddedildiyse site ayarlarından sıfırlanmalıdır (🔒 > Bildirimler > İzin ver).
+- HTTPS gerekir; `localhost`/`127.0.0.1` geliştirmede kabul edilir.
+
+### 4.2 Mobil Push (FCM/APNs)
+
+- Mobil, **Expo Push** üzerinden FCM/APNs’e köprülenir; sunucuda sertifika tutmak gerekmez.
+- Gerekenler: `eas init` ile `projectId`, ardından **geliştirme derlemesi** (`eas build --profile development`). Expo Go’da uzak push desteklenmez.
+- Cihaz belirteci girişte `POST /v1/devices` ile kaydedilir; çıkışta silinir.
+- Expo hesabı özel anahtar istiyorsa `Expo__AccessToken` ortam değişkeni verilir.
+
+### 4.3 ntfy / Telegram
 
 ```json
 "Push": {
@@ -109,13 +123,12 @@ $env:Push__ChatId='123456789'
 ```
 
 - Worker 15 saniyede bir çalışır; sessiz saatlerde push göndermez, uygulama içi olay sessiz iletilir.
-- `Push:Enabled=false` ise veritabanındaki `PushEnabled` ayarı kullanılır.
-- Push gönderilemezse hatırlatma yine SignalR ile iletilir ve sonraki turda yeniden denenir.
+- Cihaz push’u (web/mobil) ayrıca çalışır; ntfy/Telegram yapılandırması zorunlu değildir.
+- `POST /v1/push/test` yalnızca oturum sahibinin cihazlarına test bildirimi gönderir.
 
 ## 5. Sonraki adımlar
 
-- FCM/APNs (mobil) ve Web Push/VAPID.
 - İçerik yönetim konsolu ve zorunlu güncelleme ekranı.
-- Mobil cihaz UAT’i (çevrimdışı kuyruk + canlı olay).
+- Mobil cihaz UAT’i (çevrimdışı kuyruk + canlı olay + push).
 
 

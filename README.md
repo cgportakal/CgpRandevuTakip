@@ -45,6 +45,18 @@ WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma �
 Ayrıntılar: [docs/29_Platform_Mimarisi.md](docs/29_Platform_Mimarisi.md) ·
 [docs/30_Api_ve_Mobil_Kurulum.md](docs/30_Api_ve_Mobil_Kurulum.md)
 
+### Geliştirici devri (iki bilgisayar)
+
+Bu depo iki bilgisayarda iki ajanla geliştiriliyor. Çakışmayı önlemek için:
+
+- **Durum:** [coordination/CURRENT.md](coordination/CURRENT.md)
+- **Protokol:** [coordination/PROTOCOL.md](coordination/PROTOCOL.md)
+- **Kilit:** `node coordination/lock.mjs status` · `acquire --machine <ad> --task "..."`
+- **Hızlı başlangıç:** [BASLANGIC.md](BASLANGIC.md) · macOS `bash basla.command` · Windows `basla.cmd`
+- **Akış:** `agent/<makine>/<konu>` dalı → PR → yeşil CI → squash merge (`master` korumalı).
+
+Ajanlar için giriş kuralları: [AGENTS.md](AGENTS.md).
+
 ## Neden bu proje?
 
 Görüşmeler hâlâ defter, Excel veya dağınık mesajlarla takip ediliyorsa; kayıt kayboluyor,
@@ -89,6 +101,7 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 32 | [Tekrarlayan Seri](docs/32_Tekrarlayan_Seri.md) | Sıklıklar, ay sonu kırpması, iptal kapsamı |
 | 33 | [1.6.0 UAT](docs/33_UAT_1.6.0.md) | Kurulum, migration, rapor/seri senaryoları, geri dönüş |
 | 34 | [1.7.0 UAT](docs/34_UAT_1.7.0.md) | Rapor türleri, Excel, seri yönetimi, API/mobil, UI testleri |
+| 35 | [Geliştirme Ortamı](docs/35_Gelistirme_Ortami.md) | Windows + macOS kurulum, bağımlılıklar, ortam değişkenleri |
 
 ## Alınan temel kararlar
 

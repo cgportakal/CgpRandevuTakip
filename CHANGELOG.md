@@ -6,11 +6,14 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 ## [Yayınlanmamış]
 
 ### Eklendi
+- **Web Push (VAPID):** `GET /v1/push/public-key`, `public/sw.js`, üst çubukta “Bildirimleri aç”, abonelik kaydı ve test bildirimi. VAPID anahtarları ilk açılışta üretilip saklanır.
+- **Mobil push (Expo → FCM/APNs):** `expo-notifications` izni, Expo push belirteci, girişte `POST /v1/devices`, çıkışta silme.
+- **Cihaz kayıtları:** `GET/POST/DELETE /v1/devices`, `POST /v1/push/test`; web abonelikleri süresi dolunca otomatik temizlenir.
+- **Sunucu worker:** hatırlatmaları SignalR + cihaz push + ntfy/Telegram üzerinden iletir; sessiz saatlerde push göndermez.
 - **SignalR:** `/hubs/events` hub’ı (JWT, WebSocket `access_token`); `appointmentChanged`, `seriesChanged`, `reminderDue` olayları. Web ve mobil bağlıyken günlük liste/raporlar otomatik yenilenir.
-- **Sunucu bildirim worker’ı:** 15 sn’de bir due hatırlatmaları işler; sessiz saatleri uygular; **ntfy/Telegram** push gönderir (`Push` yapılandırması). Push başarısızsa SignalR olayı yine iletilir.
 - **Web canlı bildirim:** sağ altta hatırlatma baloncuğu, “Canlı” bağlantı durumu.
 - **Mobil canlı olay:** SignalR bağlantısı (TextEncoder polyfill), gün listesi otomatik yenileme, hatırlatma banner’ı.
-- API testlerine hub kimlik doğrulaması ve canlı bağlantı kontrolü eklendi (**10 API testi**).
+- API testlerine hub kimlik doğrulaması, push anahtarı ve cihaz kaydı kontrolleri eklendi (**10 API testi**).
 - **Web uygulaması (`web/`, Next.js 16):** giriş, günlük liste (tarih/arama), yeni görüşme ve tekrarlayan seri, detay + görüşme sonucu, silme/seri iptali, 7 rapor türü, çevrimdışı okuma önbelleği.
 - **CI:** web için `npm ci` + `npm run build` işi.
 

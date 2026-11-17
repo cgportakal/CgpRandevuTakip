@@ -77,6 +77,23 @@ class ApiClient {
     return this.request<ContentManifest>('/v1/content/manifest');
   }
 
+  async registerDevice(request: {
+    platform: 'android' | 'ios';
+    token: string;
+    appVersion?: string;
+  }): Promise<void> {
+    await this.request('/v1/devices', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async unregisterDeviceToken(token: string): Promise<void> {
+    await this.request(`/v1/devices?token=${encodeURIComponent(token)}`, {
+      method: 'DELETE',
+    });
+  }
+
   async saveOutcome(id: string, input: AppointmentOutcomeInput): Promise<void> {
     await this.request(`/v1/appointments/${id}/outcome`, {
       method: 'PUT',

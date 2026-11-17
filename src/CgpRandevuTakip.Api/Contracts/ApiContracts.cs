@@ -61,3 +61,17 @@ public sealed record ContentManifestDto(
     VersionPolicyDto VersionPolicy);
 
 public sealed record ErrorResponse(string Error, IReadOnlyList<string>? Details = null);
+
+public sealed record DeviceRegistrationRequest(
+    string Platform,
+    string? Token = null,
+    string? Endpoint = null,
+    string? P256dh = null,
+    string? Auth = null,
+    string? AppVersion = null);
+
+public sealed record DeviceDto(string Id, string Platform, string? AppVersion, DateTime UpdatedAtUtc);
+
+public sealed record PushPublicKeyResponse(string PublicKey, string Subject);
+
+public sealed record PushTestResponse(int Sent, int DeviceCount);
