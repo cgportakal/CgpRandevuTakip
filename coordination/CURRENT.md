@@ -1,12 +1,13 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-17 20:49 (UTC+3)
+**Son güncelleme:** 2026-11-17 21:04 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** 1.8.1 yayın hazırlığı — 371 test; Setup-only paket yerel doğrulandı.
+**Durum:** Yeşil — 371 test; **1.8.1 yayında** (Setup-only).
 
 ## Bu turda tamamlanan
 
+- **1.8.1 yayını:** `v1.8.1` GitHub Release yayınlandı (Setup-only; portable yok). Assetler: Setup, Dev.cer, SHA256SUMS, version-policy.json; latestDesktop 1.8.1. Release workflow parametre splat düzeltmesi (#25).
 - **1.8.0 yayını:** `v1.8.0` etiketi push edildi; release workflow başarılı. GitHub Release assetleri: Setup (66,8 MB), portable (94,9 MB), SHA256SUMS, Dev.cer, version-policy.json. README indirme bağlantıları HTTP 200.
 - **1.8.0 sürüm hazırlığı:** `AppConstants`/assembly/installer `1.8.0`; `version-policy.json` latest sürümleri 1.8.0; README indirme bağlantıları güncellendi; `docs/36_UAT_1.8.0.md` eklendi. Yerel Setup + portable + SHA256 üretildi.
 - **Güncelleme indirme ilerlemesi:** `UpdateProgressWindow`; yüzdelik ProgressBar, MB bilgisi ve aşama metinleri. İsteğe bağlı ve zorunlu güncelleme akışları bu pencereyi kullanıyor.
@@ -41,11 +42,10 @@
 
 ## Sıradaki iş (öncelik sırası)
 
-1. **1.8.1 yayını** — güncelleme ilerleme düzeltmesini yayınla (Setup-only; portablesiz).
-2. **Mobil cihaz UAT’i** — çevrimdışı kuyruk, canlı olay, push (EAS dev build gerekir).
-3. **Zorunlu güncelleme UAT’i** — web/mobil için eski sürüm simülasyonu, masaüstü için
+1. **Mobil cihaz UAT’i** — çevrimdışı kuyruk, canlı olay, push (EAS dev build gerekir).
+2. **Zorunlu güncelleme UAT’i** — web/mobil için eski sürüm simülasyonu, masaüstü için
    `version-policy.json` min sürüm testi.
-4. **İçerik logosu yükleme** — konsoldan kurum logosu değiştirme (şimdilik mevcut logo korunur).
+3. **İçerik logosu yükleme** — konsoldan kurum logosu değiştirme (şimdilik mevcut logo korunur).
 
 ## Aktif kilit
 
@@ -119,6 +119,6 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-PR #22 (güncelleme ilerleme düzeltmesi) — .NET, Web, Mobil üçü de başarılı; master CI çalışıyor.
-Yerel: **371/371** test, web build, mobil `tsc --noEmit`.
+PR #25 (release workflow splat) — .NET, Web, Mobil başarılı; Release workflow **1.8.1 Setup-only** başarılı.
+Yerel: **371/371** test, web build, mobil `tsc --noEmit`; kurulu 1.8.1 doğrulandı.
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol + güncel dal + yalnızca squash.
