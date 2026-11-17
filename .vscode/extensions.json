@@ -1,0 +1,14 @@
+{
+  "recommendations": [
+    "ms-dotnettools.csdevkit",
+    "ms-dotnettools.csharp",
+    "editorconfig.editorconfig",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "expo.vscode-expo-tools",
+    "bradlc.vscode-tailwindcss",
+    "qwtel.sqlite-viewer",
+    "eamodio.gitlens",
+    "github.vscode-github-actions"
+  ]
+}
