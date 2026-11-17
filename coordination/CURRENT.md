@@ -1,12 +1,20 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-17 21:04 (UTC+3)
+**Son güncelleme:** 2026-11-17 21:44 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — 371 test; **1.8.1 yayında** (Setup-only).
+**Durum:** Yeşil — zorunlu güncelleme UAT’i (web + masaüstü) tamamlandı; sürüm notu
+biçimlendirmesi ve API sürüm politikası düzeltmesi sıradaki yayına hazır.
 
 ## Bu turda tamamlanan
 
+- **Zorunlu güncelleme UAT’i (web + masaüstü):** web istemcisi 1.0.0 / `minWebVersion` 9.9.9 →
+  bloklayıcı ekran mevcut–gerekli–son sürümü doğru gösterdi; masaüstü 1.0.0 test derlemesi
+  `ForcedUpdateWindow` ile mevcut 1.0.0 / gerekli 1.5.0 / son v1.8.1 gösterdi, “Çıkış” uygulamayı
+  kapattı ([docs/38](docs/38_UAT_Zorunlu_Guncelleme.md)).
+- **Sürüm notu biçimlendirmesi:** `ReleaseNotesFormatter` ham Markdown’ı düz metne çeviriyor;
+  `ForcedUpdateWindow` ve `ReleaseNotesWindow` kullanıyor; 6 birim testi eklendi.
+- **API sürüm politikası:** `appsettings.json` `latestDesktopVersion` 1.8.0 → **1.8.1**.
 - **1.8.1 yayını:** `v1.8.1` GitHub Release yayınlandı (Setup-only; portable yok). Assetler: Setup, Dev.cer, SHA256SUMS, version-policy.json; latestDesktop 1.8.1. Release workflow parametre splat düzeltmesi (#25).
 - **1.8.0 yayını:** `v1.8.0` etiketi push edildi; release workflow başarılı. GitHub Release assetleri: Setup (66,8 MB), portable (94,9 MB), SHA256SUMS, Dev.cer, version-policy.json. README indirme bağlantıları HTTP 200.
 - **1.8.0 sürüm hazırlığı:** `AppConstants`/assembly/installer `1.8.0`; `version-policy.json` latest sürümleri 1.8.0; README indirme bağlantıları güncellendi; `docs/36_UAT_1.8.0.md` eklendi. Yerel Setup + portable + SHA256 üretildi.
@@ -42,9 +50,9 @@
 
 ## Sıradaki iş (öncelik sırası)
 
-1. **Mobil cihaz UAT’i** — çevrimdışı kuyruk, canlı olay, push (EAS dev build gerekir).
-2. **Zorunlu güncelleme UAT’i** — web/mobil için eski sürüm simülasyonu, masaüstü için
-   `version-policy.json` min sürüm testi.
+1. **Mobil cihaz UAT’i** — çevrimdışı kuyruk, canlı olay, push (EAS dev build gerekir; bu
+   makinede Android SDK/Xcode yok).
+2. **1.8.2 yayını** — sürüm notu biçimlendirmesi + API `appsettings` düzeltmesi (Setup-only).
 3. **İçerik logosu yükleme** — konsoldan kurum logosu değiştirme (şimdilik mevcut logo korunur).
 
 ## Aktif kilit
@@ -61,6 +69,9 @@ Yok. (CFR-LENOVO 1.8.0 release tamamlandı; kilit bırakıldı. Kontrol: `node c
   Masaüstü (WPF) yalnızca Windows’ta derlenir; macOS’ta API/web/mobil geliştirilir.
 - **Masaüstü verisi ayrıdır:** desktop `%LOCALAPPDATA%` SQLite, sunucu `CGP_API_DATA/cgp.db`.
   Desktop senkronizasyonu henüz yok; SignalR/push sunucu tarafını etkilemez.
+- **Masaüstü zorunlu güncelleme testi:** `UpdateService` politikayı yerel API’den değil GitHub
+  `master/version-policy.json` ve `releases/latest` üzerinden okur. Test için geçici düşük sürüm
+  derlemesi yeterlidir; yerel API politikası etkilemez.
 - **Rapor yolu:** `/v1/reports/kind/{kind}` kullan. `/v1/reports/Summary` yanlışlıkla
   `/v1/reports/summary` ucuna düşer (route çakışması).
 - **SignalR CORS:** istemci `withCredentials: false` kullanmalı; aksi halde `AllowAnyOrigin` reddedilir.
@@ -120,5 +131,5 @@ dotnet test CgpRandevuTakip.sln -c Release
 ## Son CI
 
 PR #25 (release workflow splat) — .NET, Web, Mobil başarılı; Release workflow **1.8.1 Setup-only** başarılı.
-Yerel: **371/371** test, web build, mobil `tsc --noEmit`; kurulu 1.8.1 doğrulandı.
+Yerel: **377/377** test, web build, mobil `tsc --noEmit`; zorunlu güncelleme UAT’i tamamlandı.
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol + güncel dal + yalnızca squash.

@@ -104,6 +104,7 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 35 | [Geliştirme Ortamı](docs/35_Gelistirme_Ortami.md) | Windows + macOS kurulum, bağımlılıklar, ortam değişkenleri |
 | 36 | [1.8.0 UAT](docs/36_UAT_1.8.0.md) | İçerik konsolu, yayın/geri alma, zorunlu güncelleme, ilerleme penceresi |
 | 37 | [Güncelleme İlerleme UAT](docs/37_UAT_1.8.0_Guncelleme_Ilerleme.md) | Gerçek Setup indirmesi, yüzde/MB, doğrulama, kurulum |
+| 38 | [Zorunlu Güncelleme UAT](docs/38_UAT_Zorunlu_Guncelleme.md) | Web/masaüstü bloklayıcı ekran, sürüm politikası, sürüm notları |
 
 ## Alınan temel kararlar
 
