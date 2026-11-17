@@ -5,9 +5,9 @@
 
 ## İndir
 
-> **Son sürüm: 1.8.1** · 17.11.2026 · 371 test geçiyor
+> **Son sürüm: 1.8.2** · 17.11.2026 · 377 test geçiyor
 
-- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.8.1-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.8.1/CGP-RandevuTakip-1.8.1-Setup.exe)
+- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.8.2-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.8.2/CGP-RandevuTakip-1.8.2-Setup.exe)
 - **Tüm sürümler:** [Releases](https://github.com/cgportakal/CgpRandevuTakip/releases/latest)
 - **Taşınabilir ZIP:** Yalnızca kararlı sürümlerde yayınlanır. Son taşınabilir paket:
   [1.8.0 portable](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.8.0/CGP-RandevuTakip-1.8.0-portable.zip).
@@ -19,8 +19,8 @@
 Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöneten, günlük listeyi
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
-> Durum: **1.8.1 hazır** — güncelleme ilerleme penceresindeki UI donması giderildi (doğrulama,
-> geri dönüş ve kurulum başlatma aşamaları görünür). Web içerik konsolu, zorunlu güncelleme,
+> Durum: **1.8.2 hazır** — güncelleme pencerelerinde sürüm notları ham Markdown yerine düz metin
+> gösteriliyor; zorunlu güncelleme akışı web ve masaüstünde doğrulandı. Web içerik konsolu,
 > güvenli güncelleme, oturum yönetimi ve temiz kaldırma tamamlandı.
 
 ### Kurulum ve kaldırma
