@@ -1,9 +1,9 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-17 18:45 (UTC+3)
+**Son güncelleme:** 2026-11-17 20:26 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — 370 test; **1.8.0 yayında**, Setup/portable/SHA256/version-policy assetleri hazır.
+**Durum:** Yeşil — 371 test; **1.8.0 yayında**; ilerleme penceresi düzeltmesi master’a hazırlanıyor.
 
 ## Bu turda tamamlanan
 
