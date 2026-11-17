@@ -13,6 +13,7 @@ import type {
   SeriesCreateResult,
   SeriesPlan,
   SeriesRequest,
+  VersionPolicy,
 } from './types';
 
 export class ApiError extends Error {
@@ -75,6 +76,10 @@ class ApiClient {
 
   async getManifest(): Promise<ContentManifest> {
     return this.request<ContentManifest>('/v1/content/manifest');
+  }
+
+  async getVersionPolicy(): Promise<VersionPolicy> {
+    return this.request<VersionPolicy>('/v1/version-policy', {}, false);
   }
 
   async registerDevice(request: {

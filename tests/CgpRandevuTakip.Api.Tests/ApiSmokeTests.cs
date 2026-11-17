@@ -66,6 +66,23 @@ public class ApiSmokeTests : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task VersionPolicy_IsPublic()
+    {
+        var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/v1/version-policy");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var policy = await response.Content.ReadFromJsonAsync<VersionPolicyDto>(JsonOptions);
+        Assert.NotNull(policy);
+        Assert.False(string.IsNullOrWhiteSpace(policy!.MinDesktopVersion));
+        Assert.False(string.IsNullOrWhiteSpace(policy.MinMobileVersion));
+        Assert.False(string.IsNullOrWhiteSpace(policy.MinWebVersion));
+        Assert.False(string.IsNullOrWhiteSpace(policy.LatestWebVersion));
+    }
+
+    [Fact]
     public async Task Manifest_RequiresAuthentication()
     {
         var client = _factory.CreateClient();

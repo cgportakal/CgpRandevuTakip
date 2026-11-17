@@ -2,16 +2,24 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { api } from './src/api/client';
-import type { AppointmentListItem, AuthTokens, ContentManifest } from './src/api/types';
+import type {
+  AppointmentListItem,
+  AuthTokens,
+  ContentManifest,
+  VersionPolicy,
+} from './src/api/types';
+import { APP_VERSION } from './src/config';
 import { registerForPushAsync, unregisterPushAsync } from './src/push';
 import { startRealtime, stopRealtime, subscribeRealtime } from './src/realtime';
 import { AddAppointmentScreen } from './src/screens/AddAppointmentScreen';
 import { DetailScreen } from './src/screens/DetailScreen';
+import { ForcedUpdateScreen } from './src/screens/ForcedUpdateScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { ReportsScreen } from './src/screens/ReportsScreen';
 import { TodayScreen } from './src/screens/TodayScreen';
 import { clearSession, loadSession, saveSession } from './src/storage/session';
 import { colors, radius, spacing } from './src/theme';
+import { isVersionOlder } from './src/version';
 
 type Screen =
   | { name: 'today' }
@@ -25,6 +33,7 @@ export default function App() {
   const [booting, setBooting] = useState(true);
   const [user, setUser] = useState<AuthTokens['user'] | null>(null);
   const [manifest, setManifest] = useState<ContentManifest | null>(null);
+  const [versionPolicy, setVersionPolicy] = useState<VersionPolicy | null>(null);
   const [screen, setScreen] = useState<Screen>({ name: 'today' });
   const [banner, setBanner] = useState<Banner | null>(null);
   const bannerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -38,6 +47,12 @@ export default function App() {
         setUser(session.user);
       }
       setBooting(false);
+
+      try {
+        setVersionPolicy(await api.getVersionPolicy());
+      } catch {
+        // Genel politika alınamazsa oturum sonrası manifest politikası kullanılır.
+      }
     })();
   }, []);
 
@@ -91,12 +106,39 @@ export default function App() {
     setScreen({ name: 'today' });
   };
 
+  const reloadPolicy = async () => {
+    try {
+      setVersionPolicy(await api.getVersionPolicy());
+    } catch {
+      // Yeniden denemede ağ hatası olursa ekran korunur.
+    }
+  };
+
+  const activePolicy = versionPolicy ?? manifest?.versionPolicy;
+  const forceUpdate = activePolicy
+    ? isVersionOlder(APP_VERSION, activePolicy.minMobileVersion)
+    : false;
+
   if (booting) {
     return (
       <View style={styles.boot}>
         <StatusBar style="dark" />
         <ActivityIndicator color={colors.primary} />
       </View>
+    );
+  }
+
+  if (forceUpdate && activePolicy) {
+    return (
+      <>
+        <StatusBar style="dark" />
+        <ForcedUpdateScreen
+          currentVersion={APP_VERSION}
+          requiredVersion={activePolicy.minMobileVersion}
+          latestVersion={activePolicy.latestMobileVersion}
+          onRetry={() => void reloadPolicy()}
+        />
+      </>
     );
   }
 

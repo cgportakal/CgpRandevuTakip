@@ -135,9 +135,18 @@ $env:Push__ChatId='123456789'
 - **Yayınla ve Geri Al:** yayın notu ile sürüm oluşturma, son 20 sürümü görme ve seçilen sürüme dönme.
 - Yayın/geri alma sonrası `contentChanged` SignalR olayı gönderilir; web ve mobil istemciler manifesti yeniler.
 
-## 6. Sonraki adımlar
+## 6. Sürüm politikası
 
-- Zorunlu güncelleme ekranı.
+- API `GET /v1/version-policy` (anonim) ve `/v1/content/manifest` aynı politikayı döner.
+- Web sürümü `NEXT_PUBLIC_APP_VERSION`, mobil sürümü `APP_VERSION` ile karşılaştırılır.
+- Web/mobil minimum sürümün altındaysa bloklayıcı güncelleme ekranı açılır.
+- Masaüstü güncelleyici `version-policy.json` asset'ini okur; sürüm `minDesktopVersion`
+  altındaysa giriş öncesi zorunlu güncelleme penceresi açılır.
+- `version-policy.json` ile `src/CgpRandevuTakip.Api/appsettings.json` içindeki
+  `VersionPolicy` değerleri aynı tutulmalıdır; release workflow dosyayı asset olarak yükler.
+
+## 7. Sonraki adımlar
+
 - Mobil cihaz UAT’i (çevrimdışı kuyruk + canlı olay + push).
 
 

@@ -18,6 +18,7 @@ import type {
   SeriesCreateResult,
   SeriesFrequency,
   SeriesPlan,
+  VersionPolicy,
 } from './types';
 
 export const API_URL =
@@ -125,6 +126,10 @@ class ApiClient {
 
   getManifest(): Promise<ContentManifest> {
     return this.request('/v1/content/manifest');
+  }
+
+  getVersionPolicy(): Promise<VersionPolicy> {
+    return this.request('/v1/version-policy', {}, false);
   }
 
   getPushPublicKey(): Promise<{ publicKey: string; subject: string }> {

@@ -1,12 +1,14 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-17 11:45 (UTC+3)
+**Son güncelleme:** 2026-11-17 13:05 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `agent/cfr-lenovo/content-admin-uat` (UAT sonucu PR bekliyor)
-**Durum:** Yeşil — 361 test, CI 3/3; içerik konsolu manuel UAT tamamlandı.
+**Dal:** `agent/cfr-lenovo/forced-update` (PR bekliyor)
+**Durum:** Yeşil — 369 test, web build ve mobil tsc başarılı; zorunlu güncelleme eklendi.
 
 ## Bu turda tamamlanan
 
+- **Zorunlu güncelleme ekranı:** anonim `GET /v1/version-policy`; web ve mobilde minimum sürüm altındaysa bloklayıcı ekran; masaüstünde giriş öncesi `ForcedUpdateWindow`.
+- **Sürüm politikası kaynağı:** `version-policy.json` release asset'i + `master` yedeği; API `VersionPolicy` ve `latestWebVersion`; web `NEXT_PUBLIC_APP_VERSION`, mobil `APP_VERSION`.
 - **İçerik konsolu manuel UAT (API + web):** kategori ekleme/düzenleme/sıralama/pasifleştirme/silme, görüşmeci ekleme/güncelleme/pasifleştirme, giriş hesaplı görüşmeci, kurum/ayar kaydı, v1→v2 yayın, v1'e geri alma, manifest doğrulama, görüşmeci rolünde `/v1/admin/content` → 403, `contentChanged` ile web başlığının otomatik yenilenmesi.
 - **Geri alma davranışı doğrulandı:** snapshot'ta olmayan kategoriler silinmez, pasifleştirilir; böylece randevu referansları korunur.
 - **Web içerik yönetim konsolu:** `/v1/admin/content` (yalnızca Admin); kategori ekleme/düzenleme/sıralama/pasifleştirme/silme, görüşmeci ekleme/düzenleme, kurum profili ve genel ayarlar.
@@ -34,9 +36,9 @@
 
 ## Sıradaki iş (öncelik sırası)
 
-1. **Zorunlu güncelleme ekranı** — `VersionPolicy.minMobileVersion` / `minDesktopVersion`
-   ile eski istemciyi yönlendirme.
-2. **Mobil cihaz UAT’i** — çevrimdışı kuyruk, canlı olay, push (EAS dev build gerekir).
+1. **Mobil cihaz UAT’i** — çevrimdışı kuyruk, canlı olay, push (EAS dev build gerekir).
+2. **Zorunlu güncelleme UAT’i** — web/mobil için eski sürüm simülasyonu, masaüstü için
+   `version-policy.json` min sürüm testi.
 3. **İçerik logosu yükleme** — konsoldan kurum logosu değiştirme (şimdilik mevcut logo korunur).
 4. **İçerik konsolu UAT notları** — gerçek kurum verisiyle son bir tur (opsiyonel).
 
@@ -67,6 +69,12 @@ Yok. (CFR-LENOVO içerik konsolu tamamlandı; kilit bırakıldı. Kontrol: `node
   hesapları geri almada değiştirilmez; yalnızca `Host` rolü geri yüklenir. Logo dosyası kapsam dışı.
 - **Geri alma güvenliği:** snapshot'ta olmayan kategoriler **silinmez, pasifleştirilir**; görüşmelerdeki
   kategori referansları korunur. Aynı şekilde snapshot dışı görüşmeciler silinmez, pasifleştirilir.
+- **Sürüm politikası:** API `VersionPolicy` ve kök `version-policy.json` aynı tutulmalı. Release
+  workflow `version-policy.json` dosyasını asset olarak yükler. Web build'inde
+  `NEXT_PUBLIC_APP_VERSION`, mobilde `src/config.ts` `APP_VERSION` güncellenmeli.
+- **Zorunlu güncelleme:** web/mobilde giriş öncesi, masaüstünde `EnsureSupportedDesktopVersionAsync`
+  ile giriş öncesi kontrol edilir. Ağ hatasında uygulama açılmaya devam eder; politika alınamazsa
+  zorlama yapılmaz.
 - **Sırlar:** `src/CgpRandevuTakip.Api/data/`, `*.key`, `vapid.json`, `signing.thumbprint` commit edilmez.
 - **UI testleri:** yalnızca `CGP_UI_TESTS=1` ile ve yayınlanmış EXE üzerinde çalışır.
 
@@ -106,6 +114,6 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-PR #15 (`feat(web): içerik yönetim konsolu ve yayın/geri alma`) squash merge edildi.
-Master CI: **.NET 361/361, Web build, Mobil tsc** üçü de başarılı (`aff8268`).
+Zorunlu güncelleme dalı: yerel **369/369** test, web build, mobil `tsc --noEmit` başarılı.
+PR kontrolleri merge öncesi `gh pr checks --watch` ile doğrulanacak.
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol zorunlu.

@@ -112,9 +112,22 @@ Ortak protokol (uygulanacak):
 | Mobil (native) | EAS Build → TestFlight / Play |
 | Masaüstü | Mevcut güncelleyici (SHA-256 + geri dönüş) |
 
-`VersionPolicy` alanları (`minMobileVersion`, `minDesktopVersion`) zorunlu
-güncelleme ekranını tetikler. Davranış değişiklikleri önce **feature flag** ile
-sunucudan açılır; böylece tüm platformlar aynı gün aynı davranışı alır.
+`VersionPolicy` alanları (`minWebVersion`, `minMobileVersion`, `minDesktopVersion`)
+zorunlu güncelleme ekranını tetikler. Politika hem `/v1/content/manifest` içinde
+hem de anonim `GET /v1/version-policy` ucunda yayınlanır.
+
+- **Web:** `NEXT_PUBLIC_APP_VERSION` ile `minWebVersion` karşılaştırılır; eski sürüm
+  giriş öncesinde bloklayıcı “Güncelleme gerekli” ekranını görür.
+- **Mobil:** `APP_VERSION` ile `minMobileVersion` karşılaştırılır; eski sürüm
+  bloklayıcı ekran ve “Yeniden dene” görür.
+- **Masaüstü:** Güncelleyici, release asset'i olan `version-policy.json` dosyasından
+  `minDesktopVersion` değerini okur (asset yoksa `master` dosyasına düşer). Sürüm
+  minimumun altındaysa giriş öncesinde `ForcedUpdateWindow` açılır; kullanıcı
+  güncellemeden devam edemez.
+- `version-policy.json` release workflow'unda asset olarak yüklenir. API
+  `appsettings.json` sürüm politikası ile aynı tutulmalıdır.
+- Davranış değişiklikleri önce **feature flag** ile sunucudan açılır; böylece tüm
+  platformlar aynı gün aynı davranışı alır.
 
 ## 8. Dağıtım seçenekleri
 
