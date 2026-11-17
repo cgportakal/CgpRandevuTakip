@@ -68,6 +68,8 @@ istemci önbelleği doğrular.
 - **Yayın saklama:** Her yayın `ContentVersions` tablosunda tam anlık görüntü
   olarak tutulur. Geri alma, seçilen sürümün kategorilerini, görüşmecilerini ve
   kurum/ayar alanlarını geri yükler; ardından yeni bir sürüm olarak yayınlar.
+  Snapshot'ta bulunmayan kategoriler/görüşmeciler silinmez, pasifleştirilir;
+  böylece randevu referansları korunur.
 - **SignalR:** Yayın ve geri alma sonrası `contentChanged` olayı gönderilir;
   bağlı web/mobil istemciler manifesti yeniler.
 - Aynı manifest tüm platformlarda aynı ekran/metni üretir.

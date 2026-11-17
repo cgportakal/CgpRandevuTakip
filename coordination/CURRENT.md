@@ -1,12 +1,14 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-17 10:23 (UTC+3)
+**Son güncelleme:** 2026-11-17 11:45 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — 361 test, CI 3/3; içerik yönetim konsolu yayında.
+**Dal:** `agent/cfr-lenovo/content-admin-uat` (UAT sonucu PR bekliyor)
+**Durum:** Yeşil — 361 test, CI 3/3; içerik konsolu manuel UAT tamamlandı.
 
 ## Bu turda tamamlanan
 
+- **İçerik konsolu manuel UAT (API + web):** kategori ekleme/düzenleme/sıralama/pasifleştirme/silme, görüşmeci ekleme/güncelleme/pasifleştirme, giriş hesaplı görüşmeci, kurum/ayar kaydı, v1→v2 yayın, v1'e geri alma, manifest doğrulama, görüşmeci rolünde `/v1/admin/content` → 403, `contentChanged` ile web başlığının otomatik yenilenmesi.
+- **Geri alma davranışı doğrulandı:** snapshot'ta olmayan kategoriler silinmez, pasifleştirilir; böylece randevu referansları korunur.
 - **Web içerik yönetim konsolu:** `/v1/admin/content` (yalnızca Admin); kategori ekleme/düzenleme/sıralama/pasifleştirme/silme, görüşmeci ekleme/düzenleme, kurum profili ve genel ayarlar.
 - **Yayınlama ve geri alma:** `ContentVersions` tablosu (`ContentPublishing` migration), yayın notu ile sürüm oluşturma, son 20 sürüm, seçilen sürüme geri dönme. Yayın/geri alma sonrası `contentChanged` SignalR olayı.
 - **Web SignalR:** `contentChanged` aboneliği eklendi; işleyiciler sunucuya yanlış sonuç döndürmeyecek şekilde düzeltildi.
@@ -32,12 +34,11 @@
 
 ## Sıradaki iş (öncelik sırası)
 
-1. **İçerik konsolu manuel UAT** — kategori/görüşmeci/ayar düzenleme, yayınla, geri al,
-   `contentChanged` ile web/mobil yenileme.
-2. **Zorunlu güncelleme ekranı** — `VersionPolicy.minMobileVersion` / `minDesktopVersion`
+1. **Zorunlu güncelleme ekranı** — `VersionPolicy.minMobileVersion` / `minDesktopVersion`
    ile eski istemciyi yönlendirme.
-3. **Mobil cihaz UAT’i** — çevrimdışı kuyruk, canlı olay, push (EAS dev build gerekir).
-4. **İçerik logosu yükleme** — konsoldan kurum logosu değiştirme (şimdilik mevcut logo korunur).
+2. **Mobil cihaz UAT’i** — çevrimdışı kuyruk, canlı olay, push (EAS dev build gerekir).
+3. **İçerik logosu yükleme** — konsoldan kurum logosu değiştirme (şimdilik mevcut logo korunur).
+4. **İçerik konsolu UAT notları** — gerçek kurum verisiyle son bir tur (opsiyonel).
 
 ## Aktif kilit
 
@@ -64,6 +65,8 @@ Yok. (CFR-LENOVO içerik konsolu tamamlandı; kilit bırakıldı. Kontrol: `node
   kategori/görüşmeci/kurum-ayarlarını yükler ve yeni sürüm olarak yayınlar.
 - **İçerik sürümleri:** `ContentVersions` tablosu; `ContentPublishing` migration. Admin/sekretarya
   hesapları geri almada değiştirilmez; yalnızca `Host` rolü geri yüklenir. Logo dosyası kapsam dışı.
+- **Geri alma güvenliği:** snapshot'ta olmayan kategoriler **silinmez, pasifleştirilir**; görüşmelerdeki
+  kategori referansları korunur. Aynı şekilde snapshot dışı görüşmeciler silinmez, pasifleştirilir.
 - **Sırlar:** `src/CgpRandevuTakip.Api/data/`, `*.key`, `vapid.json`, `signing.thumbprint` commit edilmez.
 - **UI testleri:** yalnızca `CGP_UI_TESTS=1` ile ve yayınlanmış EXE üzerinde çalışır.
 
