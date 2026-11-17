@@ -5,12 +5,12 @@
 
 ## İndir
 
-> **Son sürüm: 1.7.0** · 16.11.2026 · 358 test geçiyor
+> **Son sürüm: 1.8.0** · 17.11.2026 · 370 test geçiyor
 
-- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.7.0-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.7.0/CGP-RandevuTakip-1.7.0-Setup.exe)
+- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.8.0-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.8.0/CGP-RandevuTakip-1.8.0-Setup.exe)
 - **Tüm sürümler:** [Releases](https://github.com/cgportakal/CgpRandevuTakip/releases/latest)
 - **Taşınabilir ZIP:** Yalnızca kararlı sürümlerde yayınlanır. Son taşınabilir paket:
-  [1.7.0 portable](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.7.0/CGP-RandevuTakip-1.7.0-portable.zip).
+  [1.8.0 portable](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.8.0/CGP-RandevuTakip-1.8.0-portable.zip).
 
 > Kurulum EXE'si per-user çalışır; yönetici hakkı istemez. Taşınabilir ZIP'i yazılabilir bir klasöre açıp
 > `CgpRandevuTakip.Desktop.exe` dosyasını çalıştırın. Dijital imza ayrıntıları:
@@ -19,8 +19,8 @@
 Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöneten, günlük listeyi
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
-> Durum: **1.7.0 hazır** — çoklu rapor türleri, Excel aktarımı, seri yönetimi, API rapor/seri uçları, mobil
-> çevrimdışı kuyruk ve UI testleri eklendi; kurulum sihirbazı, güvenli güncelleme, oturum yönetimi ve
+> Durum: **1.8.0 hazır** — web içerik yönetim konsolu, içerik yayınlama/geri alma, zorunlu güncelleme
+> ekranı ve yüzdelik güncelleme indirme penceresi eklendi; güvenli güncelleme, oturum yönetimi ve
 > temiz kaldırma tamamlandı.
 
 ### Kurulum ve kaldırma
@@ -37,7 +37,7 @@ WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma �
 
 | Platform | Durum | Not |
 |---|---|---|
-| Masaüstü (Windows) | **1.7.0** | Tam özellik, çevrimdışı |
+| Masaüstü (Windows) | **1.8.0** | Tam özellik, çevrimdışı |
 | Sunucu API’si | **v1** | Ortak iş kuralları, JWT, içerik manifesti |
 | Mobil (Android/iOS) | **0.2** | Giriş, günlük liste, detay, yeni görüşme/seri, raporlar, çevrimdışı kuyruk (Expo) |
 | Web | **Beta** | Giriş, günlük liste, yeni görüşme/seri, detay/sonuç, 7 rapor türü (Next.js) |
@@ -102,6 +102,7 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 33 | [1.6.0 UAT](docs/33_UAT_1.6.0.md) | Kurulum, migration, rapor/seri senaryoları, geri dönüş |
 | 34 | [1.7.0 UAT](docs/34_UAT_1.7.0.md) | Rapor türleri, Excel, seri yönetimi, API/mobil, UI testleri |
 | 35 | [Geliştirme Ortamı](docs/35_Gelistirme_Ortami.md) | Windows + macOS kurulum, bağımlılıklar, ortam değişkenleri |
+| 36 | [1.8.0 UAT](docs/36_UAT_1.8.0.md) | İçerik konsolu, yayın/geri alma, zorunlu güncelleme, ilerleme penceresi |
 
 ## Alınan temel kararlar
 
