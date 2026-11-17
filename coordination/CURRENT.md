@@ -2,8 +2,8 @@
 
 **Son güncelleme:** 2026-11-17 10:23 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `agent/cfr-lenovo/content-admin` (PR bekliyor)
-**Durum:** Yerel testler yeşil — 361 test; web build ve mobil tsc başarılı.
+**Dal:** `master` (origin ile eşit)
+**Durum:** Yeşil — 361 test, CI 3/3; içerik yönetim konsolu yayında.
 
 ## Bu turda tamamlanan
 
@@ -103,6 +103,6 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-İçerik konsolu dalı: yerel .NET testleri 361/361, web build ve mobil `tsc --noEmit` başarılı.
-PR kontrolleri merge öncesi `gh pr checks --watch` ile doğrulanacak.
+PR #15 (`feat(web): içerik yönetim konsolu ve yayın/geri alma`) squash merge edildi.
+Master CI: **.NET 361/361, Web build, Mobil tsc** üçü de başarılı (`aff8268`).
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol zorunlu.
