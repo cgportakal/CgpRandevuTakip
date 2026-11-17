@@ -3,6 +3,16 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [Yayınlanmadı]
+
+### Düzeltildi
+- **Mobil SignalR yeniden bağlanma:** otomatik denemeler tükenince bağlantı kalıcı kopuyordu; üstel geri çekilmeyle (2 → 30 sn, süresiz) yeniden bağlanma eklendi ([docs/39](docs/39_Mobil_UAT_Android.md)).
+- **Mobil zorunlu güncelleme ekranı:** Türkçe metinler çift kodlanmıştı (“GÃ¼ncelleme gerekli”); doğru UTF-8 metinlerle değiştirildi.
+
+### Doğrulama
+- **Android UAT (Expo Go / API 35 emülatör):** giriş, oturum kalıcılığı, çevrimdışı önbellek, çevrimdışı kuyruk ve eşitleme, SignalR canlı olay, 60 sn kesinti sonrası yeniden bağlanma, zorunlu güncelleme, raporlar ([docs/39](docs/39_Mobil_UAT_Android.md)).
+- Push (FCM) ve iOS testleri ortam gereksinimleri nedeniyle yapılamadı.
+
 ## [1.8.2] — 2026-11-17 · Sürüm notları ve zorunlu güncelleme UAT
 
 ### Düzeltildi

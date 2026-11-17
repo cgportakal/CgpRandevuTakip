@@ -19,16 +19,16 @@ export function ForcedUpdateScreen({
     <View style={styles.container}>
       <View style={styles.card}>
         <Text style={styles.brand}>CGP</Text>
-        <Text style={styles.title}>GÃ¼ncelleme gerekli</Text>
+        <Text style={styles.title}>Güncelleme gerekli</Text>
         <Text style={styles.subtitle}>
-          Bu uygulama sÃ¼rÃ¼mÃ¼ artÄ±k desteklenmiyor. Devam etmek iÃ§in uygulamayÄ±
-          maÄŸazadan veya EAS gÃ¼ncellemesiyle gÃ¼ncelleyin.
+          Bu uygulama sürümü artık desteklenmiyor. Devam etmek için uygulamayı
+          mağazadan veya EAS güncellemesiyle güncelleyin.
         </Text>
 
         <View style={styles.versions}>
-          <Row label="Mevcut sÃ¼rÃ¼m" value={currentVersion} />
-          <Row label="Gerekli sÃ¼rÃ¼m" value={requiredVersion} />
-          {latestVersion ? <Row label="Son sÃ¼rÃ¼m" value={latestVersion} /> : null}
+          <Row label="Mevcut sürüm" value={currentVersion} />
+          <Row label="Gerekli sürüm" value={requiredVersion} />
+          {latestVersion ? <Row label="Son sürüm" value={latestVersion} /> : null}
         </View>
 
         <TouchableOpacity style={styles.button} onPress={onRetry}>
