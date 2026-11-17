@@ -1,9 +1,9 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-17 20:36 (UTC+3)
+**Son güncelleme:** 2026-11-17 20:49 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — 371 test; **1.8.0 yayında**; ilerleme penceresi düzeltmesi **master’da (PR #22)**, 1.8.1 yayını sıradaki.
+**Durum:** 1.8.1 yayın hazırlığı — 371 test; Setup-only paket yerel doğrulandı.
 
 ## Bu turda tamamlanan
 
@@ -17,6 +17,7 @@
 - **Web içerik yönetim konsolu:** `/v1/admin/content` (yalnızca Admin); kategori ekleme/düzenleme/sıralama/pasifleştirme/silme, görüşmeci ekleme/düzenleme, kurum profili ve genel ayarlar.
 - **Yayınlama ve geri alma:** `ContentVersions` tablosu (`ContentPublishing` migration), yayın notu ile sürüm oluşturma, son 20 sürüm, seçilen sürüme geri dönme. Yayın/geri alma sonrası `contentChanged` SignalR olayı.
 - **Web SignalR:** `contentChanged` aboneliği eklendi; işleyiciler sunucuya yanlış sonuç döndürmeyecek şekilde düzeltildi.
+- **1.8.1 sürüm hazırlığı:** sürüm/assembly/installer 1.8.1; `version-policy.json` latestDesktop 1.8.1; README Setup 1.8.1; release workflow ara sürümlerde portable üretmeyecek şekilde koşullu; Setup-only paket yerel üretilip 1.8.1 kurulumu doğrulandı.
 - **Güncelleme ilerleme UAT’i:** gerçek `v1.8.0` Setup indirmesiyle doğrulandı (63,7 MB, %1→%98, MB/ilerleme çubuğu, “İndirme doğrulanıyor”, “Kurulum başlatılıyor”; veri korundu). Doğrulama/geri dönüş UI thread’ini bloke ediyordu; `Task.Run` + `Task.Yield` + kısa son aşama beklemesiyle düzeltildi ([docs/37](docs/37_UAT_1.8.0_Guncelleme_Ilerleme.md)).
 - **Hızlı başlangıç:** `BASLANGIC.md`, macOS `basla.command`, Windows `basla.cmd` /
   `scripts/basla.ps1` (temiz ağaç kontrolü → pull → Node kontrolü → bootstrap → durum).
