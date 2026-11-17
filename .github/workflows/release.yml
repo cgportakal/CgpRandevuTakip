@@ -62,6 +62,8 @@ jobs:
 
           "version=$version" >> $env:GITHUB_OUTPUT
           "prerelease=$($version.Contains('-').ToString().ToLower())" >> $env:GITHUB_OUTPUT
+          $portable = $version -match '^\d+\.\d+\.0$'
+          "portable=$($portable.ToString().ToLower())" >> $env:GITHUB_OUTPUT
 
       - name: Restore
         run: dotnet restore CgpRandevuTakip.sln
@@ -106,7 +108,14 @@ jobs:
       - name: Build installer
         shell: pwsh
         run: |
-          ./Kurulum-Olustur.ps1 -Version '${{ steps.version.outputs.version }}' -Portable
+          $arguments = @('-Version', '${{ steps.version.outputs.version }}')
+          if ('${{ steps.version.outputs.portable }}' -eq 'true') {
+            $arguments += '-Portable'
+            Write-Host 'Kararlı sürüm: taşınabilir ZIP de üretilecek.'
+          } else {
+            Write-Host 'Ara sürüm: yalnızca Setup EXE üretilecek.'
+          }
+          ./Kurulum-Olustur.ps1 @arguments
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
@@ -117,7 +126,7 @@ jobs:
             dist/CGP-RandevuTakip-*.zip
             dist/SHA256SUMS.txt
             dist/CGP-RandevuTakip-Dev.cer
-          if-no-files-found: error
+          if-no-files-found: warn
 
       - name: Publish GitHub Release
         if: github.event_name == 'push' || inputs.publish
@@ -129,10 +138,11 @@ jobs:
           $tag = "v$version"
           $files = @(
             "dist/CGP-RandevuTakip-$version-Setup.exe",
-            "dist/CGP-RandevuTakip-$version-portable.zip",
             "dist/SHA256SUMS.txt",
             "version-policy.json"
           )
+          $portableZip = "dist/CGP-RandevuTakip-$version-portable.zip"
+          if (Test-Path $portableZip) { $files += $portableZip }
           $cer = 'dist/CGP-RandevuTakip-Dev.cer'
           if (Test-Path $cer) { $files += $cer }
 
