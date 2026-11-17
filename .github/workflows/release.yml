@@ -108,14 +108,14 @@ jobs:
       - name: Build installer
         shell: pwsh
         run: |
-          $arguments = @('-Version', '${{ steps.version.outputs.version }}')
+          $parameters = @{ Version = '${{ steps.version.outputs.version }}' }
           if ('${{ steps.version.outputs.portable }}' -eq 'true') {
-            $arguments += '-Portable'
+            $parameters.Portable = $true
             Write-Host 'Kararlı sürüm: taşınabilir ZIP de üretilecek.'
           } else {
             Write-Host 'Ara sürüm: yalnızca Setup EXE üretilecek.'
           }
-          ./Kurulum-Olustur.ps1 @arguments
+          ./Kurulum-Olustur.ps1 @parameters
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
