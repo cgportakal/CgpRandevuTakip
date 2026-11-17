@@ -29,7 +29,7 @@ macOS'ta masaüstü kodu okunabilir/incelenebilir; **derleme ve UAT Windows'ta**
 | Inno Setup 6 | Windows | `winget install JRSoftware.InnoSetup` | — |
 | Xcode + CLT | iOS | — | App Store + `xcode-select --install` |
 | CocoaPods / watchman | iOS/Metro | — | `brew install cocoapods watchman` |
-| Android Studio | Android | opsiyonel | opsiyonel |
+| Android SDK | Android | `cmdline-tools` veya Android Studio (bkz. bölüm 7) | — |
 | EAS CLI | mobil derleme | `npm i -g eas-cli` | `npm i -g eas-cli` |
 
 ## 3. Tek seferlik kurulum
@@ -127,9 +127,60 @@ node coordination/lock.mjs release --machine <makine>
 
 - `mobile/.env` içindeki adres cihazdan erişilebilir olmalı; güvenlik duvarında 5199 açık.
 - Android emülatörü: `http://10.0.2.2:5199`; iOS simülatörü: `http://127.0.0.1:5199`.
+- `.env` yerine `EXPO_PUBLIC_API_URL` ortam değişkeni de kullanılabilir (ortam değişkeni önceliklidir).
 - Uzak push için EAS geliştirme derlemesi: `npx eas init`, `npx eas build --profile development`.
 - `mobile/eas.json` profilleri hazırdır (`development`, `preview`, `production`).
-- iOS için Apple Developer hesabı ve Xcode gerekir.
+- iOS için Apple Developer hesabı ve Xcode gerekir (yalnızca macOS).
+- Expo Go, Android’de SDK 53+ **uzak push** desteklemez; push testi için EAS dev build gerekir.
+
+### Android SDK (Windows, Android Studio olmadan)
+
+Android Studio kurmadan yalnızca komut satırı araçlarıyla emülatör kurulumu:
+
+1. **JDK 17** (portable ZIP): <https://api.adoptium.net/v3/binary/latest/17/ga/windows/x64/jdk/hotspot/normal/eclipse>
+2. **cmdline-tools**: <https://dl.google.com/android/repository/commandlinetools-win-11076708_latest.zip>
+3. Zip’leri açıp `cmdline-tools` klasörünü `Sdk\cmdline-tools\latest` olarak yerleştirin.
+
+```powershell
+$root = 'D:\Android'
+$env:JAVA_HOME = "$root\jdk17"
+$sdk = "$root\Sdk"
+$sdkManager = "$sdk\cmdline-tools\latest\bin\sdkmanager.bat"
+$avdManager = "$sdk\cmdline-tools\latest\bin\avdmanager.bat"
+
+# Lisanslar (sorulara y)
+& $sdkManager "--sdk_root=$sdk" --licenses
+
+# Paketler (~3 GB indirme)
+& $sdkManager "--sdk_root=$sdk" 'platform-tools' 'emulator' 'platforms;android-35' 'system-images;android-35;google_apis;x86_64'
+
+# AVD
+& $avdManager create avd -n cgp_uat -k 'system-images;android-35;google_apis;x86_64' -d 'pixel_6' --force
+
+# Hızlandırma kontrolü (WHPX/Hyper-V)
+& "$sdk\emulator\emulator.exe" -accel-check
+```
+
+Emülatörü başlatma ve uygulamayı açma:
+
+```powershell
+$env:ANDROID_HOME = $sdk
+$env:PATH = "$sdk\platform-tools;$sdk\emulator;$env:JAVA_HOME\bin;$env:PATH"
+& "$sdk\emulator\emulator.exe" -avd cgp_uat -no-audio -no-boot-anim -gpu auto -memory 3072
+
+$env:EXPO_PUBLIC_API_URL = 'http://10.0.2.2:5199'
+cd mobile
+npx expo start --android   # Expo Go'yu emülatöre kurar ve projeyi açar
+```
+
+Notlar:
+
+- `emulator -accel-check` “WHPX is installed and usable” demeli; aksi halde Windows Hypervisor
+  Platform/Hyper-V etkinleştirilmelidir.
+- `-no-window` modu bu makinede Windows `RADAR_PRE_LEAK_64` kaydıyla iki kez kapandı; pencereli
+  mod ve `-memory 3072` daha kararlı.
+- Emülatör ilk açılışta 1–2 dakika sürer; `adb wait-for-device` ve `sys.boot_completed` ile bekleyin.
+- Ayrıntılı Android UAT: [docs/39](39_Mobil_UAT_Android.md).
 
 ## 8. CI ve dal koruması
 
@@ -145,5 +196,6 @@ node coordination/lock.mjs release --machine <makine>
 | `npm ci` lockfile hatası | `package-lock.json` commit'li mi kontrol edin; `npm install` ile düzeltip lockfile'ı commit'leyin |
 | macOS'ta `CgpRandevuTakip.Desktop` derlenmiyor | Beklenen; WPF Windows-only. API/web/mobil kullanın |
 | Expo cihazdan API'ye ulaşamıyor | `EXPO_PUBLIC_API_URL` LAN IP; güvenlik duvarı 5199 |
+| Emülatör kendiliğinden kapanıyor | Pencere açık `-gpu auto -memory 3072` kullanın; `-no-window` bu makinede kararsız |
 | Web'de bildirim izni yok | Chrome site ayarları > Bildirimler > İzin ver; HTTPS/localhost |
 | Port 5199/3000 dolu | `Get-NetTCPConnection -LocalPort 5199` / `lsof -i :5199` |

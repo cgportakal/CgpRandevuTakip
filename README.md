@@ -20,8 +20,10 @@ Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöne
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
 > Durum: **1.8.2 hazır** — güncelleme pencerelerinde sürüm notları ham Markdown yerine düz metin
-> gösteriliyor; zorunlu güncelleme akışı web ve masaüstünde doğrulandı. Web içerik konsolu,
-> güvenli güncelleme, oturum yönetimi ve temiz kaldırma tamamlandı.
+> gösteriliyor; zorunlu güncelleme akışı web ve masaüstünde doğrulandı. Android UAT (çevrimdışı
+> kuyruk, canlı olay, zorunlu güncelleme) tamamlandı; mobil push ve iOS testleri ortam
+> gereksinimleri nedeniyle sırada. Web içerik konsolu, güvenli güncelleme, oturum yönetimi ve
+> temiz kaldırma tamamlandı.
 
 ### Kurulum ve kaldırma
 
