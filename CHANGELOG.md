@@ -3,7 +3,7 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
-## [Yayınlanmamış]
+## [1.8.0] — 2026-11-17 · İçerik yönetimi, zorunlu güncelleme
 
 ### Eklendi
 - **Web Push (VAPID):** `GET /v1/push/public-key`, `public/sw.js`, üst çubukta “Bildirimleri aç”, abonelik kaydı ve test bildirimi. VAPID anahtarları ilk açılışta üretilip saklanır.
@@ -31,6 +31,9 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 ### Düzeltildi (önceki)
 - Dependabot NuGet grubu yalnızca minor/patch güncellemeleri alacak şekilde ayrıldı; net10 gerektiren major sürümler beklemede.
 - `Swashbuckle.AspNetCore` 10.3.1'e yükseltildi; OpenAPI v2 güvenlik şeması `OpenApiSecuritySchemeReference` ile uyarlandı. Swagger UI ve şema üretimi doğrulandı.
+
+### Sürüm
+- Masaüstü sürümü **1.8.0**; assembly, installer, `Kurulum-Olustur.ps1` ve sürüm politikası aynı sürüme çekildi.
 
 ## [1.7.0] — 2026-11-16 · Rapor türleri, seri yönetimi, API ve mobil
 
