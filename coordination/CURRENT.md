@@ -1,9 +1,9 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-17 20:26 (UTC+3)
+**Son güncelleme:** 2026-11-17 20:36 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — 371 test; **1.8.0 yayında**; ilerleme penceresi düzeltmesi master’a hazırlanıyor.
+**Durum:** Yeşil — 371 test; **1.8.0 yayında**; ilerleme penceresi düzeltmesi **master’da (PR #22)**, 1.8.1 yayını sıradaki.
 
 ## Bu turda tamamlanan
 
@@ -118,7 +118,6 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-1.8.0 release workflow ✅ başarılı (`v1.8.0`). PR #20 kontrolleri (.NET, Web, Mobil) ✅.
-Yerel doğrulama: **370/370** test, web build, mobil `tsc --noEmit`; Setup FileVersion **1.8.0.0**.
-README Setup/portable/version-policy linkleri **HTTP 200**.
-`master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol zorunlu.
+PR #22 (güncelleme ilerleme düzeltmesi) — .NET, Web, Mobil üçü de başarılı; master CI çalışıyor.
+Yerel: **371/371** test, web build, mobil `tsc --noEmit`.
+`master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol + güncel dal + yalnızca squash.
