@@ -1,6 +1,6 @@
 # 38 — Zorunlu Güncelleme UAT (Web + Masaüstü)
 
-**Tarih:** 17.11.2026 · **Sürüm:** 1.8.1 · **Kapsam:** web ve masaüstü zorunlu güncelleme akışı
+**Tarih:** 17.11.2026 · **Sürüm:** 1.8.1 · düzeltmeler **1.8.2** (Setup-only) · **Kapsam:** web ve masaüstü zorunlu güncelleme akışı
 
 ## 1. Amaç
 

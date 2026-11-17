@@ -3,15 +3,18 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
-## [Yayınlanmadı]
+## [1.8.2] — 2026-11-17 · Sürüm notları ve zorunlu güncelleme UAT
 
 ### Düzeltildi
 - **Sürüm notları biçimlendirmesi:** masaüstü güncelleme pencereleri GitHub’dan gelen ham Markdown’ı (`##`, `**`, bağlantı) düz metin olarak gösteriyordu; `ReleaseNotesFormatter` ile başlık/liste/kalın/bağlantı işaretleri sadeleştiriliyor ([docs/38](docs/38_UAT_Zorunlu_Guncelleme.md)).
 - **API sürüm politikası:** `appsettings.json` içindeki `latestDesktopVersion` 1.8.0’da kalmıştı; **1.8.1** olarak düzeltildi.
-- **Zorunlu güncelleme UAT’i:** web (1.0.0 → gerekli 9.9.9) ve masaüstü (1.0.0 → gerekli 1.5.0, son v1.8.1) akışları doğrulandı.
 
-### Test
+### Doğrulama
+- **Zorunlu güncelleme UAT’i:** web (1.0.0 → gerekli 9.9.9) ve masaüstü (1.0.0 → gerekli 1.5.0, son v1.8.1) akışları doğrulandı.
 - **377/377** test; Release 0 uyarı / 0 hata.
+
+### Paket
+- Setup-only sürüm; taşınabilir ZIP yayınlanmadı (son portable **1.8.0**).
 
 ## [1.8.1] — 2026-11-17 · Güncelleme ilerleme düzeltmesi
 

@@ -1,10 +1,10 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-17 21:44 (UTC+3)
+**Son güncelleme:** 2026-11-17 22:05 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — zorunlu güncelleme UAT’i (web + masaüstü) tamamlandı; sürüm notu
-biçimlendirmesi ve API sürüm politikası düzeltmesi sıradaki yayına hazır.
+**Durum:** 1.8.2 sürüm hazırlığı — sürüm notu biçimlendirmesi + API sürüm politikası düzeltmesi;
+377 test. Android SDK/emülatör kurulumu ve mobil UAT sürüyor.
 
 ## Bu turda tamamlanan
 
