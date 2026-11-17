@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Windows;
+using CgpRandevuTakip.Desktop.Services;
 
 namespace CgpRandevuTakip.Desktop.Views;
 
@@ -14,7 +15,7 @@ public partial class ReleaseNotesWindow : Window
         _releaseUrl = releaseUrl;
         Title = $"Sürüm notları · {version}";
         VersionText.Text = $"{version} sürümünde neler değişti?";
-        NotesBox.Text = notes;
+        NotesBox.Text = ReleaseNotesFormatter.ToPlainText(notes);
         OpenOnGitHub.Visibility = string.IsNullOrWhiteSpace(releaseUrl)
             ? Visibility.Collapsed
             : Visibility.Visible;

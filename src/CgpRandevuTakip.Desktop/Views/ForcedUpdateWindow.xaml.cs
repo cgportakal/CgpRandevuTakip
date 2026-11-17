@@ -22,7 +22,7 @@ public partial class ForcedUpdateWindow : Window
         LatestVersionText.Text = update.LatestVersion ?? "—";
 
         if (!string.IsNullOrWhiteSpace(update.ReleaseNotes))
-            ReleaseNotesText.Text = update.ReleaseNotes;
+            ReleaseNotesText.Text = ReleaseNotesFormatter.ToPlainText(update.ReleaseNotes);
         else
             ReleaseNotesText.Text = "Bu sürüm için ayrıntılı not bulunmuyor.";
     }
