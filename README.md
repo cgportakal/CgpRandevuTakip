@@ -105,6 +105,7 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 36 | [1.8.0 UAT](docs/36_UAT_1.8.0.md) | İçerik konsolu, yayın/geri alma, zorunlu güncelleme, ilerleme penceresi |
 | 37 | [Güncelleme İlerleme UAT](docs/37_UAT_1.8.0_Guncelleme_Ilerleme.md) | Gerçek Setup indirmesi, yüzde/MB, doğrulama, kurulum |
 | 38 | [Zorunlu Güncelleme UAT](docs/38_UAT_Zorunlu_Guncelleme.md) | Web/masaüstü bloklayıcı ekran, sürüm politikası, sürüm notları |
+| 39 | [Android Mobil UAT](docs/39_Mobil_UAT_Android.md) | Emülatör kurulumu, çevrimdışı kuyruk, SignalR, zorunlu güncelleme |
 
 ## Alınan temel kararlar
 

@@ -1,12 +1,26 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-17 22:05 (UTC+3)
+**Son güncelleme:** 2026-11-17 23:05 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** 1.8.2 sürüm hazırlığı — sürüm notu biçimlendirmesi + API sürüm politikası düzeltmesi;
-377 test. Android SDK/emülatör kurulumu ve mobil UAT sürüyor.
+**Durum:** Yeşil — **1.8.2 yayında** (Setup-only); Android emülatör kuruldu ve mobil UAT
+tamamlandı; iki mobil düzeltme yayınlanmayı bekliyor.
 
 ## Bu turda tamamlanan
+
+- **1.8.2 yayını:** `v1.8.2` GitHub Release (Setup-only; portable yok). Assetler: Setup, Dev.cer,
+  SHA256SUMS, version-policy (`latestDesktopVersion: 1.8.2`); README Setup bağlantısı HTTP 200.
+- **Android ortamı:** Temurin JDK 17 (`D:\Android\jdk17`), Android SDK (`D:\Android\Sdk`:
+  platform-tools, emulator, API 35, google_apis x86_64), `cgp_uat` AVD (Pixel 6, 3 GB);
+  WHPX hızlandırma etkin; Expo Go SDK 58 emülatöre kuruldu.
+- **Mobil UAT (Android 15):** giriş, oturum kalıcılığı, günlük liste, çevrimdışı önbellek,
+  çevrimdışı kayıt kuyruğu + eşitleme, SignalR canlı olay, 60 sn API kesintisi sonrası yeniden
+  bağlanma, zorunlu güncelleme ekranı ve raporlar doğrulandı
+  ([docs/39](docs/39_Mobil_UAT_Android.md)).
+- **Mobil SignalR düzeltmesi:** yeniden bağlanma denemeleri tükenince bağlantı kalıcı kopuyordu;
+  süresiz üstel geri çekilme eklendi (`mobile/src/realtime.ts`).
+- **Mobil zorunlu güncelleme ekranı:** çift kodlanmış Türkçe metinler düzeltildi
+  (`ForcedUpdateScreen.tsx`).
 
 - **Zorunlu güncelleme UAT’i (web + masaüstü):** web istemcisi 1.0.0 / `minWebVersion` 9.9.9 →
   bloklayıcı ekran mevcut–gerekli–son sürümü doğru gösterdi; masaüstü 1.0.0 test derlemesi
@@ -50,9 +64,10 @@
 
 ## Sıradaki iş (öncelik sırası)
 
-1. **Mobil cihaz UAT’i** — çevrimdışı kuyruk, canlı olay, push (EAS dev build gerekir; bu
-   makinede Android SDK/Xcode yok).
-2. **1.8.2 yayını** — sürüm notu biçimlendirmesi + API `appsettings` düzeltmesi (Setup-only).
+1. **Mobil push testi (FCM/APNs)** — EAS dev build + FCM kimlik bilgileri gerekir; Expo Go uzak
+   bildirimi desteklemiyor. Android emülatörü ve SDK kurulu (`D:\Android\Sdk`, AVD `cgp_uat`).
+2. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
+   canlı olay ve push doğrulanmalı.
 3. **İçerik logosu yükleme** — konsoldan kurum logosu değiştirme (şimdilik mevcut logo korunur).
 
 ## Aktif kilit
@@ -72,6 +87,12 @@ Yok. (CFR-LENOVO 1.8.0 release tamamlandı; kilit bırakıldı. Kontrol: `node c
 - **Masaüstü zorunlu güncelleme testi:** `UpdateService` politikayı yerel API’den değil GitHub
   `master/version-policy.json` ve `releases/latest` üzerinden okur. Test için geçici düşük sürüm
   derlemesi yeterlidir; yerel API politikası etkilemez.
+- **Android emülatör:** SDK `D:\Android\Sdk`, JDK `D:\Android\jdk17`, AVD `cgp_uat`
+  (API 35, 3 GB, pencere açık `-gpu auto`). `-no-window` modunda emülatör iki kez Windows
+  `RADAR_PRE_LEAK_64` kaydıyla kapandı; pencereli mod daha kararlı. Emülatör ana makineye
+  `10.0.2.2` ile erişir; `mobile/.env` yerine `EXPO_PUBLIC_API_URL` ortam değişkeni kullanın.
+- **Mobil push:** Expo Go Android’de SDK 53+ uzak bildirimleri desteklemez; FCM/APNs testi için
+  EAS dev build gerekir.
 - **Rapor yolu:** `/v1/reports/kind/{kind}` kullan. `/v1/reports/Summary` yanlışlıkla
   `/v1/reports/summary` ucuna düşer (route çakışması).
 - **SignalR CORS:** istemci `withCredentials: false` kullanmalı; aksi halde `AllowAnyOrigin` reddedilir.
@@ -130,6 +151,6 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-PR #25 (release workflow splat) — .NET, Web, Mobil başarılı; Release workflow **1.8.1 Setup-only** başarılı.
-Yerel: **377/377** test, web build, mobil `tsc --noEmit`; zorunlu güncelleme UAT’i tamamlandı.
+PR #28 (1.8.2) — .NET, Web, Mobil başarılı; Release workflow **1.8.2 Setup-only** başarılı.
+Yerel: **377/377** test, web build, mobil `tsc --noEmit`; Android UAT tamamlandı.
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol + güncel dal + yalnızca squash.
