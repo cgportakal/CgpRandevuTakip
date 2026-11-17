@@ -1,12 +1,13 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-17 18:35 (UTC+3)
+**Son güncelleme:** 2026-11-17 18:45 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `agent/cfr-lenovo/release-1.8.0` (release hazırlığı)
-**Durum:** Yeşil — 370 test; 1.8.0 Setup ve portable üretildi, tag bekliyor.
+**Dal:** `master` (origin ile eşit)
+**Durum:** Yeşil — 370 test; **1.8.0 yayında**, Setup/portable/SHA256/version-policy assetleri hazır.
 
 ## Bu turda tamamlanan
 
+- **1.8.0 yayını:** `v1.8.0` etiketi push edildi; release workflow başarılı. GitHub Release assetleri: Setup (66,8 MB), portable (94,9 MB), SHA256SUMS, Dev.cer, version-policy.json. README indirme bağlantıları HTTP 200.
 - **1.8.0 sürüm hazırlığı:** `AppConstants`/assembly/installer `1.8.0`; `version-policy.json` latest sürümleri 1.8.0; README indirme bağlantıları güncellendi; `docs/36_UAT_1.8.0.md` eklendi. Yerel Setup + portable + SHA256 üretildi.
 - **Güncelleme indirme ilerlemesi:** `UpdateProgressWindow`; yüzdelik ProgressBar, MB bilgisi ve aşama metinleri. İsteğe bağlı ve zorunlu güncelleme akışları bu pencereyi kullanıyor.
 - **Zorunlu güncelleme ekranı:** anonim `GET /v1/version-policy`; web ve mobilde minimum sürüm altındaysa bloklayıcı ekran; masaüstünde giriş öncesi `ForcedUpdateWindow`.
@@ -38,18 +39,16 @@
 
 ## Sıradaki iş (öncelik sırası)
 
-1. **1.8.0 tag/release** — PR merge sonrası `v1.8.0` etiketini push et, release workflow
-   asset'lerini doğrula, README linklerini kontrol et.
-2. **Güncelleme ilerleme penceresi UAT’i** — gerçek Setup indirmesinde yüzde/MB/aşama metinleri,
+1. **Güncelleme ilerleme penceresi UAT’i** — gerçek Setup indirmesinde yüzde/MB/aşama metinleri,
    doğrulama ve kurulum başlatma adımları.
-3. **Mobil cihaz UAT’i** — çevrimdışı kuyruk, canlı olay, push (EAS dev build gerekir).
-4. **Zorunlu güncelleme UAT’i** — web/mobil için eski sürüm simülasyonu, masaüstü için
+2. **Mobil cihaz UAT’i** — çevrimdışı kuyruk, canlı olay, push (EAS dev build gerekir).
+3. **Zorunlu güncelleme UAT’i** — web/mobil için eski sürüm simülasyonu, masaüstü için
    `version-policy.json` min sürüm testi.
-5. **İçerik logosu yükleme** — konsoldan kurum logosu değiştirme (şimdilik mevcut logo korunur).
+4. **İçerik logosu yükleme** — konsoldan kurum logosu değiştirme (şimdilik mevcut logo korunur).
 
 ## Aktif kilit
 
-Yok. (CFR-LENOVO 1.8.0 release hazırlığı tamamlandı; kilit bırakıldı. Kontrol: `node coordination/lock.mjs status`)
+Yok. (CFR-LENOVO 1.8.0 release tamamlandı; kilit bırakıldı. Kontrol: `node coordination/lock.mjs status`)
 
 ## Dikkat edilecekler
 
@@ -119,7 +118,7 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-1.8.0 release hazırlığı: yerel **370/370** test, web build, mobil `tsc --noEmit` başarılı.
-Yerel paketler: `CGP-RandevuTakip-1.8.0-Setup.exe` (66,8 MB), `CGP-RandevuTakip-1.8.0-portable.zip` (92,0 MB).
-PR kontrolleri merge öncesi `gh pr checks --watch` ile doğrulanacak.
+1.8.0 release workflow ✅ başarılı (`v1.8.0`). PR #20 kontrolleri (.NET, Web, Mobil) ✅.
+Yerel doğrulama: **370/370** test, web build, mobil `tsc --noEmit`; Setup FileVersion **1.8.0.0**.
+README Setup/portable/version-policy linkleri **HTTP 200**.
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol zorunlu.
