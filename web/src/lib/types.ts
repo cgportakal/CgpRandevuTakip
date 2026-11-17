@@ -109,6 +109,83 @@ export type ContentManifest = {
   versionPolicy: VersionPolicy;
 };
 
+export type ContentInstitution = {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  logoUrl: string | null;
+};
+
+export type ContentSettings = {
+  defaultReminderMinutes: number;
+  workHoursStart: string;
+  workHoursEnd: string;
+  allowOutOfHoursAppointments: boolean;
+  notificationsEnabled: boolean;
+  pushEnabled: boolean;
+  quietHoursEnabled: boolean;
+  quietHoursStart: string;
+  quietHoursEnd: string;
+  dailyShareTime: string;
+};
+
+export type ContentVersion = {
+  id: string;
+  versionNumber: number;
+  publishedAtLocal: string;
+  publishedBy: string;
+  note: string | null;
+  categoryCount: number;
+  hostCount: number;
+  isCurrent: boolean;
+};
+
+export type ContentAdminData = {
+  institution: ContentInstitution;
+  settings: ContentSettings;
+  categories: Category[];
+  hosts: Host[];
+  currentVersion: ContentVersion | null;
+  versions: ContentVersion[];
+};
+
+export type ContentSettingsInput = {
+  institutionName: string;
+  institutionEmail: string;
+  institutionPhone: string;
+  institutionAddress: string;
+  defaultReminderMinutes: number;
+  workHoursStart: string;
+  workHoursEnd: string;
+  allowOutOfHoursAppointments: boolean;
+  notificationsEnabled: boolean;
+  pushEnabled: boolean;
+  quietHoursEnabled: boolean;
+  quietHoursStart: string;
+  quietHoursEnd: string;
+  dailyShareTime: string;
+};
+
+export type CategoryInput = {
+  name: string;
+  colorHex: string;
+  isActive: boolean;
+};
+
+export type HostCreateInput = {
+  displayName: string;
+  loginEnabled: boolean;
+  username: string | null;
+  password: string | null;
+  confirmPassword: string | null;
+};
+
+export type HostUpdateInput = {
+  displayName: string;
+  isActive: boolean;
+};
+
 export type AppointmentOutcomeInput = {
   attendance: 'Arrived' | 'NoShow' | 'Postponed' | 'Cancelled';
   summary: string | null;

@@ -1,12 +1,15 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-17 01:29 (UTC+3)
+**Son güncelleme:** 2026-11-17 10:23 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — 359 test, CI 3/3
+**Dal:** `agent/cfr-lenovo/content-admin` (PR bekliyor)
+**Durum:** Yerel testler yeşil — 361 test; web build ve mobil tsc başarılı.
 
 ## Bu turda tamamlanan
 
+- **Web içerik yönetim konsolu:** `/v1/admin/content` (yalnızca Admin); kategori ekleme/düzenleme/sıralama/pasifleştirme/silme, görüşmeci ekleme/düzenleme, kurum profili ve genel ayarlar.
+- **Yayınlama ve geri alma:** `ContentVersions` tablosu (`ContentPublishing` migration), yayın notu ile sürüm oluşturma, son 20 sürüm, seçilen sürüme geri dönme. Yayın/geri alma sonrası `contentChanged` SignalR olayı.
+- **Web SignalR:** `contentChanged` aboneliği eklendi; işleyiciler sunucuya yanlış sonuç döndürmeyecek şekilde düzeltildi.
 - **Hızlı başlangıç:** `BASLANGIC.md`, macOS `basla.command`, Windows `basla.cmd` /
   `scripts/basla.ps1` (temiz ağaç kontrolü → pull → Node kontrolü → bootstrap → durum).
 - **Ortam yeniden üretimi:** `scripts/bootstrap.mjs` (Windows + macOS; `--check`, `--install`),
@@ -29,16 +32,16 @@
 
 ## Sıradaki iş (öncelik sırası)
 
-1. **İçerik yönetim konsolu** — kategori/görüşmeci/kurum/ayar düzenleme, yayınlama,
-   `contentChanged` SignalR olayı ve geri alma.
+1. **İçerik konsolu manuel UAT** — kategori/görüşmeci/ayar düzenleme, yayınla, geri al,
+   `contentChanged` ile web/mobil yenileme.
 2. **Zorunlu güncelleme ekranı** — `VersionPolicy.minMobileVersion` / `minDesktopVersion`
    ile eski istemciyi yönlendirme.
 3. **Mobil cihaz UAT’i** — çevrimdışı kuyruk, canlı olay, push (EAS dev build gerekir).
-4. **Dependabot `minimatch` (web build zinciri)** — moderate; Expo/Next güncellemesiyle çözülecek.
+4. **İçerik logosu yükleme** — konsoldan kurum logosu değiştirme (şimdilik mevcut logo korunur).
 
 ## Aktif kilit
 
-Yok. (Kontrol: `node coordination/lock.mjs status`)
+Yok. (CFR-LENOVO içerik konsolu tamamlandı; kilit bırakıldı. Kontrol: `node coordination/lock.mjs status`)
 
 ## Dikkat edilecekler
 
@@ -56,6 +59,11 @@ Yok. (Kontrol: `node coordination/lock.mjs status`)
 - **Mobil `App.tsx`:** ekran navigasyonu (today/detail/add/reports) korunmalı; basit tek ekrana
   indirmeyin. `TodayScreen` prop’ları: `onOpenAppointment`, `onAdd`, `onReports`, `onManifest`.
 - **`web/AGENTS.md`:** Next.js `next dev` tarafından üretilir; silmeyin (yeniden oluşur).
+- **İçerik konsolu:** `/v1/admin/content` uçları yalnızca Admin. Düzenlemeler canlı DB'ye yazılır;
+  `Yayınla` anlık görüntü alır ve `contentChanged` gönderir. `Geri al` seçilen sürümün
+  kategori/görüşmeci/kurum-ayarlarını yükler ve yeni sürüm olarak yayınlar.
+- **İçerik sürümleri:** `ContentVersions` tablosu; `ContentPublishing` migration. Admin/sekretarya
+  hesapları geri almada değiştirilmez; yalnızca `Host` rolü geri yüklenir. Logo dosyası kapsam dışı.
 - **Sırlar:** `src/CgpRandevuTakip.Api/data/`, `*.key`, `vapid.json`, `signing.thumbprint` commit edilmez.
 - **UI testleri:** yalnızca `CGP_UI_TESTS=1` ile ve yayınlanmış EXE üzerinde çalışır.
 
@@ -95,5 +103,6 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-PR #12 (ortam bootstrap + dal koruması) — .NET, Web, Mobil üçü de başarılı.
+İçerik konsolu dalı: yerel .NET testleri 361/361, web build ve mobil `tsc --noEmit` başarılı.
+PR kontrolleri merge öncesi `gh pr checks --watch` ile doğrulanacak.
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol zorunlu.

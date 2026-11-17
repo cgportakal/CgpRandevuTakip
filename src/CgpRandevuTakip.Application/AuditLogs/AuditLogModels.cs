@@ -96,6 +96,8 @@ public static class AuditActionText
         AuditAction.PasswordResetFailed => "Parola sıfırlama başarısız",
         AuditAction.RememberLoginUsed => "Beni hatırla ile giriş",
         AuditAction.AppointmentAnonymized => "Eski görüşme anonimleştirildi",
+        AuditAction.ContentPublished => "İçerik yayınlandı",
+        AuditAction.ContentRestored => "İçerik geri alındı",
         _ => action.ToString()
     };
 }

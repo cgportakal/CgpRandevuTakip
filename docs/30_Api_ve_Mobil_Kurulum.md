@@ -126,9 +126,18 @@ $env:Push__ChatId='123456789'
 - Cihaz push’u (web/mobil) ayrıca çalışır; ntfy/Telegram yapılandırması zorunlu değildir.
 - `POST /v1/push/test` yalnızca oturum sahibinin cihazlarına test bildirimi gönderir.
 
-## 5. Sonraki adımlar
+## 5. İçerik yönetimi (web)
 
-- İçerik yönetim konsolu ve zorunlu güncelleme ekranı.
+- Yönetici olarak giriş yapın; sol menüden **İçerik Yönetimi**'ni açın.
+- **Kategoriler:** ekleme, düzenleme, renk, sıralama, aktif/pasif ve kullanılmayan kaydı silme.
+- **Görüşmeciler:** ekleme, ad/isActive düzenleme; istenirse giriş hesabı oluşturma.
+- **Kurum ve Ayarlar:** kurum profili, çalışma/sessiz saatler, hatırlatıcı, bildirim ve push bayrakları.
+- **Yayınla ve Geri Al:** yayın notu ile sürüm oluşturma, son 20 sürümü görme ve seçilen sürüme dönme.
+- Yayın/geri alma sonrası `contentChanged` SignalR olayı gönderilir; web ve mobil istemciler manifesti yeniler.
+
+## 6. Sonraki adımlar
+
+- Zorunlu güncelleme ekranı.
 - Mobil cihaz UAT’i (çevrimdışı kuyruk + canlı olay + push).
 
 

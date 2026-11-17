@@ -7,6 +7,7 @@ public interface IRealtimeNotifier
 {
     Task AppointmentChangedAsync(string appointmentId, string change, DateTime startsAtLocal);
     Task SeriesChangedAsync(string seriesId, string change);
+    Task ContentChangedAsync(string version, string action);
     Task ReminderDueAsync(ReminderContextDto context, bool silent);
 }
 
@@ -36,6 +37,16 @@ public sealed class RealtimeNotifier : IRealtimeNotifier
             {
                 seriesId,
                 change,
+                atUtc = DateTime.UtcNow
+            });
+
+    public Task ContentChangedAsync(string version, string action)
+        => _hub.Clients
+            .Group(NotificationsHub.InstitutionGroup)
+            .SendAsync("contentChanged", new
+            {
+                version,
+                action,
                 atUtc = DateTime.UtcNow
             });
 

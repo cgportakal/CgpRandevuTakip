@@ -10,17 +10,20 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 - **Mobil push (Expo → FCM/APNs):** `expo-notifications` izni, Expo push belirteci, girişte `POST /v1/devices`, çıkışta silme.
 - **Cihaz kayıtları:** `GET/POST/DELETE /v1/devices`, `POST /v1/push/test`; web abonelikleri süresi dolunca otomatik temizlenir.
 - **Sunucu worker:** hatırlatmaları SignalR + cihaz push + ntfy/Telegram üzerinden iletir; sessiz saatlerde push göndermez.
-- **SignalR:** `/hubs/events` hub’ı (JWT, WebSocket `access_token`); `appointmentChanged`, `seriesChanged`, `reminderDue` olayları. Web ve mobil bağlıyken günlük liste/raporlar otomatik yenilenir.
+- **SignalR:** `/hubs/events` hub’ı (JWT, WebSocket `access_token`); `appointmentChanged`, `seriesChanged`, `contentChanged`, `reminderDue` olayları. Web ve mobil bağlıyken günlük liste/raporlar otomatik yenilenir.
 - **Web canlı bildirim:** sağ altta hatırlatma baloncuğu, “Canlı” bağlantı durumu.
 - **Mobil canlı olay:** SignalR bağlantısı (TextEncoder polyfill), gün listesi otomatik yenileme, hatırlatma banner’ı.
 - API testlerine hub kimlik doğrulaması, push anahtarı ve cihaz kaydı kontrolleri eklendi (**10 API testi**).
 - **Web uygulaması (`web/`, Next.js 16):** giriş, günlük liste (tarih/arama), yeni görüşme ve tekrarlayan seri, detay + görüşme sonucu, silme/seri iptali, 7 rapor türü, çevrimdışı okuma önbelleği.
+- **Web içerik yönetim konsolu:** kategori, görüşmeci, kurum profili ve genel ayarları düzenleme; yayın notu ile sürüm oluşturma, son 20 sürümü görme ve seçilen sürüme geri dönme.
+- **İçerik yayınlama:** `POST /v1/admin/content/publish` ve `/versions/{id}/restore`; `ContentVersions` tablosu ve `ContentPublishing` migration'ı; yayın/geri alma sonrası `contentChanged` SignalR olayı.
 - **CI:** web için `npm ci` + `npm run build` işi.
 
 ### Düzeltildi
 - **SignalR CORS:** istemci `withCredentials: false` kullanıyor; `AllowAnyOrigin` ile preflight hatası giderildi.
 - **Rapor uçları çakışması:** `GET /v1/reports/{kind}` ile `GET /v1/reports/summary` aynı yola düşüyordu; tür uçları `/v1/reports/kind/{kind}` olarak ayrıldı. Mobil ve web istemcileri güncellendi.
 - Web rapor ekranında eksik `summary` koruması ve “Günlük dağılım dağılım” başlığı düzeltildi.
+- Web SignalR istemcisi `contentChanged` olayını dinliyor; işleyiciler sunucuya yanlış sonuç döndürmeyecek şekilde düzeltildi.
 
 ### Düzeltildi (önceki)
 - Dependabot NuGet grubu yalnızca minor/patch güncellemeleri alacak şekilde ayrıldı; net10 gerektiren major sürümler beklemede.

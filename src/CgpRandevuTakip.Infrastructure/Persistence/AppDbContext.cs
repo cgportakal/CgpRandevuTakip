@@ -21,6 +21,7 @@ public class AppDbContext : DbContext
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<WhatsAppShareLog> WhatsAppShareLogs => Set<WhatsAppShareLog>();
     public DbSet<BackupRecord> BackupRecords => Set<BackupRecord>();
+    public DbSet<ContentVersion> ContentVersions => Set<ContentVersion>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -187,6 +188,18 @@ public class AppDbContext : DbContext
             entity.Property(x => x.Sha256).HasMaxLength(64).IsRequired();
             entity.Property(x => x.Provider).HasConversion<int>();
             entity.HasIndex(x => x.CreatedAtUtc);
+        });
+
+        modelBuilder.Entity<ContentVersion>(entity =>
+        {
+            entity.ToTable("ContentVersions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PublishedByUserId).HasMaxLength(100);
+            entity.Property(x => x.PublishedByUserName).HasMaxLength(100);
+            entity.Property(x => x.Note).HasMaxLength(200);
+            entity.Property(x => x.SnapshotJson).IsRequired();
+            entity.HasIndex(x => x.VersionNumber).IsUnique();
+            entity.HasIndex(x => x.PublishedAtUtc);
         });
     }
 }
