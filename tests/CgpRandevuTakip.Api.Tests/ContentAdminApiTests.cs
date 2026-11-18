@@ -183,6 +183,10 @@ public class ContentAdminApiTests : IClassFixture<ContentAdminApiFactory>
         var logoResponse = await client.GetAsync(afterLogo.Institution.LogoUrl);
         Assert.Equal(HttpStatusCode.OK, logoResponse.StatusCode);
         Assert.Equal("image/png", logoResponse.Content.Headers.ContentType?.MediaType);
+
+        var anonymousClient = _factory.CreateClient();
+        var anonymousLogo = await anonymousClient.GetAsync(afterLogo.Institution.LogoUrl);
+        Assert.Equal(HttpStatusCode.OK, anonymousLogo.StatusCode);
     }
 
     private async Task<HttpClient> CreateAuthenticatedClientAsync()

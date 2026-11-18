@@ -106,7 +106,7 @@ public static class ContentEndpoints
             };
 
             return Results.File(path, contentType);
-        });
+        }).AllowAnonymous();
 
         return app;
     }
