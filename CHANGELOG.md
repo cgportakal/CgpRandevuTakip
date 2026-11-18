@@ -6,6 +6,8 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 ## [Yayınlanmadı]
 
 ### Eklendi
+- **Ortak tasarım tokenları:** `design/tokens.json` (açık/koyu palet, tipografi, boşluk, yarıçap, rapor etiketleri); web CSS, mobil tema ve masaüstü XAML kaynakları hizalandı ([docs/41](docs/41_Tasarim_ve_Veri_Paritesi.md)).
+- **Mobil rapor paritesi:** `CategoryTrend` ve `Attendance` raporları mobilde görüntüleniyor; rapor etiketleri üç istemcide ortak.
 - **EAS projesi:** `@cgportakal/cgp-randevu-takip` (projectId `0e759428-9702-43f5-9783-7b8662bd4afa`) `app.json`’a bağlandı; `google-services.json` yapılandırması ve Firebase/keystore dosyaları için gitignore kuralları eklendi.
 - **Mobil dev build altyapısı:** SDK 58 uyumlu `expo-dev-client` bağımlılığı eklendi; EAS development build ve `npx expo start --dev-client` için ek kurulum gerekmiyor.
 - **Mobil push hazırlığı:** `EXPO_PUBLIC_EAS_PROJECT_ID` desteği ve eksik proje kimliğinde konsol uyarısı; FCM/APNs test adımları `docs/39` içine eklendi.

@@ -1,13 +1,21 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-18 23:10 (UTC+3)
+**Son güncelleme:** 2026-11-19 00:05 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — **377 test**. **Gerçek cihaz UAT tamamlandı** (Samsung S21, Android 15):
-push (açık/arka plan/öldürülmüş), çevrimdışı kuyruk + otomatik eşitleme, canlı olay, zorunlu
-güncelleme ve raporlar doğrulandı. EAS projesi bağlı; sıradaki iş iOS UAT ve mağaza derlemesi.
+**Durum:** Yeşil — **377 test**. Ortak tasarım tokenları ve rapor paritesi tamamlandı. Veri mimarisi
+kararı: **API tek doğruluk kaynağı; masaüstü API + çevrimdışı önbellek**. Sıradaki iş masaüstü API
+istemcisi, ardından iOS UAT ve mağaza derlemesi.
 
 ## Bu turda tamamlanan
+
+- **Ortak tasarım sistemi:** `design/tokens.json` (açık/koyu palet, tipografi, boşluk, yarıçap,
+  rapor etiketleri) eklendi; web CSS değişkenleri, mobil `theme.ts` ve masaüstü `Light.xaml`
+  aynı değerlere hizalandı ([docs/41](docs/41_Tasarim_ve_Veri_Paritesi.md)).
+- **Rapor paritesi:** rapor etiketleri üç istemcide eşitlendi (Özet, Görüşmeci, Kategori, Katılım,
+  Tekrar, Kişi geçmişi, Denetim); mobilde eksik `CategoryTrend` ve `Attendance` görünümleri eklendi.
+- **Veri mimarisi kararı:** masaüstü API’ye bağlanacak, çevrimdışıyken yerel önbellek + outbox
+  kullanacak; aşamalar `docs/41` §4’te.
 
 - **Gerçek cihaz UAT (Samsung SM-G991B, Android 15 / One UI 7):** yerel dev client
   (`expo prebuild` + Gradle `assembleDebug`, arm64) USB ile kuruldu; `adb reverse` ile API/Metro
@@ -133,11 +141,13 @@ ilk çalıştırmada `POST /v1/auth/setup` gerekir. Ayrıntı: [docs/39](docs/39
 
 ## Sıradaki iş (öncelik sırası)
 
-1. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
+1. **Masaüstü API istemcisi** — oturum, manifest, günlük liste, randevu CRUD ve raporlar; ardından
+   çevrimdışı önbellek + outbox ve SignalR. Ayrıntı: [docs/41](docs/41_Tasarim_ve_Veri_Paritesi.md) §4.
+2. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
    canlı olay ve push doğrulanmalı.
-2. **Mağaza derlemesi** — EAS `production` profiliyle imzalı AAB/APK; sürüm numarası ve
+3. **Mağaza derlemesi** — EAS `production` profiliyle imzalı AAB/APK; sürüm numarası ve
    `eas.json` `appVersionSource: remote` ayarı gözden geçirilmeli.
-3. **İçerik logosu UAT notları** — gerçek kurum verisiyle son kontrol (opsiyonel); temel akış
+4. **İçerik logosu UAT notları** — gerçek kurum verisiyle son kontrol (opsiyonel); temel akış
    tamamlandı.
 
 ## Aktif kilit

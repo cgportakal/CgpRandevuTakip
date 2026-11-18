@@ -1,13 +1,33 @@
 :root {
+  /* Kaynak: design/tokens.json */
   --primary: #2e7d5b;
   --primary-dark: #1f5c42;
+  --primary-hover: #256a4c;
+  --primary-soft: #e2f1e8;
+  --on-primary: #ffffff;
   --background: #f4f7f5;
   --surface: #ffffff;
+  --surface-alt: #f6faf7;
+  --surface-hover: #e7f2eb;
   --text: #12211a;
+  --text-secondary: #33463c;
   --muted: #5d7166;
   --border: #dde5e0;
+  --border-strong: #c3d6ca;
+  --row-selected: #cde9d8;
+  --row-selected-hover: #bfe1ce;
   --danger: #b4433b;
+  --danger-soft: #f8e7e4;
+  --success: #2e7d5b;
+  --success-soft: #e2f1e8;
   --warning: #9a6b1c;
+  --warning-soft: #f8efdc;
+  --info: #2f6f8f;
+  --info-soft: #e3f0f7;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
   --shadow: 0 10px 30px rgba(18, 33, 26, 0.08);
 }
 

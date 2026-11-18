@@ -21,6 +21,7 @@ type Props = {
 const kinds: { value: ReportKind; label: string }[] = [
   { value: 'Summary', label: 'Özet' },
   { value: 'HostPerformance', label: 'Görüşmeci' },
+  { value: 'CategoryTrend', label: 'Kategori' },
   { value: 'Attendance', label: 'Katılım' },
   { value: 'Repeat', label: 'Tekrar' },
   { value: 'PersonHistory', label: 'Kişi geçmişi' },
@@ -146,6 +147,28 @@ export function ReportsScreen({ onBack }: Props) {
           </View>
         ))}
 
+        {result?.categoryTrends?.map((item) => (
+          <View key={item.categoryId} style={styles.row}>
+            <View style={styles.rowHeading}>
+              <View style={[styles.colorDot, { backgroundColor: item.colorHex }]} />
+              <Text style={styles.rowTitle}>{item.categoryName}</Text>
+            </View>
+            <Text style={styles.meta}>{item.total} görüşme</Text>
+          </View>
+        ))}
+
+        {result?.attendance?.map((item) => (
+          <View key={item.dateText} style={styles.row}>
+            <Text style={styles.rowTitle}>
+              {item.weekdayText} · {item.dateText}
+            </Text>
+            <Text style={styles.meta}>
+              {item.total} toplam · {item.arrived} geldi · {item.completed} tamam · {item.noShow}{' '}
+              gelmedi
+            </Text>
+          </View>
+        ))}
+
         {result?.repeatPersons.map((item) => (
           <View key={`${item.personName}-${item.phone}`} style={styles.row}>
             <Text style={styles.rowTitle}>{item.personName}</Text>
@@ -252,5 +275,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   rowTitle: { fontSize: 14, fontWeight: '700', color: colors.text },
+  rowHeading: { flexDirection: 'row', alignItems: 'center' },
+  colorDot: { width: 10, height: 10, borderRadius: 5, marginRight: spacing.sm },
   entry: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
 });
