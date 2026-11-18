@@ -3,7 +3,7 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
-## [Yayınlanmadı]
+## [1.8.3] — 2026-11-18 · Tasarım paritesi ve mobil düzeltmeler
 
 ### Eklendi
 - **Ortak tasarım tokenları:** `design/tokens.json` (açık/koyu palet, tipografi, boşluk, yarıçap, rapor etiketleri); web CSS, mobil tema ve masaüstü XAML kaynakları hizalandı ([docs/41](docs/41_Tasarim_ve_Veri_Paritesi.md)).
@@ -25,6 +25,9 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 - **Android UAT (Expo Go / API 35 emülatör):** giriş, oturum kalıcılığı, çevrimdışı önbellek, çevrimdışı kuyruk ve eşitleme, SignalR canlı olay, 60 sn kesinti sonrası yeniden bağlanma, zorunlu güncelleme, raporlar ([docs/39](docs/39_Mobil_UAT_Android.md)).
 - **Gerçek cihaz UAT (Samsung SM-G991B, Android 15):** yerel dev client + USB (`adb reverse`), cihaz kaydı, push (açık / arka plan / süreç öldürülmüş), bildirime dokunma, çevrimdışı kuyruk + otomatik eşitleme, canlı olay, API kesintisi sonrası yeniden bağlanma, zorunlu güncelleme, raporlar.
 - iOS testi ortam gereksinimi nedeniyle yapılamadı.
+
+### Paket
+- Setup-only sürüm; taşınabilir ZIP yayınlanmadı (son portable **1.8.0**).
 
 ## [1.8.2] — 2026-11-17 · Sürüm notları ve zorunlu güncelleme UAT
 
@@ -642,7 +645,7 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 - WPF açılış kabuğu (Sprint 0 durum ekranı)
 - 36 birim/entegrasyon testi (tümü geçiyor)
 
-## [Yayınlanmadı] — Analiz ve tasarım
+## [Planlama] — Analiz ve tasarım
 
 ### Eklendi
 - Proje vizyonu, kapsam ve paydaş analizi (`docs/00`)

@@ -1,4 +1,4 @@
-export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? '1.8.0';
+export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? '1.8.3';
 
 function parseVersion(value: string | null | undefined): number[] {
   if (!value) return [0, 0, 0];

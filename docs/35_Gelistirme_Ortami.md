@@ -29,6 +29,7 @@ macOS'ta masaüstü kodu okunabilir/incelenebilir; **derleme ve UAT Windows'ta**
 | Inno Setup 6 | Windows | `winget install JRSoftware.InnoSetup` | — |
 | Xcode + CLT | iOS | — | App Store + `xcode-select --install` |
 | CocoaPods / watchman | iOS/Metro | — | `brew install cocoapods watchman` |
+| JDK | **17+** | `winget install EclipseAdoptium.Temurin.17.JDK` (veya bölüm 7’deki portable ZIP) | `brew install --cask temurin@17` |
 | Android SDK | Android | `cmdline-tools` veya Android Studio (bkz. bölüm 7) | — |
 | EAS CLI | mobil derleme | `npm i -g eas-cli` | `npm i -g eas-cli` |
 
@@ -44,6 +45,8 @@ Script:
 
 - Git/Node/npm/.NET/gh sürümlerini kontrol eder.
 - Windows'ta Inno Setup'ı, macOS'ta Xcode/CocoaPods/watchman'i raporlar.
+- **Mobil derleme araçlarını raporlar:** JDK 17+, Android SDK (`ANDROID_HOME`, `D:\Android\Sdk`
+  veya varsayılan konum), `adb`, platform 35 ve EAS CLI.
 - `dotnet restore` (Windows: tüm çözüm; macOS: API + API testleri).
 - `web` ve `mobile` için `npm ci` çalıştırır (lockfile'dan deterministik).
 - `web/.env.local` ve `mobile/.env` yoksa örnekten oluşturur (gitignore'da).
