@@ -71,6 +71,9 @@ Rapor türleri ve etiketleri (`design/tokens.json` → `reports`):
 
 ### Aşamalar
 
+Ayrıntılı iş paketleri, API sözleşmesi ve kabul kriterleri:
+[docs/42_Masaustu_Veri_Senkronizasyonu.md](42_Masaustu_Veri_Senkronizasyonu.md).
+
 1. **Tasarım/metin/rapor paritesi** — tamamlandı (bu belge).
 2. **Masaüstü API istemcisi** — oturum, manifest, günlük liste, randevu CRUD, raporlar.
 3. **Çevrimdışı önbellek + outbox** — mobildeki desenin masaüstüne uyarlanması.
