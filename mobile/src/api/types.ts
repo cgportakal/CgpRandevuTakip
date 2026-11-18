@@ -257,6 +257,24 @@ export type ReportResult = {
     noShowRateText: string;
     averageDurationText: string;
   }[];
+  categoryTrends: {
+    categoryId: string;
+    categoryName: string;
+    colorHex: string;
+    total: number;
+    points: { label: string; total: number; completed: number; noShow: number }[];
+  }[];
+  attendance: {
+    dateText: string;
+    weekdayText: string;
+    arrived: number;
+    completed: number;
+    noShow: number;
+    cancelled: number;
+    postponed: number;
+    scheduled: number;
+    total: number;
+  }[];
   repeatPersons: {
     personName: string;
     phone: string;

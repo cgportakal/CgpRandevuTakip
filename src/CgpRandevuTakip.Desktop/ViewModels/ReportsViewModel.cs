@@ -88,13 +88,13 @@ public partial class ReportsViewModel : ObservableObject
 
         ReportKinds = new RangeObservableCollection<ReportKindOption>
         {
-            new(ReportKind.Summary, "Özet raporu"),
-            new(ReportKind.HostPerformance, "Görüşmeci performansı"),
-            new(ReportKind.CategoryTrend, "Kategori trendi"),
-            new(ReportKind.Attendance, "Katılım raporu"),
-            new(ReportKind.Repeat, "Tekrar görüşme"),
+            new(ReportKind.Summary, "Özet"),
+            new(ReportKind.HostPerformance, "Görüşmeci"),
+            new(ReportKind.CategoryTrend, "Kategori"),
+            new(ReportKind.Attendance, "Katılım"),
+            new(ReportKind.Repeat, "Tekrar"),
             new(ReportKind.PersonHistory, "Kişi geçmişi"),
-            new(ReportKind.AuditActivity, "Denetim / aktivite")
+            new(ReportKind.AuditActivity, "Denetim")
         };
 
         _selectedKind = ReportKinds[0];

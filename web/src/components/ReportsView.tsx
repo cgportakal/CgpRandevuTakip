@@ -13,12 +13,12 @@ type Props = {
 
 const kinds: { value: ReportKind; label: string }[] = [
   { value: 'Summary', label: 'Özet' },
-  { value: 'HostPerformance', label: 'Görüşmeci performansı' },
-  { value: 'CategoryTrend', label: 'Kategori trendi' },
+  { value: 'HostPerformance', label: 'Görüşmeci' },
+  { value: 'CategoryTrend', label: 'Kategori' },
   { value: 'Attendance', label: 'Katılım' },
-  { value: 'Repeat', label: 'Tekrar görüşme' },
+  { value: 'Repeat', label: 'Tekrar' },
   { value: 'PersonHistory', label: 'Kişi geçmişi' },
-  { value: 'AuditActivity', label: 'Denetim / aktivite' },
+  { value: 'AuditActivity', label: 'Denetim' },
 ];
 
 export function ReportsView({ online }: Props) {

@@ -1,12 +1,12 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Yumuşak yeşil palet: düşük doygunluk, yüksek okunabilirlik. -->
-    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F1F6F2" />
+    <!-- Kaynak: design/tokens.json — açık tema. -->
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F4F7F5" />
     <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
     <SolidColorBrush x:Key="SurfaceAltBrush" Color="#F6FAF7" />
     <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#E7F2EB" />
-    <SolidColorBrush x:Key="BorderBrush" Color="#DCE8E0" />
+    <SolidColorBrush x:Key="BorderBrush" Color="#DDE5E0" />
     <SolidColorBrush x:Key="BorderStrongBrush" Color="#C3D6CA" />
 
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="#12211A" />
