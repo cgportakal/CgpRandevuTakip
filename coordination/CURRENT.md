@@ -1,11 +1,11 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-18 16:05 (UTC+3)
+**Son güncelleme:** 2026-11-18 16:20 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `agent/cfr-lenovo/flaky-render-test` (PR bekliyor)
-**Durum:** Yeşil — **377 test**. CFR-LENOVO’ya Android SDK/JDK/adb/emulator kuruldu
-(`D:\Android`); AVD `cgp_uat` hazır, WHPX etkin. Push testi için fiziksel cihaz + EAS/FCM
-kimlik bilgileri hâlâ gerekli. CI’daki flaky render testi düzeltildi.
+**Dal:** `master` (origin ile eşit)
+**Durum:** Yeşil — **377 test**. Android SDK/JDK/adb/emulator her iki makinede kurulu;
+CFR-LENOVO’da AVD `cgp_uat` hazır. CI’daki flaky render testi düzeltildi ve master yeşil.
+Push testi için fiziksel cihaz + EAS/FCM kimlik bilgileri hâlâ gerekli.
 
 ## Bu turda tamamlanan
 
@@ -93,7 +93,8 @@ kimlik bilgileri hâlâ gerekli. CI’daki flaky render testi düzeltildi.
 
 ## Aktif kilit
 
-Yok. (CFR-LENOVO logo yükleme + push hazırlığı tamamlandı; kilit bırakıldı. Kontrol: `node coordination/lock.mjs status`)
+Yok. (CFR-LENOVO Android ortamı, logo UAT ve flaky test düzeltmesi tamamlandı; kilit bırakıldı.
+Kontrol: `node coordination/lock.mjs status`)
 
 ## Dikkat edilecekler
 
@@ -175,8 +176,8 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-Flaky render testi dalı: Desktop testleri **38/38**, yerel toplam **377/377** başarılı.
-PR kontrolleri merge öncesi `gh pr checks --watch` ile doğrulanacak.
+Master CI ✅ (PR #36 sonrası). Yerel **377/377** test, web build ve mobil `tsc` başarılı.
 Son release: **1.8.2 Setup-only** başarılı; Android UAT tamamlandı. Dependabot picomatch
 uyarısı **withdrawn** olduğu için dismissed; kod bağımlılığı değiştirilmedi.
+Android SDK/JDK/adb/emulator `D:\Android` altında; AVD `cgp_uat` hazır.
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol + güncel dal + yalnızca squash.
