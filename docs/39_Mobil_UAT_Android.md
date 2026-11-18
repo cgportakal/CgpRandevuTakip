@@ -81,18 +81,28 @@ UTF-8 yerine çift kodlanmış metin içeriyordu (“GÃ¼ncelleme gerekli”).
 Expo Go Android’de SDK 53+ uzak bildirimleri desteklemez; ayrıca `expo-device` emülatörde
 `isDevice = false` döndürür. Gerçek push testi için:
 
-1. **Fiziksel cihaz** (Android veya iPhone) kullanın.
-2. **EAS proje kimliği** tanımlayın: `app.json` içinde `expo.extra.eas.projectId` veya
-   `EXPO_PUBLIC_EAS_PROJECT_ID` ortam değişkeni. Proje kimliği yoksa `registerForPushAsync`
-   push kaydını atlar ve konsola uyarı yazar.
-3. **EAS dev build** alın: `npx eas build --profile development --platform android`.
-   FCM kimlik bilgileri EAS projesinde tanımlı olmalıdır.
-4. API adresini fiziksel cihazdan erişilebilir yapın:
-   `EXPO_PUBLIC_API_URL=http://<bilgisayar-ip>:5199`.
-5. Uygulamada giriş yapın; `POST /v1/devices` ile `platform=android` cihaz kaydı oluşmalı.
-6. `POST /v1/push/test` (Bearer) çağırın veya sunucudaki test bildirimi akışını kullanın;
+1. **Fiziksel cihaz** (Android veya iPhone) kullanın. Emülatörde `expo-device` `isDevice = false`
+   döndüğü için push kaydı hiç başlamaz.
+2. **EAS oturumu açın ve proje kimliğini tanımlayın** (yalnızca bir kez, hesap sahibi tarafından):
+
+   `cd mobile`
+   `npx eas-cli login`
+   `npx eas init`  → `app.json` içine `expo.extra.eas.projectId` yazar
+
+   Alternatif: `EXPO_PUBLIC_EAS_PROJECT_ID` ortam değişkeni. Proje kimliği yoksa
+   `registerForPushAsync` push kaydını atlar ve konsola uyarı yazar.
+3. **FCM kimlik bilgilerini EAS projesine ekleyin** (Android): Firebase projesinden
+   `google-services.json` indirin, `npx eas credentials` → Android → Push Notifications
+   adımından yükleyin. iOS için APNs anahtarı aynı menüden eklenir.
+4. **EAS dev build alın:** `npx eas build --profile development --platform android`.
+   `expo-dev-client` bağımlılığı `mobile/package.json` içinde hazır (SDK 58 uyumlu), ayrıca
+   kurulum gerekmez. Build çıktısındaki APK bağlantısını cihazda açıp kurun.
+5. API adresini fiziksel cihazdan erişilebilir yapın:
+   `EXPO_PUBLIC_API_URL=http://<bilgisayar-ip>:5199`; Windows güvenlik duvarında 5199 açık olmalı.
+6. Uygulamada giriş yapın; `POST /v1/devices` ile `platform=android` cihaz kaydı oluşmalı.
+7. `POST /v1/push/test` (Bearer) çağırın veya sunucudaki test bildirimi akışını kullanın;
    bildirimin cihaza geldiğini doğrulayın.
-7. EAS/FCM kimlik bilgileri yoksa test **bloke** kalır; kod tarafında ek değişiklik gerekmez.
+8. EAS/FCM kimlik bilgileri yoksa test **bloke** kalır; kod tarafında ek değişiklik gerekmez.
 
 ## 6. Sınırlar
 
