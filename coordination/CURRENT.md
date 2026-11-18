@@ -1,13 +1,17 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-19 00:40 (UTC+3)
+**Son güncelleme:** 2026-11-19 00:55 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** **1.8.3 sürüm hazırlığı** — tasarım/rapor paritesi ve mobil düzeltmeler; 377 test.
-Sürüm dosyaları, README bağlantıları ve ortam betiği 1.8.3’e taşındı; Setup-only yayın sıradaki.
+**Durum:** Yeşil — **1.8.3 yayında** (Setup-only). Tasarım/rapor paritesi, mobil düzeltmeler ve
+ortam devri tamamlandı; 377 test. Sıradaki iş masaüstü API istemcisi.
 
 ## Bu turda tamamlanan
 
+- **1.8.3 yayını:** `v1.8.3` GitHub Release yayınlandı (Setup-only; portable yok). Assetler:
+  Setup (`CGP-RandevuTakip-1.8.3-Setup.exe`, ~66,8 MB), Dev.cer, SHA256SUMS, version-policy
+  (`latestDesktopVersion/latestWebVersion: 1.8.3`); README Setup bağlantısı HTTP 200; release
+  notları Türkçe özetlendi.
 - **1.8.3 sürüm hazırlığı:** `Directory.Build.props`, `AppConstants`, installer ve
   `Kurulum-Olustur.ps1` 1.8.3; `version-policy.json` + API `appsettings` latestDesktop/latestWeb
   1.8.3; web `APP_VERSION` 1.8.3; README sürüm/indirme bağlantıları ve platform tablosu güncellendi.
@@ -242,9 +246,9 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-Master CI ✅ (PR #42 sonrası). Yerel doğrulama: **377/377** test, web build ve mobil `tsc`
-başarılı. Son release: **1.8.2 Setup-only** başarılı; Android emülatör ve **Samsung S21 gerçek
-cihaz UAT** tamamlandı. Dependabot picomatch uyarısı **withdrawn** olduğu için dismissed; kod
-bağımlılığı değiştirilmedi.
+Master CI ✅ (PR #45 sonrası). Yerel doğrulama: **377/377** test, web build ve mobil `tsc`
+başarılı. Son release: **1.8.3 Setup-only** başarılı; tasarım/rapor paritesi yayında. Android
+emülatör ve **Samsung S21 gerçek cihaz UAT** tamamlandı. Dependabot picomatch uyarısı
+**withdrawn** olduğu için dismissed; kod bağımlılığı değiştirilmedi.
 Android SDK/JDK/adb/emulator `D:\Android` altında; AVD `cgp_uat` hazır; `expo-dev-client` eklendi.
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol + güncel dal + yalnızca squash.
