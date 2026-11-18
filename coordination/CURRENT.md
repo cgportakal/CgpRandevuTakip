@@ -1,10 +1,10 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-18 10:45 (UTC+3)
+**Son güncelleme:** 2026-11-18 10:55 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `agent/cfr-lenovo/mobile-push-config` (PR bekliyor)
-**Durum:** Yeşil — **377 test**; logo yükleme tamamlandı; mobil push testi için EAS proje kimliği
-desteği eklendi. Fiziksel cihaz + EAS/FCM kimlik bilgileri olmadan push testi yapılamıyor.
+**Dal:** `master` (origin ile eşit)
+**Durum:** Yeşil — **377 test**; logo yükleme ve mobil push hazırlığı merge edildi.
+Fiziksel cihaz + EAS/FCM kimlik bilgileri olmadan push testi yapılamıyor.
 
 ## Bu turda tamamlanan
 
@@ -81,7 +81,7 @@ desteği eklendi. Fiziksel cihaz + EAS/FCM kimlik bilgileri olmadan push testi y
 
 ## Aktif kilit
 
-Yok. (CFR-LENOVO 1.8.0 release tamamlandı; kilit bırakıldı. Kontrol: `node coordination/lock.mjs status`)
+Yok. (CFR-LENOVO logo yükleme + push hazırlığı tamamlandı; kilit bırakıldı. Kontrol: `node coordination/lock.mjs status`)
 
 ## Dikkat edilecekler
 
@@ -163,8 +163,9 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-Mobil push hazırlığı dalı: yerel **377/377** test, web build, mobil `tsc --noEmit` başarılı.
-PR kontrolleri merge öncesi `gh pr checks --watch` ile doğrulanacak.
+PR #31 (logo yükleme) ve PR #32 (mobil push hazırlığı) merge edildi; master CI ✅.
+Yerel: **377/377** test, web build, mobil `tsc --noEmit` başarılı.
 Son release: **1.8.2 Setup-only** başarılı; Android UAT tamamlandı. Dependabot’ta
-`mobile/package-lock.json` **picomatch** (high) uyarısı açık; yamalı paket henüz yok.
+`mobile/package-lock.json` **picomatch** (high) uyarısı açık; yamalı paket henüz yok
+(`npm audit fix --force` react-native’i düşürüyor, önerilmez).
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol + güncel dal + yalnızca squash.
