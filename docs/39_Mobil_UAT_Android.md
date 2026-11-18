@@ -76,7 +76,25 @@ UTF-8 yerine çift kodlanmış metin içeriyordu (“GÃ¼ncelleme gerekli”).
 
 - Metinler doğru Türkçe ile değiştirildi; ekran görüntüsüyle doğrulandı.
 
-## 5. Sınırlar
+## 5. Push testi (FCM/APNs) hazırlığı
+
+Expo Go Android’de SDK 53+ uzak bildirimleri desteklemez; ayrıca `expo-device` emülatörde
+`isDevice = false` döndürür. Gerçek push testi için:
+
+1. **Fiziksel cihaz** (Android veya iPhone) kullanın.
+2. **EAS proje kimliği** tanımlayın: `app.json` içinde `expo.extra.eas.projectId` veya
+   `EXPO_PUBLIC_EAS_PROJECT_ID` ortam değişkeni. Proje kimliği yoksa `registerForPushAsync`
+   push kaydını atlar ve konsola uyarı yazar.
+3. **EAS dev build** alın: `npx eas build --profile development --platform android`.
+   FCM kimlik bilgileri EAS projesinde tanımlı olmalıdır.
+4. API adresini fiziksel cihazdan erişilebilir yapın:
+   `EXPO_PUBLIC_API_URL=http://<bilgisayar-ip>:5199`.
+5. Uygulamada giriş yapın; `POST /v1/devices` ile `platform=android` cihaz kaydı oluşmalı.
+6. `POST /v1/push/test` (Bearer) çağırın veya sunucudaki test bildirimi akışını kullanın;
+   bildirimin cihaza geldiğini doğrulayın.
+7. EAS/FCM kimlik bilgileri yoksa test **bloke** kalır; kod tarafında ek değişiklik gerekmez.
+
+## 6. Sınırlar
 
 - **Push bildirimi test edilemedi:** Expo Go, Android’de SDK 53’ten sonra uzak bildirimleri
   desteklemiyor. FCM/APNs testi için EAS dev build (ve FCM kimlik bilgileri) gerekir.

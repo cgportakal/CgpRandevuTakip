@@ -6,6 +6,7 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 ## [Yayınlanmadı]
 
 ### Eklendi
+- **Mobil push hazırlığı:** `EXPO_PUBLIC_EAS_PROJECT_ID` desteği ve eksik proje kimliğinde konsol uyarısı; FCM/APNs test adımları `docs/39` içine eklendi.
 - **İçerik logosu yükleme:** web içerik konsolundan PNG/JPG/BMP (en fazla 4 MB) logo yükleme; `POST /v1/admin/content/logo`, `branding/institution-logo.*` saklama, eski dosyayı temizleme, sürüm sorgulu (`?v=...`) logo URL’si ve `contentChanged` bildirimi.
 
 ### Düzeltildi
