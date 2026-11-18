@@ -148,7 +148,9 @@ export function AddAppointmentScreen({ manifest, onBack, onSaved }: Props) {
     }
 
     if (!online) {
-      await enqueue('appointment.create', input);
+      // Çevrimdışıyken çakışma denetimi yapılamaz; kullanıcı kaydı bilerek
+      // oluşturduğu için kuyruktan gönderilirken çakışma engeli atlanır.
+      await enqueue('appointment.create', { ...input, ignoreConflicts: true });
       Alert.alert('Kuyruğa alındı', 'Bağlantı gelince görüşme sunucuya gönderilecek.');
       onSaved();
       return;
@@ -185,7 +187,7 @@ export function AddAppointmentScreen({ manifest, onBack, onSaved }: Props) {
         {!online ? (
           <View style={styles.offlineBar}>
             <Text style={styles.offlineText}>
-              Çevrimdışı · Kayıt kuyruğa alınır (seri hariç)
+              Çevrimdışı · Kayıt kuyruğa alınır; çakışma denetimi atlanır (seri hariç)
             </Text>
           </View>
         ) : null}

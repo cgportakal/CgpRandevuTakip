@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -14,7 +14,8 @@ import type { AppointmentListItem, ContentManifest } from '../api/types';
 import { subscribeRealtime } from '../realtime';
 import { pendingCount } from '../db/outbox';
 import { pullDay, flushOutbox } from '../sync/sync';
-import { MANIFEST_CACHE_KEY, readCache, writeCache } from '../storage/cache';import { colors, radius, spacing } from '../theme';
+import { MANIFEST_CACHE_KEY, readCache, writeCache } from '../storage/cache';
+import { colors, radius, spacing } from '../theme';
 
 type Props = {
   displayName: string;
@@ -63,6 +64,9 @@ export function TodayScreen({ displayName, onLogout, onOpenAppointment, onAdd, o
       if (flushed.sent > 0) {
         setPending(await pendingCount());
       }
+      if (flushed.failed > 0 && flushed.lastError) {
+        setError(flushed.lastError);
+      }
     }
 
     setLoading(!isRefresh);
@@ -100,6 +104,21 @@ export function TodayScreen({ displayName, onLogout, onOpenAppointment, onAdd, o
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
+
+  const wasOffline = useRef(false);
+
+  // Bağlantı geri geldiğinde bekleyen yazmaları gönder ve listeyi tazele.
+  useEffect(() => {
+    if (offline) {
+      wasOffline.current = true;
+      return;
+    }
+
+    if (wasOffline.current) {
+      wasOffline.current = false;
+      void load(date, true);
+    }
+  }, [offline, date, load]);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;

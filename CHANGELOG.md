@@ -6,6 +6,7 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 ## [Yayınlanmadı]
 
 ### Eklendi
+- **EAS projesi:** `@cgportakal/cgp-randevu-takip` (projectId `0e759428-9702-43f5-9783-7b8662bd4afa`) `app.json`’a bağlandı; `google-services.json` yapılandırması ve Firebase/keystore dosyaları için gitignore kuralları eklendi.
 - **Mobil dev build altyapısı:** SDK 58 uyumlu `expo-dev-client` bağımlılığı eklendi; EAS development build ve `npx expo start --dev-client` için ek kurulum gerekmiyor.
 - **Mobil push hazırlığı:** `EXPO_PUBLIC_EAS_PROJECT_ID` desteği ve eksik proje kimliğinde konsol uyarısı; FCM/APNs test adımları `docs/39` içine eklendi.
 - **İçerik logosu yükleme:** web içerik konsolundan PNG/JPG/BMP (en fazla 4 MB) logo yükleme; `POST /v1/admin/content/logo`, `branding/institution-logo.*` saklama, eski dosyayı temizleme, sürüm sorgulu (`?v=...`) logo URL’si ve `contentChanged` bildirimi.
@@ -14,11 +15,14 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 - **Performans testi:** 50 satırlık PNG render testi CI’daki ilk WPF render gecikmesiyle flaky oluyordu; ölçüm öncesi ısınma render’ı eklendi ve eşik 10 sn’ye çekildi.
 - **Logo önizlemesi:** `/v1/content/logo` ucu kimlik doğrulaması istediği için web konsolundaki `<img>` önizlemesi 401 alıyordu; logo ucu anonim erişime açıldı ve API testi eklendi ([docs/40](docs/40_Icerik_Logosu_UAT.md)).
 - **Mobil SignalR yeniden bağlanma:** otomatik denemeler tükenince bağlantı kalıcı kopuyordu; üstel geri çekilmeyle (2 → 30 sn, süresiz) yeniden bağlanma eklendi ([docs/39](docs/39_Mobil_UAT_Android.md)).
+- **Çevrimdışı kayıt kuyruğu:** Çakışan kayıt sunucu hatasıyla kuyrukta takılıyordu; çevrimdışı oluşturulan kayıt `ignoreConflicts` ile gönderiliyor ve form “çakışma denetimi atlanır” uyarısı gösteriyor.
+- **Bağlantı dönüşünde eşitleme:** Çevrimdışı → çevrimiçi geçişinde kuyruk otomatik gönderiliyor ve liste tazeleniyor; kuyruk hataları ekranda gösteriliyor.
 - **Mobil zorunlu güncelleme ekranı:** Türkçe metinler çift kodlanmıştı (“GÃ¼ncelleme gerekli”); doğru UTF-8 metinlerle değiştirildi.
 
 ### Doğrulama
 - **Android UAT (Expo Go / API 35 emülatör):** giriş, oturum kalıcılığı, çevrimdışı önbellek, çevrimdışı kuyruk ve eşitleme, SignalR canlı olay, 60 sn kesinti sonrası yeniden bağlanma, zorunlu güncelleme, raporlar ([docs/39](docs/39_Mobil_UAT_Android.md)).
-- Push (FCM) ve iOS testleri ortam gereksinimleri nedeniyle yapılamadı.
+- **Gerçek cihaz UAT (Samsung SM-G991B, Android 15):** yerel dev client + USB (`adb reverse`), cihaz kaydı, push (açık / arka plan / süreç öldürülmüş), bildirime dokunma, çevrimdışı kuyruk + otomatik eşitleme, canlı olay, API kesintisi sonrası yeniden bağlanma, zorunlu güncelleme, raporlar.
+- iOS testi ortam gereksinimi nedeniyle yapılamadı.
 
 ## [1.8.2] — 2026-11-17 · Sürüm notları ve zorunlu güncelleme UAT
 

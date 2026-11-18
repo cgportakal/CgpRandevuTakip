@@ -1,6 +1,6 @@
 # 39 — Android Mobil UAT
 
-**Tarih:** 17.11.2026 · **Sürüm:** mobil 1.0.0 (Expo SDK 58) · **API:** 1.8.2 · **Platform:** Android 15 (API 35) emülatör
+**Tarih:** 17–18.11.2026 · **Sürüm:** mobil 1.0.0 (Expo SDK 58) · **API:** 1.8.2 · **Platform:** Android 15 (API 35) emülatör + **Samsung Galaxy S21 (SM-G991B)**
 
 ## 1. Amaç
 
@@ -104,10 +104,64 @@ Expo Go Android’de SDK 53+ uzak bildirimleri desteklemez; ayrıca `expo-device
    bildirimin cihaza geldiğini doğrulayın.
 8. EAS/FCM kimlik bilgileri yoksa test **bloke** kalır; kod tarafında ek değişiklik gerekmez.
 
-## 6. Sınırlar
+## 6. Gerçek cihaz UAT (Samsung Galaxy S21)
 
-- **Push bildirimi test edilemedi:** Expo Go, Android’de SDK 53’ten sonra uzak bildirimleri
-  desteklemiyor. FCM/APNs testi için EAS dev build (ve FCM kimlik bilgileri) gerekir.
+**Cihaz:** SM-G991B · Android 15 (SDK 35) · One UI 7.0 · USB hata ayıklama.
+
+**Kurulum:** `expo prebuild` + yerel Gradle `assembleDebug` (arm64) ile dev client üretildi ve
+`adb install` ile kuruldu. USB üzerinden `adb reverse tcp:5199` / `tcp:8081`; uygulama
+`http://127.0.0.1:5199` adresini kullandı. Metro `--host localhost` ile çalıştırıldı.
+
+| Kontrol | Sonuç |
+|---|---|
+| Giriş / oturum kalıcılığı | ✅ Uygulama yeniden açıldığında oturum korundu |
+| Cihaz kaydı | ✅ `GET /v1/devices` → 1 Android (`appVersion 1.0.0`) |
+| Push — uygulama açık | ✅ “Test bildirimi: push bağlantısı çalışıyor.” |
+| Push — arka plan | ✅ Bildirim geldi |
+| Push — süreç öldürülmüş (`am kill`) | ✅ Bildirim geldi |
+| Bildirime dokunma | ✅ Uygulama açıldı (soğuk başlatma dahil) |
+| Çevrimdışı kayıt | ✅ “Kuyruğa alındı”, “1 bekleyen” |
+| Bağlantı gelince eşitleme | ✅ Otomatik gönderildi, sayaç temizlendi (2 → 3) |
+| SignalR canlı olay | ✅ API’den eklenen kayıt elle yenilemeden göründü (3 → 4) |
+| 45 sn API kesintisi sonrası | ✅ Yeniden bağlandı (4 → 5) |
+| Zorunlu güncelleme | ✅ Mevcut 1.0.0 / gerekli 9.9.9 / son 9.9.9 |
+| Raporlar | ✅ 4 görüşme özeti |
+| Hatırlatma balonu | ✅ “Sıradaki kişiyi arama zamanı · Kuyruk Testi · 23:00” |
+
+### Bulunan sorunlar ve düzeltmeler
+
+**1) Çevrimdışı kayıt, çakışma nedeniyle kuyrukta takılıyordu.** Kuyruktan gönderilen
+`appointment.create` çağrısı `ignoreConflicts` göndermediği için sunucudaki çakışma hatası
+(“Host’un bu saatte başka bir görüşmesi var…”) kaydı sürekli bekletiyordu.
+
+- Çevrimdışı kayıt kuyruğa `ignoreConflicts: true` ile alınır; kullanıcı kaydı zaten bilerek
+  oluşturmuştur ve bağlantı yokken çakışma denetimi yapılamaz.
+- Form üstündeki bilgi metni “çakışma denetimi atlanır” olarak güncellendi.
+
+**2) Bağlantı geri gelince kuyruk kendiliğinden gönderilmiyordu.** `flushOutbox` yalnızca
+pull-to-refresh veya canlı olay tetiklemesiyle çalışıyordu.
+
+- `TodayScreen`: çevrimdışı → çevrimiçi geçişinde otomatik `flushOutbox` + liste tazeleme.
+- Kuyruk gönderim hatası artık ekran hatası olarak gösterilir (sessiz kalmaz).
+
+**3) Dev client soğuk açılışta Metro adresi.** İlk açılış LAN IP’sini kaydettiği için uygulama
+kapanınca “Unable to load script” görülebildi.
+
+- USB testlerinde `npx expo start --dev-client --host localhost` + `adb reverse` kullanılır.
+- `CI=1` modunda Metro dosya değişikliklerini izlemez; JS değişikliğinden sonra Metro yeniden
+  başlatılmalıdır.
+
+**4) Samsung uyku davranışı.** Ekran test sırasında kapandı; `adb shell svc power stayon true`
+ve uzun ekran zaman aşımı kullanıldı. Push’un güvenilirliği için uygulama pil ayarı
+**Kısıtlanmamış** olmalı ve “Kullanılmayan uygulamaları uyut” listesinden çıkarılmalıdır.
+
+## 7. Sınırlar
+
+- **Expo Go’da uzak push yok:** Android’de SDK 53+ uzak bildirimleri desteklemez; push testi
+  yerel dev client ile yapıldı. EAS **production** imzalı APK/AAB bu turda üretilmedi; dev client
+  Metro’ya bağımlıdır.
+- Samsung’da pil optimizasyonu (“Kısıtlanmamış”) ve uyku listesi ayarları test edilmedi; push
+  güvenilirliği için kullanıcıya bırakılan manuel adımdır.
 - **iOS test edilemedi:** Xcode yalnızca macOS’ta çalışır; bu makine Windows.
 - Emülatör iki kez Windows `RADAR_PRE_LEAK_64` kaydıyla kapandı. Pencereli mod ve 3 GB RAM ile
   daha kararlı çalıştı; UAT adımları yeniden başlatılarak tamamlandı.

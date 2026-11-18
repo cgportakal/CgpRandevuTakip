@@ -1,15 +1,23 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-18 21:10 (UTC+3)
+**Son güncelleme:** 2026-11-18 23:10 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — **377 test**. Android SDK/JDK/adb/emulator her iki makinede kurulu;
-CFR-LENOVO’da AVD `cgp_uat` hazır. EAS projesi bağlandı (`@cgportakal/cgp-randevu-takip`).
-Push testi için kalan iki adım: **FCM kimlik bilgisi** (Firebase `google-services.json`) ve
-**fiziksel cihaz**.
+**Durum:** Yeşil — **377 test**. **Gerçek cihaz UAT tamamlandı** (Samsung S21, Android 15):
+push (açık/arka plan/öldürülmüş), çevrimdışı kuyruk + otomatik eşitleme, canlı olay, zorunlu
+güncelleme ve raporlar doğrulandı. EAS projesi bağlı; sıradaki iş iOS UAT ve mağaza derlemesi.
 
 ## Bu turda tamamlanan
 
+- **Gerçek cihaz UAT (Samsung SM-G991B, Android 15 / One UI 7):** yerel dev client
+  (`expo prebuild` + Gradle `assembleDebug`, arm64) USB ile kuruldu; `adb reverse` ile API/Metro
+  bağlandı. Push açık/arka plan/süreç öldürülmüş senaryolarında geldi; bildirime dokunma soğuk
+  başlatmada uygulamayı açtı. Çevrimdışı kuyruk, otomatik eşitleme, canlı olay, 45 sn API
+  kesintisi sonrası yeniden bağlanma, zorunlu güncelleme, raporlar ve hatırlatma balonu doğrulandı
+  ([docs/39](docs/39_Mobil_UAT_Android.md) §6).
+- **Çevrimdışı kuyruk düzeltmeleri:** çakışan çevrimdışı kayıt sunucu hatasıyla takılıyordu;
+  kuyruğa `ignoreConflicts` ile alınıyor ve form “çakışma denetimi atlanır” uyarısı gösteriyor.
+  Bağlantı dönüşünde kuyruk otomatik gönderiliyor; gönderim hataları ekranda gösteriliyor.
 - **EAS projesi (cafer-desktop):** `npx eas init` ile `@cgportakal/cgp-randevu-takip` oluşturuldu
   ve `mobile/app.json` içine bağlandı (`projectId: 0e759428-9702-43f5-9783-7b8662bd4afa`).
   EAS CLI 27.10.0 kurulu, oturum `gokmen_portakal` hesabıyla açık. `google-services.json` /
@@ -125,19 +133,16 @@ ilk çalıştırmada `POST /v1/auth/setup` gerekir. Ayrıntı: [docs/39](docs/39
 
 ## Sıradaki iş (öncelik sırası)
 
-1. **Mobil push testi (FCM/APNs)** — **fiziksel cihaz** + FCM kimlik bilgileri gerekir; Expo Go
-   uzak bildirimi desteklemiyor, emülatörde `isDevice=false`. EAS projesi bağlı
-   (`0e759428-9702-43f5-9783-7b8662bd4afa`) ve oturum açık; kalan iş Firebase
-   `google-services.json` dosyasının `npx eas credentials` ile yüklenmesi ve cihazda doğrulama.
-2. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
+1. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
    canlı olay ve push doğrulanmalı.
+2. **Mağaza derlemesi** — EAS `production` profiliyle imzalı AAB/APK; sürüm numarası ve
+   `eas.json` `appVersionSource: remote` ayarı gözden geçirilmeli.
 3. **İçerik logosu UAT notları** — gerçek kurum verisiyle son kontrol (opsiyonel); temel akış
    tamamlandı.
 
 ## Aktif kilit
 
-Yok. (CFR-LENOVO Android ortamı, logo UAT ve flaky test düzeltmesi tamamlandı; kilit bırakıldı.
-Kontrol: `node coordination/lock.mjs status`)
+Yok. (Gerçek cihaz UAT tamamlandı; kilit bırakıldı. Kontrol: `node coordination/lock.mjs status`)
 
 ## Dikkat edilecekler
 
@@ -160,7 +165,10 @@ Kontrol: `node coordination/lock.mjs status`)
   cafer-desktop). Yeni terminalde `JAVA_HOME`/`ANDROID_HOME` kullanıcı ortam değişkenlerinden gelir;
   `sdkmanager` için `JAVA_HOME` gerekir. Android UAT adımları `docs/35` bölüm 7’de.
 - **Mobil push:** Expo Go Android’de SDK 53+ uzak bildirimleri desteklemez; FCM/APNs testi için
-  EAS dev build gerekir.
+  dev client gerekir. Gerçek cihazda doğrulandı (`docs/39` §6).
+- **Dev client + USB:** Fiziksel cihazda `npx expo start --dev-client --host localhost` ve
+  `adb reverse tcp:5199 tcp:8081` kullanın. Metro’yu `CI=1` ile çalıştırırsanız dosya
+  değişikliklerini izlemez; JS değişikliğinden sonra yeniden başlatın.
 - **Rapor yolu:** `/v1/reports/kind/{kind}` kullan. `/v1/reports/Summary` yanlışlıkla
   `/v1/reports/summary` ucuna düşer (route çakışması).
 - **SignalR CORS:** istemci `withCredentials: false` kullanmalı; aksi halde `AllowAnyOrigin` reddedilir.
