@@ -41,10 +41,16 @@ export async function registerForPushAsync(): Promise<string | null> {
     if (status !== 'granted') return null;
 
     const projectId =
+      process.env.EXPO_PUBLIC_EAS_PROJECT_ID ??
       Constants.expoConfig?.extra?.eas?.projectId ??
       (Constants as unknown as { easConfig?: { projectId?: string } }).easConfig?.projectId;
 
-    if (!projectId) return null;
+    if (!projectId) {
+      console.warn(
+        'Push kaydı atlandı: EAS projectId yok. app.json extra.eas.projectId veya EXPO_PUBLIC_EAS_PROJECT_ID ayarlayın.',
+      );
+      return null;
+    }
 
     const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
 

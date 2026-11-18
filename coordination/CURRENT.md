@@ -1,13 +1,15 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-18 10:15 (UTC+3)
+**Son güncelleme:** 2026-11-18 10:45 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `agent/cfr-lenovo/content-logo` (PR bekliyor)
-**Durum:** Yeşil — **377 test**; içerik konsolundan logo yükleme eklendi. Mobil push/iOS testleri
-ortam gereksinimi nedeniyle sırada.
+**Dal:** `agent/cfr-lenovo/mobile-push-config` (PR bekliyor)
+**Durum:** Yeşil — **377 test**; logo yükleme tamamlandı; mobil push testi için EAS proje kimliği
+desteği eklendi. Fiziksel cihaz + EAS/FCM kimlik bilgileri olmadan push testi yapılamıyor.
 
 ## Bu turda tamamlanan
 
+- **Mobil push hazırlığı:** `EXPO_PUBLIC_EAS_PROJECT_ID` fallback’i ve eksik proje kimliğinde
+  konsol uyarısı; `mobile/.env.example` ve `docs/39` FCM/APNs test adımları güncellendi.
 - **İçerik logosu yükleme:** `POST /v1/admin/content/logo` (Admin, PNG/JPG/BMP, en fazla 4 MB);
   `branding/institution-logo.*` saklama, eski dosyayı temizleme, `ContentLogoUpdated` denetimi,
   sürüm sorgulu logo URL’si ve `contentChanged` olayı. Web konsolunda logo önizleme + dosya yükleme.
@@ -69,8 +71,9 @@ ortam gereksinimi nedeniyle sırada.
 
 ## Sıradaki iş (öncelik sırası)
 
-1. **Mobil push testi (FCM/APNs)** — EAS dev build + FCM kimlik bilgileri gerekir; Expo Go uzak
-   bildirimi desteklemiyor. Android emülatörü ve SDK kurulu (`D:\Android\Sdk`, AVD `cgp_uat`).
+1. **Mobil push testi (FCM/APNs)** — **fiziksel cihaz** + EAS dev build + FCM kimlik bilgileri
+   gerekir; Expo Go uzak bildirimi desteklemiyor, emülatörde `isDevice=false`. Proje kimliği
+   `app.json extra.eas.projectId` veya `EXPO_PUBLIC_EAS_PROJECT_ID` ile verilmeli.
 2. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
    canlı olay ve push doğrulanmalı.
 3. **İçerik logosu UAT** — web konsolundan gerçek logo yükleme, önizleme ve `contentChanged`
@@ -160,7 +163,8 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-Logo yükleme dalı: yerel **377/377** test, web build, mobil `tsc --noEmit` başarılı.
+Mobil push hazırlığı dalı: yerel **377/377** test, web build, mobil `tsc --noEmit` başarılı.
 PR kontrolleri merge öncesi `gh pr checks --watch` ile doğrulanacak.
-Son release: **1.8.2 Setup-only** başarılı; Android UAT tamamlandı.
+Son release: **1.8.2 Setup-only** başarılı; Android UAT tamamlandı. Dependabot’ta
+`mobile/package-lock.json` **picomatch** (high) uyarısı açık; yamalı paket henüz yok.
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol + güncel dal + yalnızca squash.
