@@ -21,8 +21,8 @@ WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma �
 
 > Durum: **1.8.2 hazır** — güncelleme pencerelerinde sürüm notları ham Markdown yerine düz metin
 > gösteriliyor; zorunlu güncelleme akışı web ve masaüstünde doğrulandı. Android UAT (çevrimdışı
-> kuyruk, canlı olay, zorunlu güncelleme) tamamlandı; mobil push ve iOS testleri ortam
-> gereksinimleri nedeniyle sırada. Web içerik konsolu, güvenli güncelleme, oturum yönetimi ve
+> kuyruk, canlı olay, zorunlu güncelleme) ve **mobil push (Samsung S21)** tamamlandı; iOS testleri
+> ortam gereksinimi nedeniyle sırada. Web içerik konsolu, güvenli güncelleme, oturum yönetimi ve
 > temiz kaldırma tamamlandı.
 
 ### Kurulum ve kaldırma
