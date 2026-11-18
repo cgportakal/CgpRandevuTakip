@@ -1,13 +1,16 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-18 10:55 (UTC+3)
+**Son güncelleme:** 2026-11-18 15:10 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — **377 test**; logo yükleme ve mobil push hazırlığı merge edildi.
-Fiziksel cihaz + EAS/FCM kimlik bilgileri olmadan push testi yapılamıyor.
+**Dal:** `agent/cfr-lenovo/content-logo-uat` (PR bekliyor)
+**Durum:** Yeşil — **377 test**; logo yükleme manuel UAT’i tamamlandı; önizleme 401 hatası
+düzeltildi. Fiziksel cihaz + EAS/FCM kimlik bilgileri olmadan push testi yapılamıyor.
 
 ## Bu turda tamamlanan
 
+- **İçerik logosu UAT:** web konsolundan 160×80 PNG yüklendi; önizleme, `?v=` URL, anonim
+  `GET /v1/content/logo` ve API testi doğrulandı. Bulunan 401 önizleme hatası düzeltildi
+  ([docs/40](docs/40_Icerik_Logosu_UAT.md)).
 - **Mobil push hazırlığı:** `EXPO_PUBLIC_EAS_PROJECT_ID` fallback’i ve eksik proje kimliğinde
   konsol uyarısı; `mobile/.env.example` ve `docs/39` FCM/APNs test adımları güncellendi.
 - **İçerik logosu yükleme:** `POST /v1/admin/content/logo` (Admin, PNG/JPG/BMP, en fazla 4 MB);
@@ -76,8 +79,8 @@ Fiziksel cihaz + EAS/FCM kimlik bilgileri olmadan push testi yapılamıyor.
    `app.json extra.eas.projectId` veya `EXPO_PUBLIC_EAS_PROJECT_ID` ile verilmeli.
 2. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
    canlı olay ve push doğrulanmalı.
-3. **İçerik logosu UAT** — web konsolundan gerçek logo yükleme, önizleme ve `contentChanged`
-   sonrası istemci yenilemesi.
+3. **İçerik logosu UAT notları** — gerçek kurum verisiyle son kontrol (opsiyonel); temel akış
+   tamamlandı.
 
 ## Aktif kilit
 
@@ -163,8 +166,8 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-PR #31 (logo yükleme) ve PR #32 (mobil push hazırlığı) merge edildi; master CI ✅.
-Yerel: **377/377** test, web build, mobil `tsc --noEmit` başarılı.
+Logo UAT dalı: API testleri ✅, yerel **377/377** test, web build ve mobil `tsc` başarılı.
+PR kontrolleri merge öncesi `gh pr checks --watch` ile doğrulanacak.
 Son release: **1.8.2 Setup-only** başarılı; Android UAT tamamlandı. Dependabot’ta
 `mobile/package-lock.json` **picomatch** (high) uyarısı açık; yamalı paket henüz yok
 (`npm audit fix --force` react-native’i düşürüyor, önerilmez).
