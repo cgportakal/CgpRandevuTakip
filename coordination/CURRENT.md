@@ -227,8 +227,9 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-Master CI ✅ (PR #36 sonrası). Yerel doğrulama: **377/377** test, web build ve mobil `tsc`
-başarılı. Son release: **1.8.2 Setup-only** başarılı; Android UAT tamamlandı. Dependabot picomatch
-uyarısı **withdrawn** olduğu için dismissed; kod bağımlılığı değiştirilmedi.
+Master CI ✅ (PR #42 sonrası). Yerel doğrulama: **377/377** test, web build ve mobil `tsc`
+başarılı. Son release: **1.8.2 Setup-only** başarılı; Android emülatör ve **Samsung S21 gerçek
+cihaz UAT** tamamlandı. Dependabot picomatch uyarısı **withdrawn** olduğu için dismissed; kod
+bağımlılığı değiştirilmedi.
 Android SDK/JDK/adb/emulator `D:\Android` altında; AVD `cgp_uat` hazır; `expo-dev-client` eklendi.
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol + güncel dal + yalnızca squash.
