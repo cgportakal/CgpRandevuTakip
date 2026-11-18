@@ -108,6 +108,7 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 39 | [Android Mobil UAT](docs/39_Mobil_UAT_Android.md) | Emülatör kurulumu, çevrimdışı kuyruk, SignalR, zorunlu güncelleme |
 | 40 | [İçerik Logosu UAT](docs/40_Icerik_Logosu_UAT.md) | Logo yükleme, önizleme, anonim logo ucu |
 | 41 | [Tasarım ve Veri Paritesi](docs/41_Tasarim_ve_Veri_Paritesi.md) | Ortak tokenlar, terimler, rapor türleri, masaüstü senkron mimarisi |
+| 42 | [Masaüstü Veri Senkronizasyonu](docs/42_Masaustu_Veri_Senkronizasyonu.md) | API istemcisi, çevrimdışı önbellek, outbox, SignalR, çakışma, UAT planı |
 
 ## Alınan temel kararlar
 

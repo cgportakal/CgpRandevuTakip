@@ -120,7 +120,13 @@ ortam devri tamamlandı; 377 test. Sıradaki iş masaüstü API istemcisi.
 git pull --ff-only
 node scripts/bootstrap.mjs --check      # eksik varsa: --install
 node coordination/lock.mjs status       # boşsa kendi kilidini al
+node coordination/lock.mjs acquire --machine cfr-lenovo --task "desktop sync" --branch agent/cfr-lenovo/desktop-sync
+git switch -c agent/cfr-lenovo/desktop-sync
 ```
+
+**Sıradaki işin devri:** masaüstü veri senkronizasyonu. Başlamadan
+[docs/42_Masaustu_Veri_Senkronizasyonu.md](docs/42_Masaustu_Veri_Senkronizasyonu.md) okunmalı;
+P1 (API istemcisi + oturum) ile başlanır. Durum: **başlanmadı**.
 
 Android ortamı `D:\Android` altında kurulu; yeni terminalde:
 
@@ -150,8 +156,9 @@ ilk çalıştırmada `POST /v1/auth/setup` gerekir. Ayrıntı: [docs/39](docs/39
 
 ## Sıradaki iş (öncelik sırası)
 
-1. **Masaüstü API istemcisi** — oturum, manifest, günlük liste, randevu CRUD ve raporlar; ardından
-   çevrimdışı önbellek + outbox ve SignalR. Ayrıntı: [docs/41](docs/41_Tasarim_ve_Veri_Paritesi.md) §4.
+1. **Masaüstü veri senkronizasyonu** — **başlanmadı.** Sıra: P1 API istemcisi/oturum → P2 okuma
+   yolu → P3 outbox → P4 SignalR → P5 çakışma → P6 dayanıklılık → P7 UAT. İş paketleri, uçlar,
+   veri modeli ve kabul kriterleri: [docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md).
 2. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
    canlı olay ve push doğrulanmalı.
 3. **Mağaza derlemesi** — EAS `production` profiliyle imzalı AAB/APK; sürüm numarası ve
