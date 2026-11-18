@@ -1,14 +1,16 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-18 15:40 (UTC+3)
+**Son güncelleme:** 2026-11-18 16:05 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `agent/cfr-lenovo/android-env` (PR bekliyor)
+**Dal:** `agent/cfr-lenovo/flaky-render-test` (PR bekliyor)
 **Durum:** Yeşil — **377 test**. CFR-LENOVO’ya Android SDK/JDK/adb/emulator kuruldu
 (`D:\Android`); AVD `cgp_uat` hazır, WHPX etkin. Push testi için fiziksel cihaz + EAS/FCM
-kimlik bilgileri hâlâ gerekli.
+kimlik bilgileri hâlâ gerekli. CI’daki flaky render testi düzeltildi.
 
 ## Bu turda tamamlanan
 
+- **Flaky render testi:** 50 satırlık PNG render testi CI ilk render gecikmesiyle 10,4 sn sürüp
+  başarısız oluyordu; ölçüm öncesi ısınma render’ı ve 10 sn eşiği eklendi.
 - **Android ortamı (CFR-LENOVO):** Temurin JDK 17.0.21 (`D:\Android\jdk17`), Android SDK
   (`D:\Android\Sdk`: platform-tools 37.0.1, emulator 37.2.13, platforms;android-35,
   google_apis x86_64), `cgp_uat` AVD (Pixel 6, 3 GB); `emulator -accel-check` WHPX kullanılabilir;
@@ -173,7 +175,7 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-Android ortam dalı: yerel **377/377** test, web build ve mobil `tsc` başarılı.
+Flaky render testi dalı: Desktop testleri **38/38**, yerel toplam **377/377** başarılı.
 PR kontrolleri merge öncesi `gh pr checks --watch` ile doğrulanacak.
 Son release: **1.8.2 Setup-only** başarılı; Android UAT tamamlandı. Dependabot picomatch
 uyarısı **withdrawn** olduğu için dismissed; kod bağımlılığı değiştirilmedi.

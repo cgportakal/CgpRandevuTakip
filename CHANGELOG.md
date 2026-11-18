@@ -10,6 +10,7 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 - **İçerik logosu yükleme:** web içerik konsolundan PNG/JPG/BMP (en fazla 4 MB) logo yükleme; `POST /v1/admin/content/logo`, `branding/institution-logo.*` saklama, eski dosyayı temizleme, sürüm sorgulu (`?v=...`) logo URL’si ve `contentChanged` bildirimi.
 
 ### Düzeltildi
+- **Performans testi:** 50 satırlık PNG render testi CI’daki ilk WPF render gecikmesiyle flaky oluyordu; ölçüm öncesi ısınma render’ı eklendi ve eşik 10 sn’ye çekildi.
 - **Logo önizlemesi:** `/v1/content/logo` ucu kimlik doğrulaması istediği için web konsolundaki `<img>` önizlemesi 401 alıyordu; logo ucu anonim erişime açıldı ve API testi eklendi ([docs/40](docs/40_Icerik_Logosu_UAT.md)).
 - **Mobil SignalR yeniden bağlanma:** otomatik denemeler tükenince bağlantı kalıcı kopuyordu; üstel geri çekilmeyle (2 → 30 sn, süresiz) yeniden bağlanma eklendi ([docs/39](docs/39_Mobil_UAT_Android.md)).
 - **Mobil zorunlu güncelleme ekranı:** Türkçe metinler çift kodlanmıştı (“GÃ¼ncelleme gerekli”); doğru UTF-8 metinlerle değiştirildi.
