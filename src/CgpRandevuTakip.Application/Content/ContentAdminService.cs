@@ -18,6 +18,8 @@ namespace CgpRandevuTakip.Application.Content;
 public sealed class ContentAdminService : IContentAdminService
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly string[] LogoExtensions = [".png", ".jpg", ".jpeg", ".bmp"];
+    private const long MaxLogoSizeBytes = 4 * 1024 * 1024;
 
     private readonly ICategoryService _categoryService;
     private readonly IHostService _hostService;
@@ -29,6 +31,7 @@ public sealed class ContentAdminService : IContentAdminService
     private readonly IAuditLogger _audit;
     private readonly ICurrentUser _currentUser;
     private readonly IClock _clock;
+    private readonly IAppEnvironment _environment;
 
     public ContentAdminService(
         ICategoryService categoryService,
@@ -40,7 +43,8 @@ public sealed class ContentAdminService : IContentAdminService
         IContentVersionRepository versions,
         IAuditLogger audit,
         ICurrentUser currentUser,
-        IClock clock)
+        IClock clock,
+        IAppEnvironment environment)
     {
         _categoryService = categoryService;
         _hostService = hostService;
@@ -52,6 +56,7 @@ public sealed class ContentAdminService : IContentAdminService
         _audit = audit;
         _currentUser = currentUser;
         _clock = clock;
+        _environment = environment;
     }
 
     public async Task<ContentAdminDto> GetAsync()
@@ -127,6 +132,66 @@ public sealed class ContentAdminService : IContentAdminService
 
         await _audit.LogAsync(AuditAction.SettingsChanged, _currentUser.UserId);
         return OperationResult.Ok();
+    }
+
+    public async Task<ContentLogoResult> SaveLogoAsync(
+        string extension,
+        long length,
+        Stream content,
+        CancellationToken cancellationToken = default)
+    {
+        if (!IsAdmin())
+            return ContentLogoResult.Fail("Logoyu yalnızca yönetici değiştirebilir.");
+
+        var normalized = (extension ?? string.Empty).Trim().ToLowerInvariant();
+        if (!LogoExtensions.Contains(normalized))
+            return ContentLogoResult.Fail("Desteklenmeyen logo türü. PNG, JPG veya BMP yükleyin.");
+
+        if (length <= 0)
+            return ContentLogoResult.Fail("Logo dosyası boş.");
+
+        if (length > MaxLogoSizeBytes)
+            return ContentLogoResult.Fail("Logo dosyası en fazla 4 MB olabilir.");
+
+        try
+        {
+            Directory.CreateDirectory(_environment.BrandingDirectory);
+            var fileName = $"institution-logo{normalized}";
+            var targetPath = Path.Combine(_environment.BrandingDirectory, fileName);
+
+            foreach (var existing in Directory.EnumerateFiles(
+                         _environment.BrandingDirectory,
+                         "institution-logo.*",
+                         SearchOption.TopDirectoryOnly))
+            {
+                if (!string.Equals(existing, targetPath, StringComparison.OrdinalIgnoreCase))
+                    File.Delete(existing);
+            }
+
+            await using (var target = File.Create(targetPath))
+            {
+                await content.CopyToAsync(target, cancellationToken);
+            }
+
+            var relativePath = $"branding/{fileName}";
+            await _settingsRepository.SetManyAsync(new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [SettingsKeys.InstitutionLogoFile] = relativePath
+            });
+
+            await _audit.LogAsync(
+                AuditAction.ContentLogoUpdated,
+                _currentUser.UserId,
+                nameof(AppSettings),
+                null,
+                relativePath);
+
+            return ContentLogoResult.Ok(ResolveLogoUrl(relativePath) ?? "/v1/content/logo");
+        }
+        catch (Exception ex)
+        {
+            return ContentLogoResult.Fail($"Logo kaydedilemedi: {ex.Message}");
+        }
     }
 
     public async Task<ContentPublishResult> PublishAsync(string? note)
@@ -335,13 +400,39 @@ public sealed class ContentAdminService : IContentAdminService
             [SettingsKeys.DailyShareTime] = settings.DailyShareTime
         });
 
-    private static ContentInstitutionDto ToInstitution(AppSettings settings)
+    private ContentInstitutionDto ToInstitution(AppSettings settings)
         => new(
             settings.InstitutionName,
             settings.InstitutionEmail,
             settings.InstitutionPhone,
             settings.InstitutionAddress,
-            string.IsNullOrWhiteSpace(settings.InstitutionLogoFile) ? null : "/v1/content/logo");
+            ResolveLogoUrl(settings.InstitutionLogoFile));
+
+    private string? ResolveLogoUrl(string logoFile)
+    {
+        if (string.IsNullOrWhiteSpace(logoFile))
+            return null;
+
+        try
+        {
+            if (!Directory.Exists(_environment.BrandingDirectory))
+                return "/v1/content/logo";
+
+            var file = Directory
+                .EnumerateFiles(_environment.BrandingDirectory, "institution-logo.*", SearchOption.TopDirectoryOnly)
+                .FirstOrDefault();
+
+            if (file is null)
+                return "/v1/content/logo";
+
+            var stamp = File.GetLastWriteTimeUtc(file).Ticks;
+            return $"/v1/content/logo?v={stamp}";
+        }
+        catch
+        {
+            return "/v1/content/logo";
+        }
+    }
 
     private static ContentSettingsDto ToSettings(AppSettings settings)
         => new(

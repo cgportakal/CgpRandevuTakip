@@ -52,6 +52,7 @@ Mobile (Expo)  ─┘        │            (Domain + Application)
 | `GET /v1/content/manifest` | Sürümlü içerik (ETag) |
 | `GET /v1/content/logo` | Kurum logosu |
 | `GET /v1/admin/content` | İçerik konsolu verisi (yalnızca Admin) |
+| `POST /v1/admin/content/logo` | Kurum logosu yükleme (PNG/JPG/BMP) |
 | `POST/PUT/DELETE /v1/admin/content/categories` | Kategori düzenleme / sıralama / silme |
 | `POST/PUT /v1/admin/content/hosts` | Görüşmeci ekleme / düzenleme |
 | `PUT /v1/admin/content/settings` | Kurum ve genel ayarlar |
@@ -64,7 +65,7 @@ görüşmeciler, özellik bayrakları, sürüm politikası. `ETag` + `version` i
 istemci önbelleği doğrular.
 
 - **Web içerik konsolu (uygulandı):** kategori/görüşmeci/kurum/ayar düzenleme,
-  yayın notu ile sürüm oluşturma, sürüm geçmişi ve geri alma.
+  kurum logosu yükleme, yayın notu ile sürüm oluşturma, sürüm geçmişi ve geri alma.
 - **Yayın saklama:** Her yayın `ContentVersions` tablosunda tam anlık görüntü
   olarak tutulur. Geri alma, seçilen sürümün kategorilerini, görüşmecilerini ve
   kurum/ayar alanlarını geri yükler; ardından yeni bir sürüm olarak yayınlar.

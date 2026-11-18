@@ -131,7 +131,8 @@ $env:Push__ChatId='123456789'
 - Yönetici olarak giriş yapın; sol menüden **İçerik Yönetimi**'ni açın.
 - **Kategoriler:** ekleme, düzenleme, renk, sıralama, aktif/pasif ve kullanılmayan kaydı silme.
 - **Görüşmeciler:** ekleme, ad/isActive düzenleme; istenirse giriş hesabı oluşturma.
-- **Kurum ve Ayarlar:** kurum profili, çalışma/sessiz saatler, hatırlatıcı, bildirim ve push bayrakları.
+- **Kurum ve Ayarlar:** kurum profili, logo yükleme (PNG/JPG/BMP, en fazla 4 MB),
+  çalışma/sessiz saatler, hatırlatıcı, bildirim ve push bayrakları.
 - **Yayınla ve Geri Al:** yayın notu ile sürüm oluşturma, son 20 sürümü görme ve seçilen sürüme dönme.
 - Yayın/geri alma sonrası `contentChanged` SignalR olayı gönderilir; web ve mobil istemciler manifesti yeniler.
 

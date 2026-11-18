@@ -1,13 +1,16 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-17 23:20 (UTC+3)
+**Son güncelleme:** 2026-11-18 10:15 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — **1.8.2 yayında** (Setup-only); Android UAT tamamlandı; sürüm notları ve
-README güncel. Mobil push/iOS testleri ortam gereksinimi nedeniyle sırada.
+**Dal:** `agent/cfr-lenovo/content-logo` (PR bekliyor)
+**Durum:** Yeşil — **377 test**; içerik konsolundan logo yükleme eklendi. Mobil push/iOS testleri
+ortam gereksinimi nedeniyle sırada.
 
 ## Bu turda tamamlanan
 
+- **İçerik logosu yükleme:** `POST /v1/admin/content/logo` (Admin, PNG/JPG/BMP, en fazla 4 MB);
+  `branding/institution-logo.*` saklama, eski dosyayı temizleme, `ContentLogoUpdated` denetimi,
+  sürüm sorgulu logo URL’si ve `contentChanged` olayı. Web konsolunda logo önizleme + dosya yükleme.
 - **1.8.2 yayını:** `v1.8.2` GitHub Release (Setup-only; portable yok). Assetler: Setup, Dev.cer,
   SHA256SUMS, version-policy (`latestDesktopVersion: 1.8.2`); README Setup bağlantısı HTTP 200.
 - **Android ortamı:** Temurin JDK 17 (`D:\Android\jdk17`), Android SDK (`D:\Android\Sdk`:
@@ -70,7 +73,8 @@ README güncel. Mobil push/iOS testleri ortam gereksinimi nedeniyle sırada.
    bildirimi desteklemiyor. Android emülatörü ve SDK kurulu (`D:\Android\Sdk`, AVD `cgp_uat`).
 2. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
    canlı olay ve push doğrulanmalı.
-3. **İçerik logosu yükleme** — konsoldan kurum logosu değiştirme (şimdilik mevcut logo korunur).
+3. **İçerik logosu UAT** — web konsolundan gerçek logo yükleme, önizleme ve `contentChanged`
+   sonrası istemci yenilemesi.
 
 ## Aktif kilit
 
@@ -156,6 +160,7 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-PR #28 (1.8.2) — .NET, Web, Mobil başarılı; Release workflow **1.8.2 Setup-only** başarılı.
-Yerel: **377/377** test, web build, mobil `tsc --noEmit`; Android UAT tamamlandı.
+Logo yükleme dalı: yerel **377/377** test, web build, mobil `tsc --noEmit` başarılı.
+PR kontrolleri merge öncesi `gh pr checks --watch` ile doğrulanacak.
+Son release: **1.8.2 Setup-only** başarılı; Android UAT tamamlandı.
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol + güncel dal + yalnızca squash.

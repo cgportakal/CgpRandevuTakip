@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { api } from '@/lib/api';
+import { api, API_URL } from '@/lib/api';
 import { realtimeEvents } from '@/lib/realtime';
 import type {
   Category,
@@ -67,6 +67,7 @@ export function ContentAdminView({ online }: Props) {
   const [hostForm, setHostForm] = useState<HostForm>(emptyHost);
   const [settingsForm, setSettingsForm] = useState<ContentSettingsInput | null>(null);
   const [publishNote, setPublishNote] = useState('');
+  const [logoBusy, setLogoBusy] = useState(false);
 
   const load = useCallback(async () => {
     if (!online) {
@@ -154,6 +155,23 @@ export function ContentAdminView({ online }: Props) {
   const saveSettings = async () => {
     if (!settingsForm) return;
     await run(() => api.saveContentSettings(settingsForm), 'Kurum ve ayarlar kaydedildi.');
+  };
+
+  const uploadLogo = async (file: File) => {
+    if (logoBusy) return;
+
+    setLogoBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await api.uploadContentLogo(file);
+      setNotice('Kurum logosu yüklendi.');
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Logo yüklenemedi.');
+    } finally {
+      setLogoBusy(false);
+    }
   };
 
   const publish = async () => {
@@ -272,6 +290,9 @@ export function ContentAdminView({ online }: Props) {
           form={settingsForm}
           setForm={setSettingsForm}
           busy={busy}
+          logoUrl={data.institution.logoUrl}
+          logoBusy={logoBusy}
+          onUploadLogo={uploadLogo}
           onSave={saveSettings}
         />
       ) : null}
@@ -639,11 +660,17 @@ function SettingsPanel({
   form,
   setForm,
   busy,
+  logoUrl,
+  logoBusy,
+  onUploadLogo,
   onSave,
 }: {
   form: ContentSettingsInput;
   setForm: (form: ContentSettingsInput) => void;
   busy: boolean;
+  logoUrl: string | null;
+  logoBusy: boolean;
+  onUploadLogo: (file: File) => void;
   onSave: () => void;
 }) {
   return (
@@ -651,6 +678,41 @@ function SettingsPanel({
       <div className="card-header">
         <h2>Kurum ve genel ayarlar</h2>
         <span className="muted">Bu alanlar yayınlandığında web ve mobil istemcilere yansır.</span>
+      </div>
+
+      <div className="field" style={{ marginBottom: 16 }}>
+        <label>Kurum logosu</label>
+        {logoUrl ? (
+          <img
+            src={logoUrl.startsWith('http') ? logoUrl : `${API_URL}${logoUrl}`}
+            alt="Kurum logosu"
+            style={{
+              maxHeight: 72,
+              maxWidth: 220,
+              objectFit: 'contain',
+              alignSelf: 'flex-start',
+              border: '1px solid var(--border)',
+              borderRadius: 8,
+              padding: 6,
+              background: '#fff',
+            }}
+          />
+        ) : (
+          <span className="muted">Logo yüklenmemiş.</span>
+        )}
+        <input
+          type="file"
+          accept=".png,.jpg,.jpeg,.bmp"
+          disabled={logoBusy || busy}
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) onUploadLogo(file);
+            event.currentTarget.value = '';
+          }}
+        />
+        <span className="muted">
+          PNG, JPG veya BMP · en fazla 4 MB{logoBusy ? ' · Yükleniyor…' : ''}
+        </span>
       </div>
 
       <div className="grid-2">

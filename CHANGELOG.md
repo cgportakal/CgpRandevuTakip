@@ -5,6 +5,9 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 
 ## [Yayınlanmadı]
 
+### Eklendi
+- **İçerik logosu yükleme:** web içerik konsolundan PNG/JPG/BMP (en fazla 4 MB) logo yükleme; `POST /v1/admin/content/logo`, `branding/institution-logo.*` saklama, eski dosyayı temizleme, sürüm sorgulu (`?v=...`) logo URL’si ve `contentChanged` bildirimi.
+
 ### Düzeltildi
 - **Mobil SignalR yeniden bağlanma:** otomatik denemeler tükenince bağlantı kalıcı kopuyordu; üstel geri çekilmeyle (2 → 30 sn, süresiz) yeniden bağlanma eklendi ([docs/39](docs/39_Mobil_UAT_Android.md)).
 - **Mobil zorunlu güncelleme ekranı:** Türkçe metinler çift kodlanmıştı (“GÃ¼ncelleme gerekli”); doğru UTF-8 metinlerle değiştirildi.
