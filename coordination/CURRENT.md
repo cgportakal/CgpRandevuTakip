@@ -1,15 +1,19 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-18 16:55 (UTC+3)
+**Son güncelleme:** 2026-11-18 21:10 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
 **Durum:** Yeşil — **377 test**. Android SDK/JDK/adb/emulator her iki makinede kurulu;
-CFR-LENOVO’da AVD `cgp_uat` hazır. CI’daki flaky render testi düzeltildi ve master yeşil.
-Push testi için `expo-dev-client` eklendi; kalan tek adım hesap sahibinin EAS/FCM girişi ve
-fiziksel cihaz.
+CFR-LENOVO’da AVD `cgp_uat` hazır. EAS projesi bağlandı (`@cgportakal/cgp-randevu-takip`).
+Push testi için kalan iki adım: **FCM kimlik bilgisi** (Firebase `google-services.json`) ve
+**fiziksel cihaz**.
 
 ## Bu turda tamamlanan
 
+- **EAS projesi (cafer-desktop):** `npx eas init` ile `@cgportakal/cgp-randevu-takip` oluşturuldu
+  ve `mobile/app.json` içine bağlandı (`projectId: 0e759428-9702-43f5-9783-7b8662bd4afa`).
+  EAS CLI 27.10.0 kurulu, oturum `gokmen_portakal` hesabıyla açık. `google-services.json` /
+  `*.jks` gitignore’a eklendi.
 - **Devir hazırlığı:** `mobile`’a SDK 58 uyumlu **`expo-dev-client`** eklendi; EAS development
   build artık doğrudan alınabilir. `docs/39` §5 adımları (EAS login, `eas init`, FCM kimlik
   bilgileri, cihaz) ve aşağıdaki “Diğer bilgisayarda devam” bölümü güncellendi.
@@ -105,11 +109,12 @@ emulator -avd cgp_uat -no-audio -no-boot-anim -gpu auto -memory 3072
 adb devices
 ```
 
-Push testi için sırayla (EAS/FCM hesabı kullanıcıya aittir, ajan yapamaz):
+Push testi için sırayla (FCM hesabı kullanıcıya aittir):
 
-1. `cd mobile` → `npx eas-cli login`
-2. `npx eas init` (proje kimliğini `app.json`’a yazar) veya `EXPO_PUBLIC_EAS_PROJECT_ID`
-3. `npx eas credentials` → Android → FCM (`google-services.json`)
+1. `cd mobile` → `npx eas-cli login` (bu makinede oturum açık; diğer makinede gerekir)
+2. EAS projesi bağlı: `@cgportakal/cgp-randevu-takip`
+   (`app.json` → `extra.eas.projectId = 0e759428-9702-43f5-9783-7b8662bd4afa`)
+3. `npx eas credentials` → Android → FCM (`google-services.json`; Firebase’den indirilir)
 4. Fiziksel cihazı bağla; dev build APK’sını kur
 5. `EXPO_PUBLIC_API_URL=http://<LAN-IP>:5199` → `npx expo start --dev-client`
    (Expo Go ile açmak için `--dev-client` yerine `--go`)
@@ -120,11 +125,10 @@ ilk çalıştırmada `POST /v1/auth/setup` gerekir. Ayrıntı: [docs/39](docs/39
 
 ## Sıradaki iş (öncelik sırası)
 
-1. **Mobil push testi (FCM/APNs)** — **fiziksel cihaz** + EAS dev build + FCM kimlik bilgileri
-   gerekir; Expo Go uzak bildirimi desteklemiyor, emülatörde `isDevice=false`. `expo-dev-client`
-   bağımlılığı hazır; kalan iş `npx eas-cli login` / `npx eas init` / `npx eas credentials`
-   (hesap sahibi) ve cihazda doğrulama. Proje kimliği `app.json extra.eas.projectId` veya
-   `EXPO_PUBLIC_EAS_PROJECT_ID` ile verilmeli.
+1. **Mobil push testi (FCM/APNs)** — **fiziksel cihaz** + FCM kimlik bilgileri gerekir; Expo Go
+   uzak bildirimi desteklemiyor, emülatörde `isDevice=false`. EAS projesi bağlı
+   (`0e759428-9702-43f5-9783-7b8662bd4afa`) ve oturum açık; kalan iş Firebase
+   `google-services.json` dosyasının `npx eas credentials` ile yüklenmesi ve cihazda doğrulama.
 2. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
    canlı olay ve push doğrulanmalı.
 3. **İçerik logosu UAT notları** — gerçek kurum verisiyle son kontrol (opsiyonel); temel akış

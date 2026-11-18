@@ -87,14 +87,10 @@ Expo Go Android’de SDK 53+ uzak bildirimleri desteklemez; ayrıca `expo-device
 
 1. **Fiziksel cihaz** (Android veya iPhone) kullanın. Emülatörde `expo-device` `isDevice = false`
    döndüğü için push kaydı hiç başlamaz.
-2. **EAS oturumu açın ve proje kimliğini tanımlayın** (yalnızca bir kez, hesap sahibi tarafından):
-
-   `cd mobile`
-   `npx eas-cli login`
-   `npx eas init`  → `app.json` içine `expo.extra.eas.projectId` yazar
-
-   Alternatif: `EXPO_PUBLIC_EAS_PROJECT_ID` ortam değişkeni. Proje kimliği yoksa
-   `registerForPushAsync` push kaydını atlar ve konsola uyarı yazar.
+2. **EAS projesi bağlıdır:** `@cgportakal/cgp-randevu-takip` (`app.json` →
+   `expo.extra.eas.projectId = 0e759428-9702-43f5-9783-7b8662bd4afa`). Yeni makinede yalnızca
+   `npx eas-cli login` gerekir; `eas init` tekrar çalıştırılmaz. Alternatif olarak
+   `EXPO_PUBLIC_EAS_PROJECT_ID` ortam değişkeni kullanılabilir.
 3. **FCM kimlik bilgilerini EAS projesine ekleyin** (Android): Firebase projesinden
    `google-services.json` indirin, `npx eas credentials` → Android → Push Notifications
    adımından yükleyin. iOS için APNs anahtarı aynı menüden eklenir.

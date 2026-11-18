@@ -44,6 +44,12 @@ Desktop.ini
 secrets.json
 appsettings.*.local.json
 
+# Mobil push/derleme kimlik bilgileri
+google-services.json
+GoogleService-Info.plist
+*.jks
+*.keystore
+
 # API sunucu verisi ve anahtarları
 src/CgpRandevuTakip.Api/data/
 *.key
