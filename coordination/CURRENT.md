@@ -99,7 +99,9 @@ Android ortamı `D:\Android` altında kurulu; yeni terminalde:
 $env:JAVA_HOME='D:\Android\jdk17'
 $env:ANDROID_HOME='D:\Android\Sdk'
 $env:PATH="$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools;$env:ANDROID_HOME\emulator;$env:PATH"
-& "$env:ANDROID_HOME\emulator\emulator.exe" -avd cgp_uat -no-audio -no-boot-anim -gpu auto -memory 3072
+emulator -list-avds                          # cgp_uat yoksa aşağıdaki komutla oluşturun
+avdmanager create avd -n cgp_uat -k "system-images;android-35;google_apis;x86_64" -d pixel_6
+emulator -avd cgp_uat -no-audio -no-boot-anim -gpu auto -memory 3072
 adb devices
 ```
 
