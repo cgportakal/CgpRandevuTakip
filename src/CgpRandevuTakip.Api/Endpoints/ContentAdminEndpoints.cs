@@ -4,6 +4,7 @@ using CgpRandevuTakip.Application.Categories;
 using CgpRandevuTakip.Application.Common;
 using CgpRandevuTakip.Application.Content;
 using CgpRandevuTakip.Application.Hosts;
+using System.IO;
 
 namespace CgpRandevuTakip.Api.Endpoints;
 
@@ -26,6 +27,27 @@ public static class ContentAdminEndpoints
             ContentSettingsInput input,
             IContentAdminService service) =>
             ToResult(await service.SaveSettingsAsync(input)));
+
+        group.MapPost("/logo", async (
+            IFormFile file,
+            IContentAdminService service,
+            IRealtimeNotifier notifier) =>
+        {
+            if (file is null || file.Length == 0)
+                return Results.BadRequest(new ErrorResponse("Logo dosyası seçilmedi."));
+
+            await using var stream = file.OpenReadStream();
+            var result = await service.SaveLogoAsync(
+                Path.GetExtension(file.FileName),
+                file.Length,
+                stream);
+
+            if (!result.Success)
+                return Results.BadRequest(new ErrorResponse(result.Error ?? "Logo yüklenemedi."));
+
+            await notifier.ContentChangedAsync("logo", "updated");
+            return Results.Ok(new { logoUrl = result.LogoUrl });
+        }).DisableAntiforgery();
 
         group.MapPost("/publish", async (
             PublishContentRequest request,

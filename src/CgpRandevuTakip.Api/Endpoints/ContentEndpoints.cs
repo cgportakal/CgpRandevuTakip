@@ -27,7 +27,8 @@ public static class ContentEndpoints
             ISettingsService settingsService,
             ICategoryService categories,
             IHostService hosts,
-            IConfiguration configuration) =>
+            IConfiguration configuration,
+            ApiEnvironment environment) =>
         {
             var settings = await settingsService.GetAsync();
             var activeCategories = await categories.GetActiveAsync();
@@ -38,7 +39,7 @@ public static class ContentEndpoints
                 settings.InstitutionEmail,
                 settings.InstitutionPhone,
                 settings.InstitutionAddress,
-                ResolveLogoUrl(settings.InstitutionLogoFile));
+                ResolveLogoUrl(settings.InstitutionLogoFile, environment));
 
             var publicSettings = new PublicSettingsDto(
                 settings.Theme.ToString(),
@@ -89,11 +90,13 @@ public static class ContentEndpoints
                 policy));
         });
 
-        group.MapGet("/logo", (ApiEnvironment environment) =>
+        group.MapGet("/logo", (HttpContext context, ApiEnvironment environment) =>
         {
             var path = FindLogo(environment);
             if (path is null)
                 return Results.NotFound();
+
+            context.Response.Headers.CacheControl = "no-store, max-age=0";
 
             var contentType = Path.GetExtension(path).ToLowerInvariant() switch
             {
@@ -148,12 +151,17 @@ public static class ContentEndpoints
             section["latestWebVersion"] ?? "1.7.0");
     }
 
-    private static string? ResolveLogoUrl(string logoFile)
+    private static string? ResolveLogoUrl(string logoFile, ApiEnvironment environment)
     {
         if (string.IsNullOrWhiteSpace(logoFile))
             return null;
 
-        return "/v1/content/logo";
+        var path = FindLogo(environment);
+        if (path is null)
+            return "/v1/content/logo";
+
+        var stamp = File.GetLastWriteTimeUtc(path).Ticks;
+        return $"/v1/content/logo?v={stamp}";
     }
 
     private static string? FindLogo(ApiEnvironment environment)

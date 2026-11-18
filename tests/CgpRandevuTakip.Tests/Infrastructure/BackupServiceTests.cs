@@ -310,5 +310,6 @@ public class BackupServiceTests : IDisposable
         public string DatabasePath { get; }
         public string LogsDirectory => Path.Combine(RootDirectory, "logs");
         public string DefaultBackupDirectory { get; }
+        public string BrandingDirectory => Path.Combine(RootDirectory, "branding");
     }
 }

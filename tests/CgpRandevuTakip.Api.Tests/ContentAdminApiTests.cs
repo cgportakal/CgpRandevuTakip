@@ -165,6 +165,24 @@ public class ContentAdminApiTests : IClassFixture<ContentAdminApiFactory>
         var afterHostEdit = await client.GetFromJsonAsync<ContentAdminDto>("/v1/admin/content", JsonOptions);
         Assert.NotNull(afterHostEdit);
         Assert.False(Assert.Single(afterHostEdit!.Hosts, item => item.Id == host.Id).IsActive);
+
+        var logoBytes = Convert.FromBase64String(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=");
+        using var logoForm = new MultipartFormDataContent();
+        var logoContent = new ByteArrayContent(logoBytes);
+        logoContent.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+        logoForm.Add(logoContent, "file", "institution-logo.png");
+
+        var uploadLogo = await client.PostAsync("/v1/admin/content/logo", logoForm);
+        Assert.Equal(HttpStatusCode.OK, uploadLogo.StatusCode);
+
+        var afterLogo = await client.GetFromJsonAsync<ContentAdminDto>("/v1/admin/content", JsonOptions);
+        Assert.NotNull(afterLogo);
+        Assert.False(string.IsNullOrWhiteSpace(afterLogo!.Institution.LogoUrl));
+
+        var logoResponse = await client.GetAsync(afterLogo.Institution.LogoUrl);
+        Assert.Equal(HttpStatusCode.OK, logoResponse.StatusCode);
+        Assert.Equal("image/png", logoResponse.Content.Headers.ContentType?.MediaType);
     }
 
     private async Task<HttpClient> CreateAuthenticatedClientAsync()

@@ -98,6 +98,7 @@ public static class AuditActionText
         AuditAction.AppointmentAnonymized => "Eski görüşme anonimleştirildi",
         AuditAction.ContentPublished => "İçerik yayınlandı",
         AuditAction.ContentRestored => "İçerik geri alındı",
+        AuditAction.ContentLogoUpdated => "Kurum logosu güncellendi",
         _ => action.ToString()
     };
 }

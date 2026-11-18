@@ -97,4 +97,5 @@ internal sealed class TestAppEnvironment : IAppEnvironment
     public string DatabasePath => Path.Combine(RootDirectory, "data.db");
     public string LogsDirectory => Path.Combine(RootDirectory, "logs");
     public string DefaultBackupDirectory { get; }
+    public string BrandingDirectory => Path.Combine(RootDirectory, "branding");
 }

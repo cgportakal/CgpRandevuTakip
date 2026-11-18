@@ -7,4 +7,5 @@ public interface IAppEnvironment
     string DatabasePath { get; }
     string LogsDirectory { get; }
     string DefaultBackupDirectory { get; }
+    string BrandingDirectory { get; }
 }

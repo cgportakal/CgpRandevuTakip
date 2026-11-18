@@ -234,6 +234,15 @@ class ApiClient {
     });
   }
 
+  uploadContentLogo(file: File): Promise<{ logoUrl: string }> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.request('/v1/admin/content/logo', {
+      method: 'POST',
+      body: form,
+    });
+  }
+
   createCategory(input: CategoryInput): Promise<void> {
     return this.request('/v1/admin/content/categories', {
       method: 'POST',
@@ -324,13 +333,14 @@ class ApiClient {
   private async request<T>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
+    const isFormData = typeof FormData !== 'undefined' && init.body instanceof FormData;
 
     try {
       const response = await fetch(`${API_URL}${path}`, {
         ...init,
         signal: controller.signal,
         headers: {
-          'Content-Type': 'application/json',
+          ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
           ...(this.accessToken ? { Authorization: `Bearer ${this.accessToken}` } : {}),
           ...(init.headers ?? {}),
         },

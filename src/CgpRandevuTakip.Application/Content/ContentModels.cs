@@ -88,10 +88,21 @@ public sealed record ContentHostSnapshot(
 
 public sealed record PublishContentRequest(string? Note);
 
+public sealed record ContentLogoResult(bool Success, string? Error, string? LogoUrl)
+{
+    public static ContentLogoResult Ok(string logoUrl) => new(true, null, logoUrl);
+    public static ContentLogoResult Fail(string error) => new(false, error, null);
+}
+
 public interface IContentAdminService
 {
     Task<ContentAdminDto> GetAsync();
     Task<OperationResult> SaveSettingsAsync(ContentSettingsInput input);
+    Task<ContentLogoResult> SaveLogoAsync(
+        string extension,
+        long length,
+        Stream content,
+        CancellationToken cancellationToken = default);
     Task<ContentPublishResult> PublishAsync(string? note);
     Task<ContentPublishResult> RestoreAsync(string versionId);
 }
