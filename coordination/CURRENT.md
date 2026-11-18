@@ -1,14 +1,19 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-19 00:05 (UTC+3)
+**Son güncelleme:** 2026-11-19 00:40 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — **377 test**. Ortak tasarım tokenları ve rapor paritesi tamamlandı. Veri mimarisi
-kararı: **API tek doğruluk kaynağı; masaüstü API + çevrimdışı önbellek**. Sıradaki iş masaüstü API
-istemcisi, ardından iOS UAT ve mağaza derlemesi.
+**Durum:** **1.8.3 sürüm hazırlığı** — tasarım/rapor paritesi ve mobil düzeltmeler; 377 test.
+Sürüm dosyaları, README bağlantıları ve ortam betiği 1.8.3’e taşındı; Setup-only yayın sıradaki.
 
 ## Bu turda tamamlanan
 
+- **1.8.3 sürüm hazırlığı:** `Directory.Build.props`, `AppConstants`, installer ve
+  `Kurulum-Olustur.ps1` 1.8.3; `version-policy.json` + API `appsettings` latestDesktop/latestWeb
+  1.8.3; web `APP_VERSION` 1.8.3; README sürüm/indirme bağlantıları ve platform tablosu güncellendi.
+- **Ortam yeniden üretimi:** `scripts/bootstrap.mjs` artık JDK 17+, Android SDK (`ANDROID_HOME`,
+  `D:\Android\Sdk` veya varsayılan), `adb`, platform 35 ve EAS CLI durumunu raporluyor; kurulum
+  ipuçları ve mobil dev build komutları eklendi. `docs/35` gereksinim tablosu güncellendi.
 - **Ortak tasarım sistemi:** `design/tokens.json` (açık/koyu palet, tipografi, boşluk, yarıçap,
   rapor etiketleri) eklendi; web CSS değişkenleri, mobil `theme.ts` ve masaüstü `Light.xaml`
   aynı değerlere hizalandı ([docs/41](docs/41_Tasarim_ve_Veri_Paritesi.md)).

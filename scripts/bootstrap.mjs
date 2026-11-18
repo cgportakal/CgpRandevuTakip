@@ -34,7 +34,9 @@ function capture(command, commandArgs) {
   const result = spawnSync(command, commandArgs, {
     cwd: root,
     encoding: 'utf8',
-    shell: isWindows && /^(npm|npx)$/.test(command),
+    shell:
+      isWindows &&
+      (/^(npm|npx)$/.test(command) || command.toLowerCase().endsWith('.cmd')),
   });
 
   if (result.status !== 0) return null;
@@ -115,6 +117,66 @@ function checkTools() {
   }
 }
 
+function checkMobileToolchain() {
+  log('\n== Mobil derleme araçları ==');
+
+  const javaHome = process.env.JAVA_HOME;
+  const javaCandidates = [
+    javaHome ? path.join(javaHome, 'bin', isWindows ? 'java.exe' : 'java') : null,
+    isWindows ? 'D:\\Android\\jdk17\\bin\\java.exe' : null,
+  ].filter(Boolean);
+  const javaExe = javaCandidates.find((candidate) => fs.existsSync(candidate));
+  const java = javaExe ? capture(javaExe, ['-version']) : capture('java', ['-version']);
+
+  if (java) {
+    log(`✓ Java: ${java}`);
+    const major = Number(/version "(\d+)/.exec(java)?.[1] ?? 0);
+    if (major > 0 && major < 17) log('  ! Android derlemesi için JDK 17+ gerekir.');
+  } else {
+    log('! Java 17 yok (Android derlemesi için): https://adoptium.net');
+  }
+
+  const candidates = [
+    process.env.ANDROID_HOME,
+    process.env.ANDROID_SDK_ROOT,
+    isWindows ? 'D:\\Android\\Sdk' : null,
+    isWindows
+      ? path.join(process.env.LOCALAPPDATA ?? '', 'Android', 'Sdk')
+      : path.join(process.env.HOME ?? '', 'Library', 'Android', 'sdk'),
+  ].filter(Boolean);
+
+  const androidHome = candidates.find((candidate) => {
+    const adb = path.join(candidate, 'platform-tools', isWindows ? 'adb.exe' : 'adb');
+    return fs.existsSync(adb);
+  });
+
+  if (androidHome) {
+    log(`✓ Android SDK: ${androidHome}`);
+    const adb = path.join(androidHome, 'platform-tools', isWindows ? 'adb.exe' : 'adb');
+    const version = capture(adb, ['version']);
+    if (version) log(`  ${version}`);
+
+    const platform35 = path.join(androidHome, 'platforms', 'android-35');
+    log(fs.existsSync(platform35)
+      ? '✓ Android platform 35'
+      : '! platform android-35 yok: sdkmanager "platforms;android-35"');
+  } else {
+    log('! Android SDK yok (Android UAT/derleme için): docs/35 §7');
+  }
+
+  const easCandidates = isWindows
+    ? [
+        path.join(process.env.APPDATA ?? '', 'npm', 'eas.cmd'),
+        path.join(process.env.ProgramFiles ?? '', 'nodejs', 'eas.cmd'),
+      ]
+    : [];
+  const easCommand = easCandidates.find((candidate) => fs.existsSync(candidate)) ?? 'eas';
+  const eas = capture(easCommand, ['--version']);
+  log(eas
+    ? `✓ EAS CLI: ${eas}`
+    : '! EAS CLI yok (mobil dev/mağaza derlemesi için): npm install -g eas-cli');
+}
+
 function installSystemTools() {
   if (!doInstall) {
     if (missing.length > 0) {
@@ -124,6 +186,9 @@ function installSystemTools() {
         log('  winget install Microsoft.DotNet.SDK.8');
         log('  winget install OpenJS.NodeJS.LTS');
         log('  winget install JRSoftware.InnoSetup');
+        log('  winget install EclipseAdoptium.Temurin.17.JDK   # Android derlemesi');
+        log('  Android SDK: docs/35 §7 (cmdline-tools, platform 35, emulator)');
+        log('  npm install -g eas-cli                          # mobil dev/mağaza derlemesi');
       } else if (isMac) {
         log('  brew install node@22 && brew link --overwrite node@22');
         log('  brew install --cask dotnet-sdk');
@@ -226,7 +291,9 @@ function installProjectDependencies() {
   ensureEnvFile('web/.env.local', 'NEXT_PUBLIC_API_URL=http://127.0.0.1:5199\n');
   ensureEnvFile(
     'mobile/.env',
-    '# Fiziksel cihazda bilgisayarın LAN IP adresini yazın.\nEXPO_PUBLIC_API_URL=http://127.0.0.1:5199\n',
+    '# Fiziksel cihazda bilgisayarın LAN IP adresini yazın.\n' +
+      'EXPO_PUBLIC_API_URL=http://127.0.0.1:5199\n' +
+      '# Push için mobile/google-services.json (Firebase) gerekir; commit edilmez.\n',
   );
 
   return true;
@@ -237,6 +304,9 @@ function summary() {
   log('API    : dotnet run --project src/CgpRandevuTakip.Api --urls http://0.0.0.0:5199');
   log('Web    : cd web && npm run dev');
   log('Mobil  : cd mobile && npx expo start');
+  log('Mobil dev build: cd mobile && npx expo start --dev-client --host localhost');
+  log('  USB: adb reverse tcp:5199 tcp:5199 && adb reverse tcp:8081 tcp:8081');
+  log('Android UAT: docs/39_Mobil_UAT_Android.md · ortam: docs/35 §7');
   if (isWindows) {
     log('Test   : dotnet test CgpRandevuTakip.sln -c Release');
     log('Setup  : .\\Kurulum-Olustur.ps1');
@@ -249,6 +319,7 @@ function summary() {
 
 log(`CGP - Randevu Takip · ortam hazırlığı (${process.platform})`);
 checkTools();
+checkMobileToolchain();
 installSystemTools();
 
 if (missing.length > 0) {

@@ -5,9 +5,9 @@
 
 ## İndir
 
-> **Son sürüm: 1.8.2** · 17.11.2026 · 377 test geçiyor
+> **Son sürüm: 1.8.3** · 18.11.2026 · 377 test geçiyor
 
-- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.8.2-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.8.2/CGP-RandevuTakip-1.8.2-Setup.exe)
+- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.8.3-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.8.3/CGP-RandevuTakip-1.8.3-Setup.exe)
 - **Tüm sürümler:** [Releases](https://github.com/cgportakal/CgpRandevuTakip/releases/latest)
 - **Taşınabilir ZIP:** Yalnızca kararlı sürümlerde yayınlanır. Son taşınabilir paket:
   [1.8.0 portable](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.8.0/CGP-RandevuTakip-1.8.0-portable.zip).
@@ -19,11 +19,9 @@
 Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöneten, günlük listeyi
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
-> Durum: **1.8.2 hazır** — güncelleme pencerelerinde sürüm notları ham Markdown yerine düz metin
-> gösteriliyor; zorunlu güncelleme akışı web ve masaüstünde doğrulandı. Android UAT (çevrimdışı
-> kuyruk, canlı olay, zorunlu güncelleme) ve **mobil push (Samsung S21)** tamamlandı; iOS testleri
-> ortam gereksinimi nedeniyle sırada. Web içerik konsolu, güvenli güncelleme, oturum yönetimi ve
-> temiz kaldırma tamamlandı.
+> Durum: **1.8.3 hazır** — web, mobil ve masaüstünde ortak tasarım tokenları, rapor türleri ve
+> etiketler eşitlendi; güncelleme pencerelerinde sürüm notları düz metin gösteriliyor. Zorunlu
+> güncelleme web/masaüstünde, mobil akış ve push Samsung S21’de doğrulandı; iOS testleri sırada.
 
 ### Kurulum ve kaldırma
 
@@ -39,10 +37,10 @@ WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma �
 
 | Platform | Durum | Not |
 |---|---|---|
-| Masaüstü (Windows) | **1.8.0** | Tam özellik, çevrimdışı |
+| Masaüstü (Windows) | **1.8.3** | Tam özellik, çevrimdışı |
 | Sunucu API’si | **v1** | Ortak iş kuralları, JWT, içerik manifesti |
-| Mobil (Android/iOS) | **0.2** | Giriş, günlük liste, detay, yeni görüşme/seri, raporlar, çevrimdışı kuyruk (Expo) |
-| Web | **Beta** | Giriş, günlük liste, yeni görüşme/seri, detay/sonuç, 7 rapor türü (Next.js) |
+| Mobil (Android/iOS) | **1.0.0** | Giriş, günlük liste, detay, yeni görüşme/seri, raporlar, çevrimdışı kuyruk, push (Expo; Android doğrulandı) |
+| Web | **1.8.3 (Beta)** | Giriş, günlük liste, yeni görüşme/seri, detay/sonuç, 7 rapor türü (Next.js) |
 
 Ayrıntılar: [docs/29_Platform_Mimarisi.md](docs/29_Platform_Mimarisi.md) ·
 [docs/30_Api_ve_Mobil_Kurulum.md](docs/30_Api_ve_Mobil_Kurulum.md)
