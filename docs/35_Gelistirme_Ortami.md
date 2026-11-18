@@ -128,7 +128,9 @@ node coordination/lock.mjs release --machine <makine>
 - `mobile/.env` içindeki adres cihazdan erişilebilir olmalı; güvenlik duvarında 5199 açık.
 - Android emülatörü: `http://10.0.2.2:5199`; iOS simülatörü: `http://127.0.0.1:5199`.
 - `.env` yerine `EXPO_PUBLIC_API_URL` ortam değişkeni de kullanılabilir (ortam değişkeni önceliklidir).
-- Uzak push için EAS geliştirme derlemesi: `npx eas init`, `npx eas build --profile development`.
+- EAS projesi bağlıdır: `@cgportakal/cgp-randevu-takip` (`mobile/app.json` →
+  `expo.extra.eas.projectId`). Geliştirme derlemesi: `npx eas build --profile development`.
+- Android push için Firebase `google-services.json` dosyasını `npx eas credentials` ile yükleyin.
 - `mobile/eas.json` profilleri hazırdır (`development`, `preview`, `production`).
 - iOS için Apple Developer hesabı ve Xcode gerekir (yalnızca macOS).
 - Expo Go, Android’de SDK 53+ **uzak push** desteklemez; push testi için EAS dev build gerekir.

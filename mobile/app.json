@@ -29,6 +29,12 @@
       "expo-secure-store",
       "expo-sqlite",
       "expo-notifications"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "0e759428-9702-43f5-9783-7b8662bd4afa"
+      }
+    },
+    "owner": "cgportakal"
   }
 }
