@@ -1,13 +1,20 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-18 15:10 (UTC+3)
+**Son güncelleme:** 2026-11-18 15:40 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `agent/cfr-lenovo/content-logo-uat` (PR bekliyor)
-**Durum:** Yeşil — **377 test**; logo yükleme manuel UAT’i tamamlandı; önizleme 401 hatası
-düzeltildi. Fiziksel cihaz + EAS/FCM kimlik bilgileri olmadan push testi yapılamıyor.
+**Dal:** `agent/cfr-lenovo/android-env` (PR bekliyor)
+**Durum:** Yeşil — **377 test**. CFR-LENOVO’ya Android SDK/JDK/adb/emulator kuruldu
+(`D:\Android`); AVD `cgp_uat` hazır, WHPX etkin. Push testi için fiziksel cihaz + EAS/FCM
+kimlik bilgileri hâlâ gerekli.
 
 ## Bu turda tamamlanan
 
+- **Android ortamı (CFR-LENOVO):** Temurin JDK 17.0.21 (`D:\Android\jdk17`), Android SDK
+  (`D:\Android\Sdk`: platform-tools 37.0.1, emulator 37.2.13, platforms;android-35,
+  google_apis x86_64), `cgp_uat` AVD (Pixel 6, 3 GB); `emulator -accel-check` WHPX kullanılabilir;
+  `adb` ve emulator açılışı doğrulandı. EAS CLI 27.10.0 global kuruldu.
+- **Dependabot picomatch:** GHSA-fc5q-39xc-vjpf **withdrawn**; yamalı sürüm yok ve yalnızca
+  build araçlarında kullanılıyor. Alert “inaccurate” gerekçesiyle dismissed.
 - **İçerik logosu UAT:** web konsolundan 160×80 PNG yüklendi; önizleme, `?v=` URL, anonim
   `GET /v1/content/logo` ve API testi doğrulandı. Bulunan 401 önizleme hatası düzeltildi
   ([docs/40](docs/40_Icerik_Logosu_UAT.md)).
@@ -103,9 +110,9 @@ Yok. (CFR-LENOVO logo yükleme + push hazırlığı tamamlandı; kilit bırakıl
   (API 35, 3 GB, pencere açık `-gpu auto`). `-no-window` modunda emülatör iki kez Windows
   `RADAR_PRE_LEAK_64` kaydıyla kapandı; pencereli mod daha kararlı. Emülatör ana makineye
   `10.0.2.2` ile erişir; `mobile/.env` yerine `EXPO_PUBLIC_API_URL` ortam değişkeni kullanın.
-- **Devir:** Android SDK/JDK yalnızca `cafer-desktop` makinesinde `D:\Android` altında kurulu.
-  Diğer makinede zorunlu değildir; web/API/masaüstü için `node scripts/bootstrap.mjs` yeterlidir.
-  Android UAT gerekirse `docs/35` bölüm 7’deki adımlar izlenir.
+- **Devir:** Android SDK/JDK her iki makinede `D:\Android` altında kurulu (CFR-LENOVO ve
+  cafer-desktop). Yeni terminalde `JAVA_HOME`/`ANDROID_HOME` kullanıcı ortam değişkenlerinden gelir;
+  `sdkmanager` için `JAVA_HOME` gerekir. Android UAT adımları `docs/35` bölüm 7’de.
 - **Mobil push:** Expo Go Android’de SDK 53+ uzak bildirimleri desteklemez; FCM/APNs testi için
   EAS dev build gerekir.
 - **Rapor yolu:** `/v1/reports/kind/{kind}` kullan. `/v1/reports/Summary` yanlışlıkla
@@ -166,9 +173,8 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-Logo UAT dalı: API testleri ✅, yerel **377/377** test, web build ve mobil `tsc` başarılı.
+Android ortam dalı: yerel **377/377** test, web build ve mobil `tsc` başarılı.
 PR kontrolleri merge öncesi `gh pr checks --watch` ile doğrulanacak.
-Son release: **1.8.2 Setup-only** başarılı; Android UAT tamamlandı. Dependabot’ta
-`mobile/package-lock.json` **picomatch** (high) uyarısı açık; yamalı paket henüz yok
-(`npm audit fix --force` react-native’i düşürüyor, önerilmez).
+Son release: **1.8.2 Setup-only** başarılı; Android UAT tamamlandı. Dependabot picomatch
+uyarısı **withdrawn** olduğu için dismissed; kod bağımlılığı değiştirilmedi.
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol + güncel dal + yalnızca squash.
