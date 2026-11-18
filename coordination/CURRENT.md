@@ -112,6 +112,7 @@ Push testi için sırayla (EAS/FCM hesabı kullanıcıya aittir, ajan yapamaz):
 3. `npx eas credentials` → Android → FCM (`google-services.json`)
 4. Fiziksel cihazı bağla; dev build APK’sını kur
 5. `EXPO_PUBLIC_API_URL=http://<LAN-IP>:5199` → `npx expo start --dev-client`
+   (Expo Go ile açmak için `--dev-client` yerine `--go`)
 6. Giriş → `POST /v1/devices` kaydı → `POST /v1/push/test`
 
 Yerel API veritabanı (`src/CgpRandevuTakip.Api/data/`) makineye özeldir ve commit edilmez;

@@ -39,6 +39,10 @@ $env:EXPO_PUBLIC_API_URL='http://10.0.2.2:5199'
 cd mobile; npx expo start --android
 ```
 
+`expo-dev-client` kurulduğu için CLI varsayılan olarak geliştirme derlemesini seçebilir.
+Expo Go ile açmak için `npx expo start --go --android`, dev build ile açmak için
+`npx expo start --dev-client --android` kullanın.
+
 API UAT verisi `%TEMP%\opencode\cgp-mobile-uat`, ilk kurulum `POST /v1/auth/setup` ile
 `admin / Admin12345` olarak yapıldı. Emülatör ana makineye `10.0.2.2` üzerinden erişir.
 
