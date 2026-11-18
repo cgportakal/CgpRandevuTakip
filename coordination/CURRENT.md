@@ -1,14 +1,18 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-18 16:20 (UTC+3)
+**Son güncelleme:** 2026-11-18 16:55 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
 **Durum:** Yeşil — **377 test**. Android SDK/JDK/adb/emulator her iki makinede kurulu;
 CFR-LENOVO’da AVD `cgp_uat` hazır. CI’daki flaky render testi düzeltildi ve master yeşil.
-Push testi için fiziksel cihaz + EAS/FCM kimlik bilgileri hâlâ gerekli.
+Push testi için `expo-dev-client` eklendi; kalan tek adım hesap sahibinin EAS/FCM girişi ve
+fiziksel cihaz.
 
 ## Bu turda tamamlanan
 
+- **Devir hazırlığı:** `mobile`’a SDK 58 uyumlu **`expo-dev-client`** eklendi; EAS development
+  build artık doğrudan alınabilir. `docs/39` §5 adımları (EAS login, `eas init`, FCM kimlik
+  bilgileri, cihaz) ve aşağıdaki “Diğer bilgisayarda devam” bölümü güncellendi.
 - **Flaky render testi:** 50 satırlık PNG render testi CI ilk render gecikmesiyle 10,4 sn sürüp
   başarısız oluyordu; ölçüm öncesi ısınma render’ı ve 10 sn eşiği eklendi.
 - **Android ortamı (CFR-LENOVO):** Temurin JDK 17.0.21 (`D:\Android\jdk17`), Android SDK
@@ -81,11 +85,43 @@ Push testi için fiziksel cihaz + EAS/FCM kimlik bilgileri hâlâ gerekli.
 - **Rapor ucu düzeltmesi:** tür uçları `/v1/reports/kind/{kind}` (summary ile çakışma giderildi).
 - Dokümanlar: `docs/29`, `docs/30`, `docs/31`, README, CHANGELOG.
 
+## Diğer bilgisayarda devam (kopyala-çalıştır)
+
+```powershell
+git pull --ff-only
+node scripts/bootstrap.mjs --check      # eksik varsa: --install
+node coordination/lock.mjs status       # boşsa kendi kilidini al
+```
+
+Android ortamı `D:\Android` altında kurulu; yeni terminalde:
+
+```powershell
+$env:JAVA_HOME='D:\Android\jdk17'
+$env:ANDROID_HOME='D:\Android\Sdk'
+$env:PATH="$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools;$env:ANDROID_HOME\emulator;$env:PATH"
+& "$env:ANDROID_HOME\emulator\emulator.exe" -avd cgp_uat -no-audio -no-boot-anim -gpu auto -memory 3072
+adb devices
+```
+
+Push testi için sırayla (EAS/FCM hesabı kullanıcıya aittir, ajan yapamaz):
+
+1. `cd mobile` → `npx eas-cli login`
+2. `npx eas init` (proje kimliğini `app.json`’a yazar) veya `EXPO_PUBLIC_EAS_PROJECT_ID`
+3. `npx eas credentials` → Android → FCM (`google-services.json`)
+4. Fiziksel cihazı bağla; dev build APK’sını kur
+5. `EXPO_PUBLIC_API_URL=http://<LAN-IP>:5199` → `npx expo start --dev-client`
+6. Giriş → `POST /v1/devices` kaydı → `POST /v1/push/test`
+
+Yerel API veritabanı (`src/CgpRandevuTakip.Api/data/`) makineye özeldir ve commit edilmez;
+ilk çalıştırmada `POST /v1/auth/setup` gerekir. Ayrıntı: [docs/39](docs/39_Mobil_UAT_Android.md) §5.
+
 ## Sıradaki iş (öncelik sırası)
 
 1. **Mobil push testi (FCM/APNs)** — **fiziksel cihaz** + EAS dev build + FCM kimlik bilgileri
-   gerekir; Expo Go uzak bildirimi desteklemiyor, emülatörde `isDevice=false`. Proje kimliği
-   `app.json extra.eas.projectId` veya `EXPO_PUBLIC_EAS_PROJECT_ID` ile verilmeli.
+   gerekir; Expo Go uzak bildirimi desteklemiyor, emülatörde `isDevice=false`. `expo-dev-client`
+   bağımlılığı hazır; kalan iş `npx eas-cli login` / `npx eas init` / `npx eas credentials`
+   (hesap sahibi) ve cihazda doğrulama. Proje kimliği `app.json extra.eas.projectId` veya
+   `EXPO_PUBLIC_EAS_PROJECT_ID` ile verilmeli.
 2. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
    canlı olay ve push doğrulanmalı.
 3. **İçerik logosu UAT notları** — gerçek kurum verisiyle son kontrol (opsiyonel); temel akış
@@ -176,8 +212,8 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-Master CI ✅ (PR #36 sonrası). Yerel **377/377** test, web build ve mobil `tsc` başarılı.
-Son release: **1.8.2 Setup-only** başarılı; Android UAT tamamlandı. Dependabot picomatch
+Master CI ✅ (PR #36 sonrası). Yerel doğrulama: **377/377** test, web build ve mobil `tsc`
+başarılı. Son release: **1.8.2 Setup-only** başarılı; Android UAT tamamlandı. Dependabot picomatch
 uyarısı **withdrawn** olduğu için dismissed; kod bağımlılığı değiştirilmedi.
-Android SDK/JDK/adb/emulator `D:\Android` altında; AVD `cgp_uat` hazır.
+Android SDK/JDK/adb/emulator `D:\Android` altında; AVD `cgp_uat` hazır; `expo-dev-client` eklendi.
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol + güncel dal + yalnızca squash.

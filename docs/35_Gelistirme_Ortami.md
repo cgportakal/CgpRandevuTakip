@@ -197,5 +197,6 @@ Notlar:
 | macOS'ta `CgpRandevuTakip.Desktop` derlenmiyor | Beklenen; WPF Windows-only. API/web/mobil kullanın |
 | Expo cihazdan API'ye ulaşamıyor | `EXPO_PUBLIC_API_URL` LAN IP; güvenlik duvarı 5199 |
 | Emülatör kendiliğinden kapanıyor | Pencere açık `-gpu auto -memory 3072` kullanın; `-no-window` bu makinede kararsız |
+| PowerShell `npm`/`npx` “cannot be loaded … not digitally signed” | Yürütme ilkesi `.ps1` betiklerini engelliyor: `cmd /c "npm ..."` kullanın veya `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` |
 | Web'de bildirim izni yok | Chrome site ayarları > Bildirimler > İzin ver; HTTPS/localhost |
 | Port 5199/3000 dolu | `Get-NetTCPConnection -LocalPort 5199` / `lsof -i :5199` |
