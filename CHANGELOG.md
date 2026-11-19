@@ -3,6 +3,18 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [1.8.5] — 2026-11-20 · Liste ve rapor hizaları
+
+### Düzeltildi
+- **Masaüstü listeleri:** tüm `DataGrid` satırlarına en az 40 px yükseklik ve dikey ortalama; metin sütunlarına ortak `DataGridCellText` stili; görüşmeci/kategori durum rozetleri dikey ortalandı.
+- **Raporlar:** KPI kartlarındaki etiket/değer grupları ve rapor tablo satırları dikey ortalandı.
+
+### Test
+- **390/390** test; Release 0 uyarı / 0 hata.
+
+### Paket
+- Setup-only sürüm; taşınabilir ZIP yayınlanmadı (son portable **1.8.0**).
+
 ## [1.8.4] — 2026-11-19 · Sunucu bağlantısı ve kullanıcı listesi
 
 ### Eklendi

@@ -68,13 +68,13 @@
                           IsReadOnly="True"
                           AutoGenerateColumns="False">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="AD SOYAD" Binding="{Binding PersonFullName}" Width="*" MinWidth="150" />
-                        <DataGridTextColumn Header="TARİH" Binding="{Binding DateLabel}" Width="100" />
-                        <DataGridTextColumn Header="SAAT" Binding="{Binding TimeLabel}" Width="70" />
-                        <DataGridTextColumn Header="GÖRÜŞMECİ" Binding="{Binding HostName}" Width="130" />
-                        <DataGridTextColumn Header="KATEGORİ" Binding="{Binding CategoryName}" Width="140" />
-                        <DataGridTextColumn Header="SİLİNME" Binding="{Binding DeletedAtText}" Width="130" />
-                        <DataGridTextColumn Header="KALAN" Binding="{Binding RemainingText}" Width="80" />
+                        <DataGridTextColumn Header="AD SOYAD" Binding="{Binding PersonFullName}" Width="*" MinWidth="150" ElementStyle="{StaticResource DataGridCellText}" />
+                        <DataGridTextColumn Header="TARİH" Binding="{Binding DateLabel}" Width="100" ElementStyle="{StaticResource DataGridCellText}" />
+                        <DataGridTextColumn Header="SAAT" Binding="{Binding TimeLabel}" Width="70" ElementStyle="{StaticResource DataGridCellText}" />
+                        <DataGridTextColumn Header="GÖRÜŞMECİ" Binding="{Binding HostName}" Width="130" ElementStyle="{StaticResource DataGridCellText}" />
+                        <DataGridTextColumn Header="KATEGORİ" Binding="{Binding CategoryName}" Width="140" ElementStyle="{StaticResource DataGridCellText}" />
+                        <DataGridTextColumn Header="SİLİNME" Binding="{Binding DeletedAtText}" Width="130" ElementStyle="{StaticResource DataGridCellText}" />
+                        <DataGridTextColumn Header="KALAN" Binding="{Binding RemainingText}" Width="80" ElementStyle="{StaticResource DataGridCellText}" />
                     </DataGrid.Columns>
                 </DataGrid>
 

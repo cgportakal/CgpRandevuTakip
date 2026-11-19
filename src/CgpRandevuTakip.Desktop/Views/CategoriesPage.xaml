@@ -73,14 +73,14 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="KATEGORİ ADI" Binding="{Binding Name}" Width="*" />
+                        <DataGridTextColumn Header="KATEGORİ ADI" Binding="{Binding Name}" Width="*" ElementStyle="{StaticResource DataGridCellText}" />
 
-                        <DataGridTextColumn Header="KULLANIM" Binding="{Binding UsageCount}" Width="90" />
+                        <DataGridTextColumn Header="KULLANIM" Binding="{Binding UsageCount}" Width="90" ElementStyle="{StaticResource DataGridCellText}" />
 
                         <DataGridTemplateColumn Header="DURUM" Width="96" SortMemberPath="IsActive">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Border CornerRadius="6" Padding="9,3" HorizontalAlignment="Left">
+                                    <Border CornerRadius="6" Padding="9,3" HorizontalAlignment="Left" VerticalAlignment="Center">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}" />
@@ -110,7 +110,7 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="SIRA" Binding="{Binding SortOrder}" Width="62" />
+                        <DataGridTextColumn Header="SIRA" Binding="{Binding SortOrder}" Width="62" ElementStyle="{StaticResource DataGridCellText}" />
                     </DataGrid.Columns>
                 </DataGrid>
             </Border>

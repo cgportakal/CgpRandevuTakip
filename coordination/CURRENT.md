@@ -1,13 +1,19 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-19 21:05 (UTC+3)
+**Son güncelleme:** 2026-11-20 00:40 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — **1.8.4 yayında** (Setup-only); kurulu sürüm 1.8.4. Masaüstü sunucu bağlantısı
-(P1) ve kullanıcı listesi hizası tamamlandı; 390 test. Sıradaki: **P2 okuma yolu**.
+**Durum:** **1.8.5 sürüm hazırlığı** — masaüstünde tüm liste ve rapor satırları dikey ortalandı;
+390 test. Setup-only yayın sıradaki. Sonrasında P2 okuma yolu.
 
 ## Bu turda tamamlanan
 
+- **Liste/rapor hizaları:** tüm masaüstü `DataGrid` metin sütunlarına `DataGridCellText` (dikey
+  ortalı), satırlara en az 40 px yükseklik; görüşmeci/kategori rozetleri ve rapor KPI kartları /
+  tablo satırları dikey ortalandı. Portatif test verisiyle Kullanıcılar, Görüşmeciler ve Raporlar
+  ekran görüntüleriyle doğrulandı.
+- **1.8.5 sürüm hazırlığı:** sürüm dosyaları, `version-policy`/API `appsettings` latestDesktop
+  1.8.5; README Setup bağlantısı ve platform tablosu güncellendi.
 - **1.8.4 yayını:** `v1.8.4` GitHub Release yayınlandı (Setup-only). Assetler: Setup (~66,9 MB),
   Dev.cer, SHA256SUMS, version-policy (`latestDesktopVersion: 1.8.4`); README Setup bağlantısı
   HTTP 200; kurulu sürüm 1.8.4 olarak doğrulandı.

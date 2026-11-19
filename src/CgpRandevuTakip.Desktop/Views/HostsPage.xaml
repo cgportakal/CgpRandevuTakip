@@ -52,7 +52,7 @@
                           BorderThickness="0"
                           Background="Transparent">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="AD SOYAD" Binding="{Binding DisplayName}" Width="*" MinWidth="150" />
+                        <DataGridTextColumn Header="AD SOYAD" Binding="{Binding DisplayName}" Width="*" MinWidth="150" ElementStyle="{StaticResource DataGridCellText}" />
 
                         <DataGridTemplateColumn Header="ROL" Width="84" SortMemberPath="Role">
                             <DataGridTemplateColumn.CellTemplate>
@@ -77,14 +77,14 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="KULLANICI ADI" Binding="{Binding Username}" Width="118" />
+                        <DataGridTextColumn Header="KULLANICI ADI" Binding="{Binding Username}" Width="118" ElementStyle="{StaticResource DataGridCellText}" />
 
-                        <DataGridTextColumn Header="GÖRÜŞME" Binding="{Binding AppointmentCount}" Width="68" />
+                        <DataGridTextColumn Header="GÖRÜŞME" Binding="{Binding AppointmentCount}" Width="68" ElementStyle="{StaticResource DataGridCellText}" />
 
                         <DataGridTemplateColumn Header="GİRİŞ" Width="64" SortMemberPath="IsLoginEnabled">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Border CornerRadius="6" Padding="9,3" HorizontalAlignment="Left">
+                                    <Border CornerRadius="6" Padding="9,3" HorizontalAlignment="Left" VerticalAlignment="Center">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}" />
@@ -117,7 +117,7 @@
                         <DataGridTemplateColumn Header="DURUM" Width="70" SortMemberPath="IsActive">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Border CornerRadius="6" Padding="9,3" HorizontalAlignment="Left">
+                                    <Border CornerRadius="6" Padding="9,3" HorizontalAlignment="Left" VerticalAlignment="Center">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}" />

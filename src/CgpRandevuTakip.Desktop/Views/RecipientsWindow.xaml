@@ -56,10 +56,10 @@
                           IsReadOnly="True"
                           AutoGenerateColumns="False">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="AD" Binding="{Binding Name}" Width="*" />
-                        <DataGridTextColumn Header="TELEFON" Binding="{Binding PhoneDisplay}" Width="150" />
-                        <DataGridTextColumn Header="ETİKET" Binding="{Binding Tag}" Width="120" />
-                        <DataGridTextColumn Header="DURUM" Binding="{Binding IsActive}" Width="80" />
+                        <DataGridTextColumn Header="AD" Binding="{Binding Name}" Width="*" ElementStyle="{StaticResource DataGridCellText}" />
+                        <DataGridTextColumn Header="TELEFON" Binding="{Binding PhoneDisplay}" Width="150" ElementStyle="{StaticResource DataGridCellText}" />
+                        <DataGridTextColumn Header="ETİKET" Binding="{Binding Tag}" Width="120" ElementStyle="{StaticResource DataGridCellText}" />
+                        <DataGridTextColumn Header="DURUM" Binding="{Binding IsActive}" Width="80" ElementStyle="{StaticResource DataGridCellText}" />
                     </DataGrid.Columns>
                 </DataGrid>
             </Border>
