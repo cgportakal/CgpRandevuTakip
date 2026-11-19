@@ -1,13 +1,16 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-19 02:00 (UTC+3)
+**Son güncelleme:** 2026-11-19 21:05 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** **1.8.4 sürüm hazırlığı** — masaüstü sunucu bağlantısı (P1) ve kullanıcı listesi hizası;
-390 test. Setup-only yayın sıradaki.
+**Durum:** Yeşil — **1.8.4 yayında** (Setup-only); kurulu sürüm 1.8.4. Masaüstü sunucu bağlantısı
+(P1) ve kullanıcı listesi hizası tamamlandı; 390 test. Sıradaki: **P2 okuma yolu**.
 
 ## Bu turda tamamlanan
 
+- **1.8.4 yayını:** `v1.8.4` GitHub Release yayınlandı (Setup-only). Assetler: Setup (~66,9 MB),
+  Dev.cer, SHA256SUMS, version-policy (`latestDesktopVersion: 1.8.4`); README Setup bağlantısı
+  HTTP 200; kurulu sürüm 1.8.4 olarak doğrulandı.
 - **1.8.4 sürüm hazırlığı:** sürüm dosyaları, `version-policy`/API `appsettings` latestDesktop 1.8.4;
   README Setup bağlantısı ve platform tablosu güncellendi.
 - **Kullanıcılar listesi hizası:** `DataGrid` satır yüksekliği 44’e sabitlendi; metin sütunları ve
@@ -262,9 +265,9 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-Master CI ✅ (PR #45 sonrası). Yerel doğrulama: **377/377** test, web build ve mobil `tsc`
-başarılı. Son release: **1.8.3 Setup-only** başarılı; tasarım/rapor paritesi yayında. Android
-emülatör ve **Samsung S21 gerçek cihaz UAT** tamamlandı. Dependabot picomatch uyarısı
-**withdrawn** olduğu için dismissed; kod bağımlılığı değiştirilmedi.
+Master CI ✅ (PR #49 sonrası). Yerel doğrulama: **390/390** test, web build ve mobil `tsc`
+başarılı. Son release: **1.8.4 Setup-only** başarılı; masaüstü sunucu bağlantısı ve kullanıcı
+listesi hizası yayında. Android emülatör ve **Samsung S21 gerçek cihaz UAT** tamamlandı.
+Dependabot picomatch uyarısı **withdrawn** olduğu için dismissed; kod bağımlılığı değiştirilmedi.
 Android SDK/JDK/adb/emulator `D:\Android` altında; AVD `cgp_uat` hazır; `expo-dev-client` eklendi.
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol + güncel dal + yalnızca squash.
