@@ -48,18 +48,25 @@
                 <DataGrid ItemsSource="{Binding Users}"
                           SelectedItem="{Binding SelectedUser, Mode=TwoWay}"
                           CanUserSortColumns="True"
+                          RowHeight="44"
+                          VerticalContentAlignment="Center"
                           BorderThickness="0"
                           Background="Transparent">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="AD SOYAD" Binding="{Binding DisplayName}" Width="*" MinWidth="150" />
-                        <DataGridTextColumn Header="KULLANICI ADI" Binding="{Binding Username}" Width="130" />
-                        <DataGridTextColumn Header="ROL" Binding="{Binding RoleText}" Width="92" />
-                        <DataGridTextColumn Header="SON GİRİŞ" Binding="{Binding LastLoginText}" Width="126" />
+                        <DataGridTextColumn Header="AD SOYAD" Binding="{Binding DisplayName}" Width="*" MinWidth="150"
+                                            ElementStyle="{StaticResource DataGridCellText}" />
+                        <DataGridTextColumn Header="KULLANICI ADI" Binding="{Binding Username}" Width="130"
+                                            ElementStyle="{StaticResource DataGridCellText}" />
+                        <DataGridTextColumn Header="ROL" Binding="{Binding RoleText}" Width="92"
+                                            ElementStyle="{StaticResource DataGridCellText}" />
+                        <DataGridTextColumn Header="SON GİRİŞ" Binding="{Binding LastLoginText}" Width="126"
+                                            ElementStyle="{StaticResource DataGridCellText}" />
 
                         <DataGridTemplateColumn Header="DURUM" Width="86" SortMemberPath="StatusText">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Border CornerRadius="6" Padding="9,3" HorizontalAlignment="Left">
+                                    <Border CornerRadius="6" Padding="9,3"
+                                            HorizontalAlignment="Left" VerticalAlignment="Center">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}" />
