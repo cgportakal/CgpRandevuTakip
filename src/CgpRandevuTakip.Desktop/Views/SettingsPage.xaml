@@ -536,6 +536,21 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- Sunucu bağlantısı -->
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="Sunucu bağlantısı" Style="{StaticResource SectionTitle}" />
+                            <TextBlock Text="Web ve mobil ile aynı veriyi kullanmak için sunucu adresini ve sunucu hesabınızı tanımlayın."
+                                       Style="{StaticResource MutedText}"
+                                       TextWrapping="Wrap" />
+                            <Button Content="Sunucu bağlantısını yönet"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding OpenServerConnectionCommand}"
+                                    HorizontalAlignment="Left"
+                                    Margin="0,12,0,0" />
+                        </StackPanel>
+                    </Border>
+
                     <!-- Hakkında -->
                     <Border Style="{StaticResource Card}">
                         <StackPanel>
