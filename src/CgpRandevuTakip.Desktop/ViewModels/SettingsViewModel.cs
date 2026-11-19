@@ -862,6 +862,20 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void OpenServerConnection()
+    {
+        if (!IsAdmin)
+        {
+            ErrorMessage = "Sunucu bağlantısını yalnızca yönetici yapılandırabilir.";
+            return;
+        }
+
+        var window = _services.GetRequiredService<Views.ServerConnectionWindow>();
+        window.Owner = System.Windows.Application.Current?.MainWindow;
+        window.ShowDialog();
+    }
+
+    [RelayCommand]
     private async Task OpenDailyShareAsync()
         => await _shareDialogs.ShowShareDailyListAsync(DateTime.Today);
 

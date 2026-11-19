@@ -3,6 +3,14 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [Yayınlanmadı]
+
+### Eklendi
+- **Masaüstü API istemcisi (P1):** JWT giriş/yenileme/çıkış, DPAPI şifreli oturum saklama, 401’de tek seferlik yenileme, sunucu adresi ve bağlantı testi; Ayarlar’dan açılan “Sunucu bağlantısı” penceresi ([docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md)).
+
+### Test
+- **390/390** test; Release 0 uyarı / 0 hata.
+
 ## [1.8.3] — 2026-11-18 · Tasarım paritesi ve mobil düzeltmeler
 
 ### Eklendi

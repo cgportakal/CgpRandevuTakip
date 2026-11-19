@@ -1,0 +1,114 @@
+<Window x:Class="CgpRandevuTakip.Desktop.Views.ServerConnectionWindow"
+        Icon="/Assets/CGPRandevuTakip.ico"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Sunucu bağlantısı"
+        Width="560"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <StackPanel Margin="28">
+        <TextBlock Text="Sunucu bağlantısı" Style="{StaticResource PageTitle}" FontSize="22" />
+        <TextBlock Text="Masaüstü uygulaması, web ve mobil ile aynı veriyi kullanmak için sunucuya bağlanır. Veri eşitleme sonraki aşamada etkinleşecek."
+                   Style="{StaticResource PageSubtitle}"
+                   TextWrapping="Wrap"
+                   Margin="0,4,0,20" />
+
+        <Border Style="{StaticResource Card}">
+            <StackPanel>
+                <TextBlock Text="Sunucu adresi" Style="{StaticResource LabelText}" />
+                <TextBox Text="{Binding BaseUrl, UpdateSourceTrigger=PropertyChanged}"
+                         AutomationProperties.Name="Sunucu adresi"
+                         Margin="0,4,0,8" />
+                <TextBlock Text="Örnek: http://127.0.0.1:5199 veya https://cgp.kurum.local"
+                           Style="{StaticResource MutedText}"
+                           FontSize="11" />
+                <Button Content="Bağlantıyı test et"
+                        Style="{StaticResource SecondaryButton}"
+                        Command="{Binding TestConnectionCommand}"
+                        HorizontalAlignment="Left"
+                        Margin="0,12,0,0" />
+            </StackPanel>
+        </Border>
+
+        <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+            <StackPanel>
+                <TextBlock Text="Sunucu hesabı" Style="{StaticResource SectionTitle}" />
+                <TextBlock Text="Sunucudaki kullanıcı hesabınızla giriş yapın. Yerel masaüstü hesabından ayrıdır."
+                           Style="{StaticResource MutedText}"
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,12" />
+
+                <TextBlock Text="Kullanıcı adı" Style="{StaticResource LabelText}" />
+                <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                         AutomationProperties.Name="Sunucu kullanıcı adı"
+                         Margin="0,4,0,10" />
+
+                <TextBlock Text="Şifre" Style="{StaticResource LabelText}" />
+                <PasswordBox x:Name="PasswordBox"
+                             AutomationProperties.Name="Sunucu şifresi"
+                             PasswordChanged="OnPasswordChanged" />
+
+                <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                    <Button Content="Giriş yap"
+                            Style="{StaticResource PrimaryButton}"
+                            Command="{Binding SignInCommand}"
+                            IsDefault="True" />
+                    <Button Content="Bağlantıyı kes"
+                            Style="{StaticResource GhostButton}"
+                            Command="{Binding SignOutCommand}"
+                            Margin="10,0,0,0"
+                            Visibility="{Binding IsConnected, Converter={StaticResource BoolToVisibility}}" />
+                </StackPanel>
+
+                <Border Background="{DynamicResource SurfaceAltBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="9"
+                        Padding="12,10"
+                        Margin="0,14,0,0">
+                    <StackPanel>
+                        <TextBlock Text="DURUM" Style="{StaticResource LabelText}" FontSize="10" />
+                        <TextBlock Text="{Binding ConnectionText}"
+                                   FontWeight="SemiBold"
+                                   Margin="0,2,0,0" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource DangerSoftBrush}"
+                BorderBrush="{DynamicResource DangerBrush}"
+                BorderThickness="1"
+                CornerRadius="9"
+                Padding="12,10"
+                Margin="0,14,0,0"
+                Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}">
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Foreground="{DynamicResource DangerBrush}"
+                       FontSize="12"
+                       TextWrapping="Wrap" />
+        </Border>
+
+        <Border Background="{DynamicResource SuccessSoftBrush}"
+                BorderBrush="{DynamicResource SuccessBrush}"
+                BorderThickness="1"
+                CornerRadius="9"
+                Padding="12,10"
+                Margin="0,14,0,0"
+                Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibility}}">
+            <TextBlock Text="{Binding StatusMessage}"
+                       Foreground="{DynamicResource SuccessBrush}"
+                       FontSize="12"
+                       TextWrapping="Wrap" />
+        </Border>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="Kapat"
+                    Style="{StaticResource GhostButton}"
+                    IsCancel="True" />
+        </StackPanel>
+    </StackPanel>
+</Window>

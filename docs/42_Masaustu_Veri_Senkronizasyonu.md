@@ -1,6 +1,6 @@
 # 42 — Masaüstü Veri Senkronizasyonu (Devir Planı)
 
-**Tarih:** 19.11.2026 · **Durum:** Planlandı, kod başlanmadı · **Kaynak karar:** [docs/41](41_Tasarim_ve_Veri_Paritesi.md) §4
+**Tarih:** 19.11.2026 · **Durum:** P1 tamamlandı; P2 (okuma yolu) sıradaki · **Kaynak karar:** [docs/41](41_Tasarim_ve_Veri_Paritesi.md) §4
 
 Bu belge, masaüstü uygulamasının API ile tam senkronize çalışması için yapılacak işleri ve
 teknik kararları diğer bilgisayara devretmek için yazıldı. Yeni oturumda önce
@@ -79,12 +79,16 @@ Mevcut veriler ilk açılışta `ServerId = null` ile “pending” işaretlenir
 
 ## 5. İş paketleri (sırayla)
 
-### P1 — API istemcisi ve oturum
-- [ ] `CgpApiClient`: `HttpClient`, JSON, hata modeli (`ErrorResponse`), timeout.
-- [ ] Login/refresh; token’ları DPAPI ile sakla (`DpapiSecretProtector` deseni).
-- [ ] `GET /v1/auth/me` + rol; 401’de tek seferlik refresh, olmazsa oturum kapat.
-- [ ] Ayarlar: sunucu adresi (varsayılan `http://127.0.0.1:5199`), “Bağlantıyı test et”.
-- [ ] Birim testleri: token yenileme, 401 tekrarı, hatalı URL.
+### P1 — API istemcisi ve oturum — **tamamlandı (19.11.2026)**
+- [x] `CgpApiClient`: `HttpClient`, JSON, hata modeli (`ErrorResponse`), timeout.
+- [x] Login/refresh; token’ları DPAPI ile sakla (`DpapiSecretProtector` deseni).
+- [x] `GET /v1/auth/me` + rol; 401’de tek seferlik refresh, olmazsa oturum kapat.
+- [x] Ayarlar: sunucu adresi (varsayılan `http://127.0.0.1:5199`), “Bağlantıyı test et”.
+- [x] Birim testleri: token yenileme, 401 tekrarı, hatalı URL.
+
+Uygulama: `Desktop/Services/Api/` (`CgpApiClient`, `ApiSessionStore`, `ApiConnectionService`,
+`ApiModels`), `ServerConnectionWindow` + `ServerConnectionViewModel`, Ayarlar → “Sunucu
+bağlantısını yönet”. Token’lar `sync.api.*` anahtarlarıyla DPAPI şifreli saklanır. 13 yeni test.
 
 ### P2 — Okuma yolu
 - [ ] Manifest çekimi + ETag önbelleği; kategori/görüşmeci/kurum adları API’den.

@@ -15,7 +15,9 @@ using CgpRandevuTakip.Application.Reminders;
 using CgpRandevuTakip.Application.Reports;
 using CgpRandevuTakip.Application.Settings;
 using CgpRandevuTakip.Application.Users;
+using System.Net.Http;
 using CgpRandevuTakip.Desktop.Services;
+using CgpRandevuTakip.Desktop.Services.Api;
 using CgpRandevuTakip.Desktop.ViewModels;
 using CgpRandevuTakip.Desktop.Views;
 using CgpRandevuTakip.Infrastructure.Auditing;
@@ -320,6 +322,10 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IAuditLogger, AuditLogger>();
         services.AddSingleton<IAuditLogRepository, AuditLogRepository>();
         services.AddSingleton<ISecretProtector, DpapiSecretProtector>();
+        services.AddSingleton(new HttpClient { Timeout = TimeSpan.FromSeconds(20) });
+        services.AddSingleton<CgpApiClient>();
+        services.AddSingleton<ApiSessionStore>();
+        services.AddSingleton<ApiConnectionService>();
         services.AddSingleton<IPushNotifier, PushNotifier>();
         services.AddSingleton<WindowsToastService>();
         services.AddSingleton<SessionStateService>();
@@ -389,6 +395,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<DashboardViewModel>();
         services.AddTransient<CategoriesViewModel>();
         services.AddTransient<SettingsViewModel>();
+        services.AddTransient<ServerConnectionViewModel>();
         services.AddTransient<AppointmentListViewModel>();
         services.AddTransient<AppointmentEditorViewModel>();
         services.AddTransient<AppointmentDetailViewModel>();
@@ -409,6 +416,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<ForgotPasswordWindow>();
         services.AddTransient<SetupWindow>();
         services.AddTransient<ChangePasswordWindow>();
+        services.AddTransient<ServerConnectionWindow>();
         services.AddTransient<MainWindow>();
         services.AddTransient<DashboardPage>();
         services.AddTransient<CategoriesPage>();

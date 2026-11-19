@@ -1,13 +1,17 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-19 00:55 (UTC+3)
+**Son güncelleme:** 2026-11-19 01:25 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — **1.8.3 yayında** (Setup-only). Tasarım/rapor paritesi, mobil düzeltmeler ve
-ortam devri tamamlandı; 377 test. Sıradaki iş masaüstü API istemcisi.
+**Durum:** Yeşil — **390 test**. Masaüstü senkronizasyonu **P1 (API istemcisi + oturum) tamamlandı**.
+Sıradaki: P2 okuma yolu (manifest, günlük liste, detay, raporlar).
 
 ## Bu turda tamamlanan
 
+- **Masaüstü senkronizasyonu P1:** API istemcisi (`CgpApiClient`), DPAPI şifreli oturum saklama
+  (`ApiSessionStore`), giriş/yenileme/401 tekrarı ve çıkış (`ApiConnectionService`); Ayarlar →
+  “Sunucu bağlantısını yönet” penceresi (adres testi, sunucu hesabıyla giriş). 13 yeni test
+  ([docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md) P1).
 - **1.8.3 yayını:** `v1.8.3` GitHub Release yayınlandı (Setup-only; portable yok). Assetler:
   Setup (`CGP-RandevuTakip-1.8.3-Setup.exe`, ~66,8 MB), Dev.cer, SHA256SUMS, version-policy
   (`latestDesktopVersion/latestWebVersion: 1.8.3`); README Setup bağlantısı HTTP 200; release
@@ -156,9 +160,10 @@ ilk çalıştırmada `POST /v1/auth/setup` gerekir. Ayrıntı: [docs/39](docs/39
 
 ## Sıradaki iş (öncelik sırası)
 
-1. **Masaüstü veri senkronizasyonu** — **başlanmadı.** Sıra: P1 API istemcisi/oturum → P2 okuma
-   yolu → P3 outbox → P4 SignalR → P5 çakışma → P6 dayanıklılık → P7 UAT. İş paketleri, uçlar,
-   veri modeli ve kabul kriterleri: [docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md).
+1. **Masaüstü veri senkronizasyonu** — **P1 tamamlandı.** Sıradaki **P2 (okuma yolu):**
+   manifest + ETag, günlük liste, detay, arama, silinenler ve raporların API’den alınması.
+   Ardından P3 outbox, P4 SignalR, P5 çakışma, P6 dayanıklılık, P7 UAT. Ayrıntı:
+   [docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md).
 2. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
    canlı olay ve push doğrulanmalı.
 3. **Mağaza derlemesi** — EAS `production` profiliyle imzalı AAB/APK; sürüm numarası ve
