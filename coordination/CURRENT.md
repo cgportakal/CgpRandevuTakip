@@ -1,13 +1,17 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-19 01:25 (UTC+3)
+**Son güncelleme:** 2026-11-19 02:00 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — **390 test**. Masaüstü senkronizasyonu **P1 (API istemcisi + oturum) tamamlandı**.
-Sıradaki: P2 okuma yolu (manifest, günlük liste, detay, raporlar).
+**Durum:** **1.8.4 sürüm hazırlığı** — masaüstü sunucu bağlantısı (P1) ve kullanıcı listesi hizası;
+390 test. Setup-only yayın sıradaki.
 
 ## Bu turda tamamlanan
 
+- **1.8.4 sürüm hazırlığı:** sürüm dosyaları, `version-policy`/API `appsettings` latestDesktop 1.8.4;
+  README Setup bağlantısı ve platform tablosu güncellendi.
+- **Kullanıcılar listesi hizası:** `DataGrid` satır yüksekliği 44’e sabitlendi; metin sütunları ve
+  durum rozeti dikey ortalandı (`UsersPage.xaml`).
 - **Masaüstü senkronizasyonu P1:** API istemcisi (`CgpApiClient`), DPAPI şifreli oturum saklama
   (`ApiSessionStore`), giriş/yenileme/401 tekrarı ve çıkış (`ApiConnectionService`); Ayarlar →
   “Sunucu bağlantısını yönet” penceresi (adres testi, sunucu hesabıyla giriş). 13 yeni test
