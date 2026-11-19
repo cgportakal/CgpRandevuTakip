@@ -5,9 +5,9 @@
 
 ## İndir
 
-> **Son sürüm: 1.8.4** · 19.11.2026 · 390 test geçiyor
+> **Son sürüm: 1.8.5** · 20.11.2026 · 390 test geçiyor
 
-- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.8.4-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.8.4/CGP-RandevuTakip-1.8.4-Setup.exe)
+- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.8.5-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.8.5/CGP-RandevuTakip-1.8.5-Setup.exe)
 - **Tüm sürümler:** [Releases](https://github.com/cgportakal/CgpRandevuTakip/releases/latest)
 - **Taşınabilir ZIP:** Yalnızca kararlı sürümlerde yayınlanır. Son taşınabilir paket:
   [1.8.0 portable](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.8.0/CGP-RandevuTakip-1.8.0-portable.zip).
@@ -19,9 +19,10 @@
 Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöneten, günlük listeyi
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
-> Durum: **1.8.4 hazır** — masaüstüne API istemcisi ve **sunucu bağlantısı** eklendi (Ayarlar →
-> Sunucu bağlantısını yönet); kullanıcı listesi satırları dikey ortalandı. Web, mobil ve masaüstünde
-> ortak tasarım tokenları ve 7 rapor türü kullanılıyor; Android push Samsung S21’de doğrulandı.
+> Durum: **1.8.5 hazır** — masaüstünde API istemcisi ve **sunucu bağlantısı** var (Ayarlar →
+> Sunucu bağlantısını yönet). Kullanıcılar, görüşmeciler ve raporlar dahil tüm masaüstü liste
+> satırları dikey ortalandı; web, mobil ve masaüstünde ortak tasarım tokenları ve 7 rapor türü
+> kullanılıyor. Android push Samsung S21’de doğrulandı.
 
 ### Kurulum ve kaldırma
 
@@ -37,7 +38,7 @@ WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma �
 
 | Platform | Durum | Not |
 |---|---|---|
-| Masaüstü (Windows) | **1.8.4** | Tam özellik, çevrimdışı, sunucu oturumu (P1) |
+| Masaüstü (Windows) | **1.8.5** | Tam özellik, çevrimdışı, sunucu oturumu (P1) |
 | Sunucu API’si | **v1** | Ortak iş kuralları, JWT, içerik manifesti |
 | Mobil (Android/iOS) | **1.0.0** | Giriş, günlük liste, detay, yeni görüşme/seri, raporlar, çevrimdışı kuyruk, push (Expo; Android doğrulandı) |
 | Web | **1.8.3 (Beta)** | Giriş, günlük liste, yeni görüşme/seri, detay/sonuç, 7 rapor türü (Next.js) |

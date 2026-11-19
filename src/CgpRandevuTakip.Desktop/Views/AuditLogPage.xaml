@@ -122,15 +122,15 @@
                           AutoGenerateColumns="False">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="TARİH" Binding="{Binding CreatedAtText}"
-                                            SortMemberPath="CreatedAtLocal" Width="150" />
+                                            SortMemberPath="CreatedAtLocal" Width="150" ElementStyle="{StaticResource DataGridCellText}" />
                         <DataGridTextColumn Header="KULLANICI" Binding="{Binding UserName}"
-                                            SortMemberPath="UserName" Width="160" />
+                                            SortMemberPath="UserName" Width="160" ElementStyle="{StaticResource DataGridCellText}" />
                         <DataGridTextColumn Header="İŞLEM" Binding="{Binding ActionText}"
-                                            SortMemberPath="ActionText" Width="205" />
+                                            SortMemberPath="ActionText" Width="205" ElementStyle="{StaticResource DataGridCellText}" />
                         <DataGridTextColumn Header="VARLIK" Binding="{Binding EntityText}"
-                                            SortMemberPath="EntityType" Width="130" />
+                                            SortMemberPath="EntityType" Width="130" ElementStyle="{StaticResource DataGridCellText}" />
                         <DataGridTextColumn Header="KAYIT NO" Binding="{Binding EntityIdText}"
-                                            SortMemberPath="EntityId" Width="200" />
+                                            SortMemberPath="EntityId" Width="200" ElementStyle="{StaticResource DataGridCellText}" />
                         <DataGridTemplateColumn Header="DETAY" Width="*" SortMemberPath="DetailsText">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>

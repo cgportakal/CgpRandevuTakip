@@ -258,7 +258,7 @@
                         </DataGridTemplateColumn>
 
                         <DataGridTextColumn Header="GÖRÜŞMECİ" Binding="{Binding HostName}"
-                                            SortMemberPath="HostName" Width="165" />
+                                            SortMemberPath="HostName" Width="165" ElementStyle="{StaticResource DataGridCellText}" />
 
                         <DataGridTemplateColumn Header="KİŞİ" Width="*" SortMemberPath="PersonFullName">
                             <DataGridTemplateColumn.CellTemplate>
@@ -306,7 +306,7 @@
                         </DataGridTemplateColumn>
 
                         <DataGridTextColumn Header="YÖNTEM" Binding="{Binding MethodText}"
-                                            SortMemberPath="MethodText" Width="100" />
+                                            SortMemberPath="MethodText" Width="100" ElementStyle="{StaticResource DataGridCellText}" />
 
                         <DataGridTemplateColumn Header="DURUM" Width="130" SortMemberPath="StatusText">
                             <DataGridTemplateColumn.CellTemplate>

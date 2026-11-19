@@ -153,20 +153,20 @@
                 <TextBlock Text="{Binding ErrorMessage}"
                            Foreground="{DynamicResource DangerBrush}"
                            FontSize="12"
-                           TextWrapping="Wrap" />
+                           TextWrapping="Wrap"  VerticalAlignment="Center"/>
             </Border>
 
             <!-- KPI kartları -->
             <UniformGrid Columns="5" Margin="0,16,0,0">
                 <Border Style="{StaticResource Card}" Margin="0,0,8,0">
-                    <StackPanel>
+                    <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="TOPLAM GÖRÜŞME" Style="{StaticResource LabelText}" />
                         <TextBlock Text="{Binding Summary.Total}" Style="{StaticResource ValueText}" />
                     </StackPanel>
                 </Border>
 
                 <Border Style="{StaticResource Card}" Margin="8,0">
-                    <StackPanel>
+                    <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="TAMAMLANDI" Style="{StaticResource LabelText}" />
                         <TextBlock Text="{Binding Summary.CompletionRateText}" Style="{StaticResource ValueText}" />
                         <TextBlock Text="{Binding Summary.Completed}" Style="{StaticResource MutedText}" Margin="0,2,0,0" />
@@ -174,7 +174,7 @@
                 </Border>
 
                 <Border Style="{StaticResource Card}" Margin="8,0">
-                    <StackPanel>
+                    <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="GELMEDİ" Style="{StaticResource LabelText}" />
                         <TextBlock Text="{Binding Summary.NoShowRateText}" Style="{StaticResource ValueText}"
                                    Foreground="{DynamicResource DangerBrush}" />
@@ -183,7 +183,7 @@
                 </Border>
 
                 <Border Style="{StaticResource Card}" Margin="8,0">
-                    <StackPanel>
+                    <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="İPTAL" Style="{StaticResource LabelText}" />
                         <TextBlock Text="{Binding Summary.CancelRateText}" Style="{StaticResource ValueText}" />
                         <TextBlock Text="{Binding Summary.Cancelled}" Style="{StaticResource MutedText}" Margin="0,2,0,0" />
@@ -191,7 +191,7 @@
                 </Border>
 
                 <Border Style="{StaticResource Card}" Margin="8,0,0,0">
-                    <StackPanel>
+                    <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="ORTALAMA SÜRE" Style="{StaticResource LabelText}" />
                         <TextBlock Text="{Binding Summary.AverageDurationText}" Style="{StaticResource ValueText}" />
                         <TextBlock Text="{Binding TotalDurationSummary}" Style="{StaticResource MutedText}" Margin="0,2,0,0" />
@@ -306,11 +306,11 @@
                                                     Margin="0,0,7,0"
                                                     VerticalAlignment="Center"
                                                     Background="{Binding ColorHex, Converter={StaticResource HexToBrush}}" />
-                                            <TextBlock Text="{Binding Name}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Name}" FontSize="12" TextTrimming="CharacterEllipsis"  VerticalAlignment="Center"/>
                                         </StackPanel>
 
-                                        <TextBlock Grid.Column="1" Text="{Binding Total}" FontSize="12" FontWeight="SemiBold" />
-                                        <TextBlock Grid.Column="2" Text="{Binding Completed}" FontSize="12" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Total}" FontSize="12" FontWeight="SemiBold"  VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Completed}" FontSize="12"  VerticalAlignment="Center"/>
                                         <TextBlock Grid.Column="3" Text="{Binding ShareText}" Style="{StaticResource MutedText}" />
                                     </Grid>
                                 </DataTemplate>
@@ -348,10 +348,10 @@
                                             <ColumnDefinition Width="46" />
                                         </Grid.ColumnDefinitions>
 
-                                        <TextBlock Text="{Binding Name}" FontSize="12" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Grid.Column="1" Text="{Binding Total}" FontSize="12" FontWeight="SemiBold" />
-                                        <TextBlock Grid.Column="2" Text="{Binding Completed}" FontSize="12" />
-                                        <TextBlock Grid.Column="3" Text="{Binding Cancelled}" FontSize="12" />
+                                        <TextBlock Text="{Binding Name}" FontSize="12" TextTrimming="CharacterEllipsis"  VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Total}" FontSize="12" FontWeight="SemiBold"  VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding Completed}" FontSize="12"  VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding Cancelled}" FontSize="12"  VerticalAlignment="Center"/>
                                     </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
@@ -434,12 +434,12 @@
                                         <ColumnDefinition Width="60" />
                                         <ColumnDefinition Width="60" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding HostName}" FontSize="12" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Grid.Column="1" Text="{Binding Total}" FontSize="12" FontWeight="SemiBold" />
-                                    <TextBlock Grid.Column="2" Text="{Binding Completed}" FontSize="12" />
-                                    <TextBlock Grid.Column="3" Text="{Binding NoShow}" FontSize="12" />
-                                    <TextBlock Grid.Column="4" Text="{Binding CompletionRateText}" FontSize="12" />
-                                    <TextBlock Grid.Column="5" Text="{Binding AverageDurationText}" FontSize="12" />
+                                    <TextBlock Text="{Binding HostName}" FontSize="12" TextTrimming="CharacterEllipsis"  VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Total}" FontSize="12" FontWeight="SemiBold"  VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding Completed}" FontSize="12"  VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="3" Text="{Binding NoShow}" FontSize="12"  VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="4" Text="{Binding CompletionRateText}" FontSize="12"  VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="5" Text="{Binding AverageDurationText}" FontSize="12"  VerticalAlignment="Center"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -464,10 +464,10 @@
                                         <Border Width="9" Height="9" CornerRadius="5" Margin="0,0,7,0"
                                                 VerticalAlignment="Center"
                                                 Background="{Binding ColorHex, Converter={StaticResource HexToBrush}}" />
-                                        <TextBlock Text="{Binding CategoryName}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding CategoryName}" FontSize="12" TextTrimming="CharacterEllipsis"  VerticalAlignment="Center"/>
                                     </StackPanel>
-                                    <TextBlock Grid.Column="1" Text="{Binding Total}" FontSize="12" FontWeight="SemiBold" />
-                                    <TextBlock Grid.Column="2" FontSize="12" Text="{Binding Points.Count}" Style="{StaticResource MutedText}" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Total}" FontSize="12" FontWeight="SemiBold"  VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" FontSize="12" Text="{Binding Points.Count}" Style="{StaticResource MutedText}"  VerticalAlignment="Center"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -512,13 +512,13 @@
                                         <ColumnDefinition Width="50" />
                                         <ColumnDefinition Width="50" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding DateText}" FontSize="12" />
-                                    <TextBlock Grid.Column="1" Text="{Binding WeekdayText}" FontSize="12" Style="{StaticResource MutedText}" />
-                                    <TextBlock Grid.Column="3" Text="{Binding Arrived}" FontSize="12" />
-                                    <TextBlock Grid.Column="4" Text="{Binding Completed}" FontSize="12" />
-                                    <TextBlock Grid.Column="5" Text="{Binding NoShow}" FontSize="12" />
-                                    <TextBlock Grid.Column="6" Text="{Binding Cancelled}" FontSize="12" />
-                                    <TextBlock Grid.Column="7" Text="{Binding Total}" FontSize="12" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding DateText}" FontSize="12"  VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding WeekdayText}" FontSize="12" Style="{StaticResource MutedText}"  VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="3" Text="{Binding Arrived}" FontSize="12"  VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="4" Text="{Binding Completed}" FontSize="12"  VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="5" Text="{Binding NoShow}" FontSize="12"  VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="6" Text="{Binding Cancelled}" FontSize="12"  VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="7" Text="{Binding Total}" FontSize="12" FontWeight="SemiBold"  VerticalAlignment="Center"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -555,11 +555,11 @@
                                         <ColumnDefinition Width="100" />
                                         <ColumnDefinition Width="80" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding PersonName}" FontSize="12" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Grid.Column="1" Text="{Binding Phone}" FontSize="12" Style="{StaticResource MutedText}" />
-                                    <TextBlock Grid.Column="2" Text="{Binding VisitCount}" FontSize="12" FontWeight="SemiBold" />
-                                    <TextBlock Grid.Column="3" Text="{Binding LastVisitText}" FontSize="12" />
-                                    <TextBlock Grid.Column="4" Text="{Binding IntervalText}" FontSize="12" />
+                                    <TextBlock Text="{Binding PersonName}" FontSize="12" TextTrimming="CharacterEllipsis"  VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Phone}" FontSize="12" Style="{StaticResource MutedText}"  VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding VisitCount}" FontSize="12" FontWeight="SemiBold"  VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="3" Text="{Binding LastVisitText}" FontSize="12"  VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="4" Text="{Binding IntervalText}" FontSize="12"  VerticalAlignment="Center"/>
                                 </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

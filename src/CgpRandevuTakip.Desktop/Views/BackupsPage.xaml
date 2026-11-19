@@ -87,17 +87,17 @@
                           Background="Transparent">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="DOSYA" Binding="{Binding FileName}"
-                                            SortMemberPath="FileName" Width="*" />
+                                            SortMemberPath="FileName" Width="*" ElementStyle="{StaticResource DataGridCellText}" />
                         <DataGridTextColumn Header="TARİH" Binding="{Binding CreatedAtText}"
-                                            SortMemberPath="CreatedAtLocal" Width="150" />
+                                            SortMemberPath="CreatedAtLocal" Width="150" ElementStyle="{StaticResource DataGridCellText}" />
                         <DataGridTextColumn Header="BOYUT" Binding="{Binding SizeText}"
-                                            SortMemberPath="SizeBytes" Width="100" />
+                                            SortMemberPath="SizeBytes" Width="100" ElementStyle="{StaticResource DataGridCellText}" />
                         <DataGridTextColumn Header="KAYNAK" Binding="{Binding SourceText}"
-                                            SortMemberPath="Source" Width="110" />
+                                            SortMemberPath="Source" Width="110" ElementStyle="{StaticResource DataGridCellText}" />
                         <DataGridTextColumn Header="ŞİFRE" Binding="{Binding EncryptionText}"
-                                            SortMemberPath="IsEncrypted" Width="90" />
+                                            SortMemberPath="IsEncrypted" Width="90" ElementStyle="{StaticResource DataGridCellText}" />
                         <DataGridTextColumn Header="DOĞRULAMA" Binding="{Binding VerificationText}"
-                                            SortMemberPath="IsVerified" Width="120" />
+                                            SortMemberPath="IsVerified" Width="120" ElementStyle="{StaticResource DataGridCellText}" />
                     </DataGrid.Columns>
                 </DataGrid>
 
