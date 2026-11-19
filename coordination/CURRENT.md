@@ -139,13 +139,18 @@ rapor satırları dikey ortalandı; 390 test. Sıradaki: **P2 okuma yolu**.
 git pull --ff-only
 node scripts/bootstrap.mjs --check      # eksik varsa: --install
 node coordination/lock.mjs status       # boşsa kendi kilidini al
-node coordination/lock.mjs acquire --machine cfr-lenovo --task "desktop sync" --branch agent/cfr-lenovo/desktop-sync
-git switch -c agent/cfr-lenovo/desktop-sync
+node coordination/lock.mjs acquire --machine cfr-lenovo --task "desktop sync P2" --branch agent/cfr-lenovo/desktop-sync-p2
+git switch -c agent/cfr-lenovo/desktop-sync-p2
 ```
 
-**Sıradaki işin devri:** masaüstü veri senkronizasyonu. Başlamadan
-[docs/42_Masaustu_Veri_Senkronizasyonu.md](docs/42_Masaustu_Veri_Senkronizasyonu.md) okunmalı;
-P1 (API istemcisi + oturum) ile başlanır. Durum: **başlanmadı**.
+**Sıradaki işin devri:** masaüstü veri senkronizasyonu. **P1 (API istemcisi + oturum)
+tamamlandı**; sıradaki iş **P2 — okuma yolu** (manifest + ETag, günlük liste, detay, arama,
+silinenler, raporlar). Başlamadan
+[docs/42_Masaustu_Veri_Senkronizasyonu.md](docs/42_Masaustu_Veri_Senkronizasyonu.md) okunmalı.
+
+**Hazırlık durumu (19.11.2026):** `master` 1.8.5 sürümünde, 390/390 test, CI yeşil,
+`bootstrap --check` tüm araçları buluyor (JDK 17, Android SDK, platform 35, adb, EAS CLI).
+API yerel veritabanı ve sırlar repoda değil; ilk çalıştırmada `POST /v1/auth/setup` gerekir.
 
 Android ortamı `D:\Android` altında kurulu; yeni terminalde:
 
