@@ -425,6 +425,8 @@ public partial class App : System.Windows.Application
         services.AddTransient<RecipientsViewModel>();
         services.AddTransient<BulkMoveViewModel>();
         services.AddTransient<BackupsViewModel>();
+        services.AddTransient<BackupCreateViewModel>();
+        services.AddTransient<BackupRestoreViewModel>();
         services.AddTransient<AuditLogViewModel>();
         services.AddTransient<ReportsViewModel>();
 

@@ -84,7 +84,7 @@ public sealed class AutoBackupService : BackgroundService
         if (!AutoBackupSchedule.ShouldRun(localNow, state.Count, sharedAfterNoon))
             return;
 
-        var result = await _backups.CreateAsync(BackupTrigger.Automatic, cancellationToken);
+        var result = await _backups.CreateAsync(BackupTrigger.Automatic, BackupOptions.Full, cancellationToken);
         if (!result.Success)
             return;
 

@@ -84,6 +84,10 @@ public class GoogleDriveFolderServiceTests : IDisposable
         public Task<OperationResult> SetThemeAsync(AppTheme theme)
             => Task.FromResult(OperationResult.Ok());
 
+        public void InvalidateCache()
+        {
+        }
+
         public IReadOnlyList<int> AllowedReminderMinutes => new[] { 30, 60, 1440 };
     }
 }
