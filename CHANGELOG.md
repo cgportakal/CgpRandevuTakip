@@ -3,7 +3,7 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
-## [Yayınlanmadı]
+## [1.9.0] — 2026-11-20 · Yedekleme yenilemesi
 
 ### Eklendi
 - **Seçmeli yedekleme ve geri yükleme:** yedek alırken bölümler (randevular, kullanıcılar, ayarlar, denetim, paylaşım, yedek geçmişi, içerik sürümleri, alıcılar, logo) ve ayar grupları seçilebilir; seçilmeyen bölümler dosyaya yazılmaz. Geri yüklemede aynı seçim sunulur, varsayılan “birleştir” modunda kullanıcılar ve ayarlar korunur ([docs/43](docs/43_Yedekleme_ve_Geri_Yukleme.md)).
@@ -14,6 +14,9 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 
 ### Düzeltildi
 - **Geri yükleme sonrası kurulum sihirbazı:** yedek, tüm `data.db` dosyasını değiştirdiği için 0 kullanıcılı/eski bir yedek geri yüklendiğinde uygulama ilk kurulum sanıp SMTP/ntfy/Telegram ayarlarını sıfırlıyordu. Geri yükleme artık dosya değiştirmeden seçilen bölümleri işlem içinde birleştirir; kullanıcılar silinmez, boş yedek onay ister ([docs/43](docs/43_Yedekleme_ve_Geri_Yukleme.md)).
+
+### Test
+- **412/412** test; Release 0 uyarı / 0 hata. Gerçek v1.2.1 yedeği (0 kullanıcı) ile geri yükleme sonrası mevcut kullanıcı/ayarların korunduğu doğrulandı.
 
 ## [1.8.5] — 2026-11-20 · Liste ve rapor hizaları
 
