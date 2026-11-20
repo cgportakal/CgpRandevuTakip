@@ -175,7 +175,7 @@ tamamlandı**; sıradaki iş **P2 — okuma yolu** (manifest + ETag, günlük li
 silinenler, raporlar). Başlamadan
 [docs/42_Masaustu_Veri_Senkronizasyonu.md](docs/42_Masaustu_Veri_Senkronizasyonu.md) okunmalı.
 
-**Hazırlık durumu (19.11.2026):** `master` 1.8.5 sürümünde, 390/390 test, CI yeşil,
+**Hazırlık durumu (20.11.2026):** `master` 1.9.0 sürümünde, 412/412 test, CI yeşil,
 `bootstrap --check` tüm araçları buluyor (JDK 17, Android SDK, platform 35, adb, EAS CLI).
 API yerel veritabanı ve sırlar repoda değil; ilk çalıştırmada `POST /v1/auth/setup` gerekir.
 

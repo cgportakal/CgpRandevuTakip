@@ -24,6 +24,18 @@ WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma �
 > Masaüstünde API istemcisi ve **sunucu bağlantısı** var (Ayarlar → Sunucu bağlantısını yönet).
 > Android push Samsung S21’de doğrulandı.
 
+### 1.9.0 yenilikleri
+
+- **Seçmeli yedek:** randevular, kullanıcılar, ayarlar, denetim/paylaşım geçmişi, içerik
+  sürümleri, alıcılar ve kurum logosu ayrı ayrı seçilebilir; seçilmeyen bölümler dosyaya yazılmaz.
+- **Yedek önizlemesi:** randevu/kişi/kullanıcı/ayar sayıları, ilk–son randevu ve son değişiklik
+  zamanı; boş yedek ve şifre çözülememe uyarıları.
+- **Güvenli geri yükleme:** mevcut veritabanı dosyası değiştirilmez; seçilen bölümler işlem
+  içinde birleştirilir. Kullanıcılar ve ayarlar varsayılan olarak korunur, kurulum sihirbazı açılmaz.
+- **Bağlantı ayarları:** sunucu adresi ve okuma modu yedeğe dahil; oturum belirteçleri asla yedeklenmez.
+- **Masaüstü P2 okuma yolu:** günlük liste, arama, detay, silinenler ve raporlar API’den okunur;
+  ağ hatasında son başarılı yanıt önbellekten gösterilir.
+
 ### Kurulum ve kaldırma
 
 | Konu | Davranış |

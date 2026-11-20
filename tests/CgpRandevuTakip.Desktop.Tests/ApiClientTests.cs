@@ -55,7 +55,7 @@ public class ApiClientTests
             Task.FromResult(Json(HttpStatusCode.OK, new
             {
                 status = "ok",
-                version = "1.8.3",
+                version = "1.9.0",
                 schemaVersion = 1,
                 serverTimeUtc = DateTime.UtcNow,
             }))));
@@ -64,7 +64,7 @@ public class ApiClientTests
         var result = await service.TestAsync("http://localhost:5199/");
 
         Assert.True(result.Success);
-        Assert.Equal("1.8.3", result.Data!.Version);
+        Assert.Equal("1.9.0", result.Data!.Version);
         Assert.Equal("http://localhost:5199", await store.GetBaseUrlAsync());
     }
 
