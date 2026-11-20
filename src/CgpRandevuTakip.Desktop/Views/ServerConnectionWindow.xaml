@@ -11,7 +11,7 @@
 
     <StackPanel Margin="28">
         <TextBlock Text="Sunucu bağlantısı" Style="{StaticResource PageTitle}" FontSize="22" />
-        <TextBlock Text="Masaüstü uygulaması, web ve mobil ile aynı veriyi kullanmak için sunucuya bağlanır. Veri eşitleme sonraki aşamada etkinleşecek."
+        <TextBlock Text="Masaüstü uygulaması, web ve mobil ile aynı veriyi kullanmak için sunucuya bağlanır. Okuma modu açıldığında listeler, detay ve raporlar sunucudan okunur; yazma eşitlemesi P3 aşamasında gelecek."
                    Style="{StaticResource PageSubtitle}"
                    TextWrapping="Wrap"
                    Margin="0,4,0,20" />
@@ -76,6 +76,19 @@
                                    Margin="0,2,0,0" />
                     </StackPanel>
                 </Border>
+            </StackPanel>
+        </Border>
+
+        <Border Style="{StaticResource Card}" Margin="0,14,0,0">
+            <StackPanel>
+                <TextBlock Text="Okuma modu (P2)" Style="{StaticResource SectionTitle}" />
+                <CheckBox Content="Listeleri ve raporları sunucudan oku"
+                          IsChecked="{Binding ReadModeEnabled}"
+                          Margin="0,8,0,0" />
+                <TextBlock Text="Açıkken günlük liste, detay, silinenler ve raporlar API'den okunur; bağlantı kesilirse son başarılı yanıt önbellekten gösterilir. Bu aşamada masaüstünde yapılan kayıtlar yalnızca yerelde kalır."
+                           Style="{StaticResource MutedText}"
+                           TextWrapping="Wrap"
+                           Margin="0,6,0,0" />
             </StackPanel>
         </Border>
 

@@ -18,6 +18,7 @@ using CgpRandevuTakip.Application.Users;
 using System.Net.Http;
 using CgpRandevuTakip.Desktop.Services;
 using CgpRandevuTakip.Desktop.Services.Api;
+using CgpRandevuTakip.Desktop.Services.Sync;
 using CgpRandevuTakip.Desktop.ViewModels;
 using CgpRandevuTakip.Desktop.Views;
 using CgpRandevuTakip.Infrastructure.Auditing;
@@ -326,6 +327,9 @@ public partial class App : System.Windows.Application
         services.AddSingleton<CgpApiClient>();
         services.AddSingleton<ApiSessionStore>();
         services.AddSingleton<ApiConnectionService>();
+        services.AddSingleton<SyncCacheStore>();
+        services.AddSingleton<ISyncCacheStore>(sp => sp.GetRequiredService<SyncCacheStore>());
+        services.AddSingleton<ServerReadService>();
         services.AddSingleton<IPushNotifier, PushNotifier>();
         services.AddSingleton<WindowsToastService>();
         services.AddSingleton<SessionStateService>();
@@ -351,11 +355,23 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<SmtpEmailSender>());
         services.AddSingleton<IPasswordResetService, PasswordResetService>();
         services.AddSingleton<IRememberedLoginStore, RememberedLoginStore>();
-        services.AddSingleton<ICategoryService, CategoryService>();
+        services.AddSingleton<CategoryService>();
+        services.AddSingleton<ICategoryService>(sp => new SyncedCategoryService(
+            sp.GetRequiredService<CategoryService>(),
+            sp.GetRequiredService<ServerReadService>()));
         services.AddSingleton<ISettingsService, SettingsService>();
-        services.AddSingleton<IAppointmentService, AppointmentService>();
-        services.AddSingleton<IReportService, ReportService>();
-        services.AddSingleton<IHostService, HostService>();
+        services.AddSingleton<AppointmentService>();
+        services.AddSingleton<IAppointmentService>(sp => new SyncedAppointmentService(
+            sp.GetRequiredService<AppointmentService>(),
+            sp.GetRequiredService<ServerReadService>()));
+        services.AddSingleton<ReportService>();
+        services.AddSingleton<IReportService>(sp => new SyncedReportService(
+            sp.GetRequiredService<ReportService>(),
+            sp.GetRequiredService<ServerReadService>()));
+        services.AddSingleton<HostService>();
+        services.AddSingleton<IHostService>(sp => new SyncedHostService(
+            sp.GetRequiredService<HostService>(),
+            sp.GetRequiredService<ServerReadService>()));
         services.AddSingleton<IAppointmentOutcomeService, AppointmentOutcomeService>();
         services.AddSingleton<IUserService, UserService>();
         services.AddSingleton<IRecipientService, RecipientService>();

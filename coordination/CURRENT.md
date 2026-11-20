@@ -1,13 +1,25 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-20 00:50 (UTC+3)
+**Son güncelleme:** 2026-11-20 14:10 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — **1.8.5 yayında** (Setup-only); kurulu sürüm 1.8.5. Masaüstünde tüm liste ve
-rapor satırları dikey ortalandı; 390 test. Sıradaki: **P2 okuma yolu**.
+**Dal:** `agent/cfr-lenovo/desktop-sync-p2` (PR bekliyor)
+**Durum:** Yeşil — **398 test**. **Masaüstü P2 okuma yolu kod tarafı tamamlandı** (manifest/ETag,
+günlük liste, arama, detay, silinenler, raporlar, SQLite önbellek). Okuma modu varsayılan kapalı;
+manuel UAT ve P3 (outbox) sıradaki.
 
 ## Bu turda tamamlanan
 
+- **Masaüstü P2 okuma yolu:** `Desktop/Services/Sync/` altında `ServerReadService`,
+  `SyncCacheStore`, `SyncedAppointmentService`, `SyncedReportService`,
+  `SyncedCategoryService`, `SyncedHostService`. `CgpApiClient`'a manifest (ETag/304),
+  günlük liste, arama, detay, silinenler, rapor uçları eklendi. Yanıtlar
+  `SyncCacheEntries` tablosunda (yeni `DesktopSyncCache` migration) önbelleğe alınır;
+  ağ hatasında son başarılı yanıt gösterilir ve 30 sn sunucu denenmez. Ayarlar →
+  “Sunucu bağlantısını yönet” → **Okuma modu (P2)** anahtarı (varsayılan kapalı);
+  günlük listede “Sunucu: bağlı / çevrimdışı — önbellek” rozeti. 8 yeni test.
+- **Yayın hazırlığı:** `mobile`’a SDK 58 uyumlu **`expo-dev-client`** eklendi; EAS development
+  build artık doğrudan alınabilir. `docs/39` §5 adımları (EAS login, `eas init`, FCM kimlik
+  bilgileri, cihaz) ve aşağıdaki “Diğer bilgisayarda devam” bölümü güncellendi.
 - **1.8.5 yayını:** `v1.8.5` GitHub Release (Setup-only). Assetler: Setup (~66,9 MB), Dev.cer,
   SHA256SUMS, version-policy (`latestDesktopVersion: 1.8.5`); kurulu sürüm 1.8.5 olarak doğrulandı.
 - **Liste/rapor hizaları:** tüm masaüstü `DataGrid` metin sütunlarına `DataGridCellText` (dikey
@@ -180,9 +192,10 @@ ilk çalıştırmada `POST /v1/auth/setup` gerekir. Ayrıntı: [docs/39](docs/39
 
 ## Sıradaki iş (öncelik sırası)
 
-1. **Masaüstü veri senkronizasyonu** — **P1 tamamlandı.** Sıradaki **P2 (okuma yolu):**
-   manifest + ETag, günlük liste, detay, arama, silinenler ve raporların API’den alınması.
-   Ardından P3 outbox, P4 SignalR, P5 çakışma, P6 dayanıklılık, P7 UAT. Ayrıntı:
+1. **Masaüstü veri senkronizasyonu** — P1 ve **P2 okuma yolu kod tarafı tamamlandı.**
+   Sıradaki: P2 manuel UAT (web’de oluşturulan randevu masaüstünde “Yenile” ile görünür,
+   çevrimdışıyken önbellek) ve **P3 outbox** (yazma yolu, `ClientRequestId`, sıra koruma).
+   Ardından P4 SignalR, P5 çakışma, P6 dayanıklılık, P7 UAT. Ayrıntı:
    [docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md).
 2. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
    canlı olay ve push doğrulanmalı.
@@ -204,7 +217,9 @@ Yok. (Gerçek cihaz UAT tamamlandı; kilit bırakıldı. Kontrol: `node coordina
 - **Ortam:** Yeni makinede `node scripts/bootstrap.mjs`; `node_modules`/`bin`/`obj` taşınmaz.
   Masaüstü (WPF) yalnızca Windows’ta derlenir; macOS’ta API/web/mobil geliştirilir.
 - **Masaüstü verisi ayrıdır:** desktop `%LOCALAPPDATA%` SQLite, sunucu `CGP_API_DATA/cgp.db`.
-  Desktop senkronizasyonu henüz yok; SignalR/push sunucu tarafını etkilemez.
+  P2 okuma modu (`sync.read.enabled`, varsayılan kapalı) açıkken listeler/raporlar API'den
+  okunur ve `SyncCacheEntries` tablosuna önbelleklenir; yazmalar P3'e kadar yerelde kalır.
+  Sunucu oturumu açma/çıkarma önbelleği temizler.
 - **Masaüstü zorunlu güncelleme testi:** `UpdateService` politikayı yerel API’den değil GitHub
   `master/version-policy.json` ve `releases/latest` üzerinden okur. Test için geçici düşük sürüm
   derlemesi yeterlidir; yerel API politikası etkilemez.
@@ -278,9 +293,10 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-Master CI ✅ (PR #51 sonrası). Yerel doğrulama: **390/390** test, web build ve mobil `tsc`
-başarılı. Son release: **1.8.5 Setup-only** başarılı; tüm masaüstü liste ve rapor hizaları yayında.
-Android emülatör ve **Samsung S21 gerçek cihaz UAT** tamamlandı.
+Bu dal: yerel **398/398** test (324 uygulama + 59 masaüstü + 13 API + 2 UI), web build ve
+mobil `tsc` başarılı. PR kontrolleri merge öncesi `gh pr checks --watch` ile doğrulanır.
+Master CI ✅ (PR #53 sonrası). Son release: **1.8.5 Setup-only** başarılı; liste ve rapor hizaları
+yayında. Android emülatör ve **Samsung S21 gerçek cihaz UAT** tamamlandı.
 Dependabot picomatch uyarısı **withdrawn** olduğu için dismissed; kod bağımlılığı değiştirilmedi.
 Android SDK/JDK/adb/emulator `D:\Android` altında; AVD `cgp_uat` hazır; `expo-dev-client` eklendi.
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol + güncel dal + yalnızca squash.

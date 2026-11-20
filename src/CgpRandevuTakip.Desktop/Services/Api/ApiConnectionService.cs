@@ -1,3 +1,5 @@
+using CgpRandevuTakip.Desktop.Services.Sync;
+
 namespace CgpRandevuTakip.Desktop.Services.Api;
 
 /// <summary>
@@ -8,12 +10,17 @@ public sealed class ApiConnectionService
 {
     private readonly CgpApiClient _client;
     private readonly ApiSessionStore _store;
+    private readonly ISyncCacheStore? _cache;
     private readonly SemaphoreSlim _refreshLock = new(1, 1);
 
-    public ApiConnectionService(CgpApiClient client, ApiSessionStore store)
+    public ApiConnectionService(
+        CgpApiClient client,
+        ApiSessionStore store,
+        ISyncCacheStore? cache = null)
     {
         _client = client;
         _store = store;
+        _cache = cache;
     }
 
     public Task<string> GetBaseUrlAsync() => _store.GetBaseUrlAsync();
@@ -62,6 +69,10 @@ public sealed class ApiConnectionService
         if (!result.Success || result.Data is null)
             return ApiResult<ApiUser>.Fail(result.Error ?? "Sunucuya giriş yapılamadı.", result.StatusCode);
 
+        // Başka bir sunucudan/hesaptan kalan okuma önbelleği gösterilmesin.
+        if (_cache is not null)
+            await _cache.ClearAsync(ct);
+
         await SaveAsync(normalized, result.Data);
         return ApiResult<ApiUser>.Ok(result.Data.User);
     }
@@ -73,6 +84,29 @@ public sealed class ApiConnectionService
             await _client.LogoutAsync(session.BaseUrl, session.RefreshToken, ct);
 
         await _store.ClearTokensAsync();
+
+        if (_cache is not null)
+            await _cache.ClearAsync(ct);
+    }
+
+    /// <summary>
+    /// Geçerli bir erişim belirteci içeren oturumu döndürür. Süresi dolmak üzereyse
+    /// (veya <paramref name="forceRefresh"/> ise) yeniler; yenilenemezse null döner.
+    /// Okuma çağrıları bu yöntemi kullanır.
+    /// </summary>
+    public async Task<ApiSession?> GetAuthorizedSessionAsync(
+        bool forceRefresh = false,
+        CancellationToken ct = default)
+    {
+        var session = await _store.LoadAsync();
+        if (session is null)
+            return null;
+
+        if (!forceRefresh && !session.IsExpiring(DateTimeOffset.UtcNow))
+            return session;
+
+        var refreshed = await RefreshAsync(session, ct, force: forceRefresh);
+        return refreshed.Success ? refreshed.Data : null;
     }
 
     /// <summary>

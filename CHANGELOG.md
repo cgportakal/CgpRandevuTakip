@@ -3,6 +3,11 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [Yayınlanmadı]
+
+### Eklendi
+- **Masaüstü P2 okuma yolu:** okuma modu açıkken günlük liste, arama, detay, silinenler ve raporlar API'den okunur; manifest ETag/304 desteklidir. Sunucu yanıtları `SyncCacheEntries` tablosunda önbelleğe alınır, ağ hatasında son başarılı yanıt gösterilir. Kategori/görüşmeci listeleri manifestten gelir; yazmalar P3'e kadar yerelde kalır ([docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md)).
+
 ## [1.8.5] — 2026-11-20 · Liste ve rapor hizaları
 
 ### Düzeltildi

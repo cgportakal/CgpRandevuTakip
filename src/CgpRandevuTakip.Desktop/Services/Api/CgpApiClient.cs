@@ -1,7 +1,10 @@
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using CgpRandevuTakip.Application.Appointments;
+using CgpRandevuTakip.Application.Reports;
 
 namespace CgpRandevuTakip.Desktop.Services.Api;
 
@@ -13,7 +16,7 @@ public sealed class CgpApiClient
 {
     private const string DeviceName = "CGP-Desktop";
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions JsonOptions = ApiJson.Options;
 
     private readonly HttpClient _http;
 
@@ -74,24 +77,160 @@ public sealed class CgpApiClient
         CancellationToken ct = default)
         => SendAsync<ApiUser>(new HttpRequestMessage(HttpMethod.Get, Url(baseUrl, "/v1/auth/me")), accessToken, ct);
 
+    /// <summary>İçerik manifesti; <paramref name="etag"/> verilirse koşullu istek yapılır.</summary>
+    public Task<ApiResult<ApiManifest>> GetManifestAsync(
+        string baseUrl,
+        string accessToken,
+        string? etag = null,
+        CancellationToken ct = default)
+        => SendAsync<ApiManifest>(
+            new HttpRequestMessage(HttpMethod.Get, Url(baseUrl, "/v1/content/manifest")),
+            accessToken,
+            ct,
+            etag);
+
+    public Task<ApiResult<IReadOnlyList<AppointmentListItemDto>>> GetDayAsync(
+        string baseUrl,
+        string accessToken,
+        DateTime localDate,
+        CancellationToken ct = default)
+        => SendAsync<IReadOnlyList<AppointmentListItemDto>>(
+            new HttpRequestMessage(
+                HttpMethod.Get,
+                Url(baseUrl, "/v1/appointments/day" + Query(("date", localDate.ToString("yyyy-MM-dd"))))),
+            accessToken,
+            ct);
+
+    public Task<ApiResult<IReadOnlyList<AppointmentListItemDto>>> SearchAppointmentsAsync(
+        string baseUrl,
+        string accessToken,
+        string? searchText,
+        string? categoryId,
+        string? status,
+        DateTime? fromLocal,
+        DateTime? toLocal,
+        string? hostUserId,
+        CancellationToken ct = default)
+        => SendAsync<IReadOnlyList<AppointmentListItemDto>>(
+            new HttpRequestMessage(
+                HttpMethod.Get,
+                Url(baseUrl, "/v1/appointments/search" + Query(
+                    ("search", searchText),
+                    ("categoryId", categoryId),
+                    ("status", status),
+                    ("from", fromLocal?.ToString("yyyy-MM-dd")),
+                    ("to", toLocal?.ToString("yyyy-MM-dd")),
+                    ("hostUserId", hostUserId)))),
+            accessToken,
+            ct);
+
+    public Task<ApiResult<AppointmentListItemDto>> GetNextAppointmentAsync(
+        string baseUrl,
+        string accessToken,
+        CancellationToken ct = default)
+        => SendAsync<AppointmentListItemDto>(
+            new HttpRequestMessage(HttpMethod.Get, Url(baseUrl, "/v1/appointments/next")),
+            accessToken,
+            ct);
+
+    public Task<ApiResult<AppointmentDetailDto>> GetAppointmentAsync(
+        string baseUrl,
+        string accessToken,
+        string id,
+        CancellationToken ct = default)
+        => SendAsync<AppointmentDetailDto>(
+            new HttpRequestMessage(
+                HttpMethod.Get,
+                Url(baseUrl, "/v1/appointments/" + Uri.EscapeDataString(id))),
+            accessToken,
+            ct);
+
+    public Task<ApiResult<IReadOnlyList<DeletedAppointmentDto>>> GetDeletedAppointmentsAsync(
+        string baseUrl,
+        string accessToken,
+        CancellationToken ct = default)
+        => SendAsync<IReadOnlyList<DeletedAppointmentDto>>(
+            new HttpRequestMessage(HttpMethod.Get, Url(baseUrl, "/v1/appointments/deleted")),
+            accessToken,
+            ct);
+
+    public Task<ApiResult<ReportSummaryDto>> GetReportSummaryAsync(
+        string baseUrl,
+        string accessToken,
+        ReportQuery query,
+        CancellationToken ct = default)
+        => SendAsync<ReportSummaryDto>(
+            new HttpRequestMessage(
+                HttpMethod.Get,
+                Url(baseUrl, "/v1/reports/summary" + ReportQueryString(query, personSearch: null))),
+            accessToken,
+            ct);
+
+    public Task<ApiResult<ReportResultDto>> GetReportAsync(
+        string baseUrl,
+        string accessToken,
+        ReportKind kind,
+        ReportQuery query,
+        string? personSearch = null,
+        CancellationToken ct = default)
+        => SendAsync<ReportResultDto>(
+            new HttpRequestMessage(
+                HttpMethod.Get,
+                Url(
+                    baseUrl,
+                    "/v1/reports/kind/" + Uri.EscapeDataString(kind.ToString())
+                    + ReportQueryString(query, personSearch))),
+            accessToken,
+            ct);
+
+    private static string ReportQueryString(ReportQuery query, string? personSearch)
+        => Query(
+            ("from", query.FromLocalDate.ToString("yyyy-MM-dd")),
+            ("to", query.ToLocalDate.ToString("yyyy-MM-dd")),
+            ("categoryId", query.CategoryId),
+            ("hostUserId", query.HostUserId),
+            ("personSearch", personSearch));
+
+    private static string Query(params (string Key, string? Value)[] parts)
+    {
+        var pairs = parts
+            .Where(x => !string.IsNullOrWhiteSpace(x.Value))
+            .Select(x => $"{x.Key}={Uri.EscapeDataString(x.Value!)}")
+            .ToList();
+
+        return pairs.Count == 0 ? string.Empty : "?" + string.Join("&", pairs);
+    }
+
     private static string Url(string baseUrl, string path)
         => ApiSessionStore.NormalizeBaseUrl(baseUrl) + path;
 
     private async Task<ApiResult<T>> SendAsync<T>(
         HttpRequestMessage request,
         string? accessToken,
-        CancellationToken ct)
+        CancellationToken ct,
+        string? etag = null)
     {
         using var _ = request;
 
         if (!string.IsNullOrWhiteSpace(accessToken))
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
+        if (!string.IsNullOrWhiteSpace(etag))
+            request.Headers.TryAddWithoutValidation("If-None-Match", etag);
+
         try
         {
             using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
-            var body = await response.Content.ReadAsStringAsync(ct);
             var statusCode = (int)response.StatusCode;
+            var responseEtag = response.Headers.ETag?.Tag;
+
+            if (response.StatusCode == HttpStatusCode.NotModified)
+                return ApiResult<T>.NotModifiedResult(responseEtag ?? etag);
+
+            if (response.StatusCode is HttpStatusCode.NoContent or HttpStatusCode.ResetContent)
+                return ApiResult<T>.Empty(statusCode);
+
+            var body = await response.Content.ReadAsStringAsync(ct);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -116,7 +255,7 @@ public sealed class CgpApiClient
             var data = JsonSerializer.Deserialize<T>(body, JsonOptions);
             return data is null
                 ? ApiResult<T>.Fail("Sunucu yanıtı okunamadı.", statusCode)
-                : ApiResult<T>.Ok(data, statusCode);
+                : ApiResult<T>.Ok(data, statusCode, responseEtag);
         }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {
@@ -125,6 +264,10 @@ public sealed class CgpApiClient
         catch (HttpRequestException ex)
         {
             return ApiResult<T>.Fail($"Sunucuya ulaşılamadı: {ex.Message}");
+        }
+        catch (JsonException)
+        {
+            return ApiResult<T>.Fail("Sunucu yanıtı okunamadı.");
         }
     }
 }

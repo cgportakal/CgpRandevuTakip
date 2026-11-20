@@ -22,6 +22,7 @@ public class AppDbContext : DbContext
     public DbSet<WhatsAppShareLog> WhatsAppShareLogs => Set<WhatsAppShareLog>();
     public DbSet<BackupRecord> BackupRecords => Set<BackupRecord>();
     public DbSet<ContentVersion> ContentVersions => Set<ContentVersion>();
+    public DbSet<SyncCacheEntry> SyncCacheEntries => Set<SyncCacheEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -200,6 +201,16 @@ public class AppDbContext : DbContext
             entity.Property(x => x.SnapshotJson).IsRequired();
             entity.HasIndex(x => x.VersionNumber).IsUnique();
             entity.HasIndex(x => x.PublishedAtUtc);
+        });
+
+        modelBuilder.Entity<SyncCacheEntry>(entity =>
+        {
+            entity.ToTable("SyncCacheEntries");
+            entity.HasKey(x => x.Key);
+            entity.Property(x => x.Key).HasMaxLength(200);
+            entity.Property(x => x.Payload).IsRequired();
+            entity.Property(x => x.ETag).HasMaxLength(100);
+            entity.HasIndex(x => x.UpdatedAtUtc);
         });
     }
 }

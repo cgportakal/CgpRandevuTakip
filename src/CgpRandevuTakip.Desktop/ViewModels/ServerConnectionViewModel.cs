@@ -1,16 +1,18 @@
 using CgpRandevuTakip.Desktop.Services.Api;
+using CgpRandevuTakip.Desktop.Services.Sync;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace CgpRandevuTakip.Desktop.ViewModels;
 
 /// <summary>
-/// Sunucu bağlantısı penceresi: adres, bağlantı testi, sunucu hesabıyla giriş/çıkış.
-/// P1 aşamasında veri eşitleme yapmaz; yalnızca oturumu hazırlar.
+/// Sunucu bağlantısı penceresi: adres, bağlantı testi, sunucu hesabıyla giriş/çıkış
+/// ve P2 okuma modu anahtarı.
 /// </summary>
 public partial class ServerConnectionViewModel : ObservableObject
 {
     private readonly ApiConnectionService _connection;
+    private readonly ServerReadService _reads;
 
     [ObservableProperty]
     private string _baseUrl = ApiSessionStore.DefaultBaseUrl;
@@ -33,11 +35,16 @@ public partial class ServerConnectionViewModel : ObservableObject
     [ObservableProperty]
     private string _connectionText = "Bağlı değil";
 
+    /// <summary>P2 okuma modu: günlük liste, detay ve raporlar sunucudan okunur.</summary>
+    [ObservableProperty]
+    private bool _readModeEnabled;
+
     public string Password { get; set; } = string.Empty;
 
-    public ServerConnectionViewModel(ApiConnectionService connection)
+    public ServerConnectionViewModel(ApiConnectionService connection, ServerReadService reads)
     {
         _connection = connection;
+        _reads = reads;
     }
 
     public async Task InitializeAsync()
@@ -45,6 +52,8 @@ public partial class ServerConnectionViewModel : ObservableObject
         try
         {
             BaseUrl = await _connection.GetBaseUrlAsync();
+            ReadModeEnabled = await _reads.IsReadModeEnabledAsync();
+
             var session = await _connection.GetSessionAsync();
             if (session is not null)
             {
@@ -57,6 +66,9 @@ public partial class ServerConnectionViewModel : ObservableObject
             ErrorMessage = ex.Message;
         }
     }
+
+    partial void OnReadModeEnabledChanged(bool value)
+        => _ = _reads.SetReadModeEnabledAsync(value);
 
     [RelayCommand]
     private async Task TestConnectionAsync()
@@ -89,7 +101,7 @@ public partial class ServerConnectionViewModel : ObservableObject
             {
                 IsConnected = true;
                 ConnectionText = $"{result.Data.DisplayName} · {result.Data.Role}";
-                StatusMessage = "Sunucu oturumu açıldı. Veri eşitleme sonraki aşamada etkinleşecek.";
+                StatusMessage = "Sunucu oturumu açıldı. Okuma modunu açarak listeleri sunucudan okuyabilirsiniz.";
                 Password = string.Empty;
             }
             else

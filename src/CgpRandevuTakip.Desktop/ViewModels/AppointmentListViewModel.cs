@@ -6,6 +6,7 @@ using CgpRandevuTakip.Application.Settings;
 using CgpRandevuTakip.Desktop.Common;
 using CgpRandevuTakip.Desktop.Messages;
 using CgpRandevuTakip.Desktop.Services;
+using CgpRandevuTakip.Desktop.Services.Sync;
 using CgpRandevuTakip.Domain.Common;
 using CgpRandevuTakip.Domain.Enums;
 using Microsoft.Win32;
@@ -32,6 +33,7 @@ public partial class AppointmentListViewModel : ObservableObject
     private readonly Services.IAppointmentExportService _exports;
     private readonly Services.IExcelImportService _excelImport;
     private readonly ISettingsService _settings;
+    private readonly ServerReadService _serverReads;
     private readonly DispatcherTimer _searchTimer;
     private readonly List<AppointmentRowViewModel> _selectedRows = new();
     private bool _isAllSelected;
@@ -49,7 +51,8 @@ public partial class AppointmentListViewModel : ObservableObject
         Services.IAppointmentDialogService appointmentDialogs,
         Services.IAppointmentExportService exports,
         Services.IExcelImportService excelImport,
-        ISettingsService settings)
+        ISettingsService settings,
+        ServerReadService serverReads)
     {
         _appointments = appointments;
         _categories = categories;
@@ -60,6 +63,7 @@ public partial class AppointmentListViewModel : ObservableObject
         _exports = exports;
         _excelImport = excelImport;
         _settings = settings;
+        _serverReads = serverReads;
 
         CategoryFilters = new RangeObservableCollection<CategoryFilterOption>
         {
@@ -133,6 +137,13 @@ public partial class AppointmentListViewModel : ObservableObject
 
     [ObservableProperty]
     private AppointmentListItemDto? _nextAppointment;
+
+    /// <summary>Sunucu oturumu varsa liste API'den okunur (P2 okuma yolu).</summary>
+    [ObservableProperty]
+    private bool _hasServerMode;
+
+    [ObservableProperty]
+    private string _serverModeText = string.Empty;
 
     public bool HasNextAppointment => NextAppointment is not null;
 
@@ -236,6 +247,13 @@ public partial class AppointmentListViewModel : ObservableObject
             SummaryText = $"{rows.Count} görüşme · {completed} tamamlandı · {noShow} gelmedi";
 
             NextAppointment = await _appointments.GetNextAppointmentAsync();
+
+            HasServerMode = await _serverReads.IsServerReadActiveAsync();
+            ServerModeText = HasServerMode
+                ? _serverReads.IsOffline
+                    ? "Sunucu: çevrimdışı — önbellek"
+                    : "Sunucu: bağlı"
+                : string.Empty;
 
             // Yenilemeden sonra seçili satırı yeni örnekle eşleştir.
             if (SelectedAppointment is not null)
