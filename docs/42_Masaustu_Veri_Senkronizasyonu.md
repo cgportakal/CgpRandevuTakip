@@ -142,7 +142,7 @@ arama ve detay yanıtları istemciyle okundu; manuel arayüz UAT'i sıradaki ad�
 - [ ] Çevrimdışı oluştur/düzenle → bağlantı gelince eşitlenir.
 - [ ] Çakışma dialog’u, rapor eşitliği (7 tür), içerik manifesti.
 - [ ] `docs/43_Masaustu_Senkronizasyon_UAT.md` + `CURRENT` güncelle.
-- [ ] 377+ test; CI yeşil; PR akışı.
+- [ ] 412+ test; CI yeşil; PR akışı.
 
 ## 6. Bilinen riskler ve kararlar
 

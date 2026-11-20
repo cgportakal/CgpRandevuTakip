@@ -138,7 +138,7 @@ public class BackupViewModelTests
 
         return BackupInspectionResult.Ok(
             Backup(),
-            new BackupManifest("CGP - Randevu Takip", "1.8.5", 1, DateTime.UtcNow, users, 0, appointments, "hash", "hash"),
+            new BackupManifest("CGP - Randevu Takip", "1.9.0", 1, DateTime.UtcNow, users, 0, appointments, "hash", "hash"),
             summary,
             available,
             warnings);

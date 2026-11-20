@@ -240,7 +240,7 @@ public class SyncReadTests
             new("host-1", "Görüşmeci", "host", UserRole.Host, false, true, 7),
         },
         new Dictionary<string, bool> { ["reports"] = true },
-        new ApiVersionPolicy("1.5.0", "1.0.0", "1.0.0", "1.8.5", "1.0.0", "1.8.5"));
+        new ApiVersionPolicy("1.5.0", "1.0.0", "1.0.0", "1.9.0", "1.0.0", "1.9.0"));
 
     private static HttpResponseMessage Json(HttpStatusCode status, object body, string? etag = null)
     {
