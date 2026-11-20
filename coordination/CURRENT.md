@@ -1,6 +1,6 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-20 18:45 (UTC+3)
+**Son güncelleme:** 2026-11-20 19:15 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
 **Durum:** Yeşil — **412 test**. **1.9.0 yayında** (Setup + portable). Seçmeli yedek/geri
@@ -166,14 +166,41 @@ masaüstü P2 okuma yolu. Gerçek 0 kullanıcılı yedekle sihirbazın açılmad
 git pull --ff-only
 node scripts/bootstrap.mjs --check      # eksik varsa: --install
 node coordination/lock.mjs status       # boşsa kendi kilidini al
-node coordination/lock.mjs acquire --machine cfr-lenovo --task "desktop sync P2" --branch agent/cfr-lenovo/desktop-sync-p2
-git switch -c agent/cfr-lenovo/desktop-sync-p2
 ```
 
-**Sıradaki işin devri:** masaüstü veri senkronizasyonu. **P1 (API istemcisi + oturum)
-tamamlandı**; sıradaki iş **P2 — okuma yolu** (manifest + ETag, günlük liste, detay, arama,
-silinenler, raporlar). Başlamadan
-[docs/42_Masaustu_Veri_Senkronizasyonu.md](docs/42_Masaustu_Veri_Senkronizasyonu.md) okunmalı.
+**Yayın:** `v1.9.0` hazır (Setup + portable). Uygulamayı denemek için GitHub Releases →
+`CGP-RandevuTakip-1.9.0-Setup.exe` (veya portable ZIP); kaynaktan çalıştırmak için:
+
+```powershell
+# API (ayrı terminal)
+$env:CGP_API_DATA="$PWD\src\CgpRandevuTakip.Api\data"
+dotnet run --project src\CgpRandevuTakip.Api --urls http://0.0.0.0:5199
+
+# Web (ayrı terminal)
+cd web
+$env:NEXT_PUBLIC_API_URL='http://127.0.0.1:5199'
+npm run dev
+
+# Mobil (ayrı terminal)
+cd mobile
+$env:EXPO_PUBLIC_API_URL='http://<LAN-IP>:5199'
+npx expo start
+```
+
+İlk API açılışında `POST /v1/auth/setup` ile yönetici oluşturulur; yerel veritabanı ve sırlar
+repoda değildir. Yedekleme davranışı: [docs/43](docs/43_Yedekleme_ve_Geri_Yukleme.md).
+
+**Sıradaki işin devri:** 1.9.0 yayınlandı. Sıradaki iş **yedekleme UAT’i**
+([docs/43](docs/43_Yedekleme_ve_Geri_Yukleme.md) §8): yalnızca ayarları yedekle → değiştir →
+geri yükle; randevular ve kullanıcılar korunmalı, kurulum sihirbazı açılmamalı. Ardından
+**P2 manuel UAT + P3 outbox** ([docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md)).
+
+Kendi kilidini al:
+
+```powershell
+node coordination/lock.mjs acquire --machine cafer-desktop --task "yedekleme UAT" --branch agent/cafer-desktop/backup-uat
+git switch -c agent/cafer-desktop/backup-uat
+```
 
 **Hazırlık durumu (20.11.2026):** `master` 1.9.0 sürümünde, 412/412 test, CI yeşil,
 `bootstrap --check` tüm araçları buluyor (JDK 17, Android SDK, platform 35, adb, EAS CLI).

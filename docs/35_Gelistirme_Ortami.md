@@ -60,9 +60,16 @@ node scripts/bootstrap.mjs --install   # eksikleri winget/brew ile kur
 node scripts/bootstrap.mjs --force     # node_modules'ü yeniden kur
 ```
 
-### Hızlı başlangıç dosyaları
+### Yayınlanmış uygulamayı kurma (Windows)
 
-```bash
+- **Hazır kurulum:** GitHub → Releases → `v1.9.0` →
+  `CGP-RandevuTakip-1.9.0-Setup.exe` (yönetici hakkı gerekmez) veya portable ZIP.
+- **Kaynaktan çalıştırma:** API/web/mobil komutları `coordination/CURRENT.md` →
+  “Diğer bilgisayarda devam” bölümünde; ilk API açılışında `POST /v1/auth/setup`.
+- Yerel veri `%LOCALAPPDATA%\CgpRandevuTakip`, yedekler `Belgeler\CgpRandevuTakip\Yedekler`;
+  bunlar git'e girmez.
+
+### Hızlı başlangıç dosyaları```bash
 # macOS (çift tık da olur)
 bash basla.command          # --yes / --check
 ```
