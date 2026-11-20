@@ -1,6 +1,6 @@
 # 43 — Yedekleme ve Geri Yükleme
 
-**Tarih:** 20.11.2026 · **Sürüm:** masaüstü 1.8.5+ · **Kapsam:** masaüstü yerel yedekleri
+**Tarih:** 20.11.2026 · **Sürüm:** masaüstü 1.9.0 · **Kapsam:** masaüstü yerel yedekleri
 
 Bu belge, seçmeli yedekleme/geri yükleme davranışını ve 20.11.2026’da düzeltilen
 “geri yükleme sonrası kurulum sihirbazı” hatasının kök nedenini açıklar.

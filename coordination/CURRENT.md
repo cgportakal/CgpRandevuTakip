@@ -1,14 +1,17 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-20 17:20 (UTC+3)
+**Son güncelleme:** 2026-11-20 18:05 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `agent/cfr-lenovo/backup-restore` (PR bekliyor)
-**Durum:** Yeşil — **412 test**. Masaüstü yedekleme/geri yükleme yenilendi: seçmeli
-bölümler, içerik önizlemesi, boş yedek koruması ve dosya değiştirmeyen birleştirme.
-Eski (0 kullanıcılı) gerçek yedekle doğrulandı; kurulum sihirbazı artık açılamaz.
+**Dal:** `agent/cfr-lenovo/release-1.9.0` (PR bekliyor)
+**Durum:** Yeşil — **412 test**. **1.9.0 yayın hazırlığı**: seçmeli yedek/geri yükleme,
+içerik önizlemesi, boş yedek koruması, kullanıcı/ayar koruyan birleştirme ve masaüstü P2
+okuma yolu. Gerçek 0 kullanıcılı yedekle sihirbazın açılmadığı doğrulandı.
 
 ## Bu turda tamamlanan
 
+- **1.9.0 sürüm hazırlığı:** `Directory.Build.props`, `AppConstants`, installer ve
+  `Kurulum-Olustur.ps1` 1.9.0; `version-policy.json` + API `appsettings` latestDesktop/latestWeb
+  1.9.0; web `APP_VERSION` 1.9.0; README indirme bağlantıları ve platform tablosu.
 - **Yedekleme/geri yükleme yenilemesi:** manifest v2 (bölümler, ayar grupları, sayılar,
   ilk/son randevu, son değişiklik); seçmeli yedek (seçilmeyen bölümler dosyaya yazılmaz,
   `VACUUM`); içerik inceleme + uyarılar; boş yedek engeli + ileri düzey onay; geri yükleme
