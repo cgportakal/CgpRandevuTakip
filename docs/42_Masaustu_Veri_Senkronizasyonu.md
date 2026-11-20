@@ -1,6 +1,6 @@
 # 42 — Masaüstü Veri Senkronizasyonu (Devir Planı)
 
-**Tarih:** 19.11.2026 · **Durum:** P1 tamamlandı; P2 (okuma yolu) sıradaki · **Kaynak karar:** [docs/41](41_Tasarim_ve_Veri_Paritesi.md) §4
+**Tarih:** 19.11.2026 · **Durum:** P1 tamamlandı; P2 (okuma yolu) kod tarafı tamamlandı, manuel UAT sıradaki · **Kaynak karar:** [docs/41](41_Tasarim_ve_Veri_Paritesi.md) §4
 
 Bu belge, masaüstü uygulamasının API ile tam senkronize çalışması için yapılacak işleri ve
 teknik kararları diğer bilgisayara devretmek için yazıldı. Yeni oturumda önce
@@ -15,8 +15,9 @@ Tek doğruluk kaynağı API’dir. Web ve mobil zaten API’yi kullanır. Masaü
 - Bağlantı gelince kuyruk sırayla gönderilir; sunucudaki değişiklikler SignalR ile alınır.
 - Aynı randevu üç istemcide anında görünür.
 
-Mevcut durum: masaüstü yalnızca `%LOCALAPPDATA%\CgpRandevuTakip\data.db` (veya portable
-`CGP-Data\data.db`) kullanıyor; API çağrısı yok.
+Mevcut durum: masaüstü yerel `%LOCALAPPDATA%\CgpRandevuTakip\data.db` (veya portable
+`CGP-Data\data.db`) veritabanını kullanır. P1 oturum yönetimi ve P2 okuma yolu eklendi;
+okuma modu açıkken listeler/raporlar API'den okunur. Yazma yolu (P3) henüz yereldir.
 
 ## 2. API sözleşmesi (mevcut uçlar)
 
@@ -90,12 +91,23 @@ Uygulama: `Desktop/Services/Api/` (`CgpApiClient`, `ApiSessionStore`, `ApiConnec
 `ApiModels`), `ServerConnectionWindow` + `ServerConnectionViewModel`, Ayarlar → “Sunucu
 bağlantısını yönet”. Token’lar `sync.api.*` anahtarlarıyla DPAPI şifreli saklanır. 13 yeni test.
 
-### P2 — Okuma yolu
-- [ ] Manifest çekimi + ETag önbelleği; kategori/görüşmeci/kurum adları API’den.
-- [ ] `GET /appointments/day` ile günlük liste; mevcut `AppointmentListPage`’e bağla.
-- [ ] Detay, arama, silinenler, rapor uçları.
-- [ ] Yerel SQLite’ı salt okunur önbellek olarak doldur (çevrimdışı görünüm).
-- [ ] UAT: web’de oluşturulan randevu masaüstünde “Yenile” ile görünür.
+### P2 — Okuma yolu — **kod tamamlandı (20.11.2026), manuel UAT sıradaki**
+- [x] Manifest çekimi + ETag önbelleği; kategori/görüşmeci/kurum adları API'den.
+- [x] `GET /appointments/day` ile günlük liste; mevcut `AppointmentListPage`'e bağla.
+- [x] Detay, arama, silinenler, rapor uçları.
+- [x] Yerel SQLite'ı salt okunur önbellek olarak doldur (çevrimdışı görünüm).
+- [ ] UAT: web'de oluşturulan randevu masaüstünde "Yenile" ile görünür.
+
+Uygulama: `Desktop/Services/Sync/` (`ServerReadService`, `SyncCacheStore`, `Synced*Service`).
+Okumalar `sync.read.enabled` ayarına bağlıdır ve **varsayılan kapalıdır**; Ayarlar →
+"Sunucu bağlantısını yönet" → "Okuma modu (P2)" ile açılır. Açıkken günlük liste,
+detay, arama, silinenler, raporlar ve manifest API'den okunur; ağ hatasında son
+başarılı yanıt `SyncCacheEntries` tablosundan gösterilir (30 sn boyunca sunucu
+yeniden denenmez). Manifest `If-None-Match`/304 desteklidir. Yazma işlemleri (randevu,
+kategori, görüşmeci düzenleme dahil) P3'e kadar yerelde kalır; bu nedenle okuma modu
+açıkken masaüstünde oluşturulan kayıtlar sunucuya gönderilmez ve sunucu listesinde görünmez.
+Yerel API'ye karşı canlı doğrulama yapıldı: giriş, manifest (ETag/304), günlük liste,
+arama ve detay yanıtları istemciyle okundu; manuel arayüz UAT'i sıradaki adımdır.
 
 ### P3 — Yazma yolu + outbox
 - [ ] Oluştur/güncelle/sil/sonuç/seri işlemlerini `OutboxService` üzerinden yürüt.

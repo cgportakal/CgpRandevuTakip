@@ -122,6 +122,19 @@
                            VerticalAlignment="Center"
                            Visibility="{Binding HasSelectedRows, Converter={StaticResource BoolToVisibility}}" />
 
+                <Border Margin="12,0,0,0"
+                        Padding="8,3"
+                        CornerRadius="10"
+                        Background="{DynamicResource SurfaceBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1"
+                        VerticalAlignment="Center"
+                        Visibility="{Binding HasServerMode, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="{Binding ServerModeText}"
+                               Style="{StaticResource MutedText}"
+                               FontSize="11" />
+                </Border>
+
                 <Button Content="Seçimi temizle"
                         Style="{StaticResource GhostButton}"
                         Command="{Binding ClearSelectionCommand}"

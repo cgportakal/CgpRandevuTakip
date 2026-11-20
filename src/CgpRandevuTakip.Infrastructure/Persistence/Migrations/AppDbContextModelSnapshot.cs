@@ -469,6 +469,30 @@ namespace CgpRandevuTakip.Infrastructure.Persistence.Migrations
                     b.ToTable("Settings", (string)null);
                 });
 
+            modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.SyncCacheEntry", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ETag")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Key");
+
+                    b.HasIndex("UpdatedAtUtc");
+
+                    b.ToTable("SyncCacheEntries", (string)null);
+                });
+
             modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.User", b =>
                 {
                     b.Property<string>("Id")
