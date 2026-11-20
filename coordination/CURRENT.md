@@ -1,14 +1,17 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-20 18:05 (UTC+3)
+**Son güncelleme:** 2026-11-20 18:45 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `agent/cfr-lenovo/release-1.9.0` (PR bekliyor)
-**Durum:** Yeşil — **412 test**. **1.9.0 yayın hazırlığı**: seçmeli yedek/geri yükleme,
-içerik önizlemesi, boş yedek koruması, kullanıcı/ayar koruyan birleştirme ve masaüstü P2
-okuma yolu. Gerçek 0 kullanıcılı yedekle sihirbazın açılmadığı doğrulandı.
+**Dal:** `master` (origin ile eşit)
+**Durum:** Yeşil — **412 test**. **1.9.0 yayında** (Setup + portable). Seçmeli yedek/geri
+yükleme, içerik önizlemesi, boş yedek koruması, kullanıcı/ayar koruyan birleştirme ve
+masaüstü P2 okuma yolu. Gerçek 0 kullanıcılı yedekle sihirbazın açılmadığı doğrulandı.
 
 ## Bu turda tamamlanan
 
+- **1.9.0 yayını:** `v1.9.0` GitHub Release; assetler Setup (~66,9 MB), portable (~94,9 MB),
+  Dev.cer, SHA256SUMS, version-policy (`latestDesktopVersion/latestWebVersion: 1.9.0`).
+  README indirme bağlantıları HTTP 200; master CI ve Release işi başarılı.
 - **1.9.0 sürüm hazırlığı:** `Directory.Build.props`, `AppConstants`, installer ve
   `Kurulum-Olustur.ps1` 1.9.0; `version-policy.json` + API `appsettings` latestDesktop/latestWeb
   1.9.0; web `APP_VERSION` 1.9.0; README indirme bağlantıları ve platform tablosu.
@@ -310,9 +313,9 @@ dotnet test CgpRandevuTakip.sln -c Release
 ## Son CI
 
 Bu dal: yerel **412/412** test (334 uygulama + 63 masaüstü/VM + 13 API + 2 UI), web build ve
-mobil `tsc` başarılı. PR kontrolleri merge öncesi `gh pr checks --watch` ile doğrulanır.
-Master CI ✅ (PR #54 sonrası). Son release: **1.8.5 Setup-only** başarılı; liste ve rapor hizaları
-yayında. Android emülatör ve **Samsung S21 gerçek cihaz UAT** tamamlandı.
+mobil `tsc` başarılı. Master CI ✅ ve **Release v1.9.0** ✅ (PR #56 / tag `v1.9.0`).
+Son release: **1.9.0** (Setup + portable); README Setup/portable bağlantıları HTTP 200.
+Android emülatör ve **Samsung S21 gerçek cihaz UAT** tamamlandı.
 Dependabot picomatch uyarısı **withdrawn** olduğu için dismissed; kod bağımlılığı değiştirilmedi.
 Android SDK/JDK/adb/emulator `D:\Android` altında; AVD `cgp_uat` hazır; `expo-dev-client` eklendi.
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol + güncel dal + yalnızca squash.
