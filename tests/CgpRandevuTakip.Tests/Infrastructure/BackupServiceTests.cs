@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Text;
+using System.Text.Json.Nodes;
 using CgpRandevuTakip.Application.Abstractions;
 using CgpRandevuTakip.Application.Auth;
 using CgpRandevuTakip.Application.Backups;
@@ -9,7 +10,9 @@ using CgpRandevuTakip.Domain.Entities;
 using CgpRandevuTakip.Domain.Enums;
 using CgpRandevuTakip.Infrastructure.Backups;
 using CgpRandevuTakip.Infrastructure.Persistence;
+using CgpRandevuTakip.Infrastructure.Repositories;
 using CgpRandevuTakip.Tests.Support;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace CgpRandevuTakip.Tests.Infrastructure;
@@ -45,11 +48,13 @@ public class BackupServiceTests : IDisposable
         => new(
             new SqliteDbContextFactory(_databasePath),
             _settings,
+            new SettingsRepository(new SqliteDbContextFactory(_databasePath)),
             new FakeEnvironment(_root, _databasePath, _backupDirectory),
             _audit,
             _currentUser,
             new FixedClock(),
-            new NoopGoogleDriveUploader());
+            new NoopGoogleDriveUploader(),
+            new FakeSecretProtector());
 
     [Fact]
     public async Task Create_WritesZipWithManifestSettingsAndHistory()
@@ -115,22 +120,23 @@ public class BackupServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task Restore_BringsBackDatabaseContent()
+    public async Task Restore_MergesDatabaseContentAndKeepsUsers()
     {
-        Guid originalId;
+        SeedUser();
+        string originalId;
         using (var db = AppDbContextFactory.Create(_databasePath))
         {
             var category = new Category { Name = "Geri Yüklenecek", ColorHex = "#112233" };
             db.Categories.Add(category);
             await db.SaveChangesAsync();
-            originalId = Guid.Parse(category.Id);
+            originalId = category.Id;
         }
 
         var service = CreateService();
         var created = await service.CreateAsync(BackupTrigger.Manual);
         Assert.True(created.Success, created.Error);
 
-        // Yedekten sonra eklenen kategori geri yüklemede kaybolmalı.
+        // Yedekten sonra eklenen kategori birleştirmede korunmalı.
         using (var db = AppDbContextFactory.Create(_databasePath))
         {
             db.Categories.Add(new Category { Name = "Yedekten Sonra", ColorHex = "#445566" });
@@ -144,8 +150,10 @@ public class BackupServiceTests : IDisposable
         {
             var names = await db.Categories.Select(x => x.Name).ToListAsync();
             Assert.Contains("Geri Yüklenecek", names);
-            Assert.DoesNotContain("Yedekten Sonra", names);
-            Assert.Equal(1, await db.Categories.CountAsync());
+            Assert.Contains("Yedekten Sonra", names);
+            Assert.Equal(2, await db.Categories.CountAsync());
+            Assert.Equal(1, await db.Users.CountAsync());
+            Assert.Contains(originalId, await db.Categories.Select(x => x.Id).ToListAsync());
         }
     }
 
@@ -175,6 +183,7 @@ public class BackupServiceTests : IDisposable
     [Fact]
     public async Task Create_EncryptedBackup_CanBeValidatedAndRestored()
     {
+        SeedUser();
         _settings.Settings = _settings.Settings with
         {
             BackupEncryptionEnabled = true,
@@ -261,6 +270,373 @@ public class BackupServiceTests : IDisposable
         Assert.Contains("yönetici", restored.Error);
     }
 
+    [Fact]
+    public async Task Inspect_ShowsCountsDatesAndSettings()
+    {
+        SeedUser();
+        SeedSetting(SettingsKeys.SmtpHost, "smtp.example.com");
+        SeedSetting(BackupSettingKeys.SyncBaseUrlKey, "http://127.0.0.1:5199");
+        SeedAppointment();
+
+        var service = CreateService();
+        var created = await service.CreateAsync(BackupTrigger.Manual, BackupOptions.Full);
+        Assert.True(created.Success, created.Error);
+
+        var inspection = await service.InspectAsync(created.Backup!.Path);
+        Assert.True(inspection.Success, inspection.Error);
+        Assert.NotNull(inspection.Summary);
+        Assert.Equal(1, inspection.Summary!.UserCount);
+        Assert.Equal(1, inspection.Summary.AppointmentCount);
+        Assert.NotNull(inspection.Summary.LastAppointmentLocal);
+        Assert.NotNull(inspection.Summary.LastChangeLocal);
+        Assert.True(inspection.Summary.HasSmtpSettings);
+        Assert.True(inspection.Summary.HasConnectionSettings);
+        Assert.False(inspection.Summary.IsEmpty);
+        Assert.True((inspection.AvailableSelection.Sections & BackupSection.Users) != 0);
+        Assert.True((inspection.AvailableSelection.Sections & BackupSection.Appointments) != 0);
+    }
+
+    [Fact]
+    public async Task Create_PartialBackup_ExcludesUsersAndSettings()
+    {
+        SeedUser();
+        SeedSetting(SettingsKeys.SmtpHost, "smtp.example.com");
+
+        var service = CreateService();
+        var selection = new BackupSelection(BackupSection.Data, BackupSettingsGroup.None);
+        var created = await service.CreateAsync(BackupTrigger.Manual, new BackupOptions(selection));
+        Assert.True(created.Success, created.Error);
+
+        var inspection = await service.InspectAsync(created.Backup!.Path);
+        Assert.True(inspection.Success, inspection.Error);
+        Assert.Equal(0, inspection.Summary!.UserCount);
+        Assert.Equal(0, inspection.Summary.SettingCount);
+        Assert.True(inspection.Summary.IsEmpty);
+    }
+
+    [Fact]
+    public async Task Restore_Defaults_PreservesUsersAndSettings()
+    {
+        SeedUser();
+        SeedSetting(SettingsKeys.SmtpHost, "old.example.com");
+        var appointment = SeedAppointment();
+
+        var service = CreateService();
+        var created = await service.CreateAsync(BackupTrigger.Manual, BackupOptions.Full);
+        Assert.True(created.Success, created.Error);
+
+        SeedSetting(SettingsKeys.SmtpHost, "new.example.com");
+        SeedAppointment("Sonradan Eklenen");
+
+        var restored = await service.RestoreAsync(created.Backup!.Path);
+        Assert.True(restored.Success, restored.Error);
+
+        using var db = AppDbContextFactory.Create(_databasePath);
+        Assert.Equal(1, await db.Users.CountAsync());
+        Assert.Equal("new.example.com", (await db.Settings.FindAsync(SettingsKeys.SmtpHost))!.Value);
+        Assert.Contains(appointment.AppointmentId, await db.Appointments.Select(x => x.Id).ToListAsync());
+        Assert.Equal(2, await db.Appointments.CountAsync());
+    }
+
+    [Fact]
+    public async Task Restore_SettingsGroup_OnlyAppliesSelectedGroup()
+    {
+        SeedUser();
+        SeedSetting(SettingsKeys.SmtpHost, "old.example.com");
+        SeedSetting(SettingsKeys.BackupDirectory, _backupDirectory);
+
+        var service = CreateService();
+        var created = await service.CreateAsync(BackupTrigger.Manual, BackupOptions.Full);
+        Assert.True(created.Success, created.Error);
+
+        var otherDirectory = Path.Combine(_root, "BaskaYedek");
+        SeedSetting(SettingsKeys.SmtpHost, "new.example.com");
+        SeedSetting(SettingsKeys.BackupDirectory, otherDirectory);
+
+        var options = new RestoreOptions(
+            new BackupSelection(BackupSection.Settings, BackupSettingsGroup.Smtp));
+        var restored = await service.RestoreAsync(created.Backup!.Path, options);
+        Assert.True(restored.Success, restored.Error);
+
+        using var db = AppDbContextFactory.Create(_databasePath);
+        Assert.Equal("old.example.com", (await db.Settings.FindAsync(SettingsKeys.SmtpHost))!.Value);
+        Assert.Equal(otherDirectory, (await db.Settings.FindAsync(SettingsKeys.BackupDirectory))!.Value);
+    }
+
+    [Fact]
+    public async Task Restore_ConnectionSettings_RestoresAddressButNotSessionTokens()
+    {
+        SeedUser();
+        SeedSetting(BackupSettingKeys.SyncBaseUrlKey, "http://old-server:5199");
+        SeedSetting("sync.api.access_token", "old-token");
+
+        var service = CreateService();
+        var created = await service.CreateAsync(BackupTrigger.Manual, BackupOptions.Full);
+        Assert.True(created.Success, created.Error);
+
+        SeedSetting(BackupSettingKeys.SyncBaseUrlKey, "http://new-server:5199");
+        SeedSetting("sync.api.access_token", "new-token");
+
+        var options = new RestoreOptions(
+            new BackupSelection(BackupSection.Settings, BackupSettingsGroup.Connection));
+        var restored = await service.RestoreAsync(created.Backup!.Path, options);
+        Assert.True(restored.Success, restored.Error);
+
+        using var db = AppDbContextFactory.Create(_databasePath);
+        Assert.Equal("http://old-server:5199", (await db.Settings.FindAsync(BackupSettingKeys.SyncBaseUrlKey))!.Value);
+        Assert.Equal("new-token", (await db.Settings.FindAsync("sync.api.access_token"))!.Value);
+    }
+
+    [Fact]
+    public async Task Restore_EmptyBackup_RequiresExplicitConfirmation()
+    {
+        SeedUser();
+
+        var service = CreateService();
+        var emptySelection = new BackupSelection(BackupSection.Data, BackupSettingsGroup.None);
+        var created = await service.CreateAsync(BackupTrigger.Manual, new BackupOptions(emptySelection));
+        Assert.True(created.Success, created.Error);
+
+        var blocked = await service.RestoreAsync(created.Backup!.Path);
+        Assert.False(blocked.Success);
+        Assert.Contains("boş", blocked.Error, StringComparison.OrdinalIgnoreCase);
+
+        var allowed = await service.RestoreAsync(
+            created.Backup.Path,
+            RestoreOptions.Default with { AllowEmptyBackup = true });
+        Assert.True(allowed.Success, allowed.Error);
+
+        using var db = AppDbContextFactory.Create(_databasePath);
+        Assert.Equal(1, await db.Users.CountAsync());
+    }
+
+    [Fact]
+    public async Task Restore_ReplaceMode_ReplacesOnlyAppointments()
+    {
+        SeedUser();
+        var first = SeedAppointment("Yedekteki Kişi");
+
+        var service = CreateService();
+        var created = await service.CreateAsync(BackupTrigger.Manual, BackupOptions.Full);
+        Assert.True(created.Success, created.Error);
+
+        var added = SeedAppointment("Sonradan Eklenen");
+
+        var options = RestoreOptions.Default with { AppointmentMode = AppointmentRestoreMode.Replace };
+        var restored = await service.RestoreAsync(created.Backup!.Path, options);
+        Assert.True(restored.Success, restored.Error);
+
+        using var db = AppDbContextFactory.Create(_databasePath);
+        var ids = await db.Appointments.Select(x => x.Id).ToListAsync();
+        Assert.Contains(first.AppointmentId, ids);
+        Assert.DoesNotContain(added.AppointmentId, ids);
+        Assert.Equal(1, await db.Users.CountAsync());
+    }
+
+    private void SeedUser(string id = "user-admin", string username = "admin")
+    {
+        using var db = AppDbContextFactory.Create(_databasePath);
+        if (db.Users.Any(x => x.Id == id))
+            return;
+
+        db.Users.Add(new User
+        {
+            Id = id,
+            Username = username,
+            DisplayName = "Yönetici",
+            Role = UserRole.Admin,
+            PasswordHash = "hash",
+            PasswordSalt = "salt",
+            IsActive = true,
+            IsLoginEnabled = true,
+        });
+
+        db.SaveChanges();
+    }
+
+    private void SeedSetting(string key, string value, string? databasePath = null)
+    {
+        using var db = AppDbContextFactory.Create(databasePath ?? _databasePath);
+        var setting = db.Settings.Find(key);
+        if (setting is null)
+        {
+            db.Settings.Add(new Setting { Key = key, Value = value, UpdatedAtUtc = DateTime.UtcNow });
+        }
+        else
+        {
+            setting.Value = value;
+            setting.UpdatedAtUtc = DateTime.UtcNow;
+        }
+
+        db.SaveChanges();
+    }
+
+    private (string PersonId, string CategoryId, string AppointmentId) SeedAppointment(
+        string personName = "Ali Veli",
+        DateTime? updatedAtUtc = null)
+    {
+        using var db = AppDbContextFactory.Create(_databasePath);
+
+        var names = personName.Split(' ', 2);
+        var person = new Person
+        {
+            FirstName = names[0],
+            LastName = names.Length > 1 ? names[1] : "Test",
+            PhoneE164 = "+905550000000",
+        };
+        db.Persons.Add(person);
+
+        var category = db.Categories.FirstOrDefault(x => x.Name == "Veli Görüşmesi");
+        if (category is null)
+        {
+            category = new Category { Name = "Veli Görüşmesi", ColorHex = "#2E7D5B" };
+            db.Categories.Add(category);
+        }
+
+        var appointment = new Appointment
+        {
+            PersonId = person.Id,
+            CategoryId = category.Id,
+            HostUserId = "user-admin",
+            StartsAtUtc = DateTime.UtcNow.AddDays(1).AddMinutes(Random.Shared.Next(0, 500)),
+            DurationMinutes = 30,
+            Method = AppointmentMethod.Phone,
+            Status = AppointmentStatus.Scheduled,
+            UpdatedAtUtc = updatedAtUtc ?? DateTime.UtcNow,
+        };
+        db.Appointments.Add(appointment);
+        db.SaveChanges();
+
+        return (person.Id, category.Id, appointment.Id);
+    }
+
+    [Fact]
+    public async Task Inspect_AcceptsVersion1Manifest()
+    {
+        SeedUser();
+        SeedAppointment();
+
+        var service = CreateService();
+        var created = await service.CreateAsync(BackupTrigger.Manual, BackupOptions.Full);
+        Assert.True(created.Success, created.Error);
+
+        using (var zip = ZipFile.Open(created.Backup!.Path, ZipArchiveMode.Update))
+        {
+            var entry = zip.GetEntry("manifest.json")!;
+            string json;
+            using (var reader = new StreamReader(entry.Open(), Encoding.UTF8))
+                json = await reader.ReadToEndAsync();
+
+            var node = JsonNode.Parse(json)!.AsObject();
+            node.Remove("ManifestVersion");
+            node.Remove("Selection");
+            node.Remove("Summary");
+
+            entry.Delete();
+            var replacement = zip.CreateEntry("manifest.json");
+            using var writer = new StreamWriter(replacement.Open(), new UTF8Encoding(false));
+            writer.Write(node.ToJsonString());
+        }
+
+        var validation = await service.ValidateAsync(created.Backup.Path);
+        Assert.True(validation.Success, validation.Error);
+        Assert.Equal(1, validation.Manifest!.ManifestVersion);
+
+        var inspection = await service.InspectAsync(created.Backup.Path);
+        Assert.True(inspection.Success, inspection.Error);
+        Assert.Equal(1, inspection.Summary!.AppointmentCount);
+        Assert.Equal(1, inspection.Summary.UserCount);
+    }
+
+    [Fact]
+    public async Task Restore_UsersSection_AddsMissingUserAndKeepsCurrent()
+    {
+        SeedUser("user-admin", "admin");
+        SeedUser("user-host", "host");
+        SeedSetting(SettingsKeys.SmtpHost, "smtp.example.com");
+
+        var service = CreateService();
+        var created = await service.CreateAsync(BackupTrigger.Manual, BackupOptions.Full);
+        Assert.True(created.Success, created.Error);
+
+        using (var db = AppDbContextFactory.Create(_databasePath))
+        {
+            var host = await db.Users.FindAsync("user-host");
+            if (host is not null)
+                db.Users.Remove(host);
+            await db.SaveChangesAsync();
+        }
+
+        var options = new RestoreOptions(
+            new BackupSelection(BackupSection.Users, BackupSettingsGroup.None));
+        var restored = await service.RestoreAsync(created.Backup!.Path, options);
+        Assert.True(restored.Success, restored.Error);
+
+        using var check = AppDbContextFactory.Create(_databasePath);
+        Assert.Equal(2, await check.Users.CountAsync());
+        Assert.NotNull(await check.Users.FindAsync("user-admin"));
+        Assert.NotNull(await check.Users.FindAsync("user-host"));
+    }
+
+    [Fact]
+    public async Task Create_BackupIncludesConnectionAddressButNeverSessionTokens()
+    {
+        SeedUser();
+        SeedSetting(BackupSettingKeys.SyncBaseUrlKey, "http://server:5199");
+        SeedSetting(BackupSettingKeys.SyncReadModeKey, "1");
+        SeedSetting("sync.api.access_token", "gizli-token");
+        SeedSetting("sync.api.refresh_token", "gizli-refresh");
+
+        var service = CreateService();
+        var created = await service.CreateAsync(BackupTrigger.Manual, BackupOptions.Full);
+        Assert.True(created.Success, created.Error);
+
+        Assert.Equal("http://server:5199", ReadBackupSetting(created.Backup!.Path, BackupSettingKeys.SyncBaseUrlKey));
+        Assert.Equal("1", ReadBackupSetting(created.Backup.Path, BackupSettingKeys.SyncReadModeKey));
+        Assert.Null(ReadBackupSetting(created.Backup.Path, "sync.api.access_token"));
+        Assert.Null(ReadBackupSetting(created.Backup.Path, "sync.api.refresh_token"));
+
+        var inspection = await service.InspectAsync(created.Backup.Path);
+        Assert.True(inspection.Summary!.HasConnectionSettings);
+    }
+
+    private static string? ReadBackupSetting(string zipPath, string key)
+    {
+        var temp = Path.Combine(
+            Path.GetTempPath(),
+            "CgpRandevuTakip",
+            $"read-{Guid.NewGuid():N}.db");
+
+        Directory.CreateDirectory(Path.GetDirectoryName(temp)!);
+
+        try
+        {
+            using (var zip = ZipFile.OpenRead(zipPath))
+                zip.GetEntry("data.db")!.ExtractToFile(temp, overwrite: true);
+
+            using var connection = new SqliteConnection($"Data Source={temp};Mode=ReadOnly;Pooling=False");
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT Value FROM Settings WHERE Key = $key;";
+            command.Parameters.AddWithValue("$key", key);
+
+            var value = command.ExecuteScalar();
+            return value is null or DBNull ? null : Convert.ToString(value);
+        }
+        finally
+        {
+            try
+            {
+                if (File.Exists(temp))
+                    File.Delete(temp);
+            }
+            catch
+            {
+            }
+        }
+    }
+
     public void Dispose()
     {
         try
@@ -294,7 +670,18 @@ public class BackupServiceTests : IDisposable
         public Task<OperationResult> SetThemeAsync(AppTheme theme)
             => Task.FromResult(OperationResult.Ok());
 
+        public void InvalidateCache()
+        {
+        }
+
         public IReadOnlyList<int> AllowedReminderMinutes => new[] { 30, 60, 1440 };
+    }
+
+    private sealed class FakeSecretProtector : ISecretProtector
+    {
+        public string? Protect(string? value) => value;
+
+        public string? Unprotect(string? value) => value;
     }
 
     private sealed class FakeEnvironment : IAppEnvironment

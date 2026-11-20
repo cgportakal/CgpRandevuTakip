@@ -1,0 +1,186 @@
+<Window x:Class="CgpRandevuTakip.Desktop.Views.BackupRestoreWindow"
+        Icon="/Assets/CGPRandevuTakip.ico"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Yedeği geri yükle"
+        Width="700"
+        Height="820"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock Text="Yedeği geri yükle" Style="{StaticResource PageTitle}" FontSize="22" />
+            <TextBlock Text="{Binding FileName}"
+                       Style="{StaticResource MutedText}"
+                       FontWeight="SemiBold"
+                       TextTrimming="CharacterEllipsis"
+                       Margin="0,4,0,0" />
+            <TextBlock Text="Seçilen bölümler mevcut verilere eklenir. Kullanıcılar ve ayarlar yalnızca siz seçerseniz değişir."
+                       Style="{StaticResource PageSubtitle}"
+                       TextWrapping="Wrap"
+                       Margin="0,4,0,0" />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="YEDEK İÇERİĞİ" Style="{StaticResource LabelText}" FontSize="10" />
+                        <TextBlock Text="{Binding SummaryText}" FontWeight="SemiBold" Margin="0,4,0,0" />
+                        <TextBlock Text="{Binding DatesText}" Style="{StaticResource MutedText}" Margin="0,3,0,0" />
+                        <TextBlock Text="{Binding SettingsText}" Style="{StaticResource MutedText}" Margin="0,3,0,0" />
+                        <TextBlock Text="{Binding AvailabilityText}" Style="{StaticResource MutedText}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <Border Background="{DynamicResource DangerSoftBrush}"
+                        BorderBrush="{DynamicResource DangerBrush}"
+                        BorderThickness="1"
+                        CornerRadius="9"
+                        Padding="12,10"
+                        Margin="0,0,0,12"
+                        Visibility="{Binding HasWarnings, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="{Binding WarningsText}"
+                               Foreground="{DynamicResource DangerBrush}"
+                               FontSize="12"
+                               TextWrapping="Wrap" />
+                </Border>
+
+                <Border Background="{DynamicResource DangerSoftBrush}"
+                        BorderBrush="{DynamicResource DangerBrush}"
+                        BorderThickness="1"
+                        CornerRadius="9"
+                        Padding="12,10"
+                        Margin="0,0,0,12"
+                        Visibility="{Binding IsEmptyBackup, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="Bu yedek boş görünüyor."
+                                   Foreground="{DynamicResource DangerBrush}"
+                                   FontWeight="SemiBold" />
+                        <CheckBox Content="Boş yedeği yine de geri yükle"
+                                  IsChecked="{Binding AllowEmptyBackup}"
+                                  Foreground="{DynamicResource DangerBrush}"
+                                  Margin="0,8,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="Geri yüklenecek bölümler" Style="{StaticResource SectionTitle}" />
+
+                        <CheckBox Content="Randevular (kişiler ve kategorilerle birlikte)"
+                                  IsChecked="{Binding RestoreAppointments}"
+                                  Margin="0,8,0,0" />
+                        <CheckBox Content="Kullanıcılar (parola özetleri dahil)"
+                                  IsChecked="{Binding RestoreUsers}"
+                                  Margin="0,6,0,0" />
+                        <TextBlock Text="Kullanıcılar seçilmezse mevcut hesaplar ve oturumunuz korunur. Seçilirse yedekteki parolalar geçerli olur."
+                                   Style="{StaticResource MutedText}"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Margin="16,2,0,0" />
+                        <CheckBox Content="Denetim kaydı"
+                                  IsChecked="{Binding RestoreAuditLogs}"
+                                  Margin="0,8,0,0" />
+                        <CheckBox Content="Günlük liste paylaşım geçmişi"
+                                  IsChecked="{Binding RestoreShareLogs}"
+                                  Margin="0,6,0,0" />
+                        <CheckBox Content="Yedek geçmişi kayıtları"
+                                  IsChecked="{Binding RestoreBackupHistory}"
+                                  Margin="0,6,0,0" />
+                        <CheckBox Content="İçerik sürümleri"
+                                  IsChecked="{Binding RestoreContentVersions}"
+                                  Margin="0,6,0,0" />
+                        <CheckBox Content="Paylaşım alıcıları"
+                                  IsChecked="{Binding RestoreRecipients}"
+                                  Margin="0,6,0,0" />
+                        <CheckBox Content="Kurum logosu"
+                                  IsChecked="{Binding RestoreLogo}"
+                                  Margin="0,6,0,0" />
+
+                        <Separator Margin="0,12,0,8" />
+
+                        <TextBlock Text="Randevular nasıl birleştirilsin?" Style="{StaticResource LabelText}" />
+                        <ComboBox SelectedIndex="{Binding AppointmentModeIndex}" Margin="0,4,0,0">
+                            <ComboBoxItem Content="Birleştir: mevcut randevular korunur, yeni ve daha yeni kayıtlar eklenir" />
+                            <ComboBoxItem Content="Değiştir: mevcut randevular silinir, yedekteki kayıtlar yazılır" />
+                        </ComboBox>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <CheckBox Content="Ayarlar"
+                                  IsChecked="{Binding RestoreSettings}"
+                                  FontWeight="SemiBold" />
+                        <TextBlock Text="Seçilen gruplar mevcut ayarların üzerine yazılır; seçilmeyenler korunur. Sunucu oturumu belirteçleri hiçbir zaman geri yüklenmez."
+                                   Style="{StaticResource MutedText}"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Margin="0,4,0,8" />
+
+                        <StackPanel IsEnabled="{Binding RestoreSettings}">
+                            <CheckBox Content="Kurum profili" IsChecked="{Binding InstitutionSettings}" Margin="16,3,0,0" />
+                            <CheckBox Content="SMTP / e-posta" IsChecked="{Binding SmtpSettings}" Margin="16,3,0,0" />
+                            <CheckBox Content="Bildirimler (ntfy / Telegram / push)" IsChecked="{Binding NotificationSettings}" Margin="16,3,0,0" />
+                            <CheckBox Content="Çalışma saatleri ve paylaşım" IsChecked="{Binding WorkHourSettings}" Margin="16,3,0,0" />
+                            <CheckBox Content="Yedekleme ve Google Drive" IsChecked="{Binding BackupAndDriveSettings}" Margin="16,3,0,0" />
+                            <CheckBox Content="Görünüm / tema" IsChecked="{Binding AppearanceSettings}" Margin="16,3,0,0" />
+                            <CheckBox Content="Masaüstü davranışı" IsChecked="{Binding DesktopBehaviorSettings}" Margin="16,3,0,0" />
+                            <CheckBox Content="Sunucu bağlantısı (adres ve okuma modu)" IsChecked="{Binding ConnectionSettings}" Margin="16,3,0,0" />
+                        </StackPanel>
+
+                        <CheckBox Content="Bu bilgisayara özel ayarları da geri yükle (yedek klasörü, otomatik başlatma, Drive klasörü)"
+                                  IsChecked="{Binding IncludeMachineSpecificSettings}"
+                                  IsEnabled="{Binding RestoreSettings}"
+                                  Margin="0,10,0,0"
+                                  FontSize="11" />
+                    </StackPanel>
+                </Border>
+
+                <Border Background="{DynamicResource DangerSoftBrush}"
+                        BorderBrush="{DynamicResource DangerBrush}"
+                        BorderThickness="1"
+                        CornerRadius="9"
+                        Padding="12,10"
+                        Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}">
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="{DynamicResource DangerBrush}"
+                               FontSize="12"
+                               TextWrapping="Wrap" />
+                </Border>
+
+                <Border Background="{DynamicResource SuccessSoftBrush}"
+                        BorderBrush="{DynamicResource SuccessBrush}"
+                        BorderThickness="1"
+                        CornerRadius="9"
+                        Padding="12,10"
+                        Margin="0,12,0,0"
+                        Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibility}}">
+                    <TextBlock Text="{Binding StatusMessage}"
+                               Foreground="{DynamicResource SuccessBrush}"
+                               FontSize="12"
+                               TextWrapping="Wrap" />
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="Vazgeç"
+                    Style="{StaticResource GhostButton}"
+                    IsCancel="True"
+                    Margin="0,0,8,0" />
+            <Button Content="Geri yükle"
+                    Style="{StaticResource DangerButton}"
+                    Command="{Binding RestoreCommand}" />
+        </StackPanel>
+    </Grid>
+</Window>

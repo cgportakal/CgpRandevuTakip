@@ -1,0 +1,126 @@
+<Window x:Class="CgpRandevuTakip.Desktop.Views.BackupCreateWindow"
+        Icon="/Assets/CGPRandevuTakip.ico"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Yedek al"
+        Width="640"
+        Height="760"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize"
+        Background="{DynamicResource WindowBackgroundBrush}">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock Text="Yedek al" Style="{StaticResource PageTitle}" FontSize="22" />
+            <TextBlock Text="Yedeğe hangi bölümlerin gireceğini seçin. Seçilmeyen bölümler dosyaya hiç yazılmaz."
+                       Style="{StaticResource PageSubtitle}"
+                       TextWrapping="Wrap"
+                       Margin="0,4,0,0" />
+            <TextBlock Text="{Binding FullBackupNote}"
+                       Style="{StaticResource MutedText}"
+                       TextWrapping="Wrap"
+                       Margin="0,8,0,0" />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="Veriler" Style="{StaticResource SectionTitle}" />
+                        <CheckBox Content="Randevular, kişiler ve kategoriler"
+                                  IsChecked="{Binding IncludeAppointments}"
+                                  Margin="0,8,0,0" />
+                        <CheckBox Content="Kullanıcılar (parola özetleri içerir)"
+                                  IsChecked="{Binding IncludeUsers}"
+                                  Margin="0,6,0,0" />
+                        <CheckBox Content="Denetim kaydı"
+                                  IsChecked="{Binding IncludeAuditLogs}"
+                                  Margin="0,6,0,0" />
+                        <CheckBox Content="Günlük liste paylaşım geçmişi"
+                                  IsChecked="{Binding IncludeShareLogs}"
+                                  Margin="0,6,0,0" />
+                        <CheckBox Content="Yedek geçmişi kayıtları"
+                                  IsChecked="{Binding IncludeBackupHistory}"
+                                  Margin="0,6,0,0" />
+                        <CheckBox Content="İçerik sürümleri"
+                                  IsChecked="{Binding IncludeContentVersions}"
+                                  Margin="0,6,0,0" />
+                        <CheckBox Content="Paylaşım alıcıları"
+                                  IsChecked="{Binding IncludeRecipients}"
+                                  Margin="0,6,0,0" />
+                        <CheckBox Content="Kurum logosu dosyası"
+                                  IsChecked="{Binding IncludeLogo}"
+                                  Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <CheckBox Content="Ayarlar"
+                                  IsChecked="{Binding IncludeSettings}"
+                                  FontWeight="SemiBold" />
+                        <TextBlock Text="Sunucu oturumu belirteçleri hiçbir zaman yedeğe yazılmaz; yalnızca sunucu adresi ve okuma modu."
+                                   Style="{StaticResource MutedText}"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Margin="0,4,0,10" />
+
+                        <StackPanel IsEnabled="{Binding IncludeSettings}">
+                            <CheckBox Content="Kurum profili" IsChecked="{Binding InstitutionSettings}" Margin="16,4,0,0" />
+                            <CheckBox Content="SMTP / e-posta" IsChecked="{Binding SmtpSettings}" Margin="16,4,0,0" />
+                            <CheckBox Content="Bildirimler (ntfy / Telegram / push)" IsChecked="{Binding NotificationSettings}" Margin="16,4,0,0" />
+                            <CheckBox Content="Çalışma saatleri ve paylaşım" IsChecked="{Binding WorkHourSettings}" Margin="16,4,0,0" />
+                            <CheckBox Content="Yedekleme ve Google Drive" IsChecked="{Binding BackupAndDriveSettings}" Margin="16,4,0,0" />
+                            <CheckBox Content="Görünüm / tema" IsChecked="{Binding AppearanceSettings}" Margin="16,4,0,0" />
+                            <CheckBox Content="Masaüstü davranışı (otomatik başlatma, tepsi)" IsChecked="{Binding DesktopBehaviorSettings}" Margin="16,4,0,0" />
+                            <CheckBox Content="Sunucu bağlantısı (adres ve okuma modu)" IsChecked="{Binding ConnectionSettings}" Margin="16,4,0,0" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="{DynamicResource DangerSoftBrush}"
+                        BorderBrush="{DynamicResource DangerBrush}"
+                        BorderThickness="1"
+                        CornerRadius="9"
+                        Padding="12,10"
+                        Margin="0,12,0,0"
+                        Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}">
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="{DynamicResource DangerBrush}"
+                               FontSize="12"
+                               TextWrapping="Wrap" />
+                </Border>
+
+                <Border Background="{DynamicResource SuccessSoftBrush}"
+                        BorderBrush="{DynamicResource SuccessBrush}"
+                        BorderThickness="1"
+                        CornerRadius="9"
+                        Padding="12,10"
+                        Margin="0,12,0,0"
+                        Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibility}}">
+                    <TextBlock Text="{Binding StatusMessage}"
+                               Foreground="{DynamicResource SuccessBrush}"
+                               FontSize="12"
+                               TextWrapping="Wrap" />
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="Vazgeç"
+                    Style="{StaticResource GhostButton}"
+                    IsCancel="True"
+                    Margin="0,0,8,0" />
+            <Button Content="Yedek al"
+                    Style="{StaticResource PrimaryButton}"
+                    Command="{Binding CreateCommand}"
+                    IsDefault="True" />
+        </StackPanel>
+    </Grid>
+</Window>

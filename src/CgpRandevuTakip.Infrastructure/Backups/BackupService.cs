@@ -2,6 +2,7 @@ using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using CgpRandevuTakip.Application.Abstractions;
 using CgpRandevuTakip.Application.Backups;
 using CgpRandevuTakip.Application.Settings;
@@ -16,8 +17,9 @@ using Microsoft.EntityFrameworkCore;
 namespace CgpRandevuTakip.Infrastructure.Backups;
 
 /// <summary>
-/// SQLite çevrimiçi kopyası + ayarlar + manifest içeren ZIP yedeği üretir,
-/// doğrular ve geri yükler. Yedekler varsayılan olarak son 30 dosyayla sınırlıdır.
+/// Seçilebilir bölümlerden ZIP yedeği üretir, yedeği doğrular/inceler ve
+/// geri yüklemeyi mevcut veritabanına bölüm bölüm birleştirir.
+/// Yedekler varsayılan olarak son 30 dosyayla sınırlıdır.
 /// </summary>
 public sealed class BackupService : IBackupService
 {
@@ -25,42 +27,53 @@ public sealed class BackupService : IBackupService
     private const string DatabaseEntry = "data.db";
     private const string SettingsEntry = "settings.json";
     private const string ManifestEntry = "manifest.json";
+    private const string LogoEntryPrefix = "branding/";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        WriteIndented = true
+        WriteIndented = true,
+        Converters = { new JsonStringEnumConverter() },
     };
 
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
     private readonly ISettingsService _settings;
+    private readonly ISettingsRepository _settingsRepository;
     private readonly IAppEnvironment _environment;
     private readonly IAuditLogger _audit;
     private readonly ICurrentUser _currentUser;
     private readonly IClock _clock;
     private readonly IGoogleDriveBackupUploader _driveUploader;
+    private readonly ISecretProtector _secrets;
 
     public BackupService(
         IDbContextFactory<AppDbContext> dbFactory,
         ISettingsService settings,
+        ISettingsRepository settingsRepository,
         IAppEnvironment environment,
         IAuditLogger audit,
         ICurrentUser currentUser,
         IClock clock,
-        IGoogleDriveBackupUploader driveUploader)
+        IGoogleDriveBackupUploader driveUploader,
+        ISecretProtector secrets)
     {
         _dbFactory = dbFactory;
         _settings = settings;
+        _settingsRepository = settingsRepository;
         _environment = environment;
         _audit = audit;
         _currentUser = currentUser;
         _clock = clock;
         _driveUploader = driveUploader;
+        _secrets = secrets;
     }
 
     public async Task<BackupCreateResult> CreateAsync(
         BackupTrigger trigger,
+        BackupOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        var selection = (options ?? BackupOptions.Full).Selection.Normalize();
+
         var tempDb = Path.Combine(
             Path.GetTempPath(),
             "CgpRandevuTakip",
@@ -83,12 +96,11 @@ public sealed class BackupService : IBackupService
                 return BackupCreateResult.Fail("Yedek şifreleme açık ancak yedek parolası tanımlı değil.");
 
             Directory.CreateDirectory(directory);
+            Directory.CreateDirectory(Path.GetDirectoryName(tempDb)!);
 
             var localNow = _clock.ToLocal(_clock.UtcNow);
             var path = BuildUniquePath(directory, localNow, encrypted);
             partialPath = path;
-
-            Directory.CreateDirectory(Path.GetDirectoryName(tempDb)!);
 
             // SQLite'ın çevrimiçi yedek API'si: uygulama açıkken tutarlı kopya alır.
             await using (var source = new SqliteConnection($"Data Source={_environment.DatabasePath};Mode=ReadOnly;Pooling=False"))
@@ -99,19 +111,16 @@ public sealed class BackupService : IBackupService
                 source.BackupDatabase(destination);
             }
 
+            ApplySelection(tempDb, selection);
+
+            var logoPath = selection.Has(BackupSection.Logo) ? FindLogo() : null;
+            var summary = await BackupContentInspector.ReadAsync(
+                tempDb,
+                logoPath is not null,
+                cancellationToken);
+
             var databaseHash = await ComputeFileHashAsync(tempDb, cancellationToken);
-
-            int userCount;
-            int personCount;
-            int appointmentCount;
-            await using (var db = await _dbFactory.CreateDbContextAsync(cancellationToken))
-            {
-                userCount = await db.Users.CountAsync(cancellationToken);
-                personCount = await db.Persons.CountAsync(cancellationToken);
-                appointmentCount = await db.Appointments.CountAsync(cancellationToken);
-            }
-
-            var settingsJson = SerializeSettings(settings);
+            var settingsJson = await BuildSettingsJsonAsync(selection, cancellationToken);
             var settingsHash = ComputeTextHash(settingsJson);
 
             var manifest = new BackupManifest(
@@ -119,11 +128,16 @@ public sealed class BackupService : IBackupService
                 AppConstants.Version,
                 AppConstants.SchemaVersion,
                 _clock.UtcNow,
-                userCount,
-                personCount,
-                appointmentCount,
+                summary.UserCount,
+                summary.PersonCount,
+                summary.AppointmentCount,
                 databaseHash,
-                settingsHash);
+                settingsHash)
+            {
+                ManifestVersion = 2,
+                Selection = selection,
+                Summary = summary,
+            };
 
             var manifestJson = JsonSerializer.Serialize(manifest, JsonOptions);
 
@@ -132,6 +146,9 @@ public sealed class BackupService : IBackupService
                 zip.CreateEntryFromFile(tempDb, DatabaseEntry, CompressionLevel.Optimal);
                 AddTextEntry(zip, SettingsEntry, settingsJson);
                 AddTextEntry(zip, ManifestEntry, manifestJson);
+
+                if (logoPath is not null)
+                    zip.CreateEntryFromFile(logoPath, LogoEntryPrefix + Path.GetFileName(logoPath), CompressionLevel.Optimal);
             }
 
             if (encrypted)
@@ -165,7 +182,15 @@ public sealed class BackupService : IBackupService
                 _currentUser.UserId,
                 nameof(BackupRecord),
                 record.Id,
-                JsonSerializer.Serialize(new { trigger, record.FileName }));
+                JsonSerializer.Serialize(new
+                {
+                    trigger,
+                    record.FileName,
+                    sections = selection.Sections.ToString(),
+                    settingsGroups = selection.SettingsGroups.ToString(),
+                    summary.UserCount,
+                    summary.AppointmentCount,
+                }));
 
             // Google Drive yüklemesi yerel yedeği bozmaz; hata olsa da yerel yedek geçerlidir.
             try
@@ -275,7 +300,7 @@ public sealed class BackupService : IBackupService
 
             BackupManifest? manifest;
             using (var reader = new StreamReader(manifestEntry.Open(), Encoding.UTF8))
-                manifest = JsonSerializer.Deserialize<BackupManifest>(reader.ReadToEnd());
+                manifest = JsonSerializer.Deserialize<BackupManifest>(reader.ReadToEnd(), JsonOptions);
 
             if (manifest is null || manifest.SchemaVersion != AppConstants.SchemaVersion)
                 return false;
@@ -342,7 +367,9 @@ public sealed class BackupService : IBackupService
             BackupManifest? manifest;
             using (var reader = new StreamReader(manifestEntry.Open(), Encoding.UTF8))
             {
-                manifest = JsonSerializer.Deserialize<BackupManifest>(await reader.ReadToEndAsync(cancellationToken));
+                manifest = JsonSerializer.Deserialize<BackupManifest>(
+                    await reader.ReadToEndAsync(cancellationToken),
+                    JsonOptions);
             }
 
             if (manifest is null || string.IsNullOrWhiteSpace(manifest.DatabaseSha256))
@@ -398,67 +425,418 @@ public sealed class BackupService : IBackupService
         }
     }
 
-    public async Task<BackupCreateResult> RestoreAsync(
+    public async Task<BackupInspectionResult> InspectAsync(
         string zipPath,
         CancellationToken cancellationToken = default)
     {
-        if (!_currentUser.IsInRole(UserRole.Admin))
-            return BackupCreateResult.Fail("Geri yükleme yetkisi yalnızca yöneticidedir.");
-
         var validation = await ValidateAsync(zipPath, cancellationToken);
         if (!validation.Success)
-            return BackupCreateResult.Fail(validation.Error ?? "Yedek doğrulanamadı.");
+            return BackupInspectionResult.Fail(validation.Error ?? "Yedek doğrulanamadı.");
 
-        // Geri yükleme öncesi mevcut veri otomatik yedeklenir.
-        var safety = await CreateAsync(BackupTrigger.PreRestore, cancellationToken);
-        if (!safety.Success)
-            return BackupCreateResult.Fail(
-                $"Güvenlik yedeği alınamadığı için geri yükleme durduruldu: {safety.Error}");
-
-        var stagedPath = Path.Combine(Path.GetTempPath(), "CgpRandevuTakip", $"restore-{Guid.NewGuid():N}.db");
-        var prepared = await PrepareZipAsync(zipPath);
-        if (prepared.Error is not null)
-            return BackupCreateResult.Fail(prepared.Error);
+        var stagedPath = Path.Combine(
+            Path.GetTempPath(),
+            "CgpRandevuTakip",
+            $"inspect-{Guid.NewGuid():N}.db");
+        string? decryptedZip = null;
 
         try
         {
+            var prepared = await PrepareZipAsync(zipPath);
+            if (prepared.Error is not null)
+                return BackupInspectionResult.Fail(prepared.Error);
+
+            decryptedZip = prepared.TempPath;
+
+            bool hasLogo;
+            using (var zip = ZipFile.OpenRead(prepared.Path))
+            {
+                var databaseEntry = zip.GetEntry(DatabaseEntry);
+                if (databaseEntry is null)
+                    return BackupInspectionResult.Fail("Yedekte data.db bulunamadı.");
+
+                hasLogo = zip.Entries.Any(x =>
+                    x.FullName.StartsWith(LogoEntryPrefix, StringComparison.OrdinalIgnoreCase));
+
+                Directory.CreateDirectory(Path.GetDirectoryName(stagedPath)!);
+                databaseEntry.ExtractToFile(stagedPath, overwrite: true);
+            }
+
+            var summary = await BackupContentInspector.ReadAsync(
+                stagedPath,
+                hasLogo,
+                cancellationToken);
+
+            var available = BuildAvailableSelection(summary, hasLogo);
+            var warnings = BuildWarnings(validation.Manifest!, summary);
+
+            return BackupInspectionResult.Ok(
+                validation.Backup!,
+                validation.Manifest!,
+                summary,
+                available,
+                warnings);
+        }
+        catch (Exception ex)
+        {
+            return BackupInspectionResult.Fail($"Yedek incelenemedi: {ex.Message}");
+        }
+        finally
+        {
+            TryDelete(stagedPath);
+            TryDelete(decryptedZip);
+        }
+    }
+
+    public async Task<BackupRestoreResult> RestoreAsync(
+        string zipPath,
+        RestoreOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (!_currentUser.IsInRole(UserRole.Admin))
+            return BackupRestoreResult.Fail("Geri yükleme yetkisi yalnızca yöneticidedir.");
+
+        var restoreOptions = options ?? RestoreOptions.Default;
+        var selection = restoreOptions.Selection.Normalize();
+
+        var inspection = await InspectAsync(zipPath, cancellationToken);
+        if (!inspection.Success || inspection.Summary is null)
+            return BackupRestoreResult.Fail(inspection.Error ?? "Yedek incelenemedi.");
+
+        if (inspection.Summary.IsEmpty && !restoreOptions.AllowEmptyBackup)
+        {
+            return BackupRestoreResult.Fail(
+                "Yedek boş görünüyor (kullanıcı, randevu ve ayar yok). " +
+                "Yine de geri yüklemek için boş yedek onayını işaretleyin.");
+        }
+
+        // Geri yükleme öncesi mevcut veri otomatik ve tam olarak yedeklenir.
+        var safety = await CreateAsync(BackupTrigger.PreRestore, BackupOptions.Full, cancellationToken);
+        if (!safety.Success)
+        {
+            return BackupRestoreResult.Fail(
+                $"Güvenlik yedeği alınamadığı için geri yükleme durduruldu: {safety.Error}");
+        }
+
+        var stagedPath = Path.Combine(
+            Path.GetTempPath(),
+            "CgpRandevuTakip",
+            $"restore-{Guid.NewGuid():N}.db");
+        string? decryptedZip = null;
+
+        try
+        {
+            var prepared = await PrepareZipAsync(zipPath);
+            if (prepared.Error is not null)
+                return BackupRestoreResult.Fail(prepared.Error);
+
+            decryptedZip = prepared.TempPath;
+
             using (var zip = ZipFile.OpenRead(prepared.Path))
             {
                 var databaseEntry = zip.GetEntry(DatabaseEntry)
                     ?? throw new InvalidOperationException("Yedekte data.db bulunamadı.");
+
                 Directory.CreateDirectory(Path.GetDirectoryName(stagedPath)!);
                 databaseEntry.ExtractToFile(stagedPath, overwrite: true);
             }
 
             var integrityError = CheckDatabase(stagedPath);
             if (integrityError is not null)
-                return BackupCreateResult.Fail(integrityError);
+                return BackupRestoreResult.Fail(integrityError);
 
-            SqliteConnection.ClearAllPools();
-            DeleteIfExists(_environment.DatabasePath + "-wal");
-            DeleteIfExists(_environment.DatabasePath + "-shm");
-            DeleteIfExists(_environment.DatabasePath + "-journal");
+            // Eski yedeklerde eksik tablo/kolon olabilir; geçici kopyayı güncel şemaya taşı.
+            using (var stagedDb = AppDbContextFactory.Create(stagedPath))
+                stagedDb.Database.Migrate();
 
-            File.Copy(stagedPath, _environment.DatabasePath, overwrite: true);
+            RestoreReport report;
+            await using (var live = await _dbFactory.CreateDbContextAsync(cancellationToken))
+            await using (var transaction = await live.Database.BeginTransactionAsync(cancellationToken))
+            {
+                try
+                {
+                    var engine = new BackupRestoreEngine(_secrets);
+                    report = await engine.MergeAsync(
+                        live,
+                        stagedPath,
+                        restoreOptions with { Selection = selection },
+                        _currentUser.UserId ?? string.Empty,
+                        logoRestored: false,
+                        cancellationToken);
+
+                    // Sunucudan okunan eski yanıtlar geri yükleme sonrası gösterilmesin.
+                    await live.SyncCacheEntries.ExecuteDeleteAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
+                }
+                catch
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    throw;
+                }
+            }
+
+            if (selection.Has(BackupSection.Logo))
+            {
+                string? logoWarning = null;
+                if (TryRestoreLogo(prepared.Path, out logoWarning))
+                    report = report with { LogoRestored = true };
+                else if (logoWarning is not null)
+                    report = report with { Warnings = report.Warnings.Append(logoWarning).ToList() };
+            }
+
+            _settings.InvalidateCache();
 
             await _audit.LogAsync(
                 AuditAction.BackupRestored,
                 _currentUser.UserId,
                 nameof(BackupRecord),
-                validation.Backup?.FileName,
-                JsonSerializer.Serialize(new { validation.Backup?.FileName }));
+                inspection.Backup?.FileName,
+                JsonSerializer.Serialize(new
+                {
+                    inspection.Backup?.FileName,
+                    sections = selection.Sections.ToString(),
+                    settingsGroups = selection.SettingsGroups.ToString(),
+                    mode = restoreOptions.AppointmentMode.ToString(),
+                    report.AppointmentsAdded,
+                    report.AppointmentsUpdated,
+                    report.PersonsAdded,
+                    report.SettingsApplied,
+                }));
 
-            return BackupCreateResult.Ok(validation.Backup!);
+            return BackupRestoreResult.Ok(report);
         }
         catch (Exception ex)
         {
-            return BackupCreateResult.Fail($"Geri yükleme başarısız: {ex.Message}");
+            return BackupRestoreResult.Fail($"Geri yükleme başarısız: {ex.Message}");
         }
         finally
         {
             TryDelete(stagedPath);
-            TryDelete(prepared.TempPath);
+            TryDelete(decryptedZip);
         }
+    }
+
+    private static BackupSelection BuildAvailableSelection(BackupContentSummary summary, bool hasLogo)
+    {
+        var sections = BackupSection.None;
+
+        if (summary.AppointmentCount > 0)
+            sections |= BackupSection.Appointments | BackupSection.Persons | BackupSection.Categories;
+        else
+        {
+            if (summary.PersonCount > 0)
+                sections |= BackupSection.Persons;
+            if (summary.CategoryCount > 0)
+                sections |= BackupSection.Categories;
+        }
+
+        if (summary.UserCount > 0)
+            sections |= BackupSection.Users;
+        if (summary.SettingCount > 0)
+            sections |= BackupSection.Settings;
+        if (summary.AuditLogCount > 0)
+            sections |= BackupSection.AuditLogs;
+        if (summary.ShareLogCount > 0)
+            sections |= BackupSection.ShareLogs;
+        if (summary.BackupRecordCount > 0)
+            sections |= BackupSection.BackupHistory;
+        if (summary.ContentVersionCount > 0)
+            sections |= BackupSection.ContentVersions;
+        if (summary.RecipientCount > 0)
+            sections |= BackupSection.Recipients;
+        if (hasLogo)
+            sections |= BackupSection.Logo;
+
+        var settingsGroups = summary.SettingCount > 0
+            ? BackupSettingsGroup.All
+            : BackupSettingsGroup.None;
+
+        return new BackupSelection(sections, settingsGroups);
+    }
+
+    private static IReadOnlyList<string> BuildWarnings(
+        BackupManifest manifest,
+        BackupContentSummary summary)
+    {
+        var warnings = new List<string>();
+
+        if (summary.IsEmpty)
+            warnings.Add("Bu yedek boş görünüyor: kullanıcı, randevu ve ayar içermiyor.");
+
+        if (summary.UserCount == 0)
+            warnings.Add("Bu yedekte kullanıcı hesabı yok; geri yüklemede mevcut kullanıcılar korunur.");
+
+        if (summary.AppointmentCount == 0 && summary.SettingCount > 0)
+            warnings.Add("Yedekte randevu yok; yalnızca ayarlar ve diğer kayıtlar var.");
+
+        if (summary.HasSmtpSettings || summary.HasPushSettings)
+        {
+            warnings.Add(
+                "Yedekte şifreli iletişim ayarları var. Yedek başka bir Windows kullanıcısında alındıysa " +
+                "SMTP/ntfy/Telegram parolaları çözülemeyebilir.");
+        }
+
+        if (manifest.ManifestVersion < 2)
+            warnings.Add("Eski yedek biçimi: içerik özeti yedekteki veritabanından hesaplandı.");
+
+        if (!string.Equals(manifest.Version, AppConstants.Version, StringComparison.Ordinal))
+        {
+            warnings.Add(
+                $"Yedek farklı bir sürümde alınmış (yedek: {manifest.Version}, uygulama: {AppConstants.Version}); " +
+                "şema otomatik güncellenecek.");
+        }
+
+        return warnings;
+    }
+
+    private async Task<string> BuildSettingsJsonAsync(
+        BackupSelection selection,
+        CancellationToken cancellationToken)
+    {
+        _ = cancellationToken;
+
+        var values = await _settingsRepository.GetAllAsync();
+        var allowed = BackupSettingKeys.KeysFor(selection.SettingsGroups)
+            .Where(x => !BackupSettingKeys.IsSecret(x))
+            .Where(x => !BackupSettingKeys.IsAlwaysExcluded(x))
+            .ToHashSet(StringComparer.Ordinal);
+
+        var filtered = values
+            .Where(x => allowed.Contains(x.Key))
+            .OrderBy(x => x.Key, StringComparer.Ordinal)
+            .ToDictionary(x => x.Key, x => x.Value, StringComparer.Ordinal);
+
+        return JsonSerializer.Serialize(new
+        {
+            Note = "Gizli alanlar (SMTP parolası, push token/chat id) bu dosyaya yazılmaz; " +
+                   "veritabanı yedeğinde şifreli olarak bulunur.",
+            Settings = filtered,
+        }, JsonOptions);
+    }
+
+    private static void ApplySelection(string databasePath, BackupSelection selection)
+    {
+        using var connection = new SqliteConnection(
+            $"Data Source={databasePath};Pooling=False");
+        connection.Open();
+
+        Execute(connection, "PRAGMA foreign_keys = OFF;");
+
+        if (!selection.Has(BackupSection.Appointments))
+        {
+            DeleteTable(connection, "ReminderDispatches");
+            DeleteTable(connection, "AppointmentOutcomes");
+            DeleteTable(connection, "Appointments");
+        }
+
+        if (!selection.Has(BackupSection.Persons))
+            DeleteTable(connection, "Persons");
+
+        if (!selection.Has(BackupSection.Categories))
+            DeleteTable(connection, "Categories");
+
+        if (!selection.Has(BackupSection.Users))
+            DeleteTable(connection, "Users");
+
+        if (!selection.Has(BackupSection.AuditLogs))
+            DeleteTable(connection, "AuditLogs");
+
+        if (!selection.Has(BackupSection.ShareLogs))
+            DeleteTable(connection, "WhatsAppShareLogs");
+
+        if (!selection.Has(BackupSection.BackupHistory))
+            DeleteTable(connection, "BackupRecords");
+
+        if (!selection.Has(BackupSection.ContentVersions))
+            DeleteTable(connection, "ContentVersions");
+
+        if (!selection.Has(BackupSection.Recipients))
+            DeleteTable(connection, "Recipients");
+
+        // Sunucu okuma önbelleği ve oturum belirteçleri hiçbir yedeğe girmez.
+        DeleteTable(connection, "SyncCacheEntries");
+        ApplySettingsSelection(connection, selection);
+
+        Execute(connection, "VACUUM;");
+    }
+
+    private static void ApplySettingsSelection(SqliteConnection connection, BackupSelection selection)
+    {
+        if (!TableExists(connection, "Settings"))
+            return;
+
+        var allowed = selection.Has(BackupSection.Settings)
+            ? BackupSettingKeys.KeysFor(selection.SettingsGroups)
+                .Where(x => !BackupSettingKeys.IsAlwaysExcluded(x))
+                .ToHashSet(StringComparer.Ordinal)
+            : new HashSet<string>(StringComparer.Ordinal);
+
+        var keys = new List<string>();
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT Key FROM Settings;";
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+                keys.Add(reader.GetString(0));
+        }
+
+        foreach (var key in keys)
+        {
+            if (BackupSettingKeys.IsAlwaysExcluded(key) || !allowed.Contains(key))
+            {
+                using var delete = connection.CreateCommand();
+                delete.CommandText = "DELETE FROM Settings WHERE Key = $key;";
+                delete.Parameters.AddWithValue("$key", key);
+                delete.ExecuteNonQuery();
+            }
+        }
+    }
+
+    private bool TryRestoreLogo(string zipPath, out string? warning)
+    {
+        warning = null;
+
+        try
+        {
+            using var zip = ZipFile.OpenRead(zipPath);
+            var entry = zip.Entries.FirstOrDefault(x =>
+                x.FullName.StartsWith(LogoEntryPrefix, StringComparison.OrdinalIgnoreCase));
+
+            if (entry is null)
+                return false;
+
+            Directory.CreateDirectory(_environment.BrandingDirectory);
+
+            var fileName = Path.GetFileName(entry.FullName);
+            var target = Path.Combine(_environment.BrandingDirectory, fileName);
+            var temp = Path.Combine(
+                Path.GetTempPath(),
+                "CgpRandevuTakip",
+                $"logo-{Guid.NewGuid():N}{Path.GetExtension(fileName)}");
+
+            Directory.CreateDirectory(Path.GetDirectoryName(temp)!);
+            entry.ExtractToFile(temp, overwrite: true);
+
+            foreach (var existing in Directory.GetFiles(_environment.BrandingDirectory, "institution-logo.*"))
+                TryDelete(existing);
+
+            File.Move(temp, target, overwrite: true);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            warning = $"Kurum logosu geri yüklenemedi: {ex.Message}";
+            return false;
+        }
+    }
+
+    private string? FindLogo()
+    {
+        if (!Directory.Exists(_environment.BrandingDirectory))
+            return null;
+
+        return Directory
+            .GetFiles(_environment.BrandingDirectory, "institution-logo.*")
+            .FirstOrDefault();
     }
 
     private async Task<(string Path, string? TempPath, string? Error)> PrepareZipAsync(string path)
@@ -513,7 +891,8 @@ public sealed class BackupService : IBackupService
         try
         {
             var files = Directory
-                .GetFiles(directory, BackupFileNameBuilder.Prefix + "*" + BackupFileNameBuilder.Extension)
+                .GetFiles(directory, BackupFileNameBuilder.Prefix + "*")
+                .Where(x => BackupFileNameBuilder.IsValid(Path.GetFileName(x)))
                 .OrderByDescending(Path.GetFileName, StringComparer.Ordinal)
                 .ToList();
 
@@ -528,36 +907,29 @@ public sealed class BackupService : IBackupService
         }
     }
 
-    private static string SerializeSettings(AppSettings settings)
-        => JsonSerializer.Serialize(new
-        {
-            settings.InstitutionName,
-            Theme = settings.Theme.ToString(),
-            settings.BackupDirectory,
-            settings.NotificationsEnabled,
-            settings.DefaultReminderMinutes,
-            settings.PushEnabled,
-            settings.PushProvider,
-            settings.PushTopic,
-            settings.DailyShareTime,
-            settings.QuietHoursEnabled,
-            settings.QuietHoursStart,
-            settings.QuietHoursEnd,
-            settings.WorkHoursStart,
-            settings.WorkHoursEnd,
-            settings.AllowOutOfHoursAppointments,
-            settings.AutoBackupEnabled,
-            settings.AutoStartEnabled,
-            settings.AutoStartMode,
-            settings.CloseToTray,
-            settings.SmtpHost,
-            settings.SmtpPort,
-            settings.SmtpUseSsl,
-            settings.SmtpUsername,
-            settings.SmtpFromAddress,
-            settings.SmtpFromName,
-            Note = "Gizli alanlar (SMTP parolası, push token/chat id) bu dosyaya yazılmaz; veritabanı yedeğinde şifreli olarak bulunur."
-        }, JsonOptions);
+    private static void Execute(SqliteConnection connection, string sql)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        command.ExecuteNonQuery();
+    }
+
+    private static void DeleteTable(SqliteConnection connection, string table)
+    {
+        if (!TableExists(connection, table))
+            return;
+
+        Execute(connection, $"DELETE FROM \"{table}\";");
+    }
+
+    private static bool TableExists(SqliteConnection connection, string table)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText =
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = $name;";
+        command.Parameters.AddWithValue("$name", table);
+        return Convert.ToInt32(command.ExecuteScalar()) > 0;
+    }
 
     private static void AddTextEntry(ZipArchive zip, string name, string content)
     {
@@ -631,19 +1003,6 @@ public sealed class BackupService : IBackupService
 
     private static string ComputeTextHash(string text)
         => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text)));
-
-    private static void DeleteIfExists(string path)
-    {
-        try
-        {
-            if (File.Exists(path))
-                File.Delete(path);
-        }
-        catch
-        {
-            // Dosya kilitliyse yeni veri yazılamaz; hata üst katmana döner.
-        }
-    }
 
     private static void TryDelete(string? path)
     {

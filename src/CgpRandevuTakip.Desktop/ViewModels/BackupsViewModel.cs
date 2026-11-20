@@ -9,6 +9,7 @@ using CgpRandevuTakip.Desktop.Services;
 using CgpRandevuTakip.Domain.Enums;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CgpRandevuTakip.Desktop.ViewModels;
 
@@ -20,6 +21,7 @@ public partial class BackupsViewModel : ObservableObject
     private readonly IDialogService _dialogs;
     private readonly IAppEnvironment _environment;
     private readonly IGoogleDriveFolderService _drive;
+    private readonly IServiceProvider _services;
 
     public BackupsViewModel(
         IBackupService backups,
@@ -27,7 +29,8 @@ public partial class BackupsViewModel : ObservableObject
         ICurrentUser currentUser,
         IDialogService dialogs,
         IAppEnvironment environment,
-        IGoogleDriveFolderService drive)
+        IGoogleDriveFolderService drive,
+        IServiceProvider services)
     {
         _backups = backups;
         _settings = settings;
@@ -35,6 +38,7 @@ public partial class BackupsViewModel : ObservableObject
         _dialogs = dialogs;
         _environment = environment;
         _drive = drive;
+        _services = services;
     }
 
     public RangeObservableCollection<BackupInfo> Backups { get; } = new();
@@ -62,6 +66,24 @@ public partial class BackupsViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _isBusy;
+
+    [ObservableProperty]
+    private string _inspectionSummaryText = string.Empty;
+
+    [ObservableProperty]
+    private string _inspectionDatesText = string.Empty;
+
+    [ObservableProperty]
+    private string _inspectionSettingsText = string.Empty;
+
+    [ObservableProperty]
+    private string _inspectionWarningsText = string.Empty;
+
+    [ObservableProperty]
+    private bool _hasInspection;
+
+    [ObservableProperty]
+    private bool _isInspecting;
 
     public bool IsAdmin => _currentUser.IsInRole(UserRole.Admin);
 
@@ -103,6 +125,9 @@ public partial class BackupsViewModel : ObservableObject
 
             if (SelectedBackup is not null)
                 SelectedBackup = Backups.FirstOrDefault(x => x.Path == SelectedBackup.Path);
+
+            if (SelectedBackup is null && Backups.Count > 0)
+                SelectedBackup = Backups[0];
         }
         catch (Exception ex)
         {
@@ -119,28 +144,18 @@ public partial class BackupsViewModel : ObservableObject
     {
         ErrorMessage = null;
         StatusMessage = null;
-        IsBusy = true;
 
-        try
+        var viewModel = _services.GetRequiredService<BackupCreateViewModel>();
+        var window = new Views.BackupCreateWindow(viewModel)
         {
-            var result = await _backups.CreateAsync(BackupTrigger.Manual);
-            if (!result.Success)
-            {
-                ErrorMessage = result.Error;
-                return;
-            }
+            Owner = System.Windows.Application.Current?.MainWindow
+        };
 
-            StatusMessage = $"Yedek oluşturuldu: {result.Backup!.FileName}";
-            await LoadAsync();
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Yedek oluşturulamadı: {ex.Message}";
-        }
-        finally
-        {
-            IsBusy = false;
-        }
+        if (window.ShowDialog() != true)
+            return;
+
+        StatusMessage = "Yedek oluşturuldu.";
+        await LoadAsync();
     }
 
     [RelayCommand(CanExecute = nameof(CanRestore))]
@@ -182,20 +197,14 @@ public partial class BackupsViewModel : ObservableObject
         if (SelectedBackup is null)
             return;
 
-        if (!_dialogs.Confirm(
-                $"Seçili yedek geri yüklenecek:{Environment.NewLine}{SelectedBackup.FileName}{Environment.NewLine}{Environment.NewLine}" +
-                "Mevcut veriler önce otomatik yedeklenecek, ardından uygulama yeniden başlayacak. Devam edilsin mi?",
-                "Yedeği geri yükle"))
-            return;
-
         ErrorMessage = null;
         StatusMessage = null;
-        IsBusy = true;
 
-        try
+        var sourcePath = SelectedBackup.Path;
+        if (SelectedBackup.IsDrive)
         {
-            var sourcePath = SelectedBackup.Path;
-            if (SelectedBackup.IsDrive)
+            IsBusy = true;
+            try
             {
                 var download = await _drive.DownloadAsync(sourcePath);
                 if (download.Path is null)
@@ -203,36 +212,53 @@ public partial class BackupsViewModel : ObservableObject
                     ErrorMessage = download.Error;
                     return;
                 }
+
                 sourcePath = download.Path;
             }
-
-            var validation = await _backups.ValidateAsync(sourcePath);
-            if (!validation.Success)
+            finally
             {
-                ErrorMessage = validation.Error;
-                return;
+                IsBusy = false;
             }
+        }
 
-            var result = await _backups.RestoreAsync(sourcePath);
-            if (!result.Success)
-            {
-                ErrorMessage = result.Error;
-                return;
-            }
+        var backup = SelectedBackup with { Path = sourcePath };
+        var viewModel = _services.GetRequiredService<BackupRestoreViewModel>();
 
-            _dialogs.Info(
-                "Yedek başarıyla geri yüklendi. Uygulama yeniden başlatılıyor.",
-                "Geri yükleme tamamlandı");
+        await viewModel.InitializeAsync(backup);
+        if (!viewModel.IsReady)
+        {
+            ErrorMessage = viewModel.ErrorMessage ?? "Yedek incelenemedi.";
+            return;
+        }
 
+        var window = new Views.BackupRestoreWindow(viewModel)
+        {
+            Owner = System.Windows.Application.Current?.MainWindow
+        };
+
+        if (window.ShowDialog() != true)
+            return;
+
+        var report = viewModel.Report;
+        StatusMessage = report?.SummaryText ?? "Yedek geri yüklendi.";
+        await LoadAsync();
+
+        var warnings = report is { Warnings.Count: > 0 }
+            ? Environment.NewLine + Environment.NewLine + "Uyarılar:" + Environment.NewLine +
+              string.Join(Environment.NewLine, report.Warnings.Select(x => "• " + x))
+            : string.Empty;
+
+        _dialogs.Info(
+            "Yedek geri yüklendi." + Environment.NewLine + Environment.NewLine +
+            (report?.SummaryText ?? string.Empty) + warnings,
+            "Geri yükleme tamamlandı");
+
+        if (_dialogs.Confirm(
+                "Değişikliklerin tam uygulanması için uygulama yeniden başlatılsın mı? " +
+                "Mevcut oturumunuz ve kullanıcılarınız korunur.",
+                "Yeniden başlat"))
+        {
             RestartApplication();
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Geri yükleme başarısız: {ex.Message}";
-        }
-        finally
-        {
-            IsBusy = false;
         }
     }
 
@@ -260,6 +286,51 @@ public partial class BackupsViewModel : ObservableObject
     {
         RestoreSelectedCommand.NotifyCanExecuteChanged();
         ValidateSelectedCommand.NotifyCanExecuteChanged();
+        _ = InspectSelectedAsync(value);
+    }
+
+    private async Task InspectSelectedAsync(BackupInfo? backup)
+    {
+        ErrorMessage = null;
+
+        if (backup is null)
+        {
+            HasInspection = false;
+            InspectionSummaryText = string.Empty;
+            InspectionDatesText = string.Empty;
+            InspectionSettingsText = string.Empty;
+            InspectionWarningsText = string.Empty;
+            return;
+        }
+
+        IsInspecting = true;
+        try
+        {
+            var result = await _backups.InspectAsync(backup.Path);
+            if (!result.Success || result.Summary is null)
+            {
+                HasInspection = false;
+                ErrorMessage = result.Error ?? "Yedek incelenemedi.";
+                return;
+            }
+
+            InspectionSummaryText = result.Summary.CountsText;
+            InspectionDatesText = result.Summary.DatesText;
+            InspectionSettingsText = result.Summary.SettingsText;
+            InspectionWarningsText = result.Warnings.Count == 0
+                ? string.Empty
+                : string.Join(Environment.NewLine, result.Warnings.Select(x => "• " + x));
+            HasInspection = true;
+        }
+        catch (Exception ex)
+        {
+            HasInspection = false;
+            ErrorMessage = $"Yedek incelenemedi: {ex.Message}";
+        }
+        finally
+        {
+            IsInspecting = false;
+        }
     }
 
     partial void OnIsBusyChanged(bool value)

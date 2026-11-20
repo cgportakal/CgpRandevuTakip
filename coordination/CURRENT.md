@@ -1,13 +1,22 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-20 14:10 (UTC+3)
+**Son güncelleme:** 2026-11-20 17:20 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `agent/cfr-lenovo/desktop-sync-p2` (PR bekliyor)
-**Durum:** Yeşil — **398 test**. **Masaüstü P2 okuma yolu kod tarafı tamamlandı** (manifest/ETag,
-günlük liste, arama, detay, silinenler, raporlar, SQLite önbellek). Okuma modu varsayılan kapalı;
-manuel UAT ve P3 (outbox) sıradaki.
+**Dal:** `agent/cfr-lenovo/backup-restore` (PR bekliyor)
+**Durum:** Yeşil — **412 test**. Masaüstü yedekleme/geri yükleme yenilendi: seçmeli
+bölümler, içerik önizlemesi, boş yedek koruması ve dosya değiştirmeyen birleştirme.
+Eski (0 kullanıcılı) gerçek yedekle doğrulandı; kurulum sihirbazı artık açılamaz.
 
 ## Bu turda tamamlanan
+
+- **Yedekleme/geri yükleme yenilemesi:** manifest v2 (bölümler, ayar grupları, sayılar,
+  ilk/son randevu, son değişiklik); seçmeli yedek (seçilmeyen bölümler dosyaya yazılmaz,
+  `VACUUM`); içerik inceleme + uyarılar; boş yedek engeli + ileri düzey onay; geri yükleme
+  artık `data.db` üzerine yazmıyor, transaction içinde birleştiriyor. Kullanıcılar/ayarlar
+  varsayılan kapalı; “Ayarlar” seçilirse grup bazlı yazılıyor. “Sunucu bağlantısı” grubu
+  (`sync.api.base_url`, okuma modu) yedeğe giriyor; oturum belirteçleri girmiyor. Logo
+  seçilebiliyor. Gerçek v1.2.1 yedeği (0 kullanıcı) ile mevcut kullanıcı/ayarların korunduğu
+  doğrulandı ([docs/43](docs/43_Yedekleme_ve_Geri_Yukleme.md)). 9 yedek + 4 VM testi eklendi.
 
 - **Masaüstü P2 okuma yolu:** `Desktop/Services/Sync/` altında `ServerReadService`,
   `SyncCacheStore`, `SyncedAppointmentService`, `SyncedReportService`,
@@ -192,16 +201,20 @@ ilk çalıştırmada `POST /v1/auth/setup` gerekir. Ayrıntı: [docs/39](docs/39
 
 ## Sıradaki iş (öncelik sırası)
 
-1. **Masaüstü veri senkronizasyonu** — P1 ve **P2 okuma yolu kod tarafı tamamlandı.**
+1. **Yedekleme UAT’i** — seçmeli yedek/geri yükleme akışını gerçek kurulumda doğrula:
+   yalnızca ayarları yedekle → değiştir → geri yükle; randevular ve kullanıcılar korunmalı,
+   kurulum sihirbazı açılmamalı. Boş yedek onayı ve eski (v1) yedek denenmeli
+   ([docs/43](docs/43_Yedekleme_ve_Geri_Yukleme.md)).
+2. **Masaüstü veri senkronizasyonu** — P1 ve **P2 okuma yolu kod tarafı tamamlandı.**
    Sıradaki: P2 manuel UAT (web’de oluşturulan randevu masaüstünde “Yenile” ile görünür,
    çevrimdışıyken önbellek) ve **P3 outbox** (yazma yolu, `ClientRequestId`, sıra koruma).
    Ardından P4 SignalR, P5 çakışma, P6 dayanıklılık, P7 UAT. Ayrıntı:
    [docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md).
-2. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
+3. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
    canlı olay ve push doğrulanmalı.
-3. **Mağaza derlemesi** — EAS `production` profiliyle imzalı AAB/APK; sürüm numarası ve
+4. **Mağaza derlemesi** — EAS `production` profiliyle imzalı AAB/APK; sürüm numarası ve
    `eas.json` `appVersionSource: remote` ayarı gözden geçirilmeli.
-4. **İçerik logosu UAT notları** — gerçek kurum verisiyle son kontrol (opsiyonel); temel akış
+5. **İçerik logosu UAT notları** — gerçek kurum verisiyle son kontrol (opsiyonel); temel akış
    tamamlandı.
 
 ## Aktif kilit
@@ -293,9 +306,9 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-Bu dal: yerel **398/398** test (324 uygulama + 59 masaüstü + 13 API + 2 UI), web build ve
+Bu dal: yerel **412/412** test (334 uygulama + 63 masaüstü/VM + 13 API + 2 UI), web build ve
 mobil `tsc` başarılı. PR kontrolleri merge öncesi `gh pr checks --watch` ile doğrulanır.
-Master CI ✅ (PR #53 sonrası). Son release: **1.8.5 Setup-only** başarılı; liste ve rapor hizaları
+Master CI ✅ (PR #54 sonrası). Son release: **1.8.5 Setup-only** başarılı; liste ve rapor hizaları
 yayında. Android emülatör ve **Samsung S21 gerçek cihaz UAT** tamamlandı.
 Dependabot picomatch uyarısı **withdrawn** olduğu için dismissed; kod bağımlılığı değiştirilmedi.
 Android SDK/JDK/adb/emulator `D:\Android` altında; AVD `cgp_uat` hazır; `expo-dev-client` eklendi.

@@ -36,6 +36,8 @@ public sealed class SettingsService : ISettingsService
 
     public IReadOnlyList<int> AllowedReminderMinutes => ReminderValues;
 
+    public void InvalidateCache() => _cachedSettings = null;
+
     public async Task<AppSettings> GetAsync()
     {
         // Ayarlar küçük ve seyrek değişen bir tablodur; tek örnekli servis içinde

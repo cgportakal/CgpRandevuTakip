@@ -110,6 +110,7 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 40 | [İçerik Logosu UAT](docs/40_Icerik_Logosu_UAT.md) | Logo yükleme, önizleme, anonim logo ucu |
 | 41 | [Tasarım ve Veri Paritesi](docs/41_Tasarim_ve_Veri_Paritesi.md) | Ortak tokenlar, terimler, rapor türleri, masaüstü senkron mimarisi |
 | 42 | [Masaüstü Veri Senkronizasyonu](docs/42_Masaustu_Veri_Senkronizasyonu.md) | API istemcisi, çevrimdışı önbellek, outbox, SignalR, çakışma, UAT planı |
+| 43 | [Yedekleme ve Geri Yükleme](docs/43_Yedekleme_ve_Geri_Yukleme.md) | Seçmeli yedek/geri yükleme, içerik özeti, boş yedek koruması, bağlantı ayarları |
 
 ## Alınan temel kararlar
 

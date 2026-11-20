@@ -6,7 +6,14 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 ## [Yayınlanmadı]
 
 ### Eklendi
+- **Seçmeli yedekleme ve geri yükleme:** yedek alırken bölümler (randevular, kullanıcılar, ayarlar, denetim, paylaşım, yedek geçmişi, içerik sürümleri, alıcılar, logo) ve ayar grupları seçilebilir; seçilmeyen bölümler dosyaya yazılmaz. Geri yüklemede aynı seçim sunulur, varsayılan “birleştir” modunda kullanıcılar ve ayarlar korunur ([docs/43](docs/43_Yedekleme_ve_Geri_Yukleme.md)).
+- **Yedek içeriği önizlemesi:** manifest v2 ile randevu/kişi/kullanıcı/ayar sayıları, ilk-son randevu ve son değişiklik zamanı; boş yedek, eksik kullanıcı ve şifre çözülememe uyarıları.
+- **Bağlantı ayarları:** yedeğe “Sunucu bağlantısı” grubu eklendi (`sync.api.base_url`, okuma modu); oturum belirteçleri hiçbir zaman yedeklenmez.
+- **Logo yedeği:** kurum logosu seçilirse ZIP’e eklenir ve isteğe bağlı geri yüklenir.
 - **Masaüstü P2 okuma yolu:** okuma modu açıkken günlük liste, arama, detay, silinenler ve raporlar API'den okunur; manifest ETag/304 desteklidir. Sunucu yanıtları `SyncCacheEntries` tablosunda önbelleğe alınır, ağ hatasında son başarılı yanıt gösterilir. Kategori/görüşmeci listeleri manifestten gelir; yazmalar P3'e kadar yerelde kalır ([docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md)).
+
+### Düzeltildi
+- **Geri yükleme sonrası kurulum sihirbazı:** yedek, tüm `data.db` dosyasını değiştirdiği için 0 kullanıcılı/eski bir yedek geri yüklendiğinde uygulama ilk kurulum sanıp SMTP/ntfy/Telegram ayarlarını sıfırlıyordu. Geri yükleme artık dosya değiştirmeden seçilen bölümleri işlem içinde birleştirir; kullanıcılar silinmez, boş yedek onay ister ([docs/43](docs/43_Yedekleme_ve_Geri_Yukleme.md)).
 
 ## [1.8.5] — 2026-11-20 · Liste ve rapor hizaları
 
