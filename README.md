@@ -135,6 +135,7 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 42 | [Masaüstü Veri Senkronizasyonu](docs/42_Masaustu_Veri_Senkronizasyonu.md) | API istemcisi, çevrimdışı önbellek, outbox, SignalR, çakışma, UAT planı |
 | 43 | [Yedekleme ve Geri Yükleme](docs/43_Yedekleme_ve_Geri_Yukleme.md) | Seçmeli yedek/geri yükleme, içerik özeti, boş yedek koruması, bağlantı ayarları |
 | 44 | [Masaüstü Senkronizasyonu Devir](docs/44_Masaustu_Senkronizasyon_Devir.md) | P1–P4 mimarisi, outbox/overlay/SignalR, UAT ve P5–P7 planı |
+| 45 | [Masaüstü Senkronizasyon Saha UAT](docs/45_Masaustu_Senkronizasyon_UAT.md) | P3/P4/P5: çevrimdışı kuyruk, SignalR, çakışma çözümü |
 
 ## Alınan temel kararlar
 

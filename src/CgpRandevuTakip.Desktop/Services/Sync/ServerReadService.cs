@@ -24,6 +24,7 @@ public sealed class ServerReadService
     private readonly ApiConnectionService _connection;
     private readonly ISyncCacheStore _cache;
     private readonly ISettingsRepository _settings;
+    private readonly SemaphoreSlim _manifestLock = new(1, 1);
 
     private DateTime _offlineUntilUtc = DateTime.MinValue;
 
@@ -66,18 +67,30 @@ public sealed class ServerReadService
     public async Task<bool> IsServerReadActiveAsync()
         => await IsReadModeEnabledAsync() && await HasSessionAsync();
 
-    public Task<ApiResult<ApiManifest>> GetManifestAsync(
+    public async Task<ApiResult<ApiManifest>> GetManifestAsync(
         bool forceRefresh = false,
         CancellationToken ct = default)
-        => ReadAsync<ApiManifest>(
-            "content:manifest",
-            conditional: true,
-            (session, etag, token) => _client.GetManifestAsync(
-                session.BaseUrl,
-                session.AccessToken,
-                forceRefresh ? null : etag,
-                token),
-            ct);
+    {
+        // Kategori ve görüşmeci servisleri manifesti eşzamanlı ister; aynı önbellek
+        // anahtarına iki yazma SQLite kilidi/yarışına yol açabilir. Tek sıraya alınır.
+        await _manifestLock.WaitAsync(ct);
+        try
+        {
+            return await ReadAsync<ApiManifest>(
+                "content:manifest",
+                conditional: true,
+                (session, etag, token) => _client.GetManifestAsync(
+                    session.BaseUrl,
+                    session.AccessToken,
+                    forceRefresh ? null : etag,
+                    token),
+                ct);
+        }
+        finally
+        {
+            _manifestLock.Release();
+        }
+    }
 
     public Task<ApiResult<IReadOnlyList<AppointmentListItemDto>>> GetDayAsync(
         DateTime localDate,
