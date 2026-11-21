@@ -3,6 +3,15 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [Yayınlanmadı]
+
+### Düzeltildi
+- **Manifest eşzamanlılığı:** Masaüstünde kategori ve görüşmeci servisleri manifesti aynı anda istediğinde aynı önbellek anahtarına eşzamanlı yazma yarışı oluşabiliyordu; `ServerReadService.GetManifestAsync` tek sıraya alındı.
+
+### Doğrulama
+- **P3/P4/P5 saha UAT’i:** çevrimdışı oluşturma/silme + otomatik eşitleme, SignalR ekle/güncelle/sil ve 45 sn kesinti sonrası yeniden bağlanma, çevrimiçi ve outbox çakışma çözümü ([docs/45](docs/45_Masaustu_Senkronizasyon_UAT.md)).
+- **432/432** test.
+
 ## [1.10.1] — 2026-11-22 · Çakışma yönetimi
 
 ### Eklendi

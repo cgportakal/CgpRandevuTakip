@@ -1,13 +1,19 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-22 00:50 (UTC+3)
+**Son güncelleme:** 2026-11-22 01:50 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — **432 test**. **1.10.1 yayında** (Setup-only); kurulu sürüm 1.10.1.
-P5 çakışma yönetimi tamamlandı. Sıradaki: **P5/P3/P4 saha UAT’i**, ardından P6 dayanıklılık.
+**Durum:** Yeşil — **432 test**. **P3/P4/P5 saha UAT’i tamamlandı**; kritik hata yok.
+Sıradaki: **P6 — açılış/kapanış ve dayanıklılık**, ardından P7 uçtan uca UAT.
 
 ## Bu turda tamamlanan
 
+- **P3/P4/P5 saha UAT’i:** Portatif masaüstü 1.10.1 + izole API ile çevrimdışı oluşturma/silme ve
+  otomatik eşitleme, SignalR ekle/güncelle/sil + 45 sn kesinti sonrası yeniden bağlanma, çevrimiçi
+  çakışma (sunucuyu koru / yerele uygula) ve outbox çakışması (“Çakışanları çöz”) doğrulandı
+  ([docs/45](docs/45_Masaustu_Senkronizasyon_UAT.md)). Kritik hata yok.
+- **Manifest sağlamlaştırması:** `ServerReadService.GetManifestAsync` eşzamanlı kategori/görüşmeci
+  isteklerinde tek sıraya alındı (aynı önbellek anahtarına eşzamanlı yazma yarışını önler).
 - **1.10.1 yayını:** `v1.10.1` GitHub Release (Setup-only). Assetler: Setup (~67,1 MB), Dev.cer,
   SHA256SUMS, version-policy (`latestDesktopVersion: 1.10.1`); kurulu sürüm 1.10.1 doğrulandı.
 - **P5 — çakışma yönetimi (cafer-desktop):** `AppointmentInput.ExpectedUpdatedAtUtc` ve
@@ -264,10 +270,11 @@ ilk çalıştırmada `POST /v1/auth/setup` gerekir. Ayrıntı: [docs/39](docs/39
    yalnızca ayarları yedekle → değiştir → geri yükle; randevular ve kullanıcılar korunmalı,
    kurulum sihirbazı açılmamalı. Boş yedek onayı ve eski (v1) yedek denenmeli
    ([docs/43](docs/43_Yedekleme_ve_Geri_Yukleme.md)).
-2. **Masaüstü veri senkronizasyonu** — P1 ✅, P2 ✅, P3 ✅, P4 ✅, **P5 kod ✅**.
-   Sıradaki: **P3/P4/P5 saha UAT’i** (çevrimdışı kuyruk, overlay, SignalR, iki istemcide
-   çakışma dialog’u) ve bulgular; ardından **P6 dayanıklılık**, P7 UAT.
+2. **Masaüstü veri senkronizasyonu** — P1 ✅, P2 ✅, P3 ✅, P4 ✅, P5 ✅, **P3/P4/P5 UAT ✅**.
+   Sıradaki: **P6 dayanıklılık** (açılışta pull, ağ durumu, yerel hatırlatıcı kapatma, kapanış
+   dayanıklılığı), ardından **P7 uçtan uca UAT**.
    Ayrıntı: [docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md),
+   [docs/45](docs/45_Masaustu_Senkronizasyon_UAT.md),
    [docs/44](docs/44_Masaustu_Senkronizasyon_Devir.md).
 3. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
    canlı olay ve push doğrulanmalı.

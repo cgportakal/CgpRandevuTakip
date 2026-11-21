@@ -143,7 +143,8 @@ geçici kimlikler sunucu kimlikleriyle eşlenir. **Kalan tek adım saha UAT’id
       güncel DTO döndür.
 - [x] Masaüstünde dialog: “Sunucudaki sürümü koru” / “Yerel değişikliği uygula”.
 - [x] Outbox’ta çakışan kayıt `conflict` durumuna geçer; kullanıcı çözene kadar tekrar denenmez.
-- [ ] UAT: iki istemcide aynı randevu düzenlenir; ikinci kayıt çakışma dialog’u görür.
+- [x] UAT: iki istemcide aynı randevu düzenlenir; ikinci kayıt çakışma dialog’u görür.
+      ([docs/45](45_Masaustu_Senkronizasyon_UAT.md))
 
 ### P6 — Açılış/kapanış ve dayanıklılık
 - [ ] Açılışta: oturum → manifest → outbox flush → günlük liste.
