@@ -363,6 +363,53 @@ public class OutboxServiceTests
         Assert.Equal("/v1/appointments/series/series-1/append", path);
     }
 
+    [Fact]
+    public async Task FlushAsync_CreateThenBulkMove_RemapsMovePayload()
+    {
+        string? moveBody = null;
+
+        var service = CreateService(async (request, _) =>
+        {
+            if (request.Method == HttpMethod.Post
+                && request.RequestUri!.AbsolutePath == "/v1/appointments")
+            {
+                return Json(HttpStatusCode.OK, new
+                {
+                    success = true,
+                    appointmentId = "server-6",
+                    error = (string?)null,
+                    conflicts = (object?)null,
+                });
+            }
+
+            moveBody = await request.Content!.ReadAsStringAsync();
+            return Json(HttpStatusCode.OK, new
+            {
+                moved = 1,
+                conflictingIds = Array.Empty<string>(),
+                conflicts = Array.Empty<object>(),
+                failedIds = Array.Empty<string>(),
+            });
+        });
+
+        await service.EnqueueAsync(OutboxOperation.AppointmentCreate, "temp-6", Input("temp-6"));
+        await Task.Delay(10);
+        await service.EnqueueAsync(
+            OutboxOperation.AppointmentsBulkMove,
+            "temp-6",
+            new BulkMoveOutboxPayload(
+                new[] { "temp-6" },
+                DateTime.Today.AddDays(6),
+                TimeSpan.FromHours(11),
+                IgnoreConflicts: true));
+
+        var result = await service.FlushAsync();
+
+        Assert.Equal(2, result.Sent);
+        Assert.Contains("server-6", moveBody);
+        Assert.DoesNotContain("temp-6", moveBody);
+    }
+
     private (OutboxService Outbox, SyncedAppointmentService Sync, PendingAppointmentOverlay Overlay)
         CreateServices(
             Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler)
