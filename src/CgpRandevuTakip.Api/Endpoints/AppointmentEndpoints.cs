@@ -58,6 +58,30 @@ public static class AppointmentEndpoints
             return detail is null ? Results.NotFound() : Results.Ok(detail);
         });
 
+        group.MapPost("/bulk-move", async (
+            BulkMoveRequest request,
+            IAppointmentService appointments,
+            IRealtimeNotifier notifier) =>
+        {
+            var result = await appointments.MoveManyAsync(
+                request.Ids,
+                request.NewDate,
+                request.NewTime,
+                request.IgnoreConflicts);
+
+            if (result.Moved > 0)
+            {
+                var skipped = result.ConflictingIds
+                    .Concat(result.FailedIds)
+                    .ToHashSet(StringComparer.Ordinal);
+
+                foreach (var id in request.Ids.Where(x => !skipped.Contains(x)))
+                    await notifier.AppointmentChangedAsync(id, "moved", request.NewDate);
+            }
+
+            return Results.Ok(result);
+        });
+
         group.MapPost("/", async (
             AppointmentInput input,
             IAppointmentService appointments,
@@ -149,3 +173,9 @@ public static class AppointmentEndpoints
         return Results.BadRequest(result);
     }
 }
+
+public sealed record BulkMoveRequest(
+    IReadOnlyList<string> Ids,
+    DateTime NewDate,
+    TimeSpan? NewTime,
+    bool IgnoreConflicts = false);

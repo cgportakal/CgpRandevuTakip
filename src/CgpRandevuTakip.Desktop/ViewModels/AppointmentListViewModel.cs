@@ -452,6 +452,14 @@ public partial class AppointmentListViewModel : ObservableObject
             : $"{result.Moved} görüşme taşındı. {skipped} görüşme taşınamadı.";
 
         _dialogs.Info(summary, "Toplu taşıma");
+
+        if (result.Queued > 0)
+        {
+            _dialogs.Info(
+                $"{result.Queued} taşıma isteği yerel kuyruğa alındı; bağlantı gelince gönderilecek.",
+                "Kuyruğa alındı");
+        }
+
         await LoadAsync();
     }
 

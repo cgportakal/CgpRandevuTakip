@@ -257,6 +257,61 @@ public sealed class CgpApiClient
             accessToken,
             ct);
 
+    public Task<ApiResult<SeriesAppendResult>> AppendSeriesAsync(
+        string baseUrl,
+        string accessToken,
+        string seriesId,
+        int count,
+        CancellationToken ct = default)
+    {
+        var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            Url(baseUrl, "/v1/appointments/series/" + Uri.EscapeDataString(seriesId) + "/append"))
+        {
+            Content = JsonContent.Create(new { count }, options: ApiJson.Options),
+        };
+
+        return SendAsync<SeriesAppendResult>(request, accessToken, ct);
+    }
+
+    public Task<ApiResult<SeriesUpdateResult>> UpdateSeriesAsync(
+        string baseUrl,
+        string accessToken,
+        string seriesId,
+        SeriesUpdateInput input,
+        CancellationToken ct = default)
+    {
+        var request = new HttpRequestMessage(
+            HttpMethod.Put,
+            Url(baseUrl, "/v1/appointments/series/" + Uri.EscapeDataString(seriesId)))
+        {
+            Content = JsonContent.Create(input, options: ApiJson.Options),
+        };
+
+        return SendAsync<SeriesUpdateResult>(request, accessToken, ct);
+    }
+
+    public Task<ApiResult<BulkMoveResult>> MoveAppointmentsAsync(
+        string baseUrl,
+        string accessToken,
+        IReadOnlyList<string> ids,
+        DateTime newDate,
+        TimeSpan? newTime,
+        bool ignoreConflicts,
+        CancellationToken ct = default)
+    {
+        var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            Url(baseUrl, "/v1/appointments/bulk-move"))
+        {
+            Content = JsonContent.Create(
+                new { ids, newDate, newTime, ignoreConflicts },
+                options: ApiJson.Options),
+        };
+
+        return SendAsync<BulkMoveResult>(request, accessToken, ct);
+    }
+
     public Task<ApiResult<ReportSummaryDto>> GetReportSummaryAsync(
         string baseUrl,
         string accessToken,

@@ -16,7 +16,10 @@ public enum OutboxOperation
     AppointmentOutcome = 3,
     AppointmentRestore = 4,
     SeriesCreate = 5,
-    SeriesCancel = 6
+    SeriesCancel = 6,
+    SeriesAppend = 7,
+    SeriesUpdate = 8,
+    AppointmentsBulkMove = 9
 }
 
 public sealed record OutboxFlushResult(
@@ -39,6 +42,14 @@ public sealed record SeriesOutboxPayload(
     AppointmentInput Input,
     SeriesFrequency Frequency,
     int Count);
+
+public sealed record SeriesAppendOutboxPayload(int Count);
+
+public sealed record BulkMoveOutboxPayload(
+    IReadOnlyList<string> Ids,
+    DateTime NewDate,
+    TimeSpan? NewTime,
+    bool IgnoreConflicts);
 
 /// <summary>
 /// Sunucuya gönderilemeyen yazma isteklerini yerel kuyrukta tutar ve bağlantı
@@ -339,6 +350,71 @@ public sealed class OutboxService
                     : OutboxExecution.Fail(
                         result.Data?.Error ?? result.Error ?? "Sunucu seriyi iptal etmedi.",
                         result.StatusCode);
+            }
+
+            case OutboxOperation.SeriesAppend:
+            {
+                var payload = Deserialize<SeriesAppendOutboxPayload>(item.Payload);
+                if (payload is null)
+                    return OutboxExecution.Fail("Kuyruk kaydı okunamadı.");
+
+                var result = await _client.AppendSeriesAsync(
+                    session.BaseUrl,
+                    session.AccessToken,
+                    item.EntityId,
+                    payload.Count,
+                    ct);
+
+                return result.Success && result.Data?.Success == true
+                    ? OutboxExecution.Ok(null)
+                    : OutboxExecution.Fail(
+                        result.Data?.Error ?? result.Error ?? "Sunucu seriye kayıt eklemedi.",
+                        result.StatusCode);
+            }
+
+            case OutboxOperation.SeriesUpdate:
+            {
+                var input = Deserialize<SeriesUpdateInput>(item.Payload);
+                if (input is null)
+                    return OutboxExecution.Fail("Kuyruk kaydı okunamadı.");
+
+                var result = await _client.UpdateSeriesAsync(
+                    session.BaseUrl,
+                    session.AccessToken,
+                    item.EntityId,
+                    input,
+                    ct);
+
+                return result.Success && result.Data?.Success == true
+                    ? OutboxExecution.Ok(null)
+                    : OutboxExecution.Fail(
+                        result.Data?.Error ?? result.Error ?? "Sunucu seriyi güncellemedi.",
+                        result.StatusCode);
+            }
+
+            case OutboxOperation.AppointmentsBulkMove:
+            {
+                var payload = Deserialize<BulkMoveOutboxPayload>(item.Payload);
+                if (payload is null)
+                    return OutboxExecution.Fail("Kuyruk kaydı okunamadı.");
+
+                var result = await _client.MoveAppointmentsAsync(
+                    session.BaseUrl,
+                    session.AccessToken,
+                    payload.Ids,
+                    payload.NewDate,
+                    payload.NewTime,
+                    payload.IgnoreConflicts,
+                    ct);
+
+                if (!result.Success || result.Data is null)
+                    return OutboxExecution.Fail(
+                        result.Error ?? "Sunucu toplu taşımayı kabul etmedi.",
+                        result.StatusCode);
+
+                return result.Data.Error is not null && result.Data.Moved == 0
+                    ? OutboxExecution.Fail(result.Data.Error)
+                    : OutboxExecution.Ok(null);
             }
 
             default:

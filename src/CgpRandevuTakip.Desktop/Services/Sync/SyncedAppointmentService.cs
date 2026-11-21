@@ -260,14 +260,70 @@ public sealed class SyncedAppointmentService : IAppointmentService
         => _local.PreviewAppendAsync(seriesId, count);
 
     public async Task<SeriesAppendResult> AppendSeriesAsync(string seriesId, int count)
-        => await _reads.IsServerReadActiveAsync()
-            ? SeriesAppendResult.Fail("Sunucu okuma modunda seri ekleme P3b'de etkinleşecek.")
-            : await _local.AppendSeriesAsync(seriesId, count);
+    {
+        if (!await _reads.IsServerReadActiveAsync())
+            return await _local.AppendSeriesAsync(seriesId, count);
+
+        var session = await _connection.GetAuthorizedSessionAsync();
+        if (session is null)
+        {
+            await _outbox.EnqueueAsync(
+                OutboxOperation.SeriesAppend,
+                seriesId,
+                new SeriesAppendOutboxPayload(count));
+            return SeriesAppendResult.QueuedOk(count);
+        }
+
+        var result = await _client.AppendSeriesAsync(
+            session.BaseUrl,
+            session.AccessToken,
+            seriesId,
+            count);
+
+        if (result.Success && result.Data is not null)
+            return result.Data;
+
+        if (result.IsNetworkError)
+        {
+            await _outbox.EnqueueAsync(
+                OutboxOperation.SeriesAppend,
+                seriesId,
+                new SeriesAppendOutboxPayload(count));
+            return SeriesAppendResult.QueuedOk(count);
+        }
+
+        return SeriesAppendResult.Fail(result.Error ?? "Seriye kayıt eklenemedi.");
+    }
 
     public async Task<SeriesUpdateResult> UpdateSeriesAsync(string seriesId, SeriesUpdateInput input)
-        => await _reads.IsServerReadActiveAsync()
-            ? SeriesUpdateResult.Fail("Sunucu okuma modunda seri düzenleme P3b'de etkinleşecek.")
-            : await _local.UpdateSeriesAsync(seriesId, input);
+    {
+        if (!await _reads.IsServerReadActiveAsync())
+            return await _local.UpdateSeriesAsync(seriesId, input);
+
+        var session = await _connection.GetAuthorizedSessionAsync();
+        if (session is null)
+        {
+            await _outbox.EnqueueAsync(OutboxOperation.SeriesUpdate, seriesId, input);
+            return SeriesUpdateResult.QueuedOk();
+        }
+
+        var result = await _client.UpdateSeriesAsync(
+            session.BaseUrl,
+            session.AccessToken,
+            seriesId,
+            input);
+
+        if (result.Success && result.Data is not null)
+            return result.Data;
+
+        if (result.IsNetworkError)
+        {
+            await _outbox.EnqueueAsync(OutboxOperation.SeriesUpdate, seriesId, input);
+            return SeriesUpdateResult.QueuedOk();
+        }
+
+        return SeriesUpdateResult.Fail(result.Error ?? "Seri güncellenemedi.");
+    }
 
     public async Task<AppointmentSaveResult> UpdateAsync(string id, AppointmentInput input)
     {
@@ -385,14 +441,47 @@ public sealed class SyncedAppointmentService : IAppointmentService
         DateTime newDate,
         TimeSpan? newTime,
         bool ignoreConflicts = false)
-        => await _reads.IsServerReadActiveAsync()
-            ? new BulkMoveResult(
-                0,
-                Array.Empty<string>(),
-                Array.Empty<AppointmentConflictDto>(),
-                ids,
-                "Sunucu okuma modunda toplu taşıma P3b'de etkinleşecek.")
-            : await _local.MoveManyAsync(ids, newDate, newTime, ignoreConflicts);
+    {
+        if (!await _reads.IsServerReadActiveAsync())
+            return await _local.MoveManyAsync(ids, newDate, newTime, ignoreConflicts);
+
+        var payload = new BulkMoveOutboxPayload(ids, newDate, newTime, ignoreConflicts);
+        var session = await _connection.GetAuthorizedSessionAsync();
+
+        if (session is null)
+        {
+            await _outbox.EnqueueAsync(OutboxOperation.AppointmentsBulkMove, ids.FirstOrDefault() ?? string.Empty, payload);
+            return new BulkMoveResult(0, Array.Empty<string>(), Array.Empty<AppointmentConflictDto>(), Array.Empty<string>())
+            {
+                Queued = ids.Count,
+            };
+        }
+
+        var result = await _client.MoveAppointmentsAsync(
+            session.BaseUrl,
+            session.AccessToken,
+            ids,
+            newDate,
+            newTime,
+            ignoreConflicts);
+
+        if (result.Success && result.Data is not null)
+            return result.Data;
+
+        if (result.IsNetworkError)
+        {
+            await _outbox.EnqueueAsync(OutboxOperation.AppointmentsBulkMove, ids.FirstOrDefault() ?? string.Empty, payload);
+            return new BulkMoveResult(0, Array.Empty<string>(), Array.Empty<AppointmentConflictDto>(), Array.Empty<string>())
+            {
+                Queued = ids.Count,
+            };
+        }
+
+        return new BulkMoveResult(0, Array.Empty<string>(), Array.Empty<AppointmentConflictDto>(), ids)
+        {
+            Error = result.Error ?? "Toplu taşıma sunucuda yapılamadı.",
+        };
+    }
 
     public async Task<OperationResult> RestoreAsync(string id)
     {

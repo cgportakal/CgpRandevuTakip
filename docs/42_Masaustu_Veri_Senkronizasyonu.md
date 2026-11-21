@@ -1,6 +1,6 @@
 # 42 — Masaüstü Veri Senkronizasyonu (Devir Planı)
 
-**Tarih:** 19.11.2026 · **Durum:** P1 tamamlandı; P2 okuma yolu tamamlandı; P3a/P3b yazma, outbox ve çevrimdışı görünürlük tamamlandı; P2/P3 UAT ve P3c (seri ekleme/düzenleme, toplu taşıma) sıradaki · **Kaynak karar:** [docs/41](41_Tasarim_ve_Veri_Paritesi.md) §4
+**Tarih:** 19.11.2026 · **Durum:** P1, P2 ve **P3 tamamlandı**; P3 saha UAT’i sıradaki · **Kaynak karar:** [docs/41](41_Tasarim_ve_Veri_Paritesi.md) §4
 
 Bu belge, masaüstü uygulamasının API ile tam senkronize çalışması için yapılacak işleri ve
 teknik kararları diğer bilgisayara devretmek için yazıldı. Yeni oturumda önce
@@ -120,12 +120,16 @@ arama ve detay yanıtları istemciyle okundu; manuel arayüz UAT'i sıradaki ad�
 - [x] Çevrimdışı oluşturulan/güncellenen kaydın listede ve detayda görünmesi (pending overlay).
 - [x] Create → update → outcome zincirinde geçici kimliğin sunucu kimliğine eşlenmesi.
 - [x] Kullanıcıya “kuyruğa alındı” mesajı, günlük listede bekleyen sayaç ve başarısız kuyruk yönetimi.
-- [ ] Seri ekleme/düzenleme (API uçları henüz yok) ve toplu taşıma.
-- [ ] UAT: uçak modunda oluştur/güncelle/sil, bağlantı gelince sırayla gönderim.
+- [x] Seri ekleme/düzenleme API uçları ve outbox.
+- [x] Toplu taşıma API ucu ve outbox; çevrimdışı taşıma listede uygulanır.
+- [x] Seri oluşturma/ekleme/düzenleme/iptal için bekleyen kayıtların listede/detayda görünmesi.
+- [ ] UAT: uçak modunda oluştur/güncelle/sil/taşı, bağlantı gelince sırayla gönderim.
 
-P3b uygulaması: `PendingAppointmentOverlay`, seri oluşturma/iptali, toplu silme ve geri alma
-API yolları; başarısız kuyruk kayıtları için “Yeniden dene”. Okuma modu açıkken seri
-ekleme/düzenleme ve toplu taşıma P3c’ye kadar **engellidir** (API uçları yok).
+P3 uygulaması tamamlandı: `OutboxService`, `PendingAppointmentOverlay`, `SyncedAppointmentService`,
+`SyncedAppointmentOutcomeService`, `SyncOutboxItems` migration; API’de `ClientRequestId`
+idempotency, seri ekleme/düzenleme ve toplu taşıma uçları. Okuma modu açıkken tüm randevu
+yazmaları API’ye gider; ağ yoksa kuyruğa alınır, bekleyen kayıtlar listede/detayda görünür ve
+geçici kimlikler sunucu kimlikleriyle eşlenir. **Kalan tek adım saha UAT’idir.**
 
 ### P4 — SignalR
 - [ ] `Microsoft.AspNetCore.SignalR.Client` ekle; süresiz geri çekilmeli yeniden bağlanma

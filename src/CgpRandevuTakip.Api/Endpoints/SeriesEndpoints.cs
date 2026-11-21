@@ -61,9 +61,41 @@ public static class SeriesEndpoints
                 : Results.BadRequest(new ErrorResponse(result.Error ?? "Seri iptal edilemedi."));
         });
 
+        group.MapPost("/{seriesId}/append", async (
+            string seriesId,
+            SeriesAppendRequestDto request,
+            IAppointmentService appointments,
+            IRealtimeNotifier notifier) =>
+        {
+            var result = await appointments.AppendSeriesAsync(seriesId, request.Count);
+            if (result.Success)
+                await notifier.SeriesChangedAsync(seriesId, "extended");
+
+            return result.Success
+                ? Results.Ok(result)
+                : Results.BadRequest(new ErrorResponse(result.Error ?? "Seriye kayıt eklenemedi."));
+        });
+
+        group.MapPut("/{seriesId}", async (
+            string seriesId,
+            SeriesUpdateInput input,
+            IAppointmentService appointments,
+            IRealtimeNotifier notifier) =>
+        {
+            var result = await appointments.UpdateSeriesAsync(seriesId, input);
+            if (result.Success)
+                await notifier.SeriesChangedAsync(seriesId, "updated");
+
+            return result.Success
+                ? Results.Ok(result)
+                : Results.BadRequest(new ErrorResponse(result.Error ?? "Seri güncellenemedi."));
+        });
+
         return app;
     }
 }
+
+public sealed record SeriesAppendRequestDto(int Count);
 
 public sealed record SeriesPreviewRequest(
     AppointmentInput Input,
