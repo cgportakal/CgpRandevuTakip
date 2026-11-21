@@ -5,12 +5,12 @@
 
 ## İndir
 
-> **Son sürüm: 1.9.0** · 20.11.2026 · 412 test geçiyor
+> **Son sürüm: 1.10.0** · 21.11.2026 · 429 test geçiyor
 
-- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.9.0-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.9.0/CGP-RandevuTakip-1.9.0-Setup.exe)
+- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.10.0-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.10.0/CGP-RandevuTakip-1.10.0-Setup.exe)
 - **Tüm sürümler:** [Releases](https://github.com/cgportakal/CgpRandevuTakip/releases/latest)
 - **Taşınabilir ZIP:** Yalnızca kararlı sürümlerde yayınlanır. Son taşınabilir paket:
-  [1.9.0 portable](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.9.0/CGP-RandevuTakip-1.9.0-portable.zip).
+  [1.10.0 portable](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.10.0/CGP-RandevuTakip-1.10.0-portable.zip).
 
 > Kurulum EXE'si per-user çalışır; yönetici hakkı istemez. Taşınabilir ZIP'i yazılabilir bir klasöre açıp
 > `CgpRandevuTakip.Desktop.exe` dosyasını çalıştırın. Dijital imza ayrıntıları:
@@ -19,12 +19,21 @@
 Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöneten, günlük listeyi
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
-> Durum: **1.9.0 hazır** — yedekleme/geri yükleme yenilendi: yedek alırken ve geri yüklerken
-> bölüm seçimi, içerik özeti, boş yedek koruması ve kullanıcı/ayarları koruyan birleştirme.
-> Masaüstünde API istemcisi ve **sunucu bağlantısı** var (Ayarlar → Sunucu bağlantısını yönet).
-> Android push Samsung S21’de doğrulandı.
+> Durum: **1.10.0 hazır** — masaüstü artık sunucuyla çift yönlü çalışıyor: yazma yolu +
+> outbox, çevrimdışı görünürlük, seri/toplu işlemler ve SignalR canlı yenileme.
+> Yedekleme/geri yükleme 1.9.0’daki seçmeli ve güvenli akışta. Android push Samsung S21’de
+> doğrulandı.
 
-### 1.9.0 yenilikleri
+### 1.10.0 yenilikleri
+
+- **Masaüstü yazma yolu + outbox:** randevu, sonuç, seri, toplu silme/taşıma ve geri alma
+  işlemleri API’ye gider; bağlantı yoksa kalıcı kuyruğa alınır ve 30 sn’de bir gönderilir.
+- **Çevrimdışı görünürlük:** bekleyen tekil ve seri kayıtlar listede/detayda görünür;
+  geçici kimlikler sunucu kimlikleriyle eşlenir.
+- **SignalR:** sunucudaki randevu/seri/içerik değişiklikleri masaüstünde elle yenilemeden görünür.
+- **Idempotency:** aynı istek (`ClientRequestId`) ikinci kez kayıt oluşturmaz.
+- **Yedekleme (1.9.0):** seçmeli yedek/geri yükleme, içerik özeti, boş yedek koruması,
+  kullanıcı/ayar koruyan birleştirme.
 
 - **Seçmeli yedek:** randevular, kullanıcılar, ayarlar, denetim/paylaşım geçmişi, içerik
   sürümleri, alıcılar ve kurum logosu ayrı ayrı seçilebilir; seçilmeyen bölümler dosyaya yazılmaz.
@@ -50,10 +59,10 @@ WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma �
 
 | Platform | Durum | Not |
 |---|---|---|
-| Masaüstü (Windows) | **1.9.0** | Tam özellik, çevrimdışı, sunucu oturumu (P2 okuma), seçmeli yedek/geri yükleme |
+| Masaüstü (Windows) | **1.10.0** | Tam özellik, çevrimdışı, sunucu senkronu (P3 yazma + P4 SignalR), seçmeli yedek/geri yükleme |
 | Sunucu API’si | **v1** | Ortak iş kuralları, JWT, içerik manifesti |
 | Mobil (Android/iOS) | **1.0.0** | Giriş, günlük liste, detay, yeni görüşme/seri, raporlar, çevrimdışı kuyruk, push (Expo; Android doğrulandı) |
-| Web | **1.9.0 (Beta)** | Giriş, günlük liste, yeni görüşme/seri, detay/sonuç, 7 rapor türü (Next.js) |
+| Web | **1.10.0 (Beta)** | Giriş, günlük liste, yeni görüşme/seri, detay/sonuç, 7 rapor türü (Next.js) |
 
 Ayrıntılar: [docs/29_Platform_Mimarisi.md](docs/29_Platform_Mimarisi.md) ·
 [docs/30_Api_ve_Mobil_Kurulum.md](docs/30_Api_ve_Mobil_Kurulum.md)
@@ -123,6 +132,7 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 41 | [Tasarım ve Veri Paritesi](docs/41_Tasarim_ve_Veri_Paritesi.md) | Ortak tokenlar, terimler, rapor türleri, masaüstü senkron mimarisi |
 | 42 | [Masaüstü Veri Senkronizasyonu](docs/42_Masaustu_Veri_Senkronizasyonu.md) | API istemcisi, çevrimdışı önbellek, outbox, SignalR, çakışma, UAT planı |
 | 43 | [Yedekleme ve Geri Yükleme](docs/43_Yedekleme_ve_Geri_Yukleme.md) | Seçmeli yedek/geri yükleme, içerik özeti, boş yedek koruması, bağlantı ayarları |
+| 44 | [Masaüstü Senkronizasyonu Devir](docs/44_Masaustu_Senkronizasyon_Devir.md) | P1–P4 mimarisi, outbox/overlay/SignalR, UAT ve P5–P7 planı |
 
 ## Alınan temel kararlar
 
