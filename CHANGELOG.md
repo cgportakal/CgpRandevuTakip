@@ -3,6 +3,17 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [1.10.1] — 2026-11-22 · Çakışma yönetimi
+
+### Eklendi
+- **P5 — çakışma yönetimi:** `AppointmentInput.ExpectedUpdatedAtUtc` ve detayda `UpdatedAtUtc`; eski sürümle güncelleme `409 Conflict` + sunucudaki güncel kaydı döndürür. Masaüstü düzenleyicisi “yerel uygula / sunucuyu koru / iptal” seçeneği sunar; outbox çakışan kaydı `conflict` durumunda tutar ve “Sunucu bağlantısı” penceresindeki “Çakışanları çöz” ile karar verilir ([docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md)).
+
+### Test
+- **432/432** test; Release 0 uyarı / 0 hata.
+
+### Paket
+- Setup-only sürüm; taşınabilir ZIP yayınlanmadı (son portable **1.10.0**).
+
 ## [1.10.0] — 2026-11-21 · Masaüstü çift yönlü senkronizasyon
 
 ### Eklendi

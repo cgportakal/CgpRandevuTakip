@@ -138,11 +138,11 @@ geçici kimlikler sunucu kimlikleriyle eşlenir. **Kalan tek adım saha UAT’id
       `seriesChanged` → liste yenileme. 400 ms debounce ile.
 - [ ] UAT: web’de değişiklik masaüstünde elle yenilemeden görünür.
 
-### P5 — Çakışma yönetimi
-- [ ] API’ye `expectedUpdatedAt` (veya `rowVersion`) ekle; uyuşmazlıkta `409 Conflict` +
+### P5 — Çakışma yönetimi — **kod tamamlandı; UAT bekliyor**
+- [x] API’ye `expectedUpdatedAt` (veya `rowVersion`) ekle; uyuşmazlıkta `409 Conflict` +
       güncel DTO döndür.
-- [ ] Masaüstünde dialog: “Sunucudaki sürümü koru” / “Yerel değişikliği uygula”.
-- [ ] Outbox’ta çakışan kayıt `conflict` durumuna geçer; kullanıcı çözene kadar tekrar denenmez.
+- [x] Masaüstünde dialog: “Sunucudaki sürümü koru” / “Yerel değişikliği uygula”.
+- [x] Outbox’ta çakışan kayıt `conflict` durumuna geçer; kullanıcı çözene kadar tekrar denenmez.
 - [ ] UAT: iki istemcide aynı randevu düzenlenir; ikinci kayıt çakışma dialog’u görür.
 
 ### P6 — Açılış/kapanış ve dayanıklılık

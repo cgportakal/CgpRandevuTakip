@@ -807,4 +807,30 @@ public class AppointmentServiceTests
         var movedDay = await sut.Service.GetDayAsync(new DateTime(2026, 11, 12));
         Assert.Equal(2, movedDay.Count);
     }
+
+    [Fact]
+    public async Task Update_WithStaleExpectedTimestamp_ReturnsVersionConflict()
+    {
+        using var sut = await CreateAsync();
+        var created = await sut.Service.CreateAsync(sut.Input());
+        var detail = await sut.Service.GetDetailAsync(created.AppointmentId!);
+
+        Assert.NotNull(detail);
+        Assert.NotEqual(default, detail!.UpdatedAtUtc);
+
+        var stale = await sut.Service.UpdateAsync(
+            created.AppointmentId!,
+            sut.Input() with { ExpectedUpdatedAtUtc = detail.UpdatedAtUtc.AddSeconds(-5) });
+
+        Assert.False(stale.Success);
+        Assert.True(stale.VersionConflict);
+        Assert.NotNull(stale.CurrentAppointment);
+        Assert.Equal(created.AppointmentId, stale.CurrentAppointment!.Id);
+
+        var fresh = await sut.Service.UpdateAsync(
+            created.AppointmentId!,
+            sut.Input(firstName: "Ayşe") with { ExpectedUpdatedAtUtc = detail.UpdatedAtUtc });
+
+        Assert.True(fresh.Success, fresh.Error);
+    }
 }

@@ -166,9 +166,14 @@ public partial class AppointmentListViewModel : ObservableObject
     [ObservableProperty]
     private int _pendingSyncCount;
 
-    public bool HasPendingSync => PendingSyncCount > 0;
+    [ObservableProperty]
+    private int _conflictSyncCount;
 
-    public string PendingSyncText => $"{PendingSyncCount} bekleyen";
+    public bool HasPendingSync => PendingSyncCount > 0 || ConflictSyncCount > 0;
+
+    public string PendingSyncText => ConflictSyncCount > 0
+        ? $"{ConflictSyncCount} çakışma · {PendingSyncCount} bekleyen"
+        : $"{PendingSyncCount} bekleyen";
 
     public bool HasNextAppointment => NextAppointment is not null;
 
@@ -275,6 +280,7 @@ public partial class AppointmentListViewModel : ObservableObject
 
             HasServerMode = await _serverReads.IsServerReadActiveAsync();
             PendingSyncCount = HasServerMode ? await _outbox.GetPendingCountAsync() : 0;
+            ConflictSyncCount = HasServerMode ? await _outbox.GetConflictCountAsync() : 0;
             ServerModeText = HasServerMode
                 ? _serverReads.IsOffline
                     ? "Sunucu: çevrimdışı — önbellek"
@@ -887,6 +893,12 @@ public partial class AppointmentListViewModel : ObservableObject
     }
 
     partial void OnPendingSyncCountChanged(int value)
+    {
+        OnPropertyChanged(nameof(HasPendingSync));
+        OnPropertyChanged(nameof(PendingSyncText));
+    }
+
+    partial void OnConflictSyncCountChanged(int value)
     {
         OnPropertyChanged(nameof(HasPendingSync));
         OnPropertyChanged(nameof(PendingSyncText));

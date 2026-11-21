@@ -115,6 +115,72 @@ public sealed class OutboxService
         return await db.SyncOutboxItems.CountAsync(x => x.State == "failed", ct);
     }
 
+    public async Task<int> GetConflictCountAsync(CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateDbContextAsync(ct);
+        return await db.SyncOutboxItems.CountAsync(x => x.State == "conflict", ct);
+    }
+
+    public async Task<IReadOnlyList<OutboxPendingItem>> GetConflictsAsync(CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateDbContextAsync(ct);
+        var items = await db.SyncOutboxItems
+            .AsNoTracking()
+            .Where(x => x.State == "conflict")
+            .OrderBy(x => x.CreatedAtUtc)
+            .ToListAsync(ct);
+
+        return items
+            .Where(x => Enum.TryParse<OutboxOperation>(x.Operation, out _))
+            .Select(x => new OutboxPendingItem(
+                x.Id,
+                Enum.Parse<OutboxOperation>(x.Operation),
+                x.EntityId,
+                x.Payload,
+                x.CreatedAtUtc))
+            .ToList();
+    }
+
+    /// <summary>
+    /// Çakışan kaydı çözer. Yerel seçilirse güncel sunucu sürümüne göre bekleyen
+    /// duruma döner; sunucu seçilirse kuyruk kaydı silinir.
+    /// </summary>
+    public async Task ResolveConflictAsync(
+        string id,
+        bool useLocal,
+        DateTime? serverUpdatedAtUtc,
+        CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateDbContextAsync(ct);
+        var item = await db.SyncOutboxItems.FirstOrDefaultAsync(x => x.Id == id, ct);
+        if (item is null)
+            return;
+
+        if (!useLocal)
+        {
+            db.SyncOutboxItems.Remove(item);
+            await db.SaveChangesAsync(ct);
+            return;
+        }
+
+        if (item.Operation == OutboxOperation.AppointmentUpdate.ToString()
+            && serverUpdatedAtUtc is not null)
+        {
+            var input = Deserialize<AppointmentInput>(item.Payload);
+            if (input is not null)
+            {
+                item.Payload = JsonSerializer.Serialize(
+                    input with { ExpectedUpdatedAtUtc = serverUpdatedAtUtc },
+                    ApiJson.Options);
+            }
+        }
+
+        item.State = "pending";
+        item.Attempts = 0;
+        item.LastError = null;
+        await db.SaveChangesAsync(ct);
+    }
+
     public async Task<IReadOnlyList<OutboxPendingItem>> GetPendingItemsAsync(CancellationToken ct = default)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
@@ -230,6 +296,15 @@ public sealed class OutboxService
                     return new OutboxFlushResult(sent, failed, true, result.Error);
                 }
 
+                if (result.VersionConflict)
+                {
+                    // Kullanıcı çözene kadar tekrar denenmez; veri kaybını önlemek için
+                    // kayıt kuyrukta "conflict" durumunda tutulur.
+                    item.State = "conflict";
+                    failed++;
+                    continue;
+                }
+
                 item.State = "failed";
                 failed++;
 
@@ -284,7 +359,8 @@ public sealed class OutboxService
 
                 return OutboxExecution.Fail(
                     result.Data?.Error ?? result.Error ?? "Sunucu kaydı kabul etmedi.",
-                    result.StatusCode);
+                    result.StatusCode,
+                    result.Data?.VersionConflict == true);
             }
 
             case OutboxOperation.AppointmentDelete:
@@ -448,15 +524,19 @@ public sealed class OutboxService
         bool Success,
         string? ServerId,
         string? Error,
-        int StatusCode)
+        int StatusCode,
+        bool VersionConflict = false)
     {
         public bool IsNetworkError => !Success && StatusCode == 0;
 
         public static OutboxExecution Ok(string? serverId)
             => new(true, serverId, null, 200);
 
-        public static OutboxExecution Fail(string error, int statusCode = 0)
-            => new(false, null, error, statusCode);
+        public static OutboxExecution Fail(
+            string error,
+            int statusCode = 0,
+            bool versionConflict = false)
+            => new(false, null, error, statusCode, versionConflict);
     }
 
     private static T? Deserialize<T>(string payload)

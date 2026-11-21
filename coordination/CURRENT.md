@@ -1,13 +1,19 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-21 15:25 (UTC+3)
+**Son güncelleme:** 2026-11-22 00:35 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — **429 test**. **1.10.0 yayında:** P3 yazma/outbox/overlay ve P4 SignalR
-tamamlandı. Sıradaki: P3/P4 saha UAT’i, ardından P5 çakışma.
+**Durum:** **1.10.1 sürüm hazırlığı** — P5 çakışma yönetimi kod olarak tamamlandı
+(`expectedUpdatedAt` + 409, masaüstü çözüm dialog’u, outbox `conflict` durumu ve çözüm ekranı);
+432 test. Setup-only yayın sıradaki; ardından P5/P3/P4 saha UAT’i ve P6.
 
 ## Bu turda tamamlanan
 
+- **P5 — çakışma yönetimi (cafer-desktop):** `AppointmentInput.ExpectedUpdatedAtUtc` ve
+  `AppointmentDetailDto.UpdatedAtUtc`; API eski sürümde `409 Conflict` + güncel DTO döndürüyor.
+  Masaüstü düzenleyicisi “yerel uygula / sunucuyu koru / iptal” dialog’u gösteriyor; outbox
+  çakışan kaydı `conflict` durumunda tutuyor ve “Çakışanları çöz” ile karar verilebiliyor.
+  Yeni testler: API sürüm çakışması + outbox conflict/çözüm.
 - **1.10.0 yayını:** `v1.10.0` GitHub Release; assetler Setup (~66,9 MB), portable (~94,9 MB),
   Dev.cer, SHA256SUMS, version-policy (`latestDesktopVersion/latestWebVersion: 1.10.0`).
   README Setup/portable bağlantıları HTTP 200; master CI ve Release işi başarılı.
@@ -257,9 +263,9 @@ ilk çalıştırmada `POST /v1/auth/setup` gerekir. Ayrıntı: [docs/39](docs/39
    yalnızca ayarları yedekle → değiştir → geri yükle; randevular ve kullanıcılar korunmalı,
    kurulum sihirbazı açılmamalı. Boş yedek onayı ve eski (v1) yedek denenmeli
    ([docs/43](docs/43_Yedekleme_ve_Geri_Yukleme.md)).
-2. **Masaüstü veri senkronizasyonu** — P1 ✅, P2 ✅, P3 ✅, P4 ✅.
-   Sıradaki: **P3/P4 saha UAT’i** (çevrimdışı kuyruk, overlay, SignalR) ve bulgular;
-   ardından **P5 çakışma** (`expectedUpdatedAt`/409 + çözüm dialog’u), P6 dayanıklılık, P7 UAT.
+2. **Masaüstü veri senkronizasyonu** — P1 ✅, P2 ✅, P3 ✅, P4 ✅, **P5 kod ✅**.
+   Sıradaki: **P3/P4/P5 saha UAT’i** (çevrimdışı kuyruk, overlay, SignalR, iki istemcide
+   çakışma dialog’u) ve bulgular; ardından **P6 dayanıklılık**, P7 UAT.
    Ayrıntı: [docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md),
    [docs/44](docs/44_Masaustu_Senkronizasyon_Devir.md).
 3. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
