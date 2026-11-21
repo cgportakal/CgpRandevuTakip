@@ -39,6 +39,7 @@ public partial class AppointmentEditorViewModel : ObservableObject
     private bool _isClosedAppointment;
     private bool _closedWarningConfirmed;
     private DateTime? _originalStartsAtLocal;
+    private DateTime? _expectedUpdatedAtUtc;
     private int _defaultReminderMinutes = 30;
     private TimeSpan _workHoursStart = AppointmentDefaults.DefaultDayStart;
     private TimeSpan _workHoursEnd = AppointmentDefaults.DefaultDayEnd;
@@ -252,6 +253,7 @@ public partial class AppointmentEditorViewModel : ObservableObject
 
         _isClosedAppointment = detail.IsClosed;
         _originalStartsAtLocal = detail.StartsAtLocal;
+        _expectedUpdatedAtUtc = detail.UpdatedAtUtc;
         FirstName = detail.PersonFirstName;
         LastName = detail.PersonLastName;
         Phone = detail.PhoneE164;
@@ -436,6 +438,8 @@ public partial class AppointmentEditorViewModel : ObservableObject
 
         if (!IsEdit)
             input = input with { ClientRequestId = Guid.NewGuid().ToString("N") };
+        else
+            input = input with { ExpectedUpdatedAtUtc = _expectedUpdatedAtUtc };
 
         var startsAtLocal = input.StartsAtLocal;
 
@@ -484,6 +488,36 @@ public partial class AppointmentEditorViewModel : ObservableObject
                 result = IsEdit
                     ? await _appointments.UpdateAsync(_appointmentId!, forced)
                     : await _appointments.CreateAsync(forced);
+            }
+
+            if (result.VersionConflict && result.CurrentAppointment is { } current)
+            {
+                var message =
+                    "Bu görüşme siz düzenlerken sunucuda değiştirildi." +
+                    Environment.NewLine + Environment.NewLine +
+                    $"Sunucu: {current.StartsAtLocal:dd.MM.yyyy HH:mm} · {current.HostName}" +
+                    Environment.NewLine +
+                    $"Yerel: {input.StartsAtLocal:dd.MM.yyyy HH:mm} · {Hosts.FirstOrDefault(x => x.Id == input.HostUserId)?.DisplayName ?? current.HostName}" +
+                    Environment.NewLine + Environment.NewLine +
+                    "Evet: yerel değişikliği uygula" + Environment.NewLine +
+                    "Hayır: sunucudaki sürümü koru" + Environment.NewLine +
+                    "İptal: düzenlemeye dön";
+
+                var choice = _dialogs.ResolveConflict(message, "Sunucu çakışması");
+                if (choice == ConflictResolution.Cancel)
+                    return;
+
+                if (choice == ConflictResolution.KeepServer)
+                {
+                    _dialogs.Info("Sunucudaki güncel sürüm korundu.", "Sunucu çakışması");
+                    Saved?.Invoke(this, EventArgs.Empty);
+                    return;
+                }
+
+                var retry = input with { ExpectedUpdatedAtUtc = current.UpdatedAtUtc };
+                result = await _appointments.UpdateAsync(_appointmentId!, retry);
+                if (result.Success)
+                    _expectedUpdatedAtUtc = current.UpdatedAtUtc;
             }
 
             if (!result.Success)

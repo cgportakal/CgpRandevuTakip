@@ -5,9 +5,9 @@
 
 ## İndir
 
-> **Son sürüm: 1.10.0** · 21.11.2026 · 429 test geçiyor
+> **Son sürüm: 1.10.1** · 22.11.2026 · 432 test geçiyor
 
-- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.10.0-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.10.0/CGP-RandevuTakip-1.10.0-Setup.exe)
+- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.10.1-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.10.1/CGP-RandevuTakip-1.10.1-Setup.exe)
 - **Tüm sürümler:** [Releases](https://github.com/cgportakal/CgpRandevuTakip/releases/latest)
 - **Taşınabilir ZIP:** Yalnızca kararlı sürümlerde yayınlanır. Son taşınabilir paket:
   [1.10.0 portable](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.10.0/CGP-RandevuTakip-1.10.0-portable.zip).
@@ -19,13 +19,15 @@
 Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöneten, günlük listeyi
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
-> Durum: **1.10.0 hazır** — masaüstü artık sunucuyla çift yönlü çalışıyor: yazma yolu +
-> outbox, çevrimdışı görünürlük, seri/toplu işlemler ve SignalR canlı yenileme.
-> Yedekleme/geri yükleme 1.9.0’daki seçmeli ve güvenli akışta. Android push Samsung S21’de
-> doğrulandı.
+> Durum: **1.10.1 hazır** — masaüstü sunucuyla çift yönlü çalışıyor: yazma yolu + outbox,
+> çevrimdışı görünürlük, SignalR canlı yenileme ve **çakışma çözümü** (yerel/sunucu seçimi).
+> Android push Samsung S21’de doğrulandı.
 
-### 1.10.0 yenilikleri
+### Son yenilikler
 
+- **Çakışma yönetimi (1.10.1):** aynı randevu iki istemcide düzenlenirse eski sürüm `409` alır;
+  masaüstü “yerel uygula / sunucuyu koru” seçeneği sunar. Çevrimdışı kuyrukta çakışan kayıt
+  `conflict` durumunda tutulur ve “Çakışanları çöz” ile karara bağlanır.
 - **Masaüstü yazma yolu + outbox:** randevu, sonuç, seri, toplu silme/taşıma ve geri alma
   işlemleri API’ye gider; bağlantı yoksa kalıcı kuyruğa alınır ve 30 sn’de bir gönderilir.
 - **Çevrimdışı görünürlük:** bekleyen tekil ve seri kayıtlar listede/detayda görünür;
@@ -59,7 +61,7 @@ WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma �
 
 | Platform | Durum | Not |
 |---|---|---|
-| Masaüstü (Windows) | **1.10.0** | Tam özellik, çevrimdışı, sunucu senkronu (P3 yazma + P4 SignalR), seçmeli yedek/geri yükleme |
+| Masaüstü (Windows) | **1.10.1** | Tam özellik, çevrimdışı, sunucu senkronu (P3 yazma + P4 SignalR + P5 çakışma), seçmeli yedek/geri yükleme |
 | Sunucu API’si | **v1** | Ortak iş kuralları, JWT, içerik manifesti |
 | Mobil (Android/iOS) | **1.0.0** | Giriş, günlük liste, detay, yeni görüşme/seri, raporlar, çevrimdışı kuyruk, push (Expo; Android doğrulandı) |
 | Web | **1.10.0 (Beta)** | Giriş, günlük liste, yeni görüşme/seri, detay/sonuç, 7 rapor türü (Next.js) |

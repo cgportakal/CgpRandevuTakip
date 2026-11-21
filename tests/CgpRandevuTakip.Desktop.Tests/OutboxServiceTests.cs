@@ -101,6 +101,74 @@ public class OutboxServiceTests
     }
 
     [Fact]
+    public async Task FlushAsync_VersionConflict_MarksConflictAndKeepsForResolution()
+    {
+        var service = CreateService((_, _) =>
+            Task.FromResult(Json(HttpStatusCode.Conflict, new
+            {
+                success = false,
+                error = "Görüşme siz düzenlerken değiştirildi.",
+                appointmentId = (string?)null,
+                conflicts = (object?)null,
+                versionConflict = true,
+                currentAppointment = new { id = "server-1" },
+            })));
+
+        await service.EnqueueAsync(
+            OutboxOperation.AppointmentUpdate,
+            "server-1",
+            Input("req-conflict") with { ExpectedUpdatedAtUtc = DateTime.UtcNow.AddMinutes(-5) });
+
+        var result = await service.FlushAsync();
+
+        Assert.Equal(1, result.Failed);
+        Assert.Equal(0, await service.GetPendingCountAsync());
+        Assert.Equal(1, await service.GetConflictCountAsync());
+
+        var conflicts = await service.GetConflictsAsync();
+        Assert.Single(conflicts);
+        Assert.Equal(OutboxOperation.AppointmentUpdate, conflicts[0].Operation);
+
+        await service.ResolveConflictAsync(conflicts[0].Id, useLocal: false, null);
+
+        Assert.Equal(0, await service.GetConflictCountAsync());
+        Assert.Equal(0, await service.GetPendingCountAsync());
+    }
+
+    [Fact]
+    public async Task ResolveConflict_UseLocal_RequeuesWithServerTimestamp()
+    {
+        var service = CreateService((_, _) =>
+            Task.FromResult(Json(HttpStatusCode.Conflict, new
+            {
+                success = false,
+                error = "Çakışma.",
+                appointmentId = (string?)null,
+                conflicts = (object?)null,
+                versionConflict = true,
+                currentAppointment = new { id = "server-2" },
+            })));
+
+        await service.EnqueueAsync(
+            OutboxOperation.AppointmentUpdate,
+            "server-2",
+            Input("req-local") with { ExpectedUpdatedAtUtc = DateTime.UtcNow.AddMinutes(-5) });
+
+        await service.FlushAsync();
+        var conflict = (await service.GetConflictsAsync()).Single();
+        var serverUpdatedAt = new DateTime(2026, 11, 20, 10, 0, 0, DateTimeKind.Utc);
+
+        await service.ResolveConflictAsync(conflict.Id, useLocal: true, serverUpdatedAt);
+
+        Assert.Equal(0, await service.GetConflictCountAsync());
+        Assert.Equal(1, await service.GetPendingCountAsync());
+
+        using var db = AppDbContextFactory.Create(_databasePath);
+        var item = await db.SyncOutboxItems.SingleAsync();
+        Assert.Contains("2026-11-20T10:00:00", item.Payload);
+    }
+
+    [Fact]
     public async Task FlushAsync_DeleteOperation_SendsDelete()
     {
         string? method = null;

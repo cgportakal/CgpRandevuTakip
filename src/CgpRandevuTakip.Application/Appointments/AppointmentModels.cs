@@ -16,7 +16,8 @@ public sealed record AppointmentInput(
     string? StudentLastName,
     IReadOnlyList<int> ReminderOffsetsMinutes,
     bool IgnoreConflicts = false,
-    string? ClientRequestId = null);
+    string? ClientRequestId = null,
+    DateTime? ExpectedUpdatedAtUtc = null);
 
 public sealed record AppointmentConflictDto(
     string AppointmentId,
@@ -35,6 +36,12 @@ public sealed record AppointmentSaveResult(
     /// <summary>Sunucu bağlantısı olmadığı için işlem kuyruğa alındı.</summary>
     public bool Queued { get; init; }
 
+    /// <summary>Kayıt, istemcinin gördüğünden sonra sunucuda değişti.</summary>
+    public bool VersionConflict { get; init; }
+
+    /// <summary>Çakışmada sunucudaki güncel kayıt.</summary>
+    public AppointmentDetailDto? CurrentAppointment { get; init; }
+
     public static AppointmentSaveResult Ok(string appointmentId)
         => new(true, null, appointmentId, null);
 
@@ -48,6 +55,15 @@ public sealed record AppointmentSaveResult(
         string error,
         IReadOnlyList<AppointmentConflictDto> conflicts)
         => new(false, error, null, conflicts);
+
+    public static AppointmentSaveResult VersionConflictResult(
+        string error,
+        AppointmentDetailDto current)
+        => new(false, error, null, null)
+        {
+            VersionConflict = true,
+            CurrentAppointment = current,
+        };
 }
 
 public sealed record AppointmentListItemDto(
@@ -179,7 +195,8 @@ public sealed record AppointmentDetailDto(
     DateTime? ClosedAtLocal,
     string? SeriesId = null,
     int? SeriesIndex = null,
-    int? SeriesCount = null)
+    int? SeriesCount = null,
+    DateTime UpdatedAtUtc = default)
 {
     public bool HasOutcome => Outcome is not null;
 

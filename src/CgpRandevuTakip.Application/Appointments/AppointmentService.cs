@@ -878,6 +878,17 @@ public sealed class AppointmentService : IAppointmentService
         if (appointment is null || appointment.IsDeleted)
             return AppointmentSaveResult.Fail("Görüşme bulunamadı.");
 
+        if (input.ExpectedUpdatedAtUtc is { } expected
+            && Math.Abs((appointment.UpdatedAtUtc - expected).TotalSeconds) > 1)
+        {
+            var current = await GetDetailAsync(id);
+            return current is null
+                ? AppointmentSaveResult.Fail("Görüşme bulunamadı.")
+                : AppointmentSaveResult.VersionConflictResult(
+                    "Görüşme siz düzenlerken başka bir kullanıcı tarafından değiştirildi.",
+                    current);
+        }
+
         var validation = await ValidateAsync(input, currentAppointmentId: id);
         if (validation.Error is not null)
             return AppointmentSaveResult.Fail(validation.Error);
@@ -1396,7 +1407,8 @@ public sealed class AppointmentService : IAppointmentService
             appointment.ClosedAtUtc is null ? null : _clock.ToLocal(appointment.ClosedAtUtc.Value),
             appointment.SeriesId,
             appointment.SeriesIndex,
-            appointment.SeriesCount);
+            appointment.SeriesCount,
+            appointment.UpdatedAtUtc);
     }
 
     private async Task<string?> ResolveClosedByNameAsync(string? closedByUserId)

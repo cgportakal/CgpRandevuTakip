@@ -1,3 +1,4 @@
+using CgpRandevuTakip.Desktop.Services;
 using CgpRandevuTakip.Desktop.Services.Api;
 using CgpRandevuTakip.Desktop.Services.Sync;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -15,6 +16,7 @@ public partial class ServerConnectionViewModel : ObservableObject
     private readonly ServerReadService _reads;
     private readonly OutboxService _outbox;
     private readonly DesktopRealtimeClient _realtime;
+    private readonly IDialogService _dialogs;
 
     [ObservableProperty]
     private string _baseUrl = ApiSessionStore.DefaultBaseUrl;
@@ -50,18 +52,25 @@ public partial class ServerConnectionViewModel : ObservableObject
     [ObservableProperty]
     private bool _hasFailedOutbox;
 
+    [ObservableProperty]
+    private int _conflictCount;
+
+    public bool HasConflicts => ConflictCount > 0;
+
     public string Password { get; set; } = string.Empty;
 
     public ServerConnectionViewModel(
         ApiConnectionService connection,
         ServerReadService reads,
         OutboxService outbox,
-        DesktopRealtimeClient realtime)
+        DesktopRealtimeClient realtime,
+        IDialogService dialogs)
     {
         _connection = connection;
         _reads = reads;
         _outbox = outbox;
         _realtime = realtime;
+        _dialogs = dialogs;
     }
 
     public async Task InitializeAsync()
@@ -190,14 +199,76 @@ public partial class ServerConnectionViewModel : ObservableObject
     {
         var pending = await _outbox.GetPendingCountAsync();
         var failed = await _outbox.GetFailedCountAsync();
+        var conflicts = await _outbox.GetConflictCountAsync();
+        ConflictCount = conflicts;
 
-        HasOutboxItems = pending > 0 || failed > 0;
+        HasOutboxItems = pending > 0 || failed > 0 || conflicts > 0;
         HasFailedOutbox = failed > 0;
-        OutboxText = failed > 0
-            ? $"{pending} bekleyen · {failed} başarısız kayıt"
-            : pending > 0
-                ? $"{pending} bekleyen kayıt"
-                : "Yazma kuyruğu boş.";
+        OutboxText = conflicts > 0
+            ? $"{pending} bekleyen · {conflicts} çakışan kayıt"
+            : failed > 0
+                ? $"{pending} bekleyen · {failed} başarısız kayıt"
+                : pending > 0
+                    ? $"{pending} bekleyen kayıt"
+                    : "Yazma kuyruğu boş.";
+    }
+
+    [RelayCommand]
+    private async Task ResolveConflictsAsync()
+    {
+        ClearMessages();
+
+        var conflicts = await _outbox.GetConflictsAsync();
+        if (conflicts.Count == 0)
+        {
+            _dialogs.Info("Çakışan kuyruk kaydı yok.", "Kuyruk");
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            foreach (var item in conflicts)
+            {
+                var detail = await _reads.GetDetailAsync(item.EntityId);
+                var server = detail.Success ? detail.Data : null;
+
+                var message = server is null
+                    ? "Sunucuda bu kayıt artık bulunmuyor veya erişilemiyor." +
+                      Environment.NewLine + Environment.NewLine +
+                      "Evet: yerel kaydı yeniden gönder" + Environment.NewLine +
+                      "Hayır: kuyruk kaydını sil" + Environment.NewLine +
+                      "İptal: sonra çöz"
+                    : $"Çakışan kuyruk kaydı: {server.PersonFirstName} {server.PersonLastName}" +
+                      Environment.NewLine +
+                      $"Sunucu: {server.StartsAtLocal:dd.MM.yyyy HH:mm} · {server.HostName}" +
+                      Environment.NewLine + Environment.NewLine +
+                      "Evet: yerel değişikliği sunucuya uygula" + Environment.NewLine +
+                      "Hayır: sunucudaki sürümü koru" + Environment.NewLine +
+                      "İptal: sonra çöz";
+
+                var choice = _dialogs.ResolveConflict(message, "Kuyruk çakışması");
+                if (choice == ConflictResolution.Cancel)
+                    break;
+
+                await _outbox.ResolveConflictAsync(
+                    item.Id,
+                    choice == ConflictResolution.UseLocal,
+                    server?.UpdatedAtUtc);
+            }
+
+            await RefreshOutboxAsync();
+            var flush = await _outbox.FlushAsync();
+            await RefreshOutboxAsync();
+
+            StatusMessage = flush.Sent > 0
+                ? $"{flush.Sent} çakışan kayıt gönderildi."
+                : "Çakışma çözümü kaydedildi.";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     private void ClearMessages()
@@ -205,4 +276,7 @@ public partial class ServerConnectionViewModel : ObservableObject
         StatusMessage = null;
         ErrorMessage = null;
     }
+
+    partial void OnConflictCountChanged(int value)
+        => OnPropertyChanged(nameof(HasConflicts));
 }

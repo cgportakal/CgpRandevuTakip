@@ -402,9 +402,28 @@ public sealed class CgpApiClient
                     // HTML/proxy hata sayfası olabilir.
                 }
 
-                return ApiResult<T>.Fail(
-                    string.IsNullOrWhiteSpace(error) ? $"Sunucu {statusCode} döndürdü." : error,
-                    statusCode);
+                // 409 gibi yanıtlarda gövde, işlem sonucunu (çakışma/çakışan kayıt)
+                // taşıyabilir; istemci bunu kaybetmemeli.
+                T? errorData = default;
+                if (!string.IsNullOrWhiteSpace(body))
+                {
+                    try
+                    {
+                        errorData = JsonSerializer.Deserialize<T>(body, JsonOptions);
+                    }
+                    catch (JsonException)
+                    {
+                        // Hata gövdesi T'ye eşlenemiyorsa yalnızca mesaj kullanılır.
+                    }
+                }
+
+                var message = string.IsNullOrWhiteSpace(error)
+                    ? $"Sunucu {statusCode} döndürdü."
+                    : error;
+
+                return errorData is not null
+                    ? new ApiResult<T>(false, errorData, message, statusCode)
+                    : ApiResult<T>.Fail(message, statusCode);
             }
 
             if (string.IsNullOrWhiteSpace(body))

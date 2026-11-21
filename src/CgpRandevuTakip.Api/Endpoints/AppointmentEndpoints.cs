@@ -167,6 +167,9 @@ public static class AppointmentEndpoints
         if (result.Success)
             return Results.Ok(result);
 
+        if (result.VersionConflict)
+            return Results.Conflict(result);
+
         if (result.Conflicts is { Count: > 0 })
             return Results.Conflict(result);
 

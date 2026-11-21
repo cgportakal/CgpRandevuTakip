@@ -172,6 +172,9 @@ public sealed class SyncedAppointmentService : IAppointmentService
         if (result.Success && result.Data is not null)
             return result.Data;
 
+        if (result.Data is not null)
+            return result.Data;
+
         if (result.IsNetworkError)
         {
             await _outbox.EnqueueAsync(OutboxOperation.AppointmentCreate, requestId, serverInput);
@@ -344,6 +347,9 @@ public sealed class SyncedAppointmentService : IAppointmentService
             input);
 
         if (result.Success && result.Data is not null)
+            return result.Data;
+
+        if (result.Data is not null)
             return result.Data;
 
         if (result.IsNetworkError)
