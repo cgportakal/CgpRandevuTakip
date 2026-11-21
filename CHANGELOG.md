@@ -6,6 +6,7 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 ## [Yayınlanmadı]
 
 ### Eklendi
+- **Masaüstü P3b — çevrimdışı görünürlük ve kalan yazmalar:** outbox’taki bekleyen oluşturma/güncelleme/silme/sonuç istekleri günlük listeye ve detaya uygulanır; geçici kimlik sunucu kimliğine eşlenir. Seri oluşturma/iptali, toplu silme ve geri alma API’ye taşındı; bağlantı yoksa kuyruğa alınır. Başarısız kuyruk kayıtları “Sunucu bağlantısı” penceresinden yeniden denenebilir. Seri ekleme/düzenleme ve toplu taşıma P3c’de ([docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md)).
 - **Masaüstü P3a — yazma yolu + outbox:** okuma modu açıkken tekil randevu oluştur/güncelle/sil işlemleri API’ye gönderilir; bağlantı yoksa `SyncOutboxItems` kuyruğuna alınır ve 30 sn’de bir otomatik gönderilir. Kullanıcıya “kuyruğa alındı” mesajı ve günlük listede bekleyen sayaç gösterilir. Seri, görüşme sonucu, toplu işlem ve çevrimdışı kayıt görünürlüğü P3b’de ([docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md)).
 - **Idempotency:** `Appointment.ClientRequestId` + tekil indeks; aynı istek ikinci kez kayıt oluşturmaz (tek randevu ve seri ilk kaydı).
 

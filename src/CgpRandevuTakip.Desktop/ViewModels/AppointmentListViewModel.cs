@@ -386,6 +386,13 @@ public partial class AppointmentListViewModel : ObservableObject
                 _dialogs.Info(
                     $"{bulk.Deleted} görüşme silindi. {bulk.FailedIds.Count} görüşme silinemedi.",
                     "Toplu silme");
+
+            if (bulk.Queued > 0)
+            {
+                _dialogs.Info(
+                    $"{bulk.Queued} silme isteği yerel kuyruğa alındı; bağlantı gelince gönderilecek.",
+                    "Kuyruğa alındı");
+            }
         }
 
         await LoadAsync();

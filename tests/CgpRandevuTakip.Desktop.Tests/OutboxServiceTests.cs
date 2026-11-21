@@ -126,7 +126,7 @@ public class OutboxServiceTests
     [Fact]
     public async Task SyncedCreate_WhenOnline_SendsToApi()
     {
-        var (_, sync) = CreateServices((_, _) => Task.FromResult(Json(HttpStatusCode.OK, new
+        var (_, sync, _) = CreateServices((_, _) => Task.FromResult(Json(HttpStatusCode.OK, new
         {
             success = true,
             appointmentId = "server-1",
@@ -144,7 +144,7 @@ public class OutboxServiceTests
     [Fact]
     public async Task SyncedCreate_WhenNetworkFails_QueuesAndReports()
     {
-        var (outbox, sync) = CreateServices((_, _) => throw new HttpRequestException("ağ yok"));
+        var (outbox, sync, _) = CreateServices((_, _) => throw new HttpRequestException("ağ yok"));
 
         var result = await sync.CreateAsync(Input("req-offline"));
 
@@ -175,8 +175,137 @@ public class OutboxServiceTests
         Assert.Equal("/v1/appointments/server-7/outcome", path);
     }
 
-    private (OutboxService Outbox, SyncedAppointmentService Sync) CreateServices(
-        Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler)
+    [Fact]
+    public async Task Overlay_ShowsPendingCreateUpdateAndDelete()
+    {
+        var (outbox, _, overlay) = CreateServices((_, _) =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.InternalServerError)));
+
+        var date = DateTime.Today.AddDays(3);
+
+        await outbox.EnqueueAsync(OutboxOperation.AppointmentCreate, "temp-1", Input("temp-1"));
+
+        var rows = await overlay.ApplyAsync(
+            Array.Empty<AppointmentListItemDto>(),
+            null,
+            date,
+            date,
+            null,
+            null);
+
+        var row = Assert.Single(rows);
+        Assert.Equal("temp-1", row.Id);
+        Assert.Equal("Kuyruk", row.PersonFirstName);
+
+        var detail = await overlay.ApplyDetailAsync(null, "temp-1");
+        Assert.NotNull(detail);
+        Assert.Equal("Kuyruk Test", detail!.PersonFullName);
+
+        await Task.Delay(10);
+        var updated = Input("temp-1") with { FirstName = "Guncel" };
+        await outbox.EnqueueAsync(OutboxOperation.AppointmentUpdate, "temp-1", updated);
+
+        rows = await overlay.ApplyAsync(
+            Array.Empty<AppointmentListItemDto>(),
+            null,
+            date,
+            date,
+            null,
+            null);
+
+        Assert.Equal("Guncel", Assert.Single(rows).PersonFirstName);
+
+        await Task.Delay(10);
+        await outbox.EnqueueAsync(OutboxOperation.AppointmentDelete, "temp-1", null);
+
+        rows = await overlay.ApplyAsync(
+            Array.Empty<AppointmentListItemDto>(),
+            null,
+            date,
+            date,
+            null,
+            null);
+
+        Assert.Empty(rows);
+        Assert.Null(await overlay.ApplyDetailAsync(null, "temp-1"));
+    }
+
+    [Fact]
+    public async Task FlushAsync_CreateThenUpdate_RemapsTempIdToServerId()
+    {
+        string? putPath = null;
+
+        var service = CreateService((request, _) =>
+        {
+            if (request.Method == HttpMethod.Post)
+            {
+                return Task.FromResult(Json(HttpStatusCode.OK, new
+                {
+                    success = true,
+                    appointmentId = "server-5",
+                    error = (string?)null,
+                    conflicts = (object?)null,
+                }));
+            }
+
+            putPath = request.RequestUri!.AbsolutePath;
+            return Task.FromResult(Json(HttpStatusCode.OK, new
+            {
+                success = true,
+                appointmentId = "server-5",
+                error = (string?)null,
+                conflicts = (object?)null,
+            }));
+        });
+
+        await service.EnqueueAsync(OutboxOperation.AppointmentCreate, "temp-9", Input("temp-9"));
+        await Task.Delay(10);
+        await service.EnqueueAsync(
+            OutboxOperation.AppointmentUpdate,
+            "temp-9",
+            Input("temp-9") with { FirstName = "Guncel" });
+
+        var result = await service.FlushAsync();
+
+        Assert.Equal(2, result.Sent);
+        Assert.Equal(0, await service.GetPendingCountAsync());
+        Assert.Equal("/v1/appointments/server-5", putPath);
+    }
+
+    [Fact]
+    public async Task FlushAsync_SeriesCreate_SendsPost()
+    {
+        string? path = null;
+        var service = CreateService((request, _) =>
+        {
+            path = request.RequestUri!.AbsolutePath;
+            return Task.FromResult(Json(HttpStatusCode.OK, new
+            {
+                success = true,
+                error = (string?)null,
+                seriesId = "series-1",
+                createdCount = 4,
+                skippedCount = 0,
+                slots = Array.Empty<object>(),
+            }));
+        });
+
+        var input = Input("series-req");
+        await service.EnqueueAsync(
+            OutboxOperation.SeriesCreate,
+            "series-req",
+            new SeriesOutboxPayload(input, SeriesFrequency.Weekly, 4));
+
+        var result = await service.FlushAsync();
+
+        Assert.Equal(1, result.Sent);
+        Assert.Equal(0, await service.GetPendingCountAsync());
+        Assert.Equal("/v1/appointments/series", path);
+    }
+
+    private (OutboxService Outbox, SyncedAppointmentService Sync, PendingAppointmentOverlay Overlay)
+        CreateServices(
+            Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler)
     {
         _settings.SetManyAsync(new Dictionary<string, string>
         {
@@ -200,8 +329,9 @@ public class OutboxServiceTests
             client);
 
         // Okuma/yazma testlerinde yerel servis kullanılmaz.
-        var sync = new SyncedAppointmentService(null!, reads, connection, client, outbox);
-        return (outbox, sync);
+        var overlay = new PendingAppointmentOverlay(outbox, reads);
+        var sync = new SyncedAppointmentService(null!, reads, connection, client, outbox, overlay);
+        return (outbox, sync, overlay);
     }
 
     private OutboxService CreateService(

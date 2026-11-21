@@ -116,7 +116,11 @@ public sealed record BulkMoveResult(
 public sealed record BulkDeleteResult(
     int Deleted,
     IReadOnlyList<string> FailedIds,
-    string? Error = null);
+    string? Error = null)
+{
+    /// <summary>Ağ/oturum yokluğu nedeniyle kuyruğa alınan silme sayısı.</summary>
+    public int Queued { get; init; }
+}
 
 public sealed record DeletedAppointmentDto(
     string Id,

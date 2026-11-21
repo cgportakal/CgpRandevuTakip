@@ -2,6 +2,7 @@ using System.Text.Json;
 using CgpRandevuTakip.Application.Appointments;
 using CgpRandevuTakip.Desktop.Services.Api;
 using CgpRandevuTakip.Domain.Entities;
+using CgpRandevuTakip.Domain.Enums;
 using CgpRandevuTakip.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,7 +13,10 @@ public enum OutboxOperation
     AppointmentCreate = 0,
     AppointmentUpdate = 1,
     AppointmentDelete = 2,
-    AppointmentOutcome = 3
+    AppointmentOutcome = 3,
+    AppointmentRestore = 4,
+    SeriesCreate = 5,
+    SeriesCancel = 6
 }
 
 public sealed record OutboxFlushResult(
@@ -23,6 +27,18 @@ public sealed record OutboxFlushResult(
 {
     public static OutboxFlushResult Empty { get; } = new(0, 0, false, null);
 }
+
+public sealed record OutboxPendingItem(
+    string Id,
+    OutboxOperation Operation,
+    string EntityId,
+    string Payload,
+    DateTime CreatedAtUtc);
+
+public sealed record SeriesOutboxPayload(
+    AppointmentInput Input,
+    SeriesFrequency Frequency,
+    int Count);
 
 /// <summary>
 /// Sunucuya gönderilemeyen yazma isteklerini yerel kuyrukta tutar ve bağlantı
@@ -82,6 +98,44 @@ public sealed class OutboxService
         return await db.SyncOutboxItems.CountAsync(x => x.State == "pending", ct);
     }
 
+    public async Task<int> GetFailedCountAsync(CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateDbContextAsync(ct);
+        return await db.SyncOutboxItems.CountAsync(x => x.State == "failed", ct);
+    }
+
+    public async Task<IReadOnlyList<OutboxPendingItem>> GetPendingItemsAsync(CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateDbContextAsync(ct);
+        var items = await db.SyncOutboxItems
+            .AsNoTracking()
+            .Where(x => x.State == "pending")
+            .OrderBy(x => x.CreatedAtUtc)
+            .ToListAsync(ct);
+
+        return items
+            .Where(x => Enum.TryParse<OutboxOperation>(x.Operation, out _))
+            .Select(x => new OutboxPendingItem(
+                x.Id,
+                Enum.Parse<OutboxOperation>(x.Operation),
+                x.EntityId,
+                x.Payload,
+                x.CreatedAtUtc))
+            .ToList();
+    }
+
+    public async Task<int> RetryFailedAsync(CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateDbContextAsync(ct);
+        return await db.SyncOutboxItems
+            .Where(x => x.State == "failed")
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(x => x.State, "pending")
+                    .SetProperty(x => x.LastError, (string?)null),
+                ct);
+    }
+
     public async Task<OutboxFlushResult> FlushAsync(CancellationToken ct = default)
     {
         await _flushLock.WaitAsync(ct);
@@ -108,6 +162,27 @@ public sealed class OutboxService
                 var result = await ExecuteAsync(session, item, ct);
                 if (result.Success)
                 {
+                    // Oluşturma başarılıysa aynı geçici kimliği kullanan sonraki
+                    // güncelleme/silme/sonuç isteklerini sunucu kimliğine bağla.
+                    if ((item.Operation == OutboxOperation.AppointmentCreate.ToString()
+                         || item.Operation == OutboxOperation.SeriesCreate.ToString())
+                        && !string.IsNullOrWhiteSpace(result.ServerId))
+                    {
+                        foreach (var dependent in pending.Where(x =>
+                                     !ReferenceEquals(x, item)
+                                     && x.State == "pending"
+                                     && x.EntityId == item.EntityId))
+                        {
+                            dependent.EntityId = result.ServerId!;
+                        }
+
+                        // Aynı anda kuyruğa eklenmiş (bu listede olmayan) bağımlı
+                        // istekleri de veritabanında sunucu kimliğine bağla.
+                        await db.Database.ExecuteSqlInterpolatedAsync(
+                            $"UPDATE SyncOutboxItems SET EntityId = {result.ServerId} WHERE State = 'pending' AND EntityId = {item.EntityId} AND Id <> {item.Id}",
+                            ct);
+                    }
+
                     db.SyncOutboxItems.Remove(item);
                     sent++;
                     continue;
@@ -124,6 +199,21 @@ public sealed class OutboxService
 
                 item.State = "failed";
                 failed++;
+
+                // Oluşturma kalıcı olarak reddedildiyse ona bağlı istekleri de düşür.
+                if (item.Operation == OutboxOperation.AppointmentCreate.ToString()
+                    || item.Operation == OutboxOperation.SeriesCreate.ToString())
+                {
+                    foreach (var dependent in pending.Where(x =>
+                                 !ReferenceEquals(x, item)
+                                 && x.State == "pending"
+                                 && x.EntityId == item.EntityId))
+                    {
+                        dependent.State = "failed";
+                        dependent.LastError = "Bağımlı oluşturma isteği başarısız oldu.";
+                        failed++;
+                    }
+                }
             }
 
             await db.SaveChangesAsync(ct);
@@ -135,13 +225,13 @@ public sealed class OutboxService
         }
     }
 
-    private async Task<ApiResult<object>> ExecuteAsync(
+    private async Task<OutboxExecution> ExecuteAsync(
         ApiSession session,
         SyncOutboxItem item,
         CancellationToken ct)
     {
         if (!Enum.TryParse<OutboxOperation>(item.Operation, out var operation))
-            return ApiResult<object>.Fail($"Bilinmeyen işlem: {item.Operation}");
+            return OutboxExecution.Fail($"Bilinmeyen işlem: {item.Operation}");
 
         switch (operation)
         {
@@ -150,16 +240,16 @@ public sealed class OutboxService
             {
                 var input = Deserialize<AppointmentInput>(item.Payload);
                 if (input is null)
-                    return ApiResult<object>.Fail("Kuyruk kaydı okunamadı.");
+                    return OutboxExecution.Fail("Kuyruk kaydı okunamadı.");
 
                 var result = operation == OutboxOperation.AppointmentCreate
                     ? await _client.CreateAppointmentAsync(session.BaseUrl, session.AccessToken, input, ct)
                     : await _client.UpdateAppointmentAsync(session.BaseUrl, session.AccessToken, item.EntityId, input, ct);
 
                 if (result.Success && result.Data?.Success == true)
-                    return ApiResult<object>.Ok(new object());
+                    return OutboxExecution.Ok(result.Data.AppointmentId);
 
-                return ApiResult<object>.Fail(
+                return OutboxExecution.Fail(
                     result.Data?.Error ?? result.Error ?? "Sunucu kaydı kabul etmedi.",
                     result.StatusCode);
             }
@@ -173,9 +263,24 @@ public sealed class OutboxService
                     ct);
 
                 return result.Success
-                    ? ApiResult<object>.Ok(new object())
-                    : ApiResult<object>.Fail(
+                    ? OutboxExecution.Ok(null)
+                    : OutboxExecution.Fail(
                         result.Error ?? "Sunucu kaydı silmedi.",
+                        result.StatusCode);
+            }
+
+            case OutboxOperation.AppointmentRestore:
+            {
+                var result = await _client.RestoreAppointmentAsync(
+                    session.BaseUrl,
+                    session.AccessToken,
+                    item.EntityId,
+                    ct);
+
+                return result.Success
+                    ? OutboxExecution.Ok(null)
+                    : OutboxExecution.Fail(
+                        result.Error ?? "Sunucu kaydı geri almadı.",
                         result.StatusCode);
             }
 
@@ -183,7 +288,7 @@ public sealed class OutboxService
             {
                 var input = Deserialize<AppointmentOutcomeInput>(item.Payload);
                 if (input is null)
-                    return ApiResult<object>.Fail("Kuyruk kaydı okunamadı.");
+                    return OutboxExecution.Fail("Kuyruk kaydı okunamadı.");
 
                 var result = await _client.SaveOutcomeAsync(
                     session.BaseUrl,
@@ -193,15 +298,67 @@ public sealed class OutboxService
                     ct);
 
                 return result.Success
-                    ? ApiResult<object>.Ok(new object())
-                    : ApiResult<object>.Fail(
+                    ? OutboxExecution.Ok(null)
+                    : OutboxExecution.Fail(
                         result.Error ?? "Sunucu görüşme sonucunu kabul etmedi.",
                         result.StatusCode);
             }
 
+            case OutboxOperation.SeriesCreate:
+            {
+                var payload = Deserialize<SeriesOutboxPayload>(item.Payload);
+                if (payload is null)
+                    return OutboxExecution.Fail("Kuyruk kaydı okunamadı.");
+
+                var result = await _client.CreateSeriesAsync(
+                    session.BaseUrl,
+                    session.AccessToken,
+                    payload.Input,
+                    payload.Frequency,
+                    payload.Count,
+                    ct);
+
+                if (result.Success && result.Data?.Success == true)
+                    return OutboxExecution.Ok(result.Data.SeriesId);
+
+                return OutboxExecution.Fail(
+                    result.Data?.Error ?? result.Error ?? "Sunucu seriyi oluşturmadı.",
+                    result.StatusCode);
+            }
+
+            case OutboxOperation.SeriesCancel:
+            {
+                var result = await _client.CancelSeriesAsync(
+                    session.BaseUrl,
+                    session.AccessToken,
+                    item.EntityId,
+                    ct);
+
+                return result.Success && result.Data?.Success == true
+                    ? OutboxExecution.Ok(null)
+                    : OutboxExecution.Fail(
+                        result.Data?.Error ?? result.Error ?? "Sunucu seriyi iptal etmedi.",
+                        result.StatusCode);
+            }
+
             default:
-                return ApiResult<object>.Fail($"Bilinmeyen işlem: {item.Operation}");
+                return OutboxExecution.Fail($"Bilinmeyen işlem: {item.Operation}");
         }
+    }
+
+    private sealed record OutboxExecution(
+        bool Success,
+        string? ServerId,
+        string? Error,
+        int StatusCode)
+    {
+        public bool IsNetworkError => !Success && StatusCode == 0;
+
+        public static OutboxExecution Ok(string? serverId)
+            => new(true, serverId, null, 200);
+
+        public static OutboxExecution Fail(string error, int statusCode = 0)
+            => new(false, null, error, statusCode);
     }
 
     private static T? Deserialize<T>(string payload)
