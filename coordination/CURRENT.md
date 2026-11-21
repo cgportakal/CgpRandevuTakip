@@ -1,13 +1,16 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-21 14:30 (UTC+3)
+**Son güncelleme:** 2026-11-21 15:25 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `agent/cfr-lenovo/release-1.10.0` (PR bekliyor)
-**Durum:** Yeşil — **429 test**. **1.10.0 yayın hazırlığı:** P3 yazma/outbox/overlay ve P4
-SignalR tamamlandı. Sıradaki: P3/P4 saha UAT’i, ardından P5 çakışma.
+**Dal:** `master` (origin ile eşit)
+**Durum:** Yeşil — **429 test**. **1.10.0 yayında:** P3 yazma/outbox/overlay ve P4 SignalR
+tamamlandı. Sıradaki: P3/P4 saha UAT’i, ardından P5 çakışma.
 
 ## Bu turda tamamlanan
 
+- **1.10.0 yayını:** `v1.10.0` GitHub Release; assetler Setup (~66,9 MB), portable (~94,9 MB),
+  Dev.cer, SHA256SUMS, version-policy (`latestDesktopVersion/latestWebVersion: 1.10.0`).
+  README Setup/portable bağlantıları HTTP 200; master CI ve Release işi başarılı.
 - **1.10.0 sürüm hazırlığı:** `Directory.Build.props`, `AppConstants`, installer ve
   `Kurulum-Olustur.ps1` 1.10.0; `version-policy.json` + API `appsettings` latestDesktop/latestWeb
   1.10.0; web `APP_VERSION` 1.10.0; README sürüm/indirme/platform tablosu; docs/44 devir notu.
@@ -184,8 +187,8 @@ node scripts/bootstrap.mjs --check      # eksik varsa: --install
 node coordination/lock.mjs status       # boşsa kendi kilidini al
 ```
 
-**Yayın:** `v1.9.0` hazır (Setup + portable). Uygulamayı denemek için GitHub Releases →
-`CGP-RandevuTakip-1.9.0-Setup.exe` (veya portable ZIP); kaynaktan çalıştırmak için:
+**Yayın:** `v1.10.0` hazır (Setup + portable). Uygulamayı denemek için GitHub Releases →
+`CGP-RandevuTakip-1.10.0-Setup.exe` (veya portable ZIP); kaynaktan çalıştırmak için:
 
 ```powershell
 # API (ayrı terminal)
@@ -206,19 +209,19 @@ npx expo start
 İlk API açılışında `POST /v1/auth/setup` ile yönetici oluşturulur; yerel veritabanı ve sırlar
 repoda değildir. Yedekleme davranışı: [docs/43](docs/43_Yedekleme_ve_Geri_Yukleme.md).
 
-**Sıradaki işin devri:** 1.9.0 yayınlandı. Sıradaki iş **yedekleme UAT’i**
-([docs/43](docs/43_Yedekleme_ve_Geri_Yukleme.md) §8): yalnızca ayarları yedekle → değiştir →
-geri yükle; randevular ve kullanıcılar korunmalı, kurulum sihirbazı açılmamalı. Ardından
-**P2 manuel UAT + P3 outbox** ([docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md)).
+**Sıradaki işin devri:** 1.10.0 yayınlandı. Sıradaki iş **P3/P4 saha UAT’i**:
+çevrimdışı tekil/seri oluştur-güncelle-sil-taşı, kuyruğun sırayla gönderimi ve SignalR canlı
+yenileme ([docs/44](docs/44_Masaustu_Senkronizasyon_Devir.md) §5). Ardından **P5 çakışma**
+([docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md)).
 
 Kendi kilidini al:
 
 ```powershell
-node coordination/lock.mjs acquire --machine cafer-desktop --task "yedekleme UAT" --branch agent/cafer-desktop/backup-uat
-git switch -c agent/cafer-desktop/backup-uat
+node coordination/lock.mjs acquire --machine cafer-desktop --task "P3/P4 UAT" --branch agent/cafer-desktop/desktop-sync-uat
+git switch -c agent/cafer-desktop/desktop-sync-uat
 ```
 
-**Hazırlık durumu (20.11.2026):** `master` 1.9.0 sürümünde, 412/412 test, CI yeşil,
+**Hazırlık durumu (21.11.2026):** `master` 1.10.0 sürümünde, 429/429 test, CI yeşil,
 `bootstrap --check` tüm araçları buluyor (JDK 17, Android SDK, platform 35, adb, EAS CLI).
 API yerel veritabanı ve sırlar repoda değil; ilk çalıştırmada `POST /v1/auth/setup` gerekir.
 
@@ -254,10 +257,11 @@ ilk çalıştırmada `POST /v1/auth/setup` gerekir. Ayrıntı: [docs/39](docs/39
    yalnızca ayarları yedekle → değiştir → geri yükle; randevular ve kullanıcılar korunmalı,
    kurulum sihirbazı açılmamalı. Boş yedek onayı ve eski (v1) yedek denenmeli
    ([docs/43](docs/43_Yedekleme_ve_Geri_Yukleme.md)).
-2. **Masaüstü veri senkronizasyonu** — P1 ✅, P2 ✅, P3 ✅, **P4 SignalR kod ✅.**
-   Sıradaki: P3/P4 saha UAT’i, ardından **P5 çakışma** (`expectedUpdatedAt`/409
-   + çözüm dialog’u), P6 dayanıklılık, P7 UAT. Ayrıntı:
-   [docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md).
+2. **Masaüstü veri senkronizasyonu** — P1 ✅, P2 ✅, P3 ✅, P4 ✅.
+   Sıradaki: **P3/P4 saha UAT’i** (çevrimdışı kuyruk, overlay, SignalR) ve bulgular;
+   ardından **P5 çakışma** (`expectedUpdatedAt`/409 + çözüm dialog’u), P6 dayanıklılık, P7 UAT.
+   Ayrıntı: [docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md),
+   [docs/44](docs/44_Masaustu_Senkronizasyon_Devir.md).
 3. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
    canlı olay ve push doğrulanmalı.
 4. **Mağaza derlemesi** — EAS `production` profiliyle imzalı AAB/APK; sürüm numarası ve
@@ -278,8 +282,9 @@ Yok. (Gerçek cihaz UAT tamamlandı; kilit bırakıldı. Kontrol: `node coordina
 - **Ortam:** Yeni makinede `node scripts/bootstrap.mjs`; `node_modules`/`bin`/`obj` taşınmaz.
   Masaüstü (WPF) yalnızca Windows’ta derlenir; macOS’ta API/web/mobil geliştirilir.
 - **Masaüstü verisi ayrıdır:** desktop `%LOCALAPPDATA%` SQLite, sunucu `CGP_API_DATA/cgp.db`.
-  P2 okuma modu (`sync.read.enabled`, varsayılan kapalı) açıkken listeler/raporlar API'den
-  okunur ve `SyncCacheEntries` tablosuna önbelleklenir; yazmalar P3'e kadar yerelde kalır.
+  Okuma modu (`sync.read.enabled`, varsayılan kapalı) açıkken okumalar API'den yapılır ve
+  `SyncCacheEntries` tablosuna önbelleklenir; yazmalar API'ye gider, bağlantı yoksa
+  `SyncOutboxItems` kuyruğuna alınır. **P3/P4 UAT tamamlanana kadar üretimde açılmamalıdır.**
   Sunucu oturumu açma/çıkarma önbelleği temizler.
 - **Masaüstü zorunlu güncelleme testi:** `UpdateService` politikayı yerel API’den değil GitHub
   `master/version-policy.json` ve `releases/latest` üzerinden okur. Test için geçici düşük sürüm
@@ -355,8 +360,8 @@ dotnet test CgpRandevuTakip.sln -c Release
 ## Son CI
 
 Bu dal: yerel **429/429** test (334 uygulama + 77 masaüstü/VM + 16 API + 2 UI), web build ve
-mobil `tsc` başarılı. Master CI ✅ ve **Release v1.9.0** ✅ (PR #56 / tag `v1.9.0`).
-Son release: **1.9.0** (Setup + portable); README Setup/portable bağlantıları HTTP 200.
+mobil `tsc` başarılı. Master CI ✅ ve **Release v1.10.0** ✅ (PR #65 / tag `v1.10.0`).
+Son release: **1.10.0** (Setup + portable); README Setup/portable bağlantıları HTTP 200.
 Android emülatör ve **Samsung S21 gerçek cihaz UAT** tamamlandı.
 Dependabot picomatch uyarısı **withdrawn** olduğu için dismissed; kod bağımlılığı değiştirilmedi.
 Android SDK/JDK/adb/emulator `D:\Android` altında; AVD `cgp_uat` hazır; `expo-dev-client` eklendi.
