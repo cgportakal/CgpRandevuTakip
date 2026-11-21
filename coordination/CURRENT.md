@@ -1,13 +1,16 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-21 13:30 (UTC+3)
+**Son güncelleme:** 2026-11-21 14:30 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `agent/cfr-lenovo/desktop-sync-p4` (PR bekliyor)
-**Durum:** Yeşil — **429 test**. **P4 SignalR kod tarafı tamamlandı:** canlı bağlantı, süresiz
-geri çekilmeli yeniden bağlanma; randevu/seri/içerik olaylarında liste otomatik yenileniyor.
-Sıradaki: P4 saha UAT’i → P5 çakışma.
+**Dal:** `agent/cfr-lenovo/release-1.10.0` (PR bekliyor)
+**Durum:** Yeşil — **429 test**. **1.10.0 yayın hazırlığı:** P3 yazma/outbox/overlay ve P4
+SignalR tamamlandı. Sıradaki: P3/P4 saha UAT’i, ardından P5 çakışma.
 
 ## Bu turda tamamlanan
+
+- **1.10.0 sürüm hazırlığı:** `Directory.Build.props`, `AppConstants`, installer ve
+  `Kurulum-Olustur.ps1` 1.10.0; `version-policy.json` + API `appsettings` latestDesktop/latestWeb
+  1.10.0; web `APP_VERSION` 1.10.0; README sürüm/indirme/platform tablosu; docs/44 devir notu.
 
 - **P4 — SignalR (masaüstü):** `Microsoft.AspNetCore.SignalR.Client` 8.0.23;
   `DesktopRealtimeClient` (`/hubs/events`, JWT, 2–30 sn üstel geri çekilme).
