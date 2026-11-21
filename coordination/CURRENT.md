@@ -1,14 +1,15 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-22 00:35 (UTC+3)
+**Son güncelleme:** 2026-11-22 00:50 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** **1.10.1 sürüm hazırlığı** — P5 çakışma yönetimi kod olarak tamamlandı
-(`expectedUpdatedAt` + 409, masaüstü çözüm dialog’u, outbox `conflict` durumu ve çözüm ekranı);
-432 test. Setup-only yayın sıradaki; ardından P5/P3/P4 saha UAT’i ve P6.
+**Durum:** Yeşil — **432 test**. **1.10.1 yayında** (Setup-only); kurulu sürüm 1.10.1.
+P5 çakışma yönetimi tamamlandı. Sıradaki: **P5/P3/P4 saha UAT’i**, ardından P6 dayanıklılık.
 
 ## Bu turda tamamlanan
 
+- **1.10.1 yayını:** `v1.10.1` GitHub Release (Setup-only). Assetler: Setup (~67,1 MB), Dev.cer,
+  SHA256SUMS, version-policy (`latestDesktopVersion: 1.10.1`); kurulu sürüm 1.10.1 doğrulandı.
 - **P5 — çakışma yönetimi (cafer-desktop):** `AppointmentInput.ExpectedUpdatedAtUtc` ve
   `AppointmentDetailDto.UpdatedAtUtc`; API eski sürümde `409 Conflict` + güncel DTO döndürüyor.
   Masaüstü düzenleyicisi “yerel uygula / sunucuyu koru / iptal” dialog’u gösteriyor; outbox
@@ -365,9 +366,9 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-Bu dal: yerel **429/429** test (334 uygulama + 77 masaüstü/VM + 16 API + 2 UI), web build ve
-mobil `tsc` başarılı. Master CI ✅ ve **Release v1.10.0** ✅ (PR #65 / tag `v1.10.0`).
-Son release: **1.10.0** (Setup + portable); README Setup/portable bağlantıları HTTP 200.
+Bu dal: yerel **432/432** test (335 uygulama + 79 masaüstü/VM + 16 API + 2 UI), web build ve
+mobil `tsc` başarılı. Master CI ✅ ve **Release v1.10.1** ✅ (PR #67 / tag `v1.10.1`).
+Son release: **1.10.1** (Setup-only); README Setup bağlantısı HTTP 200; kurulu sürüm 1.10.1.
 Android emülatör ve **Samsung S21 gerçek cihaz UAT** tamamlandı.
 Dependabot picomatch uyarısı **withdrawn** olduğu için dismissed; kod bağımlılığı değiştirilmedi.
 Android SDK/JDK/adb/emulator `D:\Android` altında; AVD `cgp_uat` hazır; `expo-dev-client` eklendi.
