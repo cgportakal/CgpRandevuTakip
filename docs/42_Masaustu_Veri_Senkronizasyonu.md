@@ -1,6 +1,6 @@
 # 42 — Masaüstü Veri Senkronizasyonu (Devir Planı)
 
-**Tarih:** 19.11.2026 · **Durum:** P1, P2 ve **P3 tamamlandı**; P3 saha UAT’i sıradaki · **Kaynak karar:** [docs/41](41_Tasarim_ve_Veri_Paritesi.md) §4
+**Tarih:** 19.11.2026 · **Durum:** P1, P2, P3 tamamlandı; P4 kod tamamlandı (UAT sıradaki) · **Kaynak karar:** [docs/41](41_Tasarim_ve_Veri_Paritesi.md) §4
 
 Bu belge, masaüstü uygulamasının API ile tam senkronize çalışması için yapılacak işleri ve
 teknik kararları diğer bilgisayara devretmek için yazıldı. Yeni oturumda önce
@@ -131,11 +131,11 @@ idempotency, seri ekleme/düzenleme ve toplu taşıma uçları. Okuma modu açı
 yazmaları API’ye gider; ağ yoksa kuyruğa alınır, bekleyen kayıtlar listede/detayda görünür ve
 geçici kimlikler sunucu kimlikleriyle eşlenir. **Kalan tek adım saha UAT’idir.**
 
-### P4 — SignalR
-- [ ] `Microsoft.AspNetCore.SignalR.Client` ekle; süresiz geri çekilmeli yeniden bağlanma
-      (mobil `realtime.ts` deseni).
-- [ ] `appointmentChanged` → ilgili günü yenile; `contentChanged` → manifest yenile;
-      `seriesChanged` → seri listesini yenile.
+### P4 — SignalR — **kod tamamlandı (21.11.2026); UAT sıradaki**
+- [x] `Microsoft.AspNetCore.SignalR.Client` eklendi; üstel geri çekilmeli (2 → 30 sn, süresiz)
+      yeniden bağlanma (`DesktopRealtimeClient`).
+- [x] `appointmentChanged` → günlük liste; `contentChanged` → filtre/manifest yenileme;
+      `seriesChanged` → liste yenileme. 400 ms debounce ile.
 - [ ] UAT: web’de değişiklik masaüstünde elle yenilemeden görünür.
 
 ### P5 — Çakışma yönetimi

@@ -35,6 +35,8 @@ public partial class AppointmentListViewModel : ObservableObject
     private readonly ISettingsService _settings;
     private readonly ServerReadService _serverReads;
     private readonly OutboxService _outbox;
+    private readonly DesktopRealtimeClient _realtime;
+    private readonly DispatcherTimer _realtimeReloadTimer;
     private readonly DispatcherTimer _searchTimer;
     private readonly List<AppointmentRowViewModel> _selectedRows = new();
     private bool _isAllSelected;
@@ -54,7 +56,8 @@ public partial class AppointmentListViewModel : ObservableObject
         Services.IExcelImportService excelImport,
         ISettingsService settings,
         ServerReadService serverReads,
-        OutboxService outbox)
+        OutboxService outbox,
+        DesktopRealtimeClient realtime)
     {
         _appointments = appointments;
         _categories = categories;
@@ -67,6 +70,18 @@ public partial class AppointmentListViewModel : ObservableObject
         _settings = settings;
         _serverReads = serverReads;
         _outbox = outbox;
+        _realtime = realtime;
+
+        _realtimeReloadTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
+        _realtimeReloadTimer.Tick += async (_, _) =>
+        {
+            _realtimeReloadTimer.Stop();
+            await LoadAsync();
+        };
+
+        _realtime.AppointmentChanged += OnRealtimeAppointmentChanged;
+        _realtime.SeriesChanged += OnRealtimeSeriesChanged;
+        _realtime.ContentChanged += OnRealtimeContentChanged;
 
         CategoryFilters = new RangeObservableCollection<CategoryFilterOption>
         {
@@ -791,6 +806,35 @@ public partial class AppointmentListViewModel : ObservableObject
         SelectedDate = date.Date;
         _suppressReload = false;
         _ = LoadAsync();
+    }
+
+    private void OnRealtimeAppointmentChanged(
+        object? sender,
+        AppointmentChangedRealtimeEvent e) => ScheduleRealtimeReload();
+
+    private void OnRealtimeSeriesChanged(
+        object? sender,
+        SeriesChangedRealtimeEvent e) => ScheduleRealtimeReload();
+
+    private void OnRealtimeContentChanged(
+        object? sender,
+        ContentChangedRealtimeEvent e)
+    {
+        _filtersLoaded = false;
+        ScheduleRealtimeReload();
+    }
+
+    private void ScheduleRealtimeReload()
+    {
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher is null)
+            return;
+
+        dispatcher.Invoke(() =>
+        {
+            _realtimeReloadTimer.Stop();
+            _realtimeReloadTimer.Start();
+        });
     }
 
     partial void OnSelectedDateChanged(DateTime value)

@@ -6,6 +6,7 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 ## [Yayınlanmadı]
 
 ### Eklendi
+- **Masaüstü P4 — SignalR:** `/hubs/events` canlı bağlantısı (`Microsoft.AspNetCore.SignalR.Client`), JWT yenilemeli erişim ve 2–30 sn üstel geri çekilmeli süresiz yeniden bağlanma. `appointmentChanged`, `seriesChanged` ve `contentChanged` olayları 400 ms debounce ile günlük listeyi/filtreleri yeniliyor; oturum açma/çıkış ve uygulama açılış/kapanışında yönetiliyor ([docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md)).
 - **Masaüstü P3 — yazma yolu, outbox ve çevrimdışı görünürlük (tamamlandı):** tekil randevu oluştur/güncelle/sil, görüşme sonucu, seri oluşturma/ekleme/düzenleme/iptali, toplu silme/taşıma ve geri alma API’ye gönderilir; bağlantı yoksa `SyncOutboxItems` kuyruğuna alınır ve 30 sn’de bir otomatik gönderilir. Bekleyen tekil/seri kayıtlar günlük listede ve detayda görünür; geçici kimlik sunucu kimliğine eşlenir. Başarısız kuyruk kayıtları “Sunucu bağlantısı” penceresinden yeniden denenebilir. `Appointment.ClientRequestId` ile idempotency ([docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md)).
 - **Idempotency:** `Appointment.ClientRequestId` + tekil indeks; aynı istek ikinci kez kayıt oluşturmaz (tek randevu ve seri ilk kaydı).
 

@@ -1,13 +1,19 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-21 12:30 (UTC+3)
+**Son güncelleme:** 2026-11-21 13:30 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `agent/cfr-lenovo/desktop-sync-p3c` (PR bekliyor)
-**Durum:** Yeşil — **428 test**. **P3 tamamlandı:** seri oluşturma/ekleme/düzenleme/iptali,
-toplu silme/taşıma, geri alma ve görüşme sonucu API + outbox; çevrimdışı kayıtlar (tekil ve
-seri) listede/detayda görünür, geçici kimlikler eşlenir. Sıradaki: P3 saha UAT’i → P4 SignalR.
+**Dal:** `agent/cfr-lenovo/desktop-sync-p4` (PR bekliyor)
+**Durum:** Yeşil — **429 test**. **P4 SignalR kod tarafı tamamlandı:** canlı bağlantı, süresiz
+geri çekilmeli yeniden bağlanma; randevu/seri/içerik olaylarında liste otomatik yenileniyor.
+Sıradaki: P4 saha UAT’i → P5 çakışma.
 
 ## Bu turda tamamlanan
+
+- **P4 — SignalR (masaüstü):** `Microsoft.AspNetCore.SignalR.Client` 8.0.23;
+  `DesktopRealtimeClient` (`/hubs/events`, JWT, 2–30 sn üstel geri çekilme).
+  `appointmentChanged` / `seriesChanged` / `contentChanged` olayları 400 ms debounce ile
+  günlük listeyi yeniliyor; içerik olayında kategori/görüşmeci filtreleri de tazeleniyor.
+  Oturum açma/çıkış ve uygulama açılış/kapanışında başlatılıp durduruluyor. 1 test.
 
 - **P3 — yazma yolu, outbox ve çevrimdışı görünürlük (tamamlandı):** `SyncOutboxItems`
   tablosu/migration, `OutboxService`, `OutboxFlushService` (30 sn), `PendingAppointmentOverlay`.
@@ -245,9 +251,9 @@ ilk çalıştırmada `POST /v1/auth/setup` gerekir. Ayrıntı: [docs/39](docs/39
    yalnızca ayarları yedekle → değiştir → geri yükle; randevular ve kullanıcılar korunmalı,
    kurulum sihirbazı açılmamalı. Boş yedek onayı ve eski (v1) yedek denenmeli
    ([docs/43](docs/43_Yedekleme_ve_Geri_Yukleme.md)).
-2. **Masaüstü veri senkronizasyonu** — P1 ✅, P2 ✅, **P3 ✅.** Sıradaki: P3 saha UAT’i
-   (uçak modunda oluştur/güncelle/sil/taşı/seri; bağlantı gelince sırayla gönderim).
-   Ardından P4 SignalR, P5 çakışma, P6 dayanıklılık, P7 UAT. Ayrıntı:
+2. **Masaüstü veri senkronizasyonu** — P1 ✅, P2 ✅, P3 ✅, **P4 SignalR kod ✅.**
+   Sıradaki: P3/P4 saha UAT’i, ardından **P5 çakışma** (`expectedUpdatedAt`/409
+   + çözüm dialog’u), P6 dayanıklılık, P7 UAT. Ayrıntı:
    [docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md).
 3. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
    canlı olay ve push doğrulanmalı.
@@ -345,7 +351,7 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-Bu dal: yerel **428/428** test (334 uygulama + 76 masaüstü/VM + 16 API + 2 UI), web build ve
+Bu dal: yerel **429/429** test (334 uygulama + 77 masaüstü/VM + 16 API + 2 UI), web build ve
 mobil `tsc` başarılı. Master CI ✅ ve **Release v1.9.0** ✅ (PR #56 / tag `v1.9.0`).
 Son release: **1.9.0** (Setup + portable); README Setup/portable bağlantıları HTTP 200.
 Android emülatör ve **Samsung S21 gerçek cihaz UAT** tamamlandı.

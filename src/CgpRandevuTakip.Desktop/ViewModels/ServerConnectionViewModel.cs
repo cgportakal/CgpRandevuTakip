@@ -14,6 +14,7 @@ public partial class ServerConnectionViewModel : ObservableObject
     private readonly ApiConnectionService _connection;
     private readonly ServerReadService _reads;
     private readonly OutboxService _outbox;
+    private readonly DesktopRealtimeClient _realtime;
 
     [ObservableProperty]
     private string _baseUrl = ApiSessionStore.DefaultBaseUrl;
@@ -54,11 +55,13 @@ public partial class ServerConnectionViewModel : ObservableObject
     public ServerConnectionViewModel(
         ApiConnectionService connection,
         ServerReadService reads,
-        OutboxService outbox)
+        OutboxService outbox,
+        DesktopRealtimeClient realtime)
     {
         _connection = connection;
         _reads = reads;
         _outbox = outbox;
+        _realtime = realtime;
     }
 
     public async Task InitializeAsync()
@@ -119,6 +122,7 @@ public partial class ServerConnectionViewModel : ObservableObject
                 ConnectionText = $"{result.Data.DisplayName} · {result.Data.Role}";
                 StatusMessage = "Sunucu oturumu açıldı. Okuma modunu açarak listeleri sunucudan okuyabilirsiniz.";
                 Password = string.Empty;
+                await _realtime.StartAsync();
             }
             else
             {
@@ -139,6 +143,7 @@ public partial class ServerConnectionViewModel : ObservableObject
         try
         {
             await _connection.SignOutAsync();
+            await _realtime.StopAsync();
             IsConnected = false;
             ConnectionText = "Bağlı değil";
             StatusMessage = "Sunucu oturumu kapatıldı.";
