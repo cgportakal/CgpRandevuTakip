@@ -135,6 +135,19 @@
                                FontSize="11" />
                 </Border>
 
+                <Border Margin="8,0,0,0"
+                        Padding="8,3"
+                        CornerRadius="10"
+                        Background="{DynamicResource WarningSoftBrush}"
+                        BorderBrush="{DynamicResource WarningBrush}"
+                        BorderThickness="1"
+                        VerticalAlignment="Center"
+                        Visibility="{Binding HasPendingSync, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="{Binding PendingSyncText}"
+                               Style="{StaticResource MutedText}"
+                               FontSize="11" />
+                </Border>
+
                 <Button Content="Seçimi temizle"
                         Style="{StaticResource GhostButton}"
                         Command="{Binding ClearSelectionCommand}"

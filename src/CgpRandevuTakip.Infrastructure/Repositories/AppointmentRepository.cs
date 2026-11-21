@@ -28,6 +28,20 @@ public sealed class AppointmentRepository : IAppointmentRepository
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
+    public async Task<Appointment?> GetByClientRequestIdAsync(string clientRequestId)
+    {
+        if (string.IsNullOrWhiteSpace(clientRequestId))
+            return null;
+
+        await using var db = await _factory.CreateDbContextAsync();
+        return await db.Appointments.AsNoTracking()
+            .Include(x => x.Person)
+            .Include(x => x.HostUser)
+            .Include(x => x.Category)
+            .Include(x => x.Outcome)
+            .FirstOrDefaultAsync(x => x.ClientRequestId == clientRequestId);
+    }
+
     public async Task<AppointmentOutcome?> GetOutcomeAsync(string appointmentId)
     {
         await using var db = await _factory.CreateDbContextAsync();

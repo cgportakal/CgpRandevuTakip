@@ -34,6 +34,7 @@ public partial class AppointmentListViewModel : ObservableObject
     private readonly Services.IExcelImportService _excelImport;
     private readonly ISettingsService _settings;
     private readonly ServerReadService _serverReads;
+    private readonly OutboxService _outbox;
     private readonly DispatcherTimer _searchTimer;
     private readonly List<AppointmentRowViewModel> _selectedRows = new();
     private bool _isAllSelected;
@@ -52,7 +53,8 @@ public partial class AppointmentListViewModel : ObservableObject
         Services.IAppointmentExportService exports,
         Services.IExcelImportService excelImport,
         ISettingsService settings,
-        ServerReadService serverReads)
+        ServerReadService serverReads,
+        OutboxService outbox)
     {
         _appointments = appointments;
         _categories = categories;
@@ -64,6 +66,7 @@ public partial class AppointmentListViewModel : ObservableObject
         _excelImport = excelImport;
         _settings = settings;
         _serverReads = serverReads;
+        _outbox = outbox;
 
         CategoryFilters = new RangeObservableCollection<CategoryFilterOption>
         {
@@ -144,6 +147,13 @@ public partial class AppointmentListViewModel : ObservableObject
 
     [ObservableProperty]
     private string _serverModeText = string.Empty;
+
+    [ObservableProperty]
+    private int _pendingSyncCount;
+
+    public bool HasPendingSync => PendingSyncCount > 0;
+
+    public string PendingSyncText => $"{PendingSyncCount} bekleyen";
 
     public bool HasNextAppointment => NextAppointment is not null;
 
@@ -249,6 +259,7 @@ public partial class AppointmentListViewModel : ObservableObject
             NextAppointment = await _appointments.GetNextAppointmentAsync();
 
             HasServerMode = await _serverReads.IsServerReadActiveAsync();
+            PendingSyncCount = HasServerMode ? await _outbox.GetPendingCountAsync() : 0;
             ServerModeText = HasServerMode
                 ? _serverReads.IsOffline
                     ? "Sunucu: çevrimdışı — önbellek"
@@ -353,6 +364,13 @@ public partial class AppointmentListViewModel : ObservableObject
             {
                 _dialogs.Error(single.Error ?? "Görüşme silinemedi.", "Görüşme silinemedi");
                 return;
+            }
+
+            if (single.Queued)
+            {
+                _dialogs.Info(
+                    "Sunucuya şu anda ulaşılamıyor. Silme isteği yerel kuyruğa alındı; bağlantı gelince gönderilecek.",
+                    "Kuyruğa alındı");
             }
         }
         else
@@ -807,6 +825,12 @@ public partial class AppointmentListViewModel : ObservableObject
         OnPropertyChanged(nameof(HasNextAppointment));
         OnPropertyChanged(nameof(NextAppointmentText));
         OpenNextCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnPendingSyncCountChanged(int value)
+    {
+        OnPropertyChanged(nameof(HasPendingSync));
+        OnPropertyChanged(nameof(PendingSyncText));
     }
 
     partial void OnIsBusyChanged(bool value)

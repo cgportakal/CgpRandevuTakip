@@ -24,6 +24,7 @@ public sealed record AppointmentConflictRecord(
 public interface IAppointmentRepository
 {
     Task<Appointment?> GetByIdAsync(string id);
+    Task<Appointment?> GetByClientRequestIdAsync(string clientRequestId);
     Task<AppointmentOutcome?> GetOutcomeAsync(string appointmentId);
     Task<IReadOnlyList<Appointment>> QueryAsync(AppointmentQuery query);
     Task<Appointment?> GetNextAsync(DateTime nowUtc, string? hostUserId);

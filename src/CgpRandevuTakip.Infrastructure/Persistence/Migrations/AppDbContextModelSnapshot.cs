@@ -26,6 +26,10 @@ namespace CgpRandevuTakip.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ClientRequestId")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("ClosedAtUtc")
                         .HasColumnType("TEXT");
 
@@ -108,6 +112,9 @@ namespace CgpRandevuTakip.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("ClientRequestId")
+                        .IsUnique();
 
                     b.HasIndex("PersonId");
 
@@ -491,6 +498,47 @@ namespace CgpRandevuTakip.Infrastructure.Persistence.Migrations
                     b.HasIndex("UpdatedAtUtc");
 
                     b.ToTable("SyncCacheEntries", (string)null);
+                });
+
+            modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.SyncOutboxItem", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntityId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("State", "CreatedAtUtc");
+
+                    b.ToTable("SyncOutboxItems", (string)null);
                 });
 
             modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.User", b =>

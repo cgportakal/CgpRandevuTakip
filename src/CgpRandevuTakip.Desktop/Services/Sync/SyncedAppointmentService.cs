@@ -1,22 +1,34 @@
 using CgpRandevuTakip.Application.Appointments;
 using CgpRandevuTakip.Application.Common;
+using CgpRandevuTakip.Desktop.Services.Api;
 using CgpRandevuTakip.Domain.Enums;
 
 namespace CgpRandevuTakip.Desktop.Services.Sync;
 
 /// <summary>
-/// P2 okuma yolu: sunucu oturumu varsa okumalar API'den (çevrimdışıyken önbellekten),
-/// yoksa yerel veritabanından yapılır. Yazmalar P3'e kadar yerelde kalır.
+/// P2/P3 okuma-yazma yolu: sunucu oturumu ve okuma modu açıkken okumalar API'den,
+/// yazmalar önce API'ye gider; bağlantı yoksa yazma isteği outbox'a alınır.
 /// </summary>
 public sealed class SyncedAppointmentService : IAppointmentService
 {
     private readonly IAppointmentService _local;
     private readonly ServerReadService _reads;
+    private readonly ApiConnectionService _connection;
+    private readonly CgpApiClient _client;
+    private readonly OutboxService _outbox;
 
-    public SyncedAppointmentService(IAppointmentService local, ServerReadService reads)
+    public SyncedAppointmentService(
+        IAppointmentService local,
+        ServerReadService reads,
+        ApiConnectionService connection,
+        CgpApiClient client,
+        OutboxService outbox)
     {
         _local = local;
         _reads = reads;
+        _connection = connection;
+        _client = client;
+        _outbox = outbox;
     }
 
     public async Task<IReadOnlyList<AppointmentListItemDto>> GetDayAsync(DateTime localDate)
@@ -88,45 +100,149 @@ public sealed class SyncedAppointmentService : IAppointmentService
     }
 
     // P3'e kadar yazma işlemleri yerel veritabanında yürür.
-    public Task<AppointmentSaveResult> CreateAsync(AppointmentInput input)
-        => _local.CreateAsync(input);
+    public async Task<AppointmentSaveResult> CreateAsync(AppointmentInput input)
+    {
+        if (!await _reads.IsServerReadActiveAsync())
+            return await _local.CreateAsync(input);
+
+        var requestId = string.IsNullOrWhiteSpace(input.ClientRequestId)
+            ? Guid.NewGuid().ToString("N")
+            : input.ClientRequestId;
+
+        var serverInput = input with { ClientRequestId = requestId };
+        var session = await _connection.GetAuthorizedSessionAsync();
+
+        if (session is null)
+        {
+            await _outbox.EnqueueAsync(OutboxOperation.AppointmentCreate, requestId, serverInput);
+            return AppointmentSaveResult.QueuedOk(requestId);
+        }
+
+        var result = await _client.CreateAppointmentAsync(
+            session.BaseUrl,
+            session.AccessToken,
+            serverInput);
+
+        if (result.Success && result.Data is not null)
+            return result.Data;
+
+        if (result.IsNetworkError)
+        {
+            await _outbox.EnqueueAsync(OutboxOperation.AppointmentCreate, requestId, serverInput);
+            return AppointmentSaveResult.QueuedOk(requestId);
+        }
+
+        return AppointmentSaveResult.Fail(result.Error ?? "Görüşme sunucuya kaydedilemedi.");
+    }
 
     public Task<SeriesPlanDto> PreviewSeriesAsync(AppointmentInput input, SeriesRequest request)
         => _local.PreviewSeriesAsync(input, request);
 
-    public Task<SeriesCreateResult> CreateSeriesAsync(AppointmentInput input, SeriesRequest request)
-        => _local.CreateSeriesAsync(input, request);
+    public async Task<SeriesCreateResult> CreateSeriesAsync(AppointmentInput input, SeriesRequest request)
+        => await _reads.IsServerReadActiveAsync()
+            ? SeriesCreateResult.Fail("Sunucu okuma modunda seri oluşturma P3b'de etkinleşecek.")
+            : await _local.CreateSeriesAsync(input, request);
 
-    public Task<SeriesCancelResult> CancelSeriesAsync(string seriesId)
-        => _local.CancelSeriesAsync(seriesId);
+    public async Task<SeriesCancelResult> CancelSeriesAsync(string seriesId)
+        => await _reads.IsServerReadActiveAsync()
+            ? SeriesCancelResult.Fail("Sunucu okuma modunda seri iptali P3b'de etkinleşecek.")
+            : await _local.CancelSeriesAsync(seriesId);
 
     public Task<SeriesAppendPlanDto> PreviewAppendAsync(string seriesId, int count)
         => _local.PreviewAppendAsync(seriesId, count);
 
-    public Task<SeriesAppendResult> AppendSeriesAsync(string seriesId, int count)
-        => _local.AppendSeriesAsync(seriesId, count);
+    public async Task<SeriesAppendResult> AppendSeriesAsync(string seriesId, int count)
+        => await _reads.IsServerReadActiveAsync()
+            ? SeriesAppendResult.Fail("Sunucu okuma modunda seri ekleme P3b'de etkinleşecek.")
+            : await _local.AppendSeriesAsync(seriesId, count);
 
-    public Task<SeriesUpdateResult> UpdateSeriesAsync(string seriesId, SeriesUpdateInput input)
-        => _local.UpdateSeriesAsync(seriesId, input);
+    public async Task<SeriesUpdateResult> UpdateSeriesAsync(string seriesId, SeriesUpdateInput input)
+        => await _reads.IsServerReadActiveAsync()
+            ? SeriesUpdateResult.Fail("Sunucu okuma modunda seri düzenleme P3b'de etkinleşecek.")
+            : await _local.UpdateSeriesAsync(seriesId, input);
 
-    public Task<AppointmentSaveResult> UpdateAsync(string id, AppointmentInput input)
-        => _local.UpdateAsync(id, input);
+    public async Task<AppointmentSaveResult> UpdateAsync(string id, AppointmentInput input)
+    {
+        if (!await _reads.IsServerReadActiveAsync())
+            return await _local.UpdateAsync(id, input);
 
-    public Task<OperationResult> DeleteAsync(string id)
-        => _local.DeleteAsync(id);
+        var session = await _connection.GetAuthorizedSessionAsync();
+        if (session is null)
+        {
+            await _outbox.EnqueueAsync(OutboxOperation.AppointmentUpdate, id, input);
+            return AppointmentSaveResult.QueuedOk(id);
+        }
 
-    public Task<BulkDeleteResult> DeleteManyAsync(IReadOnlyList<string> ids)
-        => _local.DeleteManyAsync(ids);
+        var result = await _client.UpdateAppointmentAsync(
+            session.BaseUrl,
+            session.AccessToken,
+            id,
+            input);
 
-    public Task<BulkMoveResult> MoveManyAsync(
+        if (result.Success && result.Data is not null)
+            return result.Data;
+
+        if (result.IsNetworkError)
+        {
+            await _outbox.EnqueueAsync(OutboxOperation.AppointmentUpdate, id, input);
+            return AppointmentSaveResult.QueuedOk(id);
+        }
+
+        return AppointmentSaveResult.Fail(result.Error ?? "Görüşme sunucuda güncellenemedi.");
+    }
+
+    public async Task<OperationResult> DeleteAsync(string id)
+    {
+        if (!await _reads.IsServerReadActiveAsync())
+            return await _local.DeleteAsync(id);
+
+        var session = await _connection.GetAuthorizedSessionAsync();
+        if (session is null)
+        {
+            await _outbox.EnqueueAsync(OutboxOperation.AppointmentDelete, id, null);
+            return OperationResult.QueuedOk();
+        }
+
+        var result = await _client.DeleteAppointmentAsync(
+            session.BaseUrl,
+            session.AccessToken,
+            id);
+
+        if (result.Success)
+            return OperationResult.Ok();
+
+        if (result.IsNetworkError)
+        {
+            await _outbox.EnqueueAsync(OutboxOperation.AppointmentDelete, id, null);
+            return OperationResult.QueuedOk();
+        }
+
+        return OperationResult.Fail(result.Error ?? "Görüşme sunucudan silinemedi.");
+    }
+
+    public async Task<BulkDeleteResult> DeleteManyAsync(IReadOnlyList<string> ids)
+        => await _reads.IsServerReadActiveAsync()
+            ? new BulkDeleteResult(0, ids, "Sunucu okuma modunda toplu silme P3b'de etkinleşecek.")
+            : await _local.DeleteManyAsync(ids);
+
+    public async Task<BulkMoveResult> MoveManyAsync(
         IReadOnlyList<string> ids,
         DateTime newDate,
         TimeSpan? newTime,
         bool ignoreConflicts = false)
-        => _local.MoveManyAsync(ids, newDate, newTime, ignoreConflicts);
+        => await _reads.IsServerReadActiveAsync()
+            ? new BulkMoveResult(
+                0,
+                Array.Empty<string>(),
+                Array.Empty<AppointmentConflictDto>(),
+                ids,
+                "Sunucu okuma modunda toplu taşıma P3b'de etkinleşecek.")
+            : await _local.MoveManyAsync(ids, newDate, newTime, ignoreConflicts);
 
-    public Task<OperationResult> RestoreAsync(string id)
-        => _local.RestoreAsync(id);
+    public async Task<OperationResult> RestoreAsync(string id)
+        => await _reads.IsServerReadActiveAsync()
+            ? OperationResult.Fail("Sunucu okuma modunda geri alma P3b'de etkinleşecek.")
+            : await _local.RestoreAsync(id);
 
     public Task<int> PurgeExpiredDeletedAsync(DateTime nowUtc)
         => _local.PurgeExpiredDeletedAsync(nowUtc);

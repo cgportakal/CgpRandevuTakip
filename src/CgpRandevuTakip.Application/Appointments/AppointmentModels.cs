@@ -15,7 +15,8 @@ public sealed record AppointmentInput(
     string? StudentFirstName,
     string? StudentLastName,
     IReadOnlyList<int> ReminderOffsetsMinutes,
-    bool IgnoreConflicts = false);
+    bool IgnoreConflicts = false,
+    string? ClientRequestId = null);
 
 public sealed record AppointmentConflictDto(
     string AppointmentId,
@@ -31,8 +32,14 @@ public sealed record AppointmentSaveResult(
     string? AppointmentId,
     IReadOnlyList<AppointmentConflictDto>? Conflicts)
 {
+    /// <summary>Sunucu bağlantısı olmadığı için işlem kuyruğa alındı.</summary>
+    public bool Queued { get; init; }
+
     public static AppointmentSaveResult Ok(string appointmentId)
         => new(true, null, appointmentId, null);
+
+    public static AppointmentSaveResult QueuedOk(string appointmentId)
+        => new(true, null, appointmentId, null) { Queued = true };
 
     public static AppointmentSaveResult Fail(string error)
         => new(false, error, null, null);

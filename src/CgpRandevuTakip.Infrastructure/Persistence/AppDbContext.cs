@@ -23,6 +23,7 @@ public class AppDbContext : DbContext
     public DbSet<BackupRecord> BackupRecords => Set<BackupRecord>();
     public DbSet<ContentVersion> ContentVersions => Set<ContentVersion>();
     public DbSet<SyncCacheEntry> SyncCacheEntries => Set<SyncCacheEntry>();
+    public DbSet<SyncOutboxItem> SyncOutboxItems => Set<SyncOutboxItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -88,6 +89,8 @@ public class AppDbContext : DbContext
             entity.HasIndex(x => new { x.Status, x.StartsAtUtc });
             entity.HasIndex(x => new { x.CategoryId, x.StartsAtUtc });
             entity.Property(x => x.SeriesId).HasMaxLength(100);
+            entity.Property(x => x.ClientRequestId).HasMaxLength(64);
+            entity.HasIndex(x => x.ClientRequestId).IsUnique();
 
             entity.HasOne(x => x.Person)
                   .WithMany(x => x.Appointments)
@@ -211,6 +214,18 @@ public class AppDbContext : DbContext
             entity.Property(x => x.Payload).IsRequired();
             entity.Property(x => x.ETag).HasMaxLength(100);
             entity.HasIndex(x => x.UpdatedAtUtc);
+        });
+
+        modelBuilder.Entity<SyncOutboxItem>(entity =>
+        {
+            entity.ToTable("SyncOutboxItems");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Operation).HasMaxLength(50).IsRequired();
+            entity.Property(x => x.EntityId).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Payload).IsRequired();
+            entity.Property(x => x.LastError).HasMaxLength(1000);
+            entity.Property(x => x.State).HasMaxLength(20).IsRequired();
+            entity.HasIndex(x => new { x.State, x.CreatedAtUtc });
         });
     }
 }
