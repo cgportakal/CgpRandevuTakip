@@ -70,6 +70,15 @@ public partial class App : System.Windows.Application
             await InitializeDatabaseAsync();
             await _host.StartAsync();
 
+            try
+            {
+                await _host.Services.GetRequiredService<DesktopRealtimeClient>().StartAsync();
+            }
+            catch
+            {
+                // SignalR bağlantısı kurulamazsa uygulama çevrimdışı devam eder.
+            }
+
             var rollback = _host.Services.GetRequiredService<UpdateRollbackService>();
             if (rollback.HandlePendingOnStartup())
             {
@@ -332,6 +341,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<ServerReadService>();
         services.AddSingleton<OutboxService>();
         services.AddSingleton<PendingAppointmentOverlay>();
+        services.AddSingleton<DesktopRealtimeClient>();
         services.AddSingleton<IPushNotifier, PushNotifier>();
         services.AddSingleton<WindowsToastService>();
         services.AddSingleton<SessionStateService>();
@@ -699,6 +709,18 @@ public partial class App : System.Windows.Application
 
         if (_host is not null)
         {
+            try
+            {
+                _host.Services.GetRequiredService<DesktopRealtimeClient>()
+                    .StopAsync()
+                    .GetAwaiter()
+                    .GetResult();
+            }
+            catch
+            {
+                // Kapanışta SignalR hatası kullanıcıya gösterilmez.
+            }
+
             try
             {
                 _host.StopAsync(TimeSpan.FromSeconds(3)).GetAwaiter().GetResult();
