@@ -187,6 +187,28 @@ public sealed class OutboxService
                             dependent.EntityId = result.ServerId!;
                         }
 
+                        // Bekleyen toplu taşıma isteklerindeki geçici kimliği de değiştir.
+                        foreach (var dependent in pending.Where(x =>
+                                     !ReferenceEquals(x, item)
+                                     && x.State == "pending"
+                                     && x.Operation == OutboxOperation.AppointmentsBulkMove.ToString()))
+                        {
+                            var move = Deserialize<BulkMoveOutboxPayload>(dependent.Payload);
+                            if (move is null || !move.Ids.Contains(item.EntityId, StringComparer.Ordinal))
+                                continue;
+
+                            dependent.Payload = JsonSerializer.Serialize(
+                                move with
+                                {
+                                    Ids = move.Ids
+                                        .Select(x => string.Equals(x, item.EntityId, StringComparison.Ordinal)
+                                            ? result.ServerId!
+                                            : x)
+                                        .ToList(),
+                                },
+                                ApiJson.Options);
+                        }
+
                         // Aynı anda kuyruğa eklenmiş (bu listede olmayan) bağımlı
                         // istekleri de veritabanında sunucu kimliğine bağla.
                         await db.Database.ExecuteSqlInterpolatedAsync(

@@ -3,7 +3,7 @@
 **Son güncelleme:** 2026-11-21 12:30 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `agent/cfr-lenovo/desktop-sync-p3c` (PR bekliyor)
-**Durum:** Yeşil — **427 test**. **P3 tamamlandı:** seri oluşturma/ekleme/düzenleme/iptali,
+**Durum:** Yeşil — **428 test**. **P3 tamamlandı:** seri oluşturma/ekleme/düzenleme/iptali,
 toplu silme/taşıma, geri alma ve görüşme sonucu API + outbox; çevrimdışı kayıtlar (tekil ve
 seri) listede/detayda görünür, geçici kimlikler eşlenir. Sıradaki: P3 saha UAT’i → P4 SignalR.
 
@@ -345,7 +345,7 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-Bu dal: yerel **427/427** test (334 uygulama + 75 masaüstü/VM + 16 API + 2 UI), web build ve
+Bu dal: yerel **428/428** test (334 uygulama + 76 masaüstü/VM + 16 API + 2 UI), web build ve
 mobil `tsc` başarılı. Master CI ✅ ve **Release v1.9.0** ✅ (PR #56 / tag `v1.9.0`).
 Son release: **1.9.0** (Setup + portable); README Setup/portable bağlantıları HTTP 200.
 Android emülatör ve **Samsung S21 gerçek cihaz UAT** tamamlandı.
