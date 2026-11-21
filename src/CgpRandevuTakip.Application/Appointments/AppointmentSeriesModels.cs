@@ -70,6 +70,9 @@ public sealed record SeriesCreateResult(
     int SkippedCount,
     IReadOnlyList<SeriesSlotDto> Slots)
 {
+    /// <summary>Sunucu bağlantısı olmadığı için işlem kuyruğa alındı.</summary>
+    public bool Queued { get; init; }
+
     public static SeriesCreateResult Fail(string error, IReadOnlyList<SeriesSlotDto>? slots = null)
         => new(false, error, null, 0, slots?.Count ?? 0, slots ?? Array.Empty<SeriesSlotDto>());
 
@@ -79,6 +82,12 @@ public sealed record SeriesCreateResult(
         int skippedCount,
         IReadOnlyList<SeriesSlotDto> slots)
         => new(true, null, seriesId, createdCount, skippedCount, slots);
+
+    public static SeriesCreateResult QueuedOk(
+        string seriesId,
+        int createdCount,
+        IReadOnlyList<SeriesSlotDto> slots)
+        => new(true, null, seriesId, createdCount, 0, slots) { Queued = true };
 
     public string Summary => Success
         ? SkippedCount == 0
@@ -94,10 +103,16 @@ public sealed record SeriesCancelResult(
     int SkippedCount,
     string? Error)
 {
+    /// <summary>Sunucu bağlantısı olmadığı için işlem kuyruğa alındı.</summary>
+    public bool Queued { get; init; }
+
     public static SeriesCancelResult Fail(string error) => new(false, 0, 0, error);
 
     public static SeriesCancelResult Ok(int cancelled, int skipped)
         => new(true, cancelled, skipped, null);
+
+    public static SeriesCancelResult QueuedOk()
+        => new(true, 0, 0, null) { Queued = true };
 
     public string Summary => Success
         ? SkippedCount == 0

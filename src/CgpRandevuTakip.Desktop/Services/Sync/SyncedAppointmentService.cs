@@ -16,19 +16,22 @@ public sealed class SyncedAppointmentService : IAppointmentService
     private readonly ApiConnectionService _connection;
     private readonly CgpApiClient _client;
     private readonly OutboxService _outbox;
+    private readonly PendingAppointmentOverlay? _overlay;
 
     public SyncedAppointmentService(
         IAppointmentService local,
         ServerReadService reads,
         ApiConnectionService connection,
         CgpApiClient client,
-        OutboxService outbox)
+        OutboxService outbox,
+        PendingAppointmentOverlay? overlay = null)
     {
         _local = local;
         _reads = reads;
         _connection = connection;
         _client = client;
         _outbox = outbox;
+        _overlay = overlay;
     }
 
     public async Task<IReadOnlyList<AppointmentListItemDto>> GetDayAsync(DateTime localDate)
@@ -37,9 +40,20 @@ public sealed class SyncedAppointmentService : IAppointmentService
             return await _local.GetDayAsync(localDate);
 
         var result = await _reads.GetDayAsync(localDate);
-        return result.Success && result.Data is not null
-            ? result.Data
-            : await _local.GetDayAsync(localDate);
+        if (result.Success && result.Data is not null)
+        {
+            return _overlay is null
+                ? result.Data
+                : await _overlay.ApplyAsync(
+                    result.Data,
+                    searchText: null,
+                    fromLocal: localDate,
+                    toLocal: localDate,
+                    hostUserId: null,
+                    status: null);
+        }
+
+        return await _local.GetDayAsync(localDate);
     }
 
     public async Task<IReadOnlyList<AppointmentListItemDto>> SearchAsync(
@@ -61,9 +75,20 @@ public sealed class SyncedAppointmentService : IAppointmentService
             toLocal,
             hostUserId);
 
-        return result.Success && result.Data is not null
-            ? result.Data
-            : await _local.SearchAsync(searchText, categoryId, status, fromLocal, toLocal, hostUserId);
+        if (result.Success && result.Data is not null)
+        {
+            return _overlay is null
+                ? result.Data
+                : await _overlay.ApplyAsync(
+                    result.Data,
+                    searchText,
+                    fromLocal,
+                    toLocal,
+                    hostUserId,
+                    status);
+        }
+
+        return await _local.SearchAsync(searchText, categoryId, status, fromLocal, toLocal, hostUserId);
     }
 
     public async Task<AppointmentDetailDto?> GetDetailAsync(string id)
@@ -73,7 +98,11 @@ public sealed class SyncedAppointmentService : IAppointmentService
 
         var result = await _reads.GetDetailAsync(id);
         if (result.Success)
-            return result.Data;
+        {
+            return _overlay is null
+                ? result.Data
+                : await _overlay.ApplyDetailAsync(result.Data, id);
+        }
 
         // Sunucu kaydı bulamadıysa yerelde eski kopyayı gösterme.
         return result.StatusCode == 404 ? null : await _local.GetDetailAsync(id);
@@ -85,7 +114,24 @@ public sealed class SyncedAppointmentService : IAppointmentService
             return await _local.GetNextAppointmentAsync();
 
         var result = await _reads.GetNextAsync();
-        return result.Success ? result.Data : await _local.GetNextAppointmentAsync();
+        if (!result.Success)
+            return await _local.GetNextAppointmentAsync();
+
+        if (_overlay is null)
+            return result.Data;
+
+        var candidates = await _overlay.ApplyAsync(
+            result.Data is null ? Array.Empty<AppointmentListItemDto>() : new[] { result.Data },
+            searchText: null,
+            fromLocal: null,
+            toLocal: null,
+            hostUserId: null,
+            status: null);
+
+        return candidates.FirstOrDefault(x =>
+            x.StartsAtLocal >= DateTime.Now
+            && !x.IsDeleted
+            && x.Status is AppointmentStatus.Scheduled or AppointmentStatus.Arrived);
     }
 
     public async Task<IReadOnlyList<DeletedAppointmentDto>> GetDeletedAsync()
@@ -139,14 +185,76 @@ public sealed class SyncedAppointmentService : IAppointmentService
         => _local.PreviewSeriesAsync(input, request);
 
     public async Task<SeriesCreateResult> CreateSeriesAsync(AppointmentInput input, SeriesRequest request)
-        => await _reads.IsServerReadActiveAsync()
-            ? SeriesCreateResult.Fail("Sunucu okuma modunda seri oluşturma P3b'de etkinleşecek.")
-            : await _local.CreateSeriesAsync(input, request);
+    {
+        if (!await _reads.IsServerReadActiveAsync())
+            return await _local.CreateSeriesAsync(input, request);
+
+        var requestId = string.IsNullOrWhiteSpace(input.ClientRequestId)
+            ? Guid.NewGuid().ToString("N")
+            : input.ClientRequestId;
+
+        var serverInput = input with { ClientRequestId = requestId };
+        var session = await _connection.GetAuthorizedSessionAsync();
+
+        if (session is null)
+        {
+            await _outbox.EnqueueAsync(
+                OutboxOperation.SeriesCreate,
+                requestId,
+                new SeriesOutboxPayload(serverInput, request.Frequency, request.Count));
+            return SeriesCreateResult.QueuedOk(requestId, request.Count, Array.Empty<SeriesSlotDto>());
+        }
+
+        var result = await _client.CreateSeriesAsync(
+            session.BaseUrl,
+            session.AccessToken,
+            serverInput,
+            request.Frequency,
+            request.Count);
+
+        if (result.Success && result.Data is not null)
+            return result.Data;
+
+        if (result.IsNetworkError)
+        {
+            await _outbox.EnqueueAsync(
+                OutboxOperation.SeriesCreate,
+                requestId,
+                new SeriesOutboxPayload(serverInput, request.Frequency, request.Count));
+            return SeriesCreateResult.QueuedOk(requestId, request.Count, Array.Empty<SeriesSlotDto>());
+        }
+
+        return SeriesCreateResult.Fail(result.Error ?? "Seri sunucuda oluşturulamadı.");
+    }
 
     public async Task<SeriesCancelResult> CancelSeriesAsync(string seriesId)
-        => await _reads.IsServerReadActiveAsync()
-            ? SeriesCancelResult.Fail("Sunucu okuma modunda seri iptali P3b'de etkinleşecek.")
-            : await _local.CancelSeriesAsync(seriesId);
+    {
+        if (!await _reads.IsServerReadActiveAsync())
+            return await _local.CancelSeriesAsync(seriesId);
+
+        var session = await _connection.GetAuthorizedSessionAsync();
+        if (session is null)
+        {
+            await _outbox.EnqueueAsync(OutboxOperation.SeriesCancel, seriesId, null);
+            return SeriesCancelResult.QueuedOk();
+        }
+
+        var result = await _client.CancelSeriesAsync(
+            session.BaseUrl,
+            session.AccessToken,
+            seriesId);
+
+        if (result.Success && result.Data is not null)
+            return result.Data;
+
+        if (result.IsNetworkError)
+        {
+            await _outbox.EnqueueAsync(OutboxOperation.SeriesCancel, seriesId, null);
+            return SeriesCancelResult.QueuedOk();
+        }
+
+        return SeriesCancelResult.Fail(result.Error ?? "Seri sunucuda iptal edilemedi.");
+    }
 
     public Task<SeriesAppendPlanDto> PreviewAppendAsync(string seriesId, int count)
         => _local.PreviewAppendAsync(seriesId, count);
@@ -221,9 +329,56 @@ public sealed class SyncedAppointmentService : IAppointmentService
     }
 
     public async Task<BulkDeleteResult> DeleteManyAsync(IReadOnlyList<string> ids)
-        => await _reads.IsServerReadActiveAsync()
-            ? new BulkDeleteResult(0, ids, "Sunucu okuma modunda toplu silme P3b'de etkinleşecek.")
-            : await _local.DeleteManyAsync(ids);
+    {
+        if (!await _reads.IsServerReadActiveAsync())
+            return await _local.DeleteManyAsync(ids);
+
+        var session = await _connection.GetAuthorizedSessionAsync();
+        if (session is null)
+        {
+            foreach (var id in ids)
+                await _outbox.EnqueueAsync(OutboxOperation.AppointmentDelete, id, null);
+
+            return new BulkDeleteResult(0, Array.Empty<string>())
+            {
+                Queued = ids.Count,
+            };
+        }
+
+        var deleted = 0;
+        var failed = new List<string>();
+        var queued = 0;
+
+        for (var index = 0; index < ids.Count; index++)
+        {
+            var id = ids[index];
+            var result = await _client.DeleteAppointmentAsync(
+                session.BaseUrl,
+                session.AccessToken,
+                id);
+
+            if (result.Success)
+            {
+                deleted++;
+                continue;
+            }
+
+            if (result.IsNetworkError)
+            {
+                for (var remaining = index; remaining < ids.Count; remaining++)
+                {
+                    await _outbox.EnqueueAsync(OutboxOperation.AppointmentDelete, ids[remaining], null);
+                    queued++;
+                }
+
+                break;
+            }
+
+            failed.Add(id);
+        }
+
+        return new BulkDeleteResult(deleted, failed) { Queued = queued };
+    }
 
     public async Task<BulkMoveResult> MoveManyAsync(
         IReadOnlyList<string> ids,
@@ -240,9 +395,33 @@ public sealed class SyncedAppointmentService : IAppointmentService
             : await _local.MoveManyAsync(ids, newDate, newTime, ignoreConflicts);
 
     public async Task<OperationResult> RestoreAsync(string id)
-        => await _reads.IsServerReadActiveAsync()
-            ? OperationResult.Fail("Sunucu okuma modunda geri alma P3b'de etkinleşecek.")
-            : await _local.RestoreAsync(id);
+    {
+        if (!await _reads.IsServerReadActiveAsync())
+            return await _local.RestoreAsync(id);
+
+        var session = await _connection.GetAuthorizedSessionAsync();
+        if (session is null)
+        {
+            await _outbox.EnqueueAsync(OutboxOperation.AppointmentRestore, id, null);
+            return OperationResult.QueuedOk();
+        }
+
+        var result = await _client.RestoreAppointmentAsync(
+            session.BaseUrl,
+            session.AccessToken,
+            id);
+
+        if (result.Success)
+            return OperationResult.Ok();
+
+        if (result.IsNetworkError)
+        {
+            await _outbox.EnqueueAsync(OutboxOperation.AppointmentRestore, id, null);
+            return OperationResult.QueuedOk();
+        }
+
+        return OperationResult.Fail(result.Error ?? "Görüşme sunucuda geri alınamadı.");
+    }
 
     public Task<int> PurgeExpiredDeletedAsync(DateTime nowUtc)
         => _local.PurgeExpiredDeletedAsync(nowUtc);

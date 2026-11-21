@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using CgpRandevuTakip.Application.Appointments;
 using CgpRandevuTakip.Application.Reports;
+using CgpRandevuTakip.Domain.Enums;
 
 namespace CgpRandevuTakip.Desktop.Services.Api;
 
@@ -197,6 +198,18 @@ public sealed class CgpApiClient
             accessToken,
             ct);
 
+    public Task<ApiResult<bool>> RestoreAppointmentAsync(
+        string baseUrl,
+        string accessToken,
+        string id,
+        CancellationToken ct = default)
+        => SendAsync<bool>(
+            new HttpRequestMessage(
+                HttpMethod.Post,
+                Url(baseUrl, "/v1/appointments/" + Uri.EscapeDataString(id) + "/restore")),
+            accessToken,
+            ct);
+
     public Task<ApiResult<bool>> SaveOutcomeAsync(
         string baseUrl,
         string accessToken,
@@ -213,6 +226,36 @@ public sealed class CgpApiClient
 
         return SendAsync<bool>(request, accessToken, ct);
     }
+
+    public Task<ApiResult<SeriesCreateResult>> CreateSeriesAsync(
+        string baseUrl,
+        string accessToken,
+        AppointmentInput input,
+        SeriesFrequency frequency,
+        int count,
+        CancellationToken ct = default)
+    {
+        var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            Url(baseUrl, "/v1/appointments/series"))
+        {
+            Content = JsonContent.Create(new { input, frequency, count }, options: ApiJson.Options),
+        };
+
+        return SendAsync<SeriesCreateResult>(request, accessToken, ct);
+    }
+
+    public Task<ApiResult<SeriesCancelResult>> CancelSeriesAsync(
+        string baseUrl,
+        string accessToken,
+        string seriesId,
+        CancellationToken ct = default)
+        => SendAsync<SeriesCancelResult>(
+            new HttpRequestMessage(
+                HttpMethod.Post,
+                Url(baseUrl, "/v1/appointments/series/" + Uri.EscapeDataString(seriesId) + "/cancel")),
+            accessToken,
+            ct);
 
     public Task<ApiResult<ReportSummaryDto>> GetReportSummaryAsync(
         string baseUrl,

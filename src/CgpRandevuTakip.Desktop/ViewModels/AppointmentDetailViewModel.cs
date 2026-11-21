@@ -147,7 +147,17 @@ public partial class AppointmentDetailViewModel : ObservableObject
             return;
         }
 
-        _dialogs.Info(result.Summary, "Seri iptal edildi");
+        if (result.Queued)
+        {
+            _dialogs.Info(
+                "Sunucuya şu anda ulaşılamıyor. Seri iptali yerel kuyruğa alındı; bağlantı gelince gönderilecek.",
+                "Kuyruğa alındı");
+        }
+        else
+        {
+            _dialogs.Info(result.Summary, "Seri iptal edildi");
+        }
+
         NeedsRefresh = true;
         await LoadAsync(Detail.Id);
     }

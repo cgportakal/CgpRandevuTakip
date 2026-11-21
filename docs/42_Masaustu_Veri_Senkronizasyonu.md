@@ -1,6 +1,6 @@
 # 42 — Masaüstü Veri Senkronizasyonu (Devir Planı)
 
-**Tarih:** 19.11.2026 · **Durum:** P1 tamamlandı; P2 okuma yolu tamamlandı (manuel UAT sıradaki); P3a yazma yolu + outbox tamamlandı · **Kaynak karar:** [docs/41](41_Tasarim_ve_Veri_Paritesi.md) §4
+**Tarih:** 19.11.2026 · **Durum:** P1 tamamlandı; P2 okuma yolu tamamlandı; P3a/P3b yazma, outbox ve çevrimdışı görünürlük tamamlandı; P2/P3 UAT ve P3c (seri ekleme/düzenleme, toplu taşıma) sıradaki · **Kaynak karar:** [docs/41](41_Tasarim_ve_Veri_Paritesi.md) §4
 
 Bu belge, masaüstü uygulamasının API ile tam senkronize çalışması için yapılacak işleri ve
 teknik kararları diğer bilgisayara devretmek için yazıldı. Yeni oturumda önce
@@ -112,20 +112,20 @@ arama ve detay yanıtları istemciyle okundu; manuel arayüz UAT'i sıradaki ad�
 ### P3 — Yazma yolu + outbox — **P3a tamamlandı (21.11.2026); P3b sıradaki**
 - [x] Tekil randevu oluştur/güncelle/sil işlemlerini API’ye gönder; bağlantı yoksa kuyrukla.
 - [x] Görüşme sonucu (outcome) kaydetmeyi API’ye gönder; bağlantı yoksa kuyrukla.
-- [x] `ClientRequestId` idempotency (API + tek randevu ve seri ilk kaydı) ve migration.
+- [x] Seri oluşturma ve iptalini API’ye gönder; bağlantı yoksa kuyrukla.
+- [x] Toplu silmeyi API’ye gönder; bağlantı yoksa her kaydı kuyruğa al.
+- [x] Silinen randevuyu geri almayı API’ye gönder; bağlantı yoksa kuyrukla.
+- [x] `ClientRequestId` idempotency (API + tek randevu ve seri) ve migration.
 - [x] `SyncOutboxItems` tablosu; sıralı gönderim, 30 sn’lik arka plan gönderimi, hata durumu.
-- [x] Kullanıcıya “kuyruğa alındı” mesajı ve günlük listede bekleyen sayaç.
-- [ ] Seri oluşturma/iptal/ekleme, toplu silme/taşıma ve geri alma.
-- [ ] Çevrimdışı oluşturulan kaydın listede hemen görünmesi (pending overlay).
-- [ ] Create → update → outcome zincirinde kimlik eşleme.
-- [ ] UAT: uçak modunda oluştur, bağlantı gelince sunucuya gider; kuyruk kalıcıdır.
+- [x] Çevrimdışı oluşturulan/güncellenen kaydın listede ve detayda görünmesi (pending overlay).
+- [x] Create → update → outcome zincirinde geçici kimliğin sunucu kimliğine eşlenmesi.
+- [x] Kullanıcıya “kuyruğa alındı” mesajı, günlük listede bekleyen sayaç ve başarısız kuyruk yönetimi.
+- [ ] Seri ekleme/düzenleme (API uçları henüz yok) ve toplu taşıma.
+- [ ] UAT: uçak modunda oluştur/güncelle/sil, bağlantı gelince sırayla gönderim.
 
-P3a uygulaması: `Desktop/Services/Sync/OutboxService.cs`, `OutboxFlushService.cs`,
-`SyncedAppointmentService` ve `SyncedAppointmentOutcomeService` yazma metotları,
-`SyncOutboxItems` migration. Okuma modu açıkken tekil randevu oluştur/güncelle/sil ve
-görüşme sonucu API’ye gider; ağ yoksa kuyruğa alınır ve 30 sn’de bir gönderilir.
-**P3b’ye kadar seri, toplu işlem ve geri alma yerelde kalır; çevrimdışı oluşturulan kayıt
-listelenmez.** Bu nedenle okuma modu üretimde açılmamalıdır.
+P3b uygulaması: `PendingAppointmentOverlay`, seri oluşturma/iptali, toplu silme ve geri alma
+API yolları; başarısız kuyruk kayıtları için “Yeniden dene”. Okuma modu açıkken seri
+ekleme/düzenleme ve toplu taşıma P3c’ye kadar **engellidir** (API uçları yok).
 
 ### P4 — SignalR
 - [ ] `Microsoft.AspNetCore.SignalR.Client` ekle; süresiz geri çekilmeli yeniden bağlanma

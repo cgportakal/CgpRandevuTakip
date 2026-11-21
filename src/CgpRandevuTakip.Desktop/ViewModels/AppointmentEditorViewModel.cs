@@ -563,7 +563,17 @@ public partial class AppointmentEditorViewModel : ObservableObject
             return;
         }
 
-        _dialogs.Info(result.Summary, "Seri oluşturuldu");
+        if (result.Queued)
+        {
+            _dialogs.Info(
+                "Sunucuya şu anda ulaşılamıyor. Seri oluşturma isteği yerel kuyruğa alındı; bağlantı gelince gönderilecek.",
+                "Kuyruğa alındı");
+        }
+        else
+        {
+            _dialogs.Info(result.Summary, "Seri oluşturuldu");
+        }
+
         Saved?.Invoke(this, EventArgs.Empty);
     }
 

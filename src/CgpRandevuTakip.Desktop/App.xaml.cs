@@ -331,6 +331,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<ISyncCacheStore>(sp => sp.GetRequiredService<SyncCacheStore>());
         services.AddSingleton<ServerReadService>();
         services.AddSingleton<OutboxService>();
+        services.AddSingleton<PendingAppointmentOverlay>();
         services.AddSingleton<IPushNotifier, PushNotifier>();
         services.AddSingleton<WindowsToastService>();
         services.AddSingleton<SessionStateService>();
@@ -367,7 +368,8 @@ public partial class App : System.Windows.Application
             sp.GetRequiredService<ServerReadService>(),
             sp.GetRequiredService<ApiConnectionService>(),
             sp.GetRequiredService<CgpApiClient>(),
-            sp.GetRequiredService<OutboxService>()));
+            sp.GetRequiredService<OutboxService>(),
+            sp.GetRequiredService<PendingAppointmentOverlay>()));
         services.AddSingleton<ReportService>();
         services.AddSingleton<IReportService>(sp => new SyncedReportService(
             sp.GetRequiredService<ReportService>(),

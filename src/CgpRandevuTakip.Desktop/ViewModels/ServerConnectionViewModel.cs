@@ -13,6 +13,7 @@ public partial class ServerConnectionViewModel : ObservableObject
 {
     private readonly ApiConnectionService _connection;
     private readonly ServerReadService _reads;
+    private readonly OutboxService _outbox;
 
     [ObservableProperty]
     private string _baseUrl = ApiSessionStore.DefaultBaseUrl;
@@ -39,12 +40,25 @@ public partial class ServerConnectionViewModel : ObservableObject
     [ObservableProperty]
     private bool _readModeEnabled;
 
+    [ObservableProperty]
+    private string _outboxText = "Yazma kuyruğu boş.";
+
+    [ObservableProperty]
+    private bool _hasOutboxItems;
+
+    [ObservableProperty]
+    private bool _hasFailedOutbox;
+
     public string Password { get; set; } = string.Empty;
 
-    public ServerConnectionViewModel(ApiConnectionService connection, ServerReadService reads)
+    public ServerConnectionViewModel(
+        ApiConnectionService connection,
+        ServerReadService reads,
+        OutboxService outbox)
     {
         _connection = connection;
         _reads = reads;
+        _outbox = outbox;
     }
 
     public async Task InitializeAsync()
@@ -60,6 +74,8 @@ public partial class ServerConnectionViewModel : ObservableObject
                 IsConnected = true;
                 ConnectionText = $"{session.User.DisplayName} · {session.User.Role}";
             }
+
+            await RefreshOutboxAsync();
         }
         catch (Exception ex)
         {
@@ -135,6 +151,48 @@ public partial class ServerConnectionViewModel : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task RetryOutboxAsync()
+    {
+        ClearMessages();
+        IsBusy = true;
+        try
+        {
+            var retried = await _outbox.RetryFailedAsync();
+            var flush = await _outbox.FlushAsync();
+            await RefreshOutboxAsync();
+
+            if (flush.Sent > 0)
+                StatusMessage = $"{flush.Sent} kuyruk kaydı gönderildi.";
+            else if (retried > 0)
+                StatusMessage = $"{retried} kayıt yeniden denemeye alındı.";
+            else
+                StatusMessage = "Gönderilecek kayıt yok.";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task RefreshOutboxAsync()
+    {
+        var pending = await _outbox.GetPendingCountAsync();
+        var failed = await _outbox.GetFailedCountAsync();
+
+        HasOutboxItems = pending > 0 || failed > 0;
+        HasFailedOutbox = failed > 0;
+        OutboxText = failed > 0
+            ? $"{pending} bekleyen · {failed} başarısız kayıt"
+            : pending > 0
+                ? $"{pending} bekleyen kayıt"
+                : "Yazma kuyruğu boş.";
     }
 
     private void ClearMessages()
