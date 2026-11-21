@@ -330,6 +330,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<SyncCacheStore>();
         services.AddSingleton<ISyncCacheStore>(sp => sp.GetRequiredService<SyncCacheStore>());
         services.AddSingleton<ServerReadService>();
+        services.AddSingleton<OutboxService>();
         services.AddSingleton<IPushNotifier, PushNotifier>();
         services.AddSingleton<WindowsToastService>();
         services.AddSingleton<SessionStateService>();
@@ -363,7 +364,10 @@ public partial class App : System.Windows.Application
         services.AddSingleton<AppointmentService>();
         services.AddSingleton<IAppointmentService>(sp => new SyncedAppointmentService(
             sp.GetRequiredService<AppointmentService>(),
-            sp.GetRequiredService<ServerReadService>()));
+            sp.GetRequiredService<ServerReadService>(),
+            sp.GetRequiredService<ApiConnectionService>(),
+            sp.GetRequiredService<CgpApiClient>(),
+            sp.GetRequiredService<OutboxService>()));
         services.AddSingleton<ReportService>();
         services.AddSingleton<IReportService>(sp => new SyncedReportService(
             sp.GetRequiredService<ReportService>(),
@@ -372,7 +376,13 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IHostService>(sp => new SyncedHostService(
             sp.GetRequiredService<HostService>(),
             sp.GetRequiredService<ServerReadService>()));
-        services.AddSingleton<IAppointmentOutcomeService, AppointmentOutcomeService>();
+        services.AddSingleton<AppointmentOutcomeService>();
+        services.AddSingleton<IAppointmentOutcomeService>(sp => new SyncedAppointmentOutcomeService(
+            sp.GetRequiredService<AppointmentOutcomeService>(),
+            sp.GetRequiredService<ServerReadService>(),
+            sp.GetRequiredService<ApiConnectionService>(),
+            sp.GetRequiredService<CgpApiClient>(),
+            sp.GetRequiredService<OutboxService>()));
         services.AddSingleton<IUserService, UserService>();
         services.AddSingleton<IRecipientService, RecipientService>();
         services.AddSingleton<IDailyShareService, DailyShareService>();
@@ -401,6 +411,7 @@ public partial class App : System.Windows.Application
         services.AddHostedService<DailyShareScheduler>();
         services.AddHostedService<AutoBackupService>();
         services.AddHostedService<RetentionService>();
+        services.AddHostedService<OutboxFlushService>();
         services.AddTransient<SessionLockService>();
 
         services.AddTransient<LoginViewModel>();

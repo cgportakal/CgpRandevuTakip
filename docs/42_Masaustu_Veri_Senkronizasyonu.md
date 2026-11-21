@@ -1,6 +1,6 @@
 # 42 — Masaüstü Veri Senkronizasyonu (Devir Planı)
 
-**Tarih:** 19.11.2026 · **Durum:** P1 tamamlandı; P2 (okuma yolu) kod tarafı tamamlandı, manuel UAT sıradaki · **Kaynak karar:** [docs/41](41_Tasarim_ve_Veri_Paritesi.md) §4
+**Tarih:** 19.11.2026 · **Durum:** P1 tamamlandı; P2 okuma yolu tamamlandı (manuel UAT sıradaki); P3a yazma yolu + outbox tamamlandı · **Kaynak karar:** [docs/41](41_Tasarim_ve_Veri_Paritesi.md) §4
 
 Bu belge, masaüstü uygulamasının API ile tam senkronize çalışması için yapılacak işleri ve
 teknik kararları diğer bilgisayara devretmek için yazıldı. Yeni oturumda önce
@@ -109,12 +109,23 @@ açıkken masaüstünde oluşturulan kayıtlar sunucuya gönderilmez ve sunucu l
 Yerel API'ye karşı canlı doğrulama yapıldı: giriş, manifest (ETag/304), günlük liste,
 arama ve detay yanıtları istemciyle okundu; manuel arayüz UAT'i sıradaki adımdır.
 
-### P3 — Yazma yolu + outbox
-- [ ] Oluştur/güncelle/sil/sonuç/seri işlemlerini `OutboxService` üzerinden yürüt.
-- [ ] Çevrimiçiyse hemen gönder; değilse kuyruğa al ve UI’da “bekliyor” göster.
-- [ ] Idempotency: `ClientRequestId` (GUID) API’ye eklenir; aynı istek iki kez işlenmez.
-- [ ] Sıralama: aynı randevunun create → update → outcome zinciri korunur.
-- [ ] UAT: uçak modunda oluştur, bağlantı gelince sunucuya gider.
+### P3 — Yazma yolu + outbox — **P3a tamamlandı (21.11.2026); P3b sıradaki**
+- [x] Tekil randevu oluştur/güncelle/sil işlemlerini API’ye gönder; bağlantı yoksa kuyrukla.
+- [x] Görüşme sonucu (outcome) kaydetmeyi API’ye gönder; bağlantı yoksa kuyrukla.
+- [x] `ClientRequestId` idempotency (API + tek randevu ve seri ilk kaydı) ve migration.
+- [x] `SyncOutboxItems` tablosu; sıralı gönderim, 30 sn’lik arka plan gönderimi, hata durumu.
+- [x] Kullanıcıya “kuyruğa alındı” mesajı ve günlük listede bekleyen sayaç.
+- [ ] Seri oluşturma/iptal/ekleme, toplu silme/taşıma ve geri alma.
+- [ ] Çevrimdışı oluşturulan kaydın listede hemen görünmesi (pending overlay).
+- [ ] Create → update → outcome zincirinde kimlik eşleme.
+- [ ] UAT: uçak modunda oluştur, bağlantı gelince sunucuya gider; kuyruk kalıcıdır.
+
+P3a uygulaması: `Desktop/Services/Sync/OutboxService.cs`, `OutboxFlushService.cs`,
+`SyncedAppointmentService` ve `SyncedAppointmentOutcomeService` yazma metotları,
+`SyncOutboxItems` migration. Okuma modu açıkken tekil randevu oluştur/güncelle/sil ve
+görüşme sonucu API’ye gider; ağ yoksa kuyruğa alınır ve 30 sn’de bir gönderilir.
+**P3b’ye kadar seri, toplu işlem ve geri alma yerelde kalır; çevrimdışı oluşturulan kayıt
+listelenmez.** Bu nedenle okuma modu üretimde açılmamalıdır.
 
 ### P4 — SignalR
 - [ ] `Microsoft.AspNetCore.SignalR.Client` ekle; süresiz geri çekilmeli yeniden bağlanma

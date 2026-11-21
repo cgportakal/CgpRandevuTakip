@@ -154,6 +154,66 @@ public sealed class CgpApiClient
             accessToken,
             ct);
 
+    public Task<ApiResult<AppointmentSaveResult>> CreateAppointmentAsync(
+        string baseUrl,
+        string accessToken,
+        AppointmentInput input,
+        CancellationToken ct = default)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, Url(baseUrl, "/v1/appointments"))
+        {
+            Content = JsonContent.Create(input, options: ApiJson.Options),
+        };
+
+        return SendAsync<AppointmentSaveResult>(request, accessToken, ct);
+    }
+
+    public Task<ApiResult<AppointmentSaveResult>> UpdateAppointmentAsync(
+        string baseUrl,
+        string accessToken,
+        string id,
+        AppointmentInput input,
+        CancellationToken ct = default)
+    {
+        var request = new HttpRequestMessage(
+            HttpMethod.Put,
+            Url(baseUrl, "/v1/appointments/" + Uri.EscapeDataString(id)))
+        {
+            Content = JsonContent.Create(input, options: ApiJson.Options),
+        };
+
+        return SendAsync<AppointmentSaveResult>(request, accessToken, ct);
+    }
+
+    public Task<ApiResult<bool>> DeleteAppointmentAsync(
+        string baseUrl,
+        string accessToken,
+        string id,
+        CancellationToken ct = default)
+        => SendAsync<bool>(
+            new HttpRequestMessage(
+                HttpMethod.Delete,
+                Url(baseUrl, "/v1/appointments/" + Uri.EscapeDataString(id))),
+            accessToken,
+            ct);
+
+    public Task<ApiResult<bool>> SaveOutcomeAsync(
+        string baseUrl,
+        string accessToken,
+        string id,
+        AppointmentOutcomeInput input,
+        CancellationToken ct = default)
+    {
+        var request = new HttpRequestMessage(
+            HttpMethod.Put,
+            Url(baseUrl, "/v1/appointments/" + Uri.EscapeDataString(id) + "/outcome"))
+        {
+            Content = JsonContent.Create(input, options: ApiJson.Options),
+        };
+
+        return SendAsync<bool>(request, accessToken, ct);
+    }
+
     public Task<ApiResult<ReportSummaryDto>> GetReportSummaryAsync(
         string baseUrl,
         string accessToken,

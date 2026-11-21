@@ -44,6 +44,10 @@ public class Appointment : EntityBase
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
     public string? CreatedByUserId { get; set; }
     public string? UpdatedByUserId { get; set; }
+
+    /// <summary>İstemci isteği kimliği; aynı isteğin iki kez işlenmesini engeller.</summary>
+    public string? ClientRequestId { get; set; }
+
     public int RowVersion { get; set; } = 1;
 
     public Person? Person { get; set; }

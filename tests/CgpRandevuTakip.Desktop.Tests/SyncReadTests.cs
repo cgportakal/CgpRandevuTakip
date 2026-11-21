@@ -119,7 +119,7 @@ public class SyncReadTests
         var reads = CreateReads(new InMemorySyncCache(), (_, _) =>
             throw new InvalidOperationException("Sunucu çağrılmamalı."), withSession: false);
 
-        var service = new SyncedAppointmentService(local, reads);
+        var service = new SyncedAppointmentService(local, reads, null!, null!, null!);
         var rows = await service.GetDayAsync(DateTime.Today);
 
         Assert.Single(rows);
@@ -136,7 +136,7 @@ public class SyncReadTests
             withSession: true,
             readMode: false);
 
-        var service = new SyncedAppointmentService(local, reads);
+        var service = new SyncedAppointmentService(local, reads, null!, null!, null!);
         var rows = await service.GetDayAsync(DateTime.Today);
 
         Assert.Single(rows);
@@ -154,7 +154,7 @@ public class SyncReadTests
                 Row("s2", "Sunucu İki"),
             })));
 
-        var service = new SyncedAppointmentService(local, reads);
+        var service = new SyncedAppointmentService(local, reads, null!, null!, null!);
         var rows = await service.GetDayAsync(DateTime.Today);
 
         Assert.Equal(2, rows.Count);

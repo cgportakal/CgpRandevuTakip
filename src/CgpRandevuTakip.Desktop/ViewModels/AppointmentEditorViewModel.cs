@@ -434,6 +434,9 @@ public partial class AppointmentEditorViewModel : ObservableObject
         if (!TryBuildInput(out var input))
             return;
 
+        if (!IsEdit)
+            input = input with { ClientRequestId = Guid.NewGuid().ToString("N") };
+
         var startsAtLocal = input.StartsAtLocal;
 
         // Geçmiş tarih/saat uyarısı: yeni görüşmede her zaman, düzenlemede yalnızca
@@ -487,6 +490,13 @@ public partial class AppointmentEditorViewModel : ObservableObject
             {
                 ErrorMessage = result.Error;
                 return;
+            }
+
+            if (result.Queued)
+            {
+                _dialogs.Info(
+                    "Sunucuya şu anda ulaşılamıyor. Kayıt yerel kuyruğa alındı; bağlantı gelince otomatik gönderilecek.",
+                    "Kuyruğa alındı");
             }
 
             Saved?.Invoke(this, EventArgs.Empty);

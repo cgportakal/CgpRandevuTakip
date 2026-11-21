@@ -1,14 +1,20 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-20 19:15 (UTC+3)
+**Son güncelleme:** 2026-11-21 09:30 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — **412 test**. **1.9.0 yayında** (Setup + portable). Seçmeli yedek/geri
-yükleme, içerik önizlemesi, boş yedek koruması, kullanıcı/ayar koruyan birleştirme ve
-masaüstü P2 okuma yolu. Gerçek 0 kullanıcılı yedekle sihirbazın açılmadığı doğrulandı.
+**Dal:** `agent/cfr-lenovo/desktop-sync-p3` (PR bekliyor)
+**Durum:** Yeşil — **421 test**. **P3a yazma yolu + outbox tamamlandı:** tekil randevu
+oluştur/güncelle/sil ve görüşme sonucu API’ye gidiyor, bağlantı yoksa kuyruğa alınıyor ve
+30 sn’de bir gönderiliyor. `ClientRequestId` idempotency eklendi. P3b (seri/toplu/overlay) sıradaki.
 
 ## Bu turda tamamlanan
 
+- **P3a — yazma yolu + outbox:** `SyncOutboxItems` tablosu/migration, `OutboxService`,
+  `OutboxFlushService` (30 sn), `SyncedAppointmentService` create/update/delete ve
+  `SyncedAppointmentOutcomeService` API yolu. Ağ hatasında “kuyruğa alındı” mesajı ve günlük
+  listede bekleyen sayaç. API’ye `Appointment.ClientRequestId` + tekil indeks ve migration;
+  aynı istek ikinci kez kayıt oluşturmuyor (tek randevu + seri ilk kaydı). Seri/toplu işlem
+  ve geri alma okuma modunda P3b’ye kadar engelli. 7 outbox + 2 API testi.
 - **1.9.0 yayını:** `v1.9.0` GitHub Release; assetler Setup (~66,9 MB), portable (~94,9 MB),
   Dev.cer, SHA256SUMS, version-policy (`latestDesktopVersion/latestWebVersion: 1.9.0`).
   README indirme bağlantıları HTTP 200; master CI ve Release işi başarılı.
@@ -238,10 +244,10 @@ ilk çalıştırmada `POST /v1/auth/setup` gerekir. Ayrıntı: [docs/39](docs/39
    yalnızca ayarları yedekle → değiştir → geri yükle; randevular ve kullanıcılar korunmalı,
    kurulum sihirbazı açılmamalı. Boş yedek onayı ve eski (v1) yedek denenmeli
    ([docs/43](docs/43_Yedekleme_ve_Geri_Yukleme.md)).
-2. **Masaüstü veri senkronizasyonu** — P1 ve **P2 okuma yolu kod tarafı tamamlandı.**
-   Sıradaki: P2 manuel UAT (web’de oluşturulan randevu masaüstünde “Yenile” ile görünür,
-   çevrimdışıyken önbellek) ve **P3 outbox** (yazma yolu, `ClientRequestId`, sıra koruma).
-   Ardından P4 SignalR, P5 çakışma, P6 dayanıklılık, P7 UAT. Ayrıntı:
+2. **Masaüstü veri senkronizasyonu** — P1 ✅, P2 okuma ✅, **P3a yazma + outbox ✅.**
+   Sıradaki **P3b:** seri oluşturma/iptal/ekleme, toplu silme/taşıma, geri alma; çevrimdışı
+   oluşturulan kaydın listede görünmesi (pending overlay), create→update→outcome kimlik
+   eşleme. Ardından P4 SignalR, P5 çakışma, P6 dayanıklılık, P7 UAT. Ayrıntı:
    [docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md).
 3. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
    canlı olay ve push doğrulanmalı.
@@ -339,7 +345,7 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-Bu dal: yerel **412/412** test (334 uygulama + 63 masaüstü/VM + 13 API + 2 UI), web build ve
+Bu dal: yerel **421/421** test (334 uygulama + 70 masaüstü/VM + 15 API + 2 UI), web build ve
 mobil `tsc` başarılı. Master CI ✅ ve **Release v1.9.0** ✅ (PR #56 / tag `v1.9.0`).
 Son release: **1.9.0** (Setup + portable); README Setup/portable bağlantıları HTTP 200.
 Android emülatör ve **Samsung S21 gerçek cihaz UAT** tamamlandı.

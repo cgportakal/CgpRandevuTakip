@@ -3,6 +3,12 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [Yayınlanmadı]
+
+### Eklendi
+- **Masaüstü P3a — yazma yolu + outbox:** okuma modu açıkken tekil randevu oluştur/güncelle/sil işlemleri API’ye gönderilir; bağlantı yoksa `SyncOutboxItems` kuyruğuna alınır ve 30 sn’de bir otomatik gönderilir. Kullanıcıya “kuyruğa alındı” mesajı ve günlük listede bekleyen sayaç gösterilir. Seri, görüşme sonucu, toplu işlem ve çevrimdışı kayıt görünürlüğü P3b’de ([docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md)).
+- **Idempotency:** `Appointment.ClientRequestId` + tekil indeks; aynı istek ikinci kez kayıt oluşturmaz (tek randevu ve seri ilk kaydı).
+
 ## [1.9.0] — 2026-11-20 · Yedekleme yenilemesi
 
 ### Eklendi

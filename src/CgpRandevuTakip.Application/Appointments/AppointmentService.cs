@@ -136,6 +136,13 @@ public sealed class AppointmentService : IAppointmentService
         if (!CanManageAppointments())
             return AppointmentSaveResult.Fail("Görüşme ekleme yetkiniz yok.");
 
+        if (!string.IsNullOrWhiteSpace(input.ClientRequestId))
+        {
+            var existing = await _appointments.GetByClientRequestIdAsync(input.ClientRequestId);
+            if (existing is not null)
+                return AppointmentSaveResult.Ok(existing.Id);
+        }
+
         var validation = await ValidateAsync(input, currentAppointmentId: null);
         if (validation.Error is not null)
             return AppointmentSaveResult.Fail(validation.Error);
@@ -162,7 +169,12 @@ public sealed class AppointmentService : IAppointmentService
             validation.PhoneE164!);
 
         var now = _clock.UtcNow;
-        var appointment = BuildEntity(person, input, startsAtUtc, now);
+        var appointment = BuildEntity(
+            person,
+            input,
+            startsAtUtc,
+            now,
+            clientRequestId: input.ClientRequestId);
 
         await _appointments.AddAsync(appointment);
 
@@ -198,6 +210,20 @@ public sealed class AppointmentService : IAppointmentService
     {
         if (!CanManageAppointments())
             return SeriesCreateResult.Fail("Seri oluşturma yetkiniz yok.");
+
+        if (!string.IsNullOrWhiteSpace(input.ClientRequestId))
+        {
+            var existing = await _appointments.GetByClientRequestIdAsync(input.ClientRequestId);
+            if (existing?.SeriesId is not null)
+            {
+                var rows = await _appointments.GetSeriesAsync(existing.SeriesId);
+                return SeriesCreateResult.Ok(
+                    existing.SeriesId,
+                    rows.Count,
+                    0,
+                    Array.Empty<SeriesSlotDto>());
+            }
+        }
 
         if (!request.IsValid)
             return SeriesCreateResult.Fail(
@@ -235,7 +261,8 @@ public sealed class AppointmentService : IAppointmentService
                 slot.Index,
                 slots.Count,
                 request.Frequency,
-                input.StartsAtLocal));
+                input.StartsAtLocal,
+                clientRequestId: entities.Count == 0 ? input.ClientRequestId : null));
         }
 
         await _appointments.AddRangeAsync(entities);
@@ -770,7 +797,8 @@ public sealed class AppointmentService : IAppointmentService
         int? seriesIndex = null,
         int? seriesCount = null,
         SeriesFrequency? seriesFrequency = null,
-        DateTime? seriesAnchorLocal = null)
+        DateTime? seriesAnchorLocal = null,
+        string? clientRequestId = null)
     {
         var appointment = new Appointment
         {
@@ -787,6 +815,7 @@ public sealed class AppointmentService : IAppointmentService
             UpdatedAtUtc = now,
             CreatedByUserId = _currentUser.UserId,
             UpdatedByUserId = _currentUser.UserId,
+            ClientRequestId = clientRequestId,
             RowVersion = 1,
             SeriesId = seriesId,
             SeriesIndex = seriesIndex,

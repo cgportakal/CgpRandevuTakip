@@ -195,6 +195,13 @@ public partial class AppointmentOutcomeViewModel : ObservableObject
                 return;
             }
 
+            if (result.Queued)
+            {
+                _dialogs.Info(
+                    "Sunucuya şu anda ulaşılamıyor. Görüşme sonucu yerel kuyruğa alındı; bağlantı gelince gönderilecek.",
+                    "Kuyruğa alındı");
+            }
+
             if (postponeStart is not null)
             {
                 var moved = await _appointments.MoveManyAsync(
