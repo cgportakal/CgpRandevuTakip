@@ -205,7 +205,17 @@ public partial class SeriesManageViewModel : ObservableObject
                 return;
             }
 
-            _dialogs.Info(result.Summary, "Seriye kayıt eklendi");
+            if (result.Queued)
+            {
+                _dialogs.Info(
+                    "Sunucuya şu anda ulaşılamıyor. Seri ekleme isteği yerel kuyruğa alındı; bağlantı gelince gönderilecek.",
+                    "Kuyruğa alındı");
+            }
+            else
+            {
+                _dialogs.Info(result.Summary, "Seriye kayıt eklendi");
+            }
+
             Saved?.Invoke(this, EventArgs.Empty);
         }
         catch (Exception ex)
@@ -275,7 +285,17 @@ public partial class SeriesManageViewModel : ObservableObject
                            string.Join(Environment.NewLine, result.Warnings.Select(x => $"• {x}"));
             }
 
-            _dialogs.Info(message, "Seri güncellendi");
+            if (result.Queued)
+            {
+                _dialogs.Info(
+                    "Sunucuya şu anda ulaşılamıyor. Seri güncelleme isteği yerel kuyruğa alındı; bağlantı gelince gönderilecek.",
+                    "Kuyruğa alındı");
+            }
+            else
+            {
+                _dialogs.Info(message, "Seri güncellendi");
+            }
+
             Saved?.Invoke(this, EventArgs.Empty);
         }
         catch (Exception ex)

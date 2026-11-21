@@ -2,6 +2,7 @@ using CgpRandevuTakip.Application.Appointments;
 using CgpRandevuTakip.Application.Categories;
 using CgpRandevuTakip.Application.Hosts;
 using CgpRandevuTakip.Domain.Enums;
+using CgpRandevuTakip.Domain.Rules;
 
 namespace CgpRandevuTakip.Desktop.Services.Sync;
 
@@ -89,6 +90,104 @@ public sealed class PendingAppointmentOverlay
 
                     break;
                 }
+
+                case OutboxOperation.SeriesCreate:
+                {
+                    var payload = Deserialize<SeriesOutboxPayload>(item.Payload);
+                    if (payload is null)
+                        break;
+
+                    var prefix = SeriesPrefix(item.EntityId);
+                    if (result.Any(x => x.Id.StartsWith(prefix, StringComparison.Ordinal)))
+                        break;
+
+                    foreach (var (date, index) in BuildSeriesDates(payload))
+                    {
+                        result.Add(BuildRow(
+                            prefix + index,
+                            payload.Input with { StartsAtLocal = date },
+                            lookup));
+                    }
+
+                    break;
+                }
+
+                case OutboxOperation.SeriesCancel:
+                    result.RemoveAll(x => x.Id.StartsWith(
+                        SeriesPrefix(item.EntityId),
+                        StringComparison.Ordinal));
+                    break;
+
+                case OutboxOperation.SeriesAppend:
+                {
+                    var payload = Deserialize<SeriesAppendOutboxPayload>(item.Payload);
+                    var create = items.FirstOrDefault(x =>
+                        x.Operation == OutboxOperation.SeriesCreate
+                        && x.EntityId == item.EntityId);
+                    var series = create is null ? null : Deserialize<SeriesOutboxPayload>(create.Payload);
+
+                    if (payload is null || series is null)
+                        break;
+
+                    var prefix = SeriesPrefix(item.EntityId);
+                    var existing = result.Count(x => x.Id.StartsWith(prefix, StringComparison.Ordinal));
+                    var allDates = SeriesScheduleCalculator.Build(
+                        series.Input.StartsAtLocal,
+                        series.Frequency,
+                        series.Count + payload.Count);
+
+                    for (var index = existing; index < allDates.Count; index++)
+                    {
+                        result.Add(BuildRow(
+                            prefix + (index + 1),
+                            series.Input with { StartsAtLocal = allDates[index] },
+                            lookup));
+                    }
+
+                    break;
+                }
+
+                case OutboxOperation.SeriesUpdate:
+                {
+                    var input = Deserialize<SeriesUpdateInput>(item.Payload);
+                    if (input is null)
+                        break;
+
+                    var prefix = SeriesPrefix(item.EntityId);
+                    for (var index = 0; index < result.Count; index++)
+                    {
+                        if (result[index].Id.StartsWith(prefix, StringComparison.Ordinal))
+                            result[index] = ApplySeriesUpdate(result[index], input, lookup);
+                    }
+
+                    break;
+                }
+
+                case OutboxOperation.AppointmentsBulkMove:
+                {
+                    var payload = Deserialize<BulkMoveOutboxPayload>(item.Payload);
+                    if (payload is null)
+                        break;
+
+                    var ids = payload.Ids.ToHashSet(StringComparer.Ordinal);
+                    for (var index = 0; index < result.Count; index++)
+                    {
+                        var row = result[index];
+                        if (!ids.Contains(row.Id))
+                            continue;
+
+                        var time = payload.NewTime ?? row.StartsAtLocal.TimeOfDay;
+                        var startsAt = payload.NewDate.Date.Add(time);
+                        result[index] = row with
+                        {
+                            StartsAtLocal = startsAt,
+                            EndsAtLocal = startsAt.AddMinutes(row.DurationMinutes),
+                            IsOverdue = startsAt < DateTime.Now,
+                        };
+                    }
+
+                    break;
+                }
             }
         }
 
@@ -108,6 +207,10 @@ public sealed class PendingAppointmentOverlay
             return detail;
 
         var lookup = await LoadLookupAsync(items, ct);
+
+        if (id.StartsWith(SeriesMarker, StringComparison.Ordinal))
+            return BuildSeriesDetail(id, items, lookup);
+
         var current = detail;
 
         foreach (var item in items.Where(x => x.EntityId == id))
@@ -164,6 +267,23 @@ public sealed class PendingAppointmentOverlay
                 case OutboxOperation.AppointmentDelete:
                     current = null;
                     break;
+
+                case OutboxOperation.AppointmentsBulkMove:
+                {
+                    var payload = Deserialize<BulkMoveOutboxPayload>(item.Payload);
+                    if (payload is null || current is null || !payload.Ids.Contains(id, StringComparer.Ordinal))
+                        break;
+
+                    var time = payload.NewTime ?? current.StartsAtLocal.TimeOfDay;
+                    var startsAt = payload.NewDate.Date.Add(time);
+                    current = current with
+                    {
+                        StartsAtLocal = startsAt,
+                        EndsAtLocal = startsAt.AddMinutes(current.DurationMinutes),
+                        IsOverdue = startsAt < DateTime.Now,
+                    };
+                    break;
+                }
             }
         }
 
@@ -364,6 +484,122 @@ public sealed class PendingAppointmentOverlay
             Attendance.Cancelled => AppointmentStatus.Cancelled,
             _ => AppointmentStatus.Scheduled,
         };
+
+    private const string SeriesMarker = "series:";
+
+    private static string SeriesPrefix(string seriesId) => SeriesMarker + seriesId + ":";
+
+    private static IEnumerable<(DateTime Date, int Index)> BuildSeriesDates(SeriesOutboxPayload payload)
+        => SeriesScheduleCalculator
+            .Build(payload.Input.StartsAtLocal, payload.Frequency, payload.Count)
+            .Select((date, index) => (Date: date, Index: index + 1))
+            .Where(x => x.Date > DateTime.Now);
+
+    private static AppointmentListItemDto ApplySeriesUpdate(
+        AppointmentListItemDto row,
+        SeriesUpdateInput input,
+        Lookup lookup)
+    {
+        var category = lookup.Categories.GetValueOrDefault(input.CategoryId);
+        var host = lookup.Hosts.GetValueOrDefault(input.HostUserId);
+        var startsAt = input.TimeOfDay is null
+            ? row.StartsAtLocal
+            : row.StartsAtLocal.Date.Add(input.TimeOfDay.Value);
+
+        return row with
+        {
+            StartsAtLocal = startsAt,
+            EndsAtLocal = startsAt.AddMinutes(input.DurationMinutes),
+            DurationMinutes = input.DurationMinutes,
+            HostUserId = input.HostUserId,
+            HostName = host?.DisplayName ?? input.HostUserId,
+            CategoryId = input.CategoryId,
+            CategoryName = category?.Name ?? input.CategoryId,
+            CategoryColorHex = category?.ColorHex ?? row.CategoryColorHex,
+            Method = input.Method,
+            StudentFullName = string.Join(
+                ' ',
+                new[] { input.StudentFirstName, input.StudentLastName }
+                    .Where(x => !string.IsNullOrWhiteSpace(x))) is { Length: > 0 } student
+                ? student
+                : null,
+        };
+    }
+
+    private static AppointmentDetailDto? BuildSeriesDetail(
+        string id,
+        IReadOnlyList<OutboxPendingItem> items,
+        Lookup lookup)
+    {
+        var inner = id[SeriesMarker.Length..];
+        var separator = inner.LastIndexOf(':');
+        if (separator <= 0 || !int.TryParse(inner[(separator + 1)..], out var index))
+            return null;
+
+        var seriesId = inner[..separator];
+        var create = items.FirstOrDefault(x =>
+            x.Operation == OutboxOperation.SeriesCreate
+            && x.EntityId == seriesId);
+
+        if (create is null)
+            return null;
+
+        var payload = Deserialize<SeriesOutboxPayload>(create.Payload);
+        if (payload is null || index < 1)
+            return null;
+
+        var dates = SeriesScheduleCalculator.Build(
+            payload.Input.StartsAtLocal,
+            payload.Frequency,
+            payload.Count);
+
+        if (index > dates.Count)
+            return null;
+
+        var detail = BuildDetail(
+            id,
+            payload.Input with { StartsAtLocal = dates[index - 1] },
+            lookup) with
+        {
+            SeriesId = seriesId,
+            SeriesIndex = index,
+            SeriesCount = payload.Count,
+        };
+
+        foreach (var updateItem in items.Where(x =>
+                     x.Operation == OutboxOperation.SeriesUpdate
+                     && x.EntityId == seriesId))
+        {
+            var input = Deserialize<SeriesUpdateInput>(updateItem.Payload);
+            if (input is null)
+                continue;
+
+            var category = lookup.Categories.GetValueOrDefault(input.CategoryId);
+            var host = lookup.Hosts.GetValueOrDefault(input.HostUserId);
+            var startsAt = input.TimeOfDay is null
+                ? detail.StartsAtLocal
+                : detail.StartsAtLocal.Date.Add(input.TimeOfDay.Value);
+
+            detail = detail with
+            {
+                StartsAtLocal = startsAt,
+                EndsAtLocal = startsAt.AddMinutes(input.DurationMinutes),
+                DurationMinutes = input.DurationMinutes,
+                HostUserId = input.HostUserId,
+                HostName = host?.DisplayName ?? input.HostUserId,
+                CategoryId = input.CategoryId,
+                CategoryName = category?.Name ?? input.CategoryId,
+                CategoryColorHex = category?.ColorHex ?? detail.CategoryColorHex,
+                Method = input.Method,
+                Description = input.Description,
+                StudentFirstName = input.StudentFirstName,
+                StudentLastName = input.StudentLastName,
+                ReminderOffsetsMinutes = input.ReminderOffsetsMinutes,
+            };
+        }
+
+        return detail;
+    }
 
     private static T? Deserialize<T>(string payload)
     {

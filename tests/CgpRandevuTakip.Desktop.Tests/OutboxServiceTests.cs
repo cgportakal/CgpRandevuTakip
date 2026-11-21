@@ -303,6 +303,66 @@ public class OutboxServiceTests
         Assert.Equal("/v1/appointments/series", path);
     }
 
+    [Fact]
+    public async Task FlushAsync_BulkMove_SendsPost()
+    {
+        string? path = null;
+        var service = CreateService((request, _) =>
+        {
+            path = request.RequestUri!.AbsolutePath;
+            return Task.FromResult(Json(HttpStatusCode.OK, new
+            {
+                moved = 2,
+                conflictingIds = Array.Empty<string>(),
+                conflicts = Array.Empty<object>(),
+                failedIds = Array.Empty<string>(),
+            }));
+        });
+
+        await service.EnqueueAsync(
+            OutboxOperation.AppointmentsBulkMove,
+            "first",
+            new BulkMoveOutboxPayload(
+                new[] { "first", "second" },
+                DateTime.Today.AddDays(5),
+                TimeSpan.FromHours(10),
+                IgnoreConflicts: true));
+
+        var result = await service.FlushAsync();
+
+        Assert.Equal(1, result.Sent);
+        Assert.Equal("/v1/appointments/bulk-move", path);
+    }
+
+    [Fact]
+    public async Task FlushAsync_SeriesAppend_SendsPost()
+    {
+        string? path = null;
+        var service = CreateService((request, _) =>
+        {
+            path = request.RequestUri!.AbsolutePath;
+            return Task.FromResult(Json(HttpStatusCode.OK, new
+            {
+                success = true,
+                error = (string?)null,
+                createdCount = 2,
+                skippedCount = 0,
+                newSeriesCount = 6,
+                slots = Array.Empty<object>(),
+            }));
+        });
+
+        await service.EnqueueAsync(
+            OutboxOperation.SeriesAppend,
+            "series-1",
+            new SeriesAppendOutboxPayload(2));
+
+        var result = await service.FlushAsync();
+
+        Assert.Equal(1, result.Sent);
+        Assert.Equal("/v1/appointments/series/series-1/append", path);
+    }
+
     private (OutboxService Outbox, SyncedAppointmentService Sync, PendingAppointmentOverlay Overlay)
         CreateServices(
             Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler)

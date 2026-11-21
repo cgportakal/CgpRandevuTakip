@@ -1,23 +1,21 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-21 11:10 (UTC+3)
+**Son güncelleme:** 2026-11-21 12:30 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
-**Dal:** `agent/cfr-lenovo/desktop-sync-p3b` (PR bekliyor)
-**Durum:** Yeşil — **424 test**. **P3a + P3b tamamlandı:** tekil randevu/seri/sonuç/toplu
-silme/geri alma API yolu, outbox kuyruğu, çevrimdışı kayıtların listede/detayda görünmesi,
-geçici kimlik → sunucu kimliği eşleme ve başarısız kuyruk yönetimi. P3c (seri ekleme/düzenleme,
-toplu taşıma) ve UAT sıradaki.
+**Dal:** `agent/cfr-lenovo/desktop-sync-p3c` (PR bekliyor)
+**Durum:** Yeşil — **427 test**. **P3 tamamlandı:** seri oluşturma/ekleme/düzenleme/iptali,
+toplu silme/taşıma, geri alma ve görüşme sonucu API + outbox; çevrimdışı kayıtlar (tekil ve
+seri) listede/detayda görünür, geçici kimlikler eşlenir. Sıradaki: P3 saha UAT’i → P4 SignalR.
 
 ## Bu turda tamamlanan
 
-- **P3a/P3b — yazma yolu, outbox ve çevrimdışı görünürlük:** `SyncOutboxItems` tablosu/migration,
-  `OutboxService`, `OutboxFlushService` (30 sn), `PendingAppointmentOverlay`. Tekil randevu
-  create/update/delete, görüşme sonucu, seri oluşturma/iptali, toplu silme ve geri alma API
-  yolları; ağ yoksa kuyruk. Çevrimdışı oluşturulan/güncellenen kayıt listede ve detayda görünür;
-  geçici kimlik sunucu kimliğine eşlenir; başarısız kayıtlar “Sunucu bağlantısı” penceresinden
-  yeniden denenebilir. `Appointment.ClientRequestId` + tekil indeks/migration ile idempotency.
-  Seri ekleme/düzenleme ve toplu taşıma API ucu olmadığından P3c’ye kadar engelli.
-  10 outbox + 2 API testi.
+- **P3 — yazma yolu, outbox ve çevrimdışı görünürlük (tamamlandı):** `SyncOutboxItems`
+  tablosu/migration, `OutboxService`, `OutboxFlushService` (30 sn), `PendingAppointmentOverlay`.
+  Tekil randevu create/update/delete, görüşme sonucu, seri oluşturma/ekleme/düzenleme/iptali,
+  toplu silme/taşıma ve geri alma API yolları; ağ yoksa kuyruk. Çevrimdışı tekil ve seri
+  kayıtlar listede/detayda görünür; geçici kimlik sunucu kimliğine eşlenir; başarısız kayıtlar
+  “Sunucu bağlantısı” penceresinden yeniden denenebilir. `Appointment.ClientRequestId` + tekil
+  indeks/migration ile idempotency. 13 outbox + 3 API testi.
 - **1.9.0 yayını:** `v1.9.0` GitHub Release; assetler Setup (~66,9 MB), portable (~94,9 MB),
   Dev.cer, SHA256SUMS, version-policy (`latestDesktopVersion/latestWebVersion: 1.9.0`).
   README indirme bağlantıları HTTP 200; master CI ve Release işi başarılı.
@@ -247,9 +245,9 @@ ilk çalıştırmada `POST /v1/auth/setup` gerekir. Ayrıntı: [docs/39](docs/39
    yalnızca ayarları yedekle → değiştir → geri yükle; randevular ve kullanıcılar korunmalı,
    kurulum sihirbazı açılmamalı. Boş yedek onayı ve eski (v1) yedek denenmeli
    ([docs/43](docs/43_Yedekleme_ve_Geri_Yukleme.md)).
-2. **Masaüstü veri senkronizasyonu** — P1 ✅, P2 okuma ✅, **P3a/P3b yazma + outbox + overlay ✅.**
-   Sıradaki **P3c:** seri ekleme/düzenleme API uçları, toplu taşıma, ardından P4 SignalR,
-   P5 çakışma, P6 dayanıklılık, P7 UAT. Ayrıntı:
+2. **Masaüstü veri senkronizasyonu** — P1 ✅, P2 ✅, **P3 ✅.** Sıradaki: P3 saha UAT’i
+   (uçak modunda oluştur/güncelle/sil/taşı/seri; bağlantı gelince sırayla gönderim).
+   Ardından P4 SignalR, P5 çakışma, P6 dayanıklılık, P7 UAT. Ayrıntı:
    [docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md).
 3. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
    canlı olay ve push doğrulanmalı.
@@ -347,7 +345,7 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-Bu dal: yerel **424/424** test (334 uygulama + 73 masaüstü/VM + 15 API + 2 UI), web build ve
+Bu dal: yerel **427/427** test (334 uygulama + 75 masaüstü/VM + 16 API + 2 UI), web build ve
 mobil `tsc` başarılı. Master CI ✅ ve **Release v1.9.0** ✅ (PR #56 / tag `v1.9.0`).
 Son release: **1.9.0** (Setup + portable); README Setup/portable bağlantıları HTTP 200.
 Android emülatör ve **Samsung S21 gerçek cihaz UAT** tamamlandı.

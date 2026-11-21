@@ -122,6 +122,70 @@ public class SyncIdempotencyApiTests : IClassFixture<ApiFactory>
         Assert.NotEqual(first.AppointmentId, second.AppointmentId);
     }
 
+    [Fact]
+    public async Task BulkMove_MovesAppointmentsToNewDate()
+    {
+        var client = await CreateAdminClientAsync();
+        var manifest = await client.GetFromJsonAsync<ContentManifestDto>(
+            "/v1/content/manifest",
+            JsonOptions);
+
+        Assert.NotNull(manifest);
+        var category = manifest!.Categories.First();
+        var host = manifest.Hosts.First();
+
+        async Task<string> CreateAsync(string phone)
+        {
+            var input = new AppointmentInput(
+                "Tasima",
+                "Test",
+                phone,
+                DateTime.Today.AddDays(10).AddHours(9),
+                30,
+                host.Id,
+                category.Id,
+                AppointmentMethod.Phone,
+                null,
+                null,
+                null,
+                new[] { 30 },
+                IgnoreConflicts: true,
+                ClientRequestId: "move-" + Guid.NewGuid().ToString("N"));
+
+            var response = await client.PostAsJsonAsync("/v1/appointments", input, JsonOptions);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var result = await response.Content.ReadFromJsonAsync<AppointmentSaveResult>(JsonOptions);
+            Assert.NotNull(result);
+            return result!.AppointmentId!;
+        }
+
+        var first = await CreateAsync("+905551234570");
+        var second = await CreateAsync("+905551234571");
+
+        var response = await client.PostAsJsonAsync(
+            "/v1/appointments/bulk-move",
+            new
+            {
+                ids = new[] { first, second },
+                newDate = DateTime.Today.AddDays(11),
+                newTime = TimeSpan.FromHours(10),
+                ignoreConflicts = true,
+            },
+            JsonOptions);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<BulkMoveResult>(JsonOptions);
+        Assert.NotNull(result);
+        Assert.Equal(2, result!.Moved);
+
+        var day = await client.GetFromJsonAsync<List<AppointmentListItemDto>>(
+            $"/v1/appointments/day?date={DateTime.Today.AddDays(11):yyyy-MM-dd}",
+            JsonOptions);
+
+        Assert.NotNull(day);
+        Assert.Equal(2, day!.Count(x => x.Id == first || x.Id == second));
+    }
+
     private async Task<HttpClient> CreateAdminClientAsync()
     {
         var client = _factory.CreateClient();

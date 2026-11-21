@@ -110,6 +110,9 @@ public sealed record BulkMoveResult(
     string? Error = null)
 {
     public bool HasConflicts => Conflicts.Count > 0;
+
+    /// <summary>Ağ/oturum yokluğu nedeniyle kuyruğa alınan taşıma sayısı.</summary>
+    public int Queued { get; init; }
 }
 
 /// <summary>Toplu silme sonucu.</summary>
