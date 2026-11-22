@@ -1,15 +1,16 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-22 19:25 (UTC+3)
+**Son güncelleme:** 2026-11-23 09:30 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** **1.11.0 masaüstü + Mobil 1.1.0 Android yayında** — görüşme odaları, ünvanlar,
-çoklu görüşmeci ve misafir başına sonuç. **438/438** .NET testi; web `next build`;
-mobil `tsc`; web Playwright; masaüstü 1.11.0 manuel UAT; Samsung S21 Maestro UAT.
-Kurulu masaüstü sürümü **1.11.0**. Kalan tek platform: **iOS (Mac gerekir)**.
+**Durum:** **1.11.1 API yaması hazırlanıyor** — 1.11.0 masaüstü + Mobil 1.1.0 yayında.
+**438/438** .NET testi; web `next build`; mobil `tsc`; web Playwright; masaüstü
+1.11.0 manuel UAT; Samsung S21 Maestro UAT. Kalan: **iOS UAT**, **1.11.1 yayını**.
 
 ## Bu turda tamamlanan
 
+- **1.11.1 API yaması:** Expo push `HttpClient` zaman aşımı API host’unu durdurmuyor;
+  `DevicePushSender` uyarı loglayıp sonraki turda yeniden deniyor. Setup-only sürüm.
 - **Mobil 1.1.0 Android APK:** EAS `preview` build (`741399f5…`, versionCode 1).
   GitHub Release: [mobile-v1.1.0](https://github.com/cgportakal/CgpRandevuTakip/releases/tag/mobile-v1.1.0).
   Samsung S21’de giriş, oluşturma, çevrimdışı kuyruk ve rapor Maestro akışları geçti.
@@ -304,22 +305,15 @@ ilk çalıştırmada `POST /v1/auth/setup` gerekir. Ayrıntı: [docs/39](docs/39
 
 ## Sıradaki iş (öncelik sırası)
 
-1. **Yedekleme UAT’i** — seçmeli yedek/geri yükleme akışını gerçek kurulumda doğrula:
-   yalnızca ayarları yedekle → değiştir → geri yükle; randevular ve kullanıcılar korunmalı,
-   kurulum sihirbazı açılmamalı. Boş yedek onayı ve eski (v1) yedek denenmeli
-   ([docs/43](docs/43_Yedekleme_ve_Geri_Yukleme.md)).
-2. **Masaüstü veri senkronizasyonu** — P1 ✅, P2 ✅, P3 ✅, P4 ✅, P5 ✅, P6 ✅.
-   Sıradaki: **P7 uçtan uca UAT** — web UI + mobil + masaüstü aynı randevu, içerik/seri olayları,
-   rapor eşitliği ve kapanış dayanıklılığı.
-   Ayrıntı: [docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md),
-   [docs/45](docs/45_Masaustu_Senkronizasyon_UAT.md),
-   [docs/44](docs/44_Masaustu_Senkronizasyon_Devir.md).
-3. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
+1. **1.11.1 yayını ve doğrulama** — Setup-only sürüm; API push timeout düzeltmesi.
+   Yayın sonrası `latestDesktopVersion/latestWebVersion = 1.11.1`, kurulu sürüm kontrolü.
+2. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
    canlı olay ve push doğrulanmalı.
-4. **Mağaza derlemesi** — EAS `production` profiliyle imzalı AAB/APK; sürüm numarası ve
-   `eas.json` `appVersionSource: remote` ayarı gözden geçirilmeli.
-5. **İçerik logosu UAT notları** — gerçek kurum verisiyle son kontrol (opsiyonel); temel akış
-   tamamlandı.
+3. **Online barındırma (ertelendi)** — araştırma: mevcut sistem için tek gerçekçi ücretsiz
+   seçenek Oracle Cloud Always Free (İstanbul bölgesi); InfinityFree uygun değil. İlk aşama
+   SQLite, büyüme için PostgreSQL. Karar ileride verilecek.
+4. **Mağaza derlemesi (opsiyonel)** — EAS `production` profiliyle imzalı AAB/APK.
+5. **İçerik logosu UAT notları (opsiyonel)** — gerçek kurum verisiyle son kontrol.
 
 ## Aktif kilit
 

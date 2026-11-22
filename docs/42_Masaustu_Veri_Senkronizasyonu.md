@@ -161,7 +161,7 @@ Uygulama: `SyncMaintenanceService` (açılış hazırlığı + 60 sn pull, `Serv
 - [x] Web Playwright: oluşturma, detay, rapor, içerik yönetimi.
 - [x] Oda/host/misafir çakışmaları; misafir başına sonuç ve rapor toplamları.
 - [x] `docs/47` + `CURRENT` güncelle.
-- [x] Masaüstü kurulu 1.11.0 ile manuel saha UAT’i (sunucu bağlantısı, liste, çoklu misafir detayı, oda/katılımcı/misafir düzenleyicisi, oluşturma).
+- [x] Masaüstü kurulu 1.11.0 (1.11.1 aynı UI) ile manuel saha UAT’i (sunucu bağlantısı, liste, çoklu misafir detayı, oda/katılımcı/misafir düzenleyicisi, oluşturma).
 - [x] Mobil Maestro akışları Samsung S21’de: giriş, oluşturma, çevrimdışı kuyruk, raporlar.
 - [ ] iOS UAT’i (macOS/Xcode gerekir).
 
