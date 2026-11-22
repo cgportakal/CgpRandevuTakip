@@ -2,7 +2,7 @@
   "expo": {
     "name": "CGP - Randevu Takip",
     "slug": "cgp-randevu-takip",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "cgp",
