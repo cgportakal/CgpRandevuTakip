@@ -5,10 +5,11 @@
 
 ## İndir
 
-> **Son sürüm: 1.11.0** · 22.11.2026 · 438 test geçiyor
+> **Son sürüm: 1.11.1** · 23.11.2026 · 438 test geçiyor
 
-- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.11.0-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.11.0/CGP-RandevuTakip-1.11.0-Setup.exe)
-- **Taşınabilir (ZIP):** [CGP-RandevuTakip-1.11.0-portable.zip](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.11.0/CGP-RandevuTakip-1.11.0-portable.zip)
+- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.11.1-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.11.1/CGP-RandevuTakip-1.11.1-Setup.exe)
+- **Taşınabilir (ZIP):** Son kararlı paket [1.11.0 portable](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.11.0/CGP-RandevuTakip-1.11.0-portable.zip)
+  (1.11.1 ara sürüm olduğu için yalnızca Setup yayınlanır.)
 - **Android APK (1.1.0):** [CGP-RandevuTakip-1.1.0.apk](https://github.com/cgportakal/CgpRandevuTakip/releases/download/mobile-v1.1.0/CGP-RandevuTakip-1.1.0.apk)
 - **Tüm sürümler:** [Releases](https://github.com/cgportakal/CgpRandevuTakip/releases/latest)
 
@@ -19,13 +20,15 @@
 Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöneten, günlük listeyi
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
-> Durum: **1.11.0 hazır** — görüşme odaları, yönetilen ünvanlar, çoklu görüşmeci ve
+> Durum: **1.11.1 hazır** — görüşme odaları, yönetilen ünvanlar, çoklu görüşmeci ve
 > misafir başına bağımsız sonuç. Masaüstü, web ve mobil aynı kayıtları görür; çevrimdışı
 > kuyruk ve çakışma çözümü korunur. 1.082 kayıtla API, web Playwright, masaüstü 1.11.0
 > ve Samsung S21 Maestro UAT’i tamamlandı; iOS Mac bekliyor.
 
 ### Son yenilikler
 
+- **1.11.1 API yaması:** Expo push `HttpClient` zaman aşımı artık API host’unu durdurmuyor;
+  yalnızca uyarı loglanıp sonraki turda yeniden deneniyor. Setup-only sürüm.
 - **Görüşme odaları ve ünvanlar (1.11.0):** her görüşmecinin kendi odası + 3 ortak oda;
   oda/host/misafir çakışma kontrolü. Yönetilen ünvan listesi, adın altında/parantez içinde.
 - **Çoklu görüşmeci ve misafir (1.11.0):** bir randevuda “Katılımcılar” ve ek misafirler;
@@ -68,10 +71,10 @@ WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma �
 
 | Platform | Durum | Not |
 |---|---|---|
-| Masaüstü (Windows) | **1.11.0** | Tam özellik, çevrimdışı, sunucu senkronu (P3–P6), oda/ünvan/çoklu misafir, seçmeli yedek/geri yükleme |
+| Masaüstü (Windows) | **1.11.1** | Tam özellik, çevrimdışı, sunucu senkronu (P3–P6), oda/ünvan/çoklu misafir, seçmeli yedek/geri yükleme |
 | Sunucu API’si | **v1** | Ortak iş kuralları, JWT, içerik manifesti, oda/ünvan/katılımcı/misafir |
 | Mobil (Android/iOS) | **1.1.0** | Giriş, günlük liste, oda/katılımcı/ek misafir, detay/sonuç, raporlar, çevrimdışı kuyruk, push (Expo; Android doğrulandı) |
-| Web | **1.11.0** | Giriş, günlük liste/oda filtresi, oda/katılımcı/misafir, detay/sonuç, 7 rapor türü (Next.js) |
+| Web | **1.11.1** | Giriş, günlük liste/oda filtresi, oda/katılımcı/misafir, detay/sonuç, 7 rapor türü (Next.js) |
 
 Ayrıntılar: [docs/29_Platform_Mimarisi.md](docs/29_Platform_Mimarisi.md) ·
 [docs/30_Api_ve_Mobil_Kurulum.md](docs/30_Api_ve_Mobil_Kurulum.md)
@@ -145,6 +148,7 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 45 | [Masaüstü Senkronizasyon Saha UAT](docs/45_Masaustu_Senkronizasyon_UAT.md) | P3/P4/P5: çevrimdışı kuyruk, SignalR, çakışma çözümü |
 | 46 | [Test Verisi Üretimi](docs/46_Test_Verisi_Uretimi.md) | 1000+ kayıt, oda/ünvan/misafir zenginleştirme, doğrulama |
 | 47 | [Görüşme Odaları, Ünvanlar, Misafirler](docs/47_Gorusme_Odalari_Unvanlar_Misafirler.md) | Veri modeli, iş kuralları, API, UAT sonuçları |
+| 48 | [Mobil 1.1.0 Build](docs/48_Mobil_1.1.0_Build.md) | EAS APK, cleartext, Samsung S21 Maestro UAT |
 
 ## Alınan temel kararlar
 

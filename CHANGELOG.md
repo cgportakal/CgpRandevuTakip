@@ -3,6 +3,18 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [1.11.1] — 2026-11-23 · API push dayanıklılığı
+
+### Düzeltildi
+- **Expo push zaman aşımı:** `HttpClient` zaman aşımı artık API host’unu durdurmuyor; `DevicePushSender` uyarı loglayıp sonraki turda yeniden deniyor. Böylece cihaz çevrimdışıyken veya Expo yavaşken API ayakta kalır.
+
+### Doğrulama
+- **438/438** .NET testi; API/web/mobil derlemeleri.
+- 1.11.0 saha UAT’i (masaüstü + Samsung S21) geçerli; bu yama yalnızca API dayanıklılığını değiştirir.
+
+### Paket
+- **Setup-only** sürüm; taşınabilir ZIP yayınlanmadı (son portable **1.11.0**).
+
 ## [Mobil 1.1.0] — 2026-11-22 · Android APK
 
 ### Eklendi

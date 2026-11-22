@@ -62,8 +62,9 @@ node scripts/bootstrap.mjs --force     # node_modules'ü yeniden kur
 
 ### Yayınlanmış uygulamayı kurma (Windows)
 
-- **Hazır kurulum:** GitHub → Releases → `v1.9.0` →
-  `CGP-RandevuTakip-1.9.0-Setup.exe` (yönetici hakkı gerekmez) veya portable ZIP.
+- **Hazır kurulum:** GitHub → Releases → `v1.11.1` →
+  `CGP-RandevuTakip-1.11.1-Setup.exe` (yönetici hakkı gerekmez). Son taşınabilir ZIP
+  `v1.11.0` sürümündedir; 1.11.1 ara sürüm olduğu için yalnızca Setup yayınlanır.
 - **Kaynaktan çalıştırma:** API/web/mobil komutları `coordination/CURRENT.md` →
   “Diğer bilgisayarda devam” bölümünde; ilk API açılışında `POST /v1/auth/setup`.
 - Yerel veri `%LOCALAPPDATA%\CgpRandevuTakip`, yedekler `Belgeler\CgpRandevuTakip\Yedekler`;

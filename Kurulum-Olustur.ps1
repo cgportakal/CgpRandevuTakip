@@ -1,5 +1,5 @@
 param(
-    [string]$Version = "1.11.0",
+    [string]$Version = "1.11.1",
     [string]$CertificateThumbprint = "",
     [string]$PfxPath = "",
     [string]$PfxPassword = "",

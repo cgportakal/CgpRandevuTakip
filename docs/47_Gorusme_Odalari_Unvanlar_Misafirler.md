@@ -1,6 +1,6 @@
 # 47 — Görüşme Odaları, Ünvanlar ve Çoklu Misafir
 
-**Tarih:** 22.11.2026 · **Durum:** Tamamlandı · **Sürüm:** 1.11.0
+**Tarih:** 22.11.2026 · **Durum:** Tamamlandı · **Sürüm:** 1.11.0 (API yaması: 1.11.1)
 
 Bu belge, görüşme odaları, yönetilen ünvanlar, çoklu görüşmeci ve misafir
 başına bağımsız değerlendirme özelliklerinin veri modelini, iş kurallarını,
