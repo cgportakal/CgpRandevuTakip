@@ -1,13 +1,17 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-22 01:50 (UTC+3)
+**Son güncelleme:** 2026-11-22 02:45 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — **432 test**. **P3/P4/P5 saha UAT’i tamamlandı**; kritik hata yok.
-Sıradaki: **P6 — açılış/kapanış ve dayanıklılık**, ardından P7 uçtan uca UAT.
+**Durum:** **1.10.2 sürüm hazırlığı** — P6 (açılış/pull/ağ/hatırlatıcı) kod olarak tamamlandı;
+432 test. Setup-only yayın sıradaki; ardından **P7 uçtan uca UAT**.
 
 ## Bu turda tamamlanan
 
+- **P6 — açılış/pull/ağ/hatırlatıcı:** `SyncMaintenanceService` eklendi. Açılışta oturum →
+  manifest → outbox flush → günlük liste (8 sn zaman aşımı); sunucu modunda 60 sn’de bir pull ve
+  `ServerSyncTickMessage` ile liste tazeleme; ağ hatası çevrimdışı durumuna yazılıyor. Yerel
+  `ReminderDispatcher` sunucu modunda çalışmıyor (çift bildirim önlenir).
 - **P3/P4/P5 saha UAT’i:** Portatif masaüstü 1.10.1 + izole API ile çevrimdışı oluşturma/silme ve
   otomatik eşitleme, SignalR ekle/güncelle/sil + 45 sn kesinti sonrası yeniden bağlanma, çevrimiçi
   çakışma (sunucuyu koru / yerele uygula) ve outbox çakışması (“Çakışanları çöz”) doğrulandı
@@ -270,9 +274,9 @@ ilk çalıştırmada `POST /v1/auth/setup` gerekir. Ayrıntı: [docs/39](docs/39
    yalnızca ayarları yedekle → değiştir → geri yükle; randevular ve kullanıcılar korunmalı,
    kurulum sihirbazı açılmamalı. Boş yedek onayı ve eski (v1) yedek denenmeli
    ([docs/43](docs/43_Yedekleme_ve_Geri_Yukleme.md)).
-2. **Masaüstü veri senkronizasyonu** — P1 ✅, P2 ✅, P3 ✅, P4 ✅, P5 ✅, **P3/P4/P5 UAT ✅**.
-   Sıradaki: **P6 dayanıklılık** (açılışta pull, ağ durumu, yerel hatırlatıcı kapatma, kapanış
-   dayanıklılığı), ardından **P7 uçtan uca UAT**.
+2. **Masaüstü veri senkronizasyonu** — P1 ✅, P2 ✅, P3 ✅, P4 ✅, P5 ✅, P6 ✅.
+   Sıradaki: **P7 uçtan uca UAT** — web UI + mobil + masaüstü aynı randevu, içerik/seri olayları,
+   rapor eşitliği ve kapanış dayanıklılığı.
    Ayrıntı: [docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md),
    [docs/45](docs/45_Masaustu_Senkronizasyon_UAT.md),
    [docs/44](docs/44_Masaustu_Senkronizasyon_Devir.md).

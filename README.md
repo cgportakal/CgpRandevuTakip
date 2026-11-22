@@ -5,9 +5,9 @@
 
 ## İndir
 
-> **Son sürüm: 1.10.1** · 22.11.2026 · 432 test geçiyor
+> **Son sürüm: 1.10.2** · 22.11.2026 · 432 test geçiyor
 
-- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.10.1-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.10.1/CGP-RandevuTakip-1.10.1-Setup.exe)
+- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.10.2-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.10.2/CGP-RandevuTakip-1.10.2-Setup.exe)
 - **Tüm sürümler:** [Releases](https://github.com/cgportakal/CgpRandevuTakip/releases/latest)
 - **Taşınabilir ZIP:** Yalnızca kararlı sürümlerde yayınlanır. Son taşınabilir paket:
   [1.10.0 portable](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.10.0/CGP-RandevuTakip-1.10.0-portable.zip).
@@ -19,12 +19,15 @@
 Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöneten, günlük listeyi
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
-> Durum: **1.10.1 hazır** — masaüstü sunucuyla çift yönlü çalışıyor: yazma yolu + outbox,
-> çevrimdışı görünürlük, SignalR canlı yenileme ve **çakışma çözümü** (yerel/sunucu seçimi).
-> Android push Samsung S21’de doğrulandı.
+> Durum: **1.10.2 hazır** — masaüstü sunucuyla çift yönlü çalışıyor: yazma yolu + outbox,
+> çevrimdışı görünürlük, SignalR canlı yenileme, çakışma çözümü ve **60 sn’lik sessiz pull**.
+> Sunucu modunda yerel hatırlatıcı kapatılır (çift bildirim yok). Android push Samsung S21’de
+> doğrulandı.
 
 ### Son yenilikler
 
+- **Dayanıklılık (1.10.2):** açılışta oturum → manifest → outbox → günlük liste; sunucu modunda
+  60 sn’de bir pull; ağ hatasında çevrimdışı durumu; yerel hatırlatıcı devre dışı.
 - **Çakışma yönetimi (1.10.1):** aynı randevu iki istemcide düzenlenirse eski sürüm `409` alır;
   masaüstü “yerel uygula / sunucuyu koru” seçeneği sunar. Çevrimdışı kuyrukta çakışan kayıt
   `conflict` durumunda tutulur ve “Çakışanları çöz” ile karara bağlanır.
@@ -61,7 +64,7 @@ WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma �
 
 | Platform | Durum | Not |
 |---|---|---|
-| Masaüstü (Windows) | **1.10.1** | Tam özellik, çevrimdışı, sunucu senkronu (P3 yazma + P4 SignalR + P5 çakışma), seçmeli yedek/geri yükleme |
+| Masaüstü (Windows) | **1.10.2** | Tam özellik, çevrimdışı, sunucu senkronu (P3 yazma + P4 SignalR + P5 çakışma + P6 dayanıklılık), seçmeli yedek/geri yükleme |
 | Sunucu API’si | **v1** | Ortak iş kuralları, JWT, içerik manifesti |
 | Mobil (Android/iOS) | **1.0.0** | Giriş, günlük liste, detay, yeni görüşme/seri, raporlar, çevrimdışı kuyruk, push (Expo; Android doğrulandı) |
 | Web | **1.10.0 (Beta)** | Giriş, günlük liste, yeni görüşme/seri, detay/sonuç, 7 rapor türü (Next.js) |

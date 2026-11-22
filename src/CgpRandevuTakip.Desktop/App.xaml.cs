@@ -424,6 +424,8 @@ public partial class App : System.Windows.Application
         services.AddHostedService<AutoBackupService>();
         services.AddHostedService<RetentionService>();
         services.AddHostedService<OutboxFlushService>();
+        services.AddSingleton<SyncMaintenanceService>();
+        services.AddHostedService(sp => sp.GetRequiredService<SyncMaintenanceService>());
         services.AddTransient<SessionLockService>();
 
         services.AddTransient<LoginViewModel>();
@@ -566,6 +568,13 @@ public partial class App : System.Windows.Application
                             lockStore.Clear();
                         }
                     }
+                }
+
+                using (var syncTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(8)))
+                {
+                    await _host.Services
+                        .GetRequiredService<SyncMaintenanceService>()
+                        .PrepareAsync(syncTimeout.Token);
                 }
 
                 var shell = _host.Services.GetRequiredService<MainWindow>();
