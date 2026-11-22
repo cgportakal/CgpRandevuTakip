@@ -1,6 +1,6 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-22 03:05 (UTC+3)
+**Son güncelleme:** 2026-11-22 10:10 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
 **Durum:** Yeşil — **432 test**. **1.10.2 yayında** (Setup-only); kurulu sürüm 1.10.2.
@@ -8,6 +8,11 @@ P6 tamamlandı. Sıradaki: **P7 uçtan uca UAT** (web UI + mobil + masaüstü).
 
 ## Bu turda tamamlanan
 
+- **UAT test verisi (1000+ kayıt):** [`scripts/seed-test-data.mjs`](scripts/seed-test-data.mjs)
+  API’ye geçmiş/bugün/gelecek karışık **1073 görünür kayıt**, 8 seri, bilinçli host/kişi
+  çakışmaları, geçmişte planlı kayıtlar, silinenler ve hatırlatıcı denemeleri yazdı.
+  Masaüstü (okuma modu, 1.10.2), web ve Android cihazda aynı günlük liste doğrulandı
+  ([docs/46](docs/46_Test_Verisi_Uretimi.md)).
 - **1.10.2 yayını:** `v1.10.2` GitHub Release (Setup-only). Assetler: Setup (~67,1 MB), Dev.cer,
   SHA256SUMS, version-policy (`latestDesktopVersion: 1.10.2`); kurulu sürüm 1.10.2 doğrulandı.
 - **P6 — açılış/pull/ağ/hatırlatıcı:** `SyncMaintenanceService` eklendi. Açılışta oturum →
