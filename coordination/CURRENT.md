@@ -1,14 +1,18 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-23 09:30 (UTC+3)
+**Son güncelleme:** 2026-11-23 10:05 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** **1.11.1 API yaması hazırlanıyor** — 1.11.0 masaüstü + Mobil 1.1.0 yayında.
+**Durum:** **1.11.1 yayında** — 1.11.0 masaüstü + Mobil 1.1.0 + 1.11.1 API yaması.
 **438/438** .NET testi; web `next build`; mobil `tsc`; web Playwright; masaüstü
-1.11.0 manuel UAT; Samsung S21 Maestro UAT. Kalan: **iOS UAT**, **1.11.1 yayını**.
+1.11.0 manuel UAT; Samsung S21 Maestro UAT. Kurulu sürüm **1.11.1**.
+Kalan: **iOS UAT**; online barındırma ertelendi.
 
 ## Bu turda tamamlanan
 
+- **1.11.1 yayını:** `v1.11.1` GitHub Release (Setup-only). Assetler: Setup (~67,2 MB),
+  Dev.cer, SHA256SUMS, version-policy (`latestDesktopVersion/latestWebVersion: 1.11.1`).
+  Kurulu sürüm 1.11.1 doğrulandı.
 - **1.11.1 API yaması:** Expo push `HttpClient` zaman aşımı API host’unu durdurmuyor;
   `DevicePushSender` uyarı loglayıp sonraki turda yeniden deniyor. Setup-only sürüm.
 - **Mobil 1.1.0 Android APK:** EAS `preview` build (`741399f5…`, versionCode 1).
@@ -407,8 +411,8 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 Bu dal: yerel **438/438** test (341 uygulama + 79 masaüstü/VM + 16 API + 2 UI), web build ve
 mobil `tsc` başarılı. API UAT: 1.082 randevu; web Playwright geçti.
-Master CI ✅ ve **Release v1.11.0** ✅ (PR #75 / tag `v1.11.0`).
-Son release: **1.11.0** (Setup + portable); kurulu sürüm 1.11.0.
+Master CI ✅ ve **Release v1.11.1** ✅ (PR #80 / tag `v1.11.1`).
+Son release: **1.11.1** (Setup-only); kurulu sürüm 1.11.1. Son portable: **1.11.0**.
 Android emülatör ve **Samsung S21 gerçek cihaz UAT** tamamlandı; iOS Mac bekliyor.
 Dependabot picomatch uyarısı **withdrawn** olduğu için dismissed; kod bağımlılığı değiştirilmedi.
 Android SDK/JDK/adb/emulator `D:\Android` altında; AVD `cgp_uat` hazır; `expo-dev-client` eklendi.
