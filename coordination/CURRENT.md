@@ -1,11 +1,12 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-22 11:55 (UTC+3)
+**Son güncelleme:** 2026-11-22 13:20 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** **1.11.0 yayında** — görüşme odaları, ünvanlar, çoklu görüşmeci ve
-misafir başına sonuç tamamlandı. **438/438** .NET testi; web `next build`; mobil `tsc`;
-API UAT 1.082 kayıt; web Playwright geçti. Kurulu masaüstü sürümü **1.11.0**.
+**Durum:** **1.11.0 yayında ve saha UAT’i tamamlandı** — görüşme odaları, ünvanlar,
+çoklu görüşmeci ve misafir başına sonuç. **438/438** .NET testi; web `next build`;
+mobil `tsc`; web Playwright; masaüstü 1.11.0 manuel UAT; Samsung S21 Maestro UAT.
+Kurulu masaüstü sürümü **1.11.0**. Kalan tek platform: **iOS (Mac gerekir)**.
 
 ## Bu turda tamamlanan
 
@@ -20,8 +21,14 @@ API UAT 1.082 kayıt; web Playwright geçti. Kurulu masaüstü sürümü **1.11.
   güncellendi ([docs/47](docs/47_Gorusme_Odalari_Unvanlar_Misafirler.md)).
 - **UAT:** `scripts/seed-meeting-rooms.mjs` 1.082 randevuyu yeni modele taşıdı;
   `scripts/verify-uat.mjs` oda çakışması, rapor toplamları ve süreleri doğruladı.
-  Web Playwright akışı (`web/e2e/meeting-rooms.spec.ts`) geçti. Mobil Maestro akışları
-  `mobile/.maestro/` altında hazır.
+  Web Playwright akışı (`web/e2e/meeting-rooms.spec.ts`) geçti.
+- **Masaüstü 1.11.0 saha UAT’i:** sunucuya bağlandı (112 görüşme, “Sunucu: bağlı”);
+  çoklu misafirli detayda `Geldi/Gelmedi` sonuçları, oda ve katılımcı ünvanı görüldü;
+  düzenleyicide Oda/Katılımcılar/Ek misafirler alanları doğrulandı; 2 misafir + 2 görüşmeci
+  + oda ile yeni randevu oluşturuldu ve API’de doğrulandı ([docs/47](docs/47_Gorusme_Odalari_Unvanlar_Misafirler.md)).
+- **Mobil Maestro / Samsung S21:** giriş, ek misafirli oluşturma, uçak modu → kuyruk →
+  bağlantı, raporlar geçti; çevrimdışı kayıt yeniden açılışta otomatik gönderildi.
+  Akışlar `mobile/.maestro/` altında.
 - **UAT test verisi (1000+ kayıt):** [`scripts/seed-test-data.mjs`](scripts/seed-test-data.mjs)
   API’ye geçmiş/bugün/gelecek karışık **1081 görünür kayıt**, 8 seri, bilinçli host/kişi
   çakışmaları, geçmişte planlı kayıtlar, silinenler ve hatırlatıcı denemeleri yazdı.

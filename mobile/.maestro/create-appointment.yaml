@@ -11,21 +11,56 @@ appId: com.cgportakal.cgpRandevuTakip
 - inputText: Mobil Misafir
 - tapOn:
     id: phone
-- inputText: "05557779911"
+- inputText: "05558880012"
+- tapOn:
+    id: date
+- eraseText: 10
+- inputText: "2026-11-22"
+- tapOn:
+    id: time
+- eraseText: 5
+- inputText: "19:30"
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: add-guest
+    direction: DOWN
 - tapOn:
     id: add-guest
+- scrollUntilVisible:
+    element:
+      id: guest-first-0
+    direction: DOWN
 - tapOn:
     id: guest-first-0
 - inputText: Ek
+- hideKeyboard
 - tapOn:
     id: guest-last-0
 - inputText: Misafir
+- hideKeyboard
 - tapOn:
     id: guest-phone-0
 - inputText: "05557779922"
-- tapOn:
-    text: "Oda 1"
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: save-appointment
+    direction: DOWN
 - tapOn:
     id: save-appointment
+- tapOn:
+    text: "YİNE DE KAYDET"
+    optional: true
+- tapOn:
+    text: "OK"
+    optional: true
+- repeat:
+    times: 16
+    commands:
+      - swipe:
+          start: "50%,80%"
+          end: "50%,20%"
+          duration: 200
 - assertVisible:
-    text: ".*Mobil Misafir.*"
+    text: "UAT Mobil Misafir +1 misafir"

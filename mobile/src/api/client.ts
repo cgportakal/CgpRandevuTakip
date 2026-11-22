@@ -4,6 +4,7 @@ import type {
   AppointmentInput,
   AppointmentListItem,
   AppointmentOutcomeInput,
+  AppointmentSaveResult,
   AuthTokens,
   ContentManifest,
   ReportKind,
@@ -17,7 +18,11 @@ import type {
 } from './types';
 
 export class ApiError extends Error {
-  constructor(message: string, readonly status: number) {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly payload?: unknown,
+  ) {
     super(message);
   }
 }
@@ -110,7 +115,7 @@ class ApiClient {
     return this.request<AppointmentDetail>(`/v1/appointments/${id}`);
   }
 
-  async createAppointment(input: AppointmentInput): Promise<{ success: boolean; error: string | null; appointmentId: string | null }> {
+  async createAppointment(input: AppointmentInput): Promise<AppointmentSaveResult> {
     return this.request('/v1/appointments', {
       method: 'POST',
       body: JSON.stringify(input),
@@ -208,17 +213,19 @@ class ApiClient {
       if (!response.ok) {
         const text = await response.text();
         let message = `Sunucu hatası (${response.status})`;
+        let payload: unknown = undefined;
 
         if (text) {
           try {
             const parsed = JSON.parse(text) as { error?: string };
+            payload = parsed;
             message = parsed.error ?? message;
           } catch {
             message = text;
           }
         }
 
-        throw new ApiError(message, response.status);
+        throw new ApiError(message, response.status, payload);
       }
 
       if (response.status === 204) {

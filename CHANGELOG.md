@@ -18,6 +18,8 @@ sürümleme: [SemVer](https://semver.org/lang/tr/).
 - **438/438** .NET testi; web `next build`; mobil `tsc`.
 - API UAT: 1.082 randevu, rapor toplamları eşit, oda çakışması `Room` türüyle döndü.
 - Web Playwright: oda + katılımcı + ek misafir oluşturma, detay, rapor ve içerik yönetimi.
+- Masaüstü 1.11.0: sunucuya bağlandı (112 görüşme), çoklu misafir detayı, oda/katılımcı/misafir düzenleyicisi; 2 misafir + 2 görüşmeci + oda ile oluşturma API’de doğrulandı.
+- Samsung S21 Maestro: giriş, oluşturma, çevrimdışı kuyruk, raporlar; çevrimdışı kayıt yeniden açılışta otomatik gönderildi.
 
 ### Paket
 - Setup + taşınabilir ZIP (kararlı `x.y.0` sürümü).

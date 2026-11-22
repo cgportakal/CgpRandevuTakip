@@ -148,11 +148,41 @@ misafir sonuçlarını taşır.
 | Web Playwright | Geçti (oluşturma + detay + rapor + içerik) |
 | Mobil `tsc` | Geçti |
 
+### Masaüstü 1.11.0 saha UAT’i
+
+Kurulu sürüm: **1.11.0** (`%LOCALAPPDATA%\Programs\CGP Randevu Takip`).
+
+- Sunucu bağlantısı `http://127.0.0.1:5199` ile kuruldu; okuma modu açık.
+- Günlük liste: **112 görüşme**, “**Sunucu: bağlı**” rozeti.
+- Liste satırlarında **oda** ve **+N görüşmeci / +N misafir** göründü.
+- Çoklu misafirli detay: `Dilek Aydın - Geldi`, `Ali Çelik - Gelmedi`; oda ve
+  katılımcı ünvanı göründü.
+- Düzenleyici: **Oda**, **Katılımcılar**, **Ek misafirler**, **+ Misafir ekle** alanları.
+- Yeni randevu: 2 misafir + 2 görüşmeci + oda ile oluşturuldu; API’de
+  `guestCount=2`, `participantCount=2`, `roomName=Demet Yalçın Odası` doğrulandı.
+
+### Mobil Maestro / Samsung S21 UAT’i
+
+Cihaz: **R5CN3C6SN** (Samsung S21), Expo dev build.
+
+| Akış | Sonuç |
+|---|---|
+| `login.yaml` | Geçti |
+| `create-appointment.yaml` | Geçti (ek misafir + oda + kaydet) |
+| `offline-create.yaml` | Geçti (uçak modu → kuyruk → bağlantı → rapor) |
+| `reports.yaml` | Geçti |
+
+- Çevrimdışı oluşturulan kayıt, uygulama yeniden açıldığında otomatik gönderildi
+  (`05558880033` → API’de görünür).
+- Mobil raporda **301 görüşme / 435 kişi** özeti görüntülendi.
+
 ### Sınırlar
 
 - iOS UAT macOS/Xcode gerektirir; Android emülatör + Samsung S21 doğrulandı.
-- Masaüstü WPF UI otomasyonu eklenmedi; ViewModel/sync testleri + manuel UAT.
-- Maestro akışları hazır; çalıştırmak için Maestro CLI + emülatör gerekir.
+- Masaüstü WPF UI otomasyonu kalıcı testlere eklenmedi; bu turda UI Automation ile
+  manuel saha UAT’i yapıldı.
+- Maestro CLI Windows’ta `maestro.zip` + JDK 17 ile çalıştırıldı; CI’a eklenmedi
+  (gerçek cihaz/emülatör gerektirir).
 
 ## 6. Yeniden üretim
 

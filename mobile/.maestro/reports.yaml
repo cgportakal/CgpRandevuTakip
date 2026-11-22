@@ -6,4 +6,6 @@ appId: com.cgportakal.cgpRandevuTakip
 - assertVisible:
     text: ".*Rapor.*"
 - assertVisible:
-    text: ".*Toplam.*"
+    text: ".*görüşme.*"
+- assertVisible:
+    text: "Özet"
