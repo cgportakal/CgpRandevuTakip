@@ -1,15 +1,21 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-22 13:20 (UTC+3)
+**Son güncelleme:** 2026-11-22 19:25 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** **1.11.0 yayında ve saha UAT’i tamamlandı** — görüşme odaları, ünvanlar,
+**Durum:** **1.11.0 masaüstü + Mobil 1.1.0 Android yayında** — görüşme odaları, ünvanlar,
 çoklu görüşmeci ve misafir başına sonuç. **438/438** .NET testi; web `next build`;
 mobil `tsc`; web Playwright; masaüstü 1.11.0 manuel UAT; Samsung S21 Maestro UAT.
 Kurulu masaüstü sürümü **1.11.0**. Kalan tek platform: **iOS (Mac gerekir)**.
 
 ## Bu turda tamamlanan
 
+- **Mobil 1.1.0 Android APK:** EAS `preview` build (`741399f5…`, versionCode 1).
+  GitHub Release: [mobile-v1.1.0](https://github.com/cgportakal/CgpRandevuTakip/releases/tag/mobile-v1.1.0).
+  Samsung S21’de giriş, oluşturma, çevrimdışı kuyruk ve rapor Maestro akışları geçti.
+  Release APK’da cleartext HTTP, `GOOGLE_SERVICES_JSON` secret file ve ağ hatasında
+  outbox desteği eklendi ([docs/48](docs/48_Mobil_1.1.0_Build.md)).
+- **API push dayanıklılığı:** Expo push `HttpClient` zaman aşımı artık host’u durdurmuyor.
 - **1.11.0 yayını:** `v1.11.0` GitHub Release; assetler Setup (~67,2 MB), portable
   (~95,4 MB), Dev.cer, SHA256SUMS, version-policy (`latestDesktopVersion/latestWebVersion:
   1.11.0`). Kurulu sürüm 1.11.0 doğrulandı. Master CI ve Release işi yeşil.

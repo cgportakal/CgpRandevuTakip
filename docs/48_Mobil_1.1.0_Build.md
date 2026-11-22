@@ -16,6 +16,7 @@ npx eas-cli build -p android --profile preview --non-interactive
 - **Sürüm:** `1.1.0` · **versionCode:** `1`
 - **APK:** ~74,9 MB
 - **Paket:** `com.cgportakal.cgpRandevuTakip`
+- **GitHub Release:** [mobile-v1.1.0](https://github.com/cgportakal/CgpRandevuTakip/releases/tag/mobile-v1.1.0)
 
 ### Yapılandırma
 

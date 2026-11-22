@@ -175,6 +175,9 @@ Cihaz: **R5CN3C6SN** (Samsung S21), Expo dev build.
 - Çevrimdışı oluşturulan kayıt, uygulama yeniden açıldığında otomatik gönderildi
   (`05558880033` → API’de görünür).
 - Mobil raporda **301 görüşme / 435 kişi** özeti görüntülendi.
+- Üretim APK’sı **1.1.0** olarak EAS `preview` ile alındı ve Samsung S21’e kuruldu;
+  cleartext HTTP, `GOOGLE_SERVICES_JSON` secret file ve ağ hatasında outbox desteği
+  eklendi ([docs/48](48_Mobil_1.1.0_Build.md)).
 
 ### Sınırlar
 
