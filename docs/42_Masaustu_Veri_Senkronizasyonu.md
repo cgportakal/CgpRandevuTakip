@@ -163,6 +163,10 @@ Uygulama: `SyncMaintenanceService` (açılış hazırlığı + 60 sn pull, `Serv
 - [ ] `docs/43_Masaustu_Senkronizasyon_UAT.md` + `CURRENT` güncelle.
 - [ ] 412+ test; CI yeşil; PR akışı.
 
+UAT verisi: `node scripts/seed-test-data.mjs --count 1000` (deterministik
+`clientRequestId`, geçmiş/bugün/gelecek randevular, seri ve çakışma örnekleri). Durum dosyası
+`scripts/.seed-demo-state.json` yereldir ve commit edilmez.
+
 ## 6. Bilinen riskler ve kararlar
 
 - **Çift hatırlatma:** Masaüstü yerel hatırlatıcısı ile API worker’ı aynı randevu için iki
