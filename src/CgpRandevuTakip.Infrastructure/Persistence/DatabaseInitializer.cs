@@ -11,7 +11,7 @@ public sealed record DatabaseSummary(
     int UserCount,
     int SchemaVersion);
 
-public static class DatabaseInitializer
+public static partial class DatabaseInitializer
 {
     private static readonly (string Name, string Color)[] DefaultCategories =
     {
@@ -59,6 +59,8 @@ public static class DatabaseInitializer
         }
 
         NormalizeLegacyCategoryColors(db);
+        EnsureMeetingRooms(db);
+        BackfillMeetingRelations(db);
 
         return new DatabaseSummary(
             databasePath,

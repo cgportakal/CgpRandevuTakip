@@ -86,6 +86,19 @@ public partial class AppointmentDetailViewModel : ObservableObject
         ? "—"
         : Detail.StudentFullName;
 
+    public string RoomText => Detail?.RoomDisplayName ?? "—";
+
+    public string ParticipantsText => Detail?.Participants is { Count: > 0 }
+        ? string.Join(Environment.NewLine, Detail.Participants.Select(x =>
+            (x.IsPrimary ? "★ " : "• ") + x.DisplayNameWithTitle))
+        : "—";
+
+    public string GuestsText => Detail?.Guests is { Count: > 0 }
+        ? string.Join(Environment.NewLine, Detail.Guests.Select(x =>
+            (x.IsPrimary ? "★ " : "• ") + x.FullName
+            + (x.Outcome is null ? string.Empty : $" — {x.Outcome.AttendanceText}")))
+        : Detail?.PersonFullName ?? "—";
+
     public event EventHandler? EditRequested;
 
     public event EventHandler? Deleted;
@@ -218,6 +231,9 @@ public partial class AppointmentDetailViewModel : ObservableObject
     partial void OnDetailChanged(AppointmentDetailDto? value)
     {
         OnPropertyChanged(nameof(ReminderText));
+        OnPropertyChanged(nameof(RoomText));
+        OnPropertyChanged(nameof(ParticipantsText));
+        OnPropertyChanged(nameof(GuestsText));
         OnPropertyChanged(nameof(DescriptionText));
         OnPropertyChanged(nameof(StudentText));
         OnPropertyChanged(nameof(CanEnterOutcome));

@@ -1,5 +1,6 @@
 using CgpRandevuTakip.Application.Auth;
 using CgpRandevuTakip.Application.Hosts;
+using CgpRandevuTakip.Application.Rooms;
 using CgpRandevuTakip.Domain.Entities;
 using CgpRandevuTakip.Domain.Enums;
 using CgpRandevuTakip.Infrastructure.Repositories;
@@ -31,9 +32,17 @@ public class HostServiceTests
         currentUser.SignIn(new UserSession("actor", "actor", "Aktör", role));
         var audit = new RecordingAuditLogger();
 
+        var clock = new FixedClock(DateTime.UtcNow);
         var service = new HostService(
             new UserRepository(db.Factory),
             new AppointmentRepository(db.Factory),
+            new HostTitleRepository(db.Factory),
+            new MeetingRoomService(
+                new MeetingRoomRepository(db.Factory),
+                new UserRepository(db.Factory),
+                audit,
+                currentUser,
+                clock),
             new Pbkdf2PasswordHasher(),
             audit,
             currentUser);

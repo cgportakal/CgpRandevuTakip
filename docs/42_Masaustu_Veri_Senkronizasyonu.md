@@ -156,16 +156,18 @@ geçici kimlikler sunucu kimlikleriyle eşlenir. **Kalan tek adım saha UAT’id
 Uygulama: `SyncMaintenanceService` (açılış hazırlığı + 60 sn pull, `ServerSyncTickMessage`),
 `App` açılışında 8 sn zaman aşımlı `PrepareAsync`, `ReminderDispatcher` sunucu modunda atlar.
 
-### P7 — UAT ve dokümantasyon
-- [ ] Aynı randevu: masaüstü oluştur → web/mobil anında görür; tersi de.
-- [ ] Çevrimdışı oluştur/düzenle → bağlantı gelince eşitlenir.
-- [ ] Çakışma dialog’u, rapor eşitliği (7 tür), içerik manifesti.
-- [ ] `docs/43_Masaustu_Senkronizasyon_UAT.md` + `CURRENT` güncelle.
-- [ ] 412+ test; CI yeşil; PR akışı.
+### P7 — UAT ve dokümantasyon — **API + web tamamlandı**
+- [x] API: 1.082 randevu ile oda/ünvan/çoklu görüşmeci/çoklu misafir doğrulandı.
+- [x] Web Playwright: oluşturma, detay, rapor, içerik yönetimi.
+- [x] Oda/host/misafir çakışmaları; misafir başına sonuç ve rapor toplamları.
+- [x] `docs/47` + `CURRENT` güncelle.
+- [ ] Masaüstü kurulu 1.11.0 ile manuel saha UAT’i.
+- [ ] Mobil Maestro akışlarının emülatör/S21’de çalıştırılması ve iOS UAT’i (Mac gerekir).
 
-UAT verisi: `node scripts/seed-test-data.mjs --count 1000` (deterministik
-`clientRequestId`, geçmiş/bugün/gelecek randevular, seri ve çakışma örnekleri). Durum dosyası
-`scripts/.seed-demo-state.json` yereldir ve commit edilmez.
+UAT verisi: `node scripts/seed-test-data.mjs --count 1000 --force` +
+`node scripts/seed-meeting-rooms.mjs --force`; doğrulama `node scripts/verify-uat.mjs`.
+Durum dosyaları `scripts/.seed-demo-state.json` ve `scripts/.seed-rooms-state.json` yereldir
+ve commit edilmez.
 
 ## 6. Bilinen riskler ve kararlar
 

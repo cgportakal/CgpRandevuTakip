@@ -9,15 +9,26 @@ public sealed record HostDto(
     UserRole Role,
     bool IsLoginEnabled,
     bool IsActive,
-    int AppointmentCount);
+    int AppointmentCount,
+    string? TitleId = null,
+    string? TitleName = null)
+{
+    /// <summary>Kompakt yerlerde "Ad Soyad (Ünvan)" biçimini verir.</summary>
+    public string DisplayNameWithTitle => string.IsNullOrWhiteSpace(TitleName)
+        ? DisplayName
+        : $"{DisplayName} ({TitleName})";
+}
 
 public sealed record HostCreateInput(
     string DisplayName,
     bool LoginEnabled,
     string? Username,
     string? Password,
-    string? ConfirmPassword);
+    string? ConfirmPassword,
+    string? TitleId = null);
 
 public sealed record HostUpdateInput(
     string DisplayName,
-    bool IsActive);
+    bool IsActive,
+    string? TitleId = null,
+    bool ClearTitle = false);

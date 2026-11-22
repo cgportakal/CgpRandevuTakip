@@ -10,7 +10,9 @@ import type {
   ContentSettingsInput,
   ContentVersion,
   HostCreateInput,
+  HostTitle,
   HostUpdateInput,
+  MeetingRoom,
   ReportKind,
   ReportResult,
   ReportSummary,
@@ -214,13 +216,97 @@ class ApiClient {
     return this.request(`/v1/appointments/series/${seriesId}/cancel`, { method: 'POST' });
   }
 
-  getReportSummary(from: string, to: string): Promise<ReportSummary> {
-    return this.request(`/v1/reports/summary?from=${from}&to=${to}`);
+  getReportSummary(from: string, to: string, roomId?: string): Promise<ReportSummary> {
+    const room = roomId ? `&roomId=${encodeURIComponent(roomId)}` : '';
+    return this.request(`/v1/reports/summary?from=${from}&to=${to}${room}`);
   }
 
-  getReport(kind: ReportKind, from: string, to: string, personSearch?: string): Promise<ReportResult> {
+  getReport(
+    kind: ReportKind,
+    from: string,
+    to: string,
+    personSearch?: string,
+    roomId?: string,
+  ): Promise<ReportResult> {
     const search = personSearch ? `&personSearch=${encodeURIComponent(personSearch)}` : '';
-    return this.request(`/v1/reports/kind/${kind}?from=${from}&to=${to}${search}`);
+    const room = roomId ? `&roomId=${encodeURIComponent(roomId)}` : '';
+    return this.request(`/v1/reports/kind/${kind}?from=${from}&to=${to}${search}${room}`);
+  }
+
+  getTitles(): Promise<HostTitle[]> {
+    return this.request('/v1/titles');
+  }
+
+  getRooms(): Promise<MeetingRoom[]> {
+    return this.request('/v1/rooms');
+  }
+
+  createTitle(input: { name: string; sortOrder: number; isActive: boolean }): Promise<void> {
+    return this.request('/v1/admin/content/titles', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  }
+
+  updateTitle(
+    id: string,
+    input: { name: string; sortOrder: number; isActive: boolean },
+  ): Promise<void> {
+    return this.request(`/v1/admin/content/titles/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    });
+  }
+
+  setTitleActive(id: string, isActive: boolean): Promise<void> {
+    return this.request(`/v1/admin/content/titles/${id}/active`, {
+      method: 'POST',
+      body: JSON.stringify({ isActive }),
+    });
+  }
+
+  deleteTitle(id: string): Promise<void> {
+    return this.request(`/v1/admin/content/titles/${id}`, { method: 'DELETE' });
+  }
+
+  createRoom(input: {
+    name: string;
+    kind: 'HostRoom' | 'Shared';
+    hostUserId: string | null;
+    sortOrder: number;
+    isActive: boolean;
+  }): Promise<void> {
+    return this.request('/v1/admin/content/rooms', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  }
+
+  updateRoom(
+    id: string,
+    input: {
+      name: string;
+      kind: 'HostRoom' | 'Shared';
+      hostUserId: string | null;
+      sortOrder: number;
+      isActive: boolean;
+    },
+  ): Promise<void> {
+    return this.request(`/v1/admin/content/rooms/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    });
+  }
+
+  setRoomActive(id: string, isActive: boolean): Promise<void> {
+    return this.request(`/v1/admin/content/rooms/${id}/active`, {
+      method: 'POST',
+      body: JSON.stringify({ isActive }),
+    });
+  }
+
+  deleteRoom(id: string): Promise<void> {
+    return this.request(`/v1/admin/content/rooms/${id}`, { method: 'DELETE' });
   }
 
   getContentAdmin(): Promise<ContentAdminData> {

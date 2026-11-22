@@ -16,9 +16,10 @@ export async function upsertDay(dateKey: string, items: AppointmentListItem[]): 
       await db.runAsync(
         `INSERT INTO appointments (
            id, starts_at_local, duration_minutes, person_full_name, phone_e164,
-           host_user_id, host_name, category_id, category_name, category_color_hex,
+           host_user_id, host_name, room_id, room_name, guest_count, host_count,
+           category_id, category_name, category_color_hex,
            method, status, payload, synced_at
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(id) DO UPDATE SET
            starts_at_local = excluded.starts_at_local,
            duration_minutes = excluded.duration_minutes,
@@ -26,6 +27,10 @@ export async function upsertDay(dateKey: string, items: AppointmentListItem[]): 
            phone_e164 = excluded.phone_e164,
            host_user_id = excluded.host_user_id,
            host_name = excluded.host_name,
+           room_id = excluded.room_id,
+           room_name = excluded.room_name,
+           guest_count = excluded.guest_count,
+           host_count = excluded.host_count,
            category_id = excluded.category_id,
            category_name = excluded.category_name,
            category_color_hex = excluded.category_color_hex,
@@ -40,6 +45,10 @@ export async function upsertDay(dateKey: string, items: AppointmentListItem[]): 
         item.phoneE164,
         item.hostUserId,
         item.hostName,
+        item.roomId,
+        item.roomName,
+        item.guestCount,
+        item.participantCount,
         item.categoryId,
         item.categoryName,
         item.categoryColorHex,

@@ -23,6 +23,14 @@ type Conflict = {
   personName: string;
   startsAtLocal: string;
   categoryName?: string | null;
+  kind?: 'Host' | 'Room' | 'Guest';
+  resourceName?: string | null;
+};
+
+type GuestDraft = {
+  firstName: string;
+  lastName: string;
+  phone: string;
 };
 
 const methods: { value: AppointmentMethod; label: string }[] = [
@@ -44,6 +52,8 @@ function nextHalfHour(): string {
   return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 }
 
+const emptyGuest: GuestDraft = { firstName: '', lastName: '', phone: '' };
+
 export function AppointmentForm({ manifest, defaultDate, initial, onClose, onSaved }: Props) {
   const editing = Boolean(initial);
 
@@ -56,6 +66,9 @@ export function AppointmentForm({ manifest, defaultDate, initial, onClose, onSav
   const [hostUserId, setHostUserId] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [method, setMethod] = useState<AppointmentMethod>('FaceToFace');
+  const [roomId, setRoomId] = useState('');
+  const [participantIds, setParticipantIds] = useState<string[]>([]);
+  const [guests, setGuests] = useState<GuestDraft[]>([]);
   const [description, setDescription] = useState('');
   const [studentFirstName, setStudentFirstName] = useState('');
   const [studentLastName, setStudentLastName] = useState('');
@@ -70,11 +83,21 @@ export function AppointmentForm({ manifest, defaultDate, initial, onClose, onSav
   const [ignoreConflicts, setIgnoreConflicts] = useState(false);
   const [seriesNote, setSeriesNote] = useState<string | null>(null);
 
+  const hostRoom = useMemo(
+    () => manifest?.rooms.find((room) => room.kind === 'HostRoom' && room.hostUserId === hostUserId),
+    [manifest, hostUserId],
+  );
+
   useEffect(() => {
-    setHostUserId(manifest?.hosts[0]?.id ?? '');
+    const firstHost = manifest?.hosts[0]?.id ?? '';
+    setHostUserId(firstHost);
     setCategoryId(manifest?.categories[0]?.id ?? '');
     setDate(defaultDate);
     setTime(nextHalfHour());
+    const firstRoom = manifest?.rooms.find(
+      (room) => room.kind === 'HostRoom' && room.hostUserId === firstHost,
+    );
+    setRoomId(firstRoom?.id ?? '');
   }, [manifest, defaultDate]);
 
   useEffect(() => {
@@ -90,6 +113,21 @@ export function AppointmentForm({ manifest, defaultDate, initial, onClose, onSav
     setHostUserId(initial.hostUserId);
     setCategoryId(initial.categoryId);
     setMethod(initial.method);
+    setRoomId(initial.roomId ?? '');
+    setParticipantIds(
+      (initial.participants ?? [])
+        .filter((participant) => !participant.isPrimary)
+        .map((participant) => participant.userId),
+    );
+    setGuests(
+      (initial.guests ?? [])
+        .filter((guest) => !guest.isPrimary)
+        .map((guest) => ({
+          firstName: guest.firstName,
+          lastName: guest.lastName,
+          phone: guest.phoneE164,
+        })),
+    );
     setDescription(initial.description ?? '');
     setStudentFirstName(initial.studentFullName ?? '');
     setStudentLastName('');
@@ -105,8 +143,30 @@ export function AppointmentForm({ manifest, defaultDate, initial, onClose, onSav
 
   const toggleReminder = (value: number) => {
     setReminders((current) =>
-      current.includes(value) ? current.filter((item) => item !== value) : [...current, value].sort((a, b) => a - b),
+      current.includes(value)
+        ? current.filter((item) => item !== value)
+        : [...current, value].sort((a, b) => a - b),
     );
+  };
+
+  const selectHost = (value: string) => {
+    setHostUserId(value);
+    setParticipantIds((current) => current.filter((id) => id !== value));
+    if (method === 'FaceToFace') {
+      const room = manifest?.rooms.find(
+        (item) => item.kind === 'HostRoom' && item.hostUserId === value,
+      );
+      setRoomId(room?.id ?? '');
+    }
+  };
+
+  const selectMethod = (value: AppointmentMethod) => {
+    setMethod(value);
+    if (value !== 'FaceToFace') {
+      setRoomId('');
+    } else {
+      setRoomId(hostRoom?.id ?? '');
+    }
   };
 
   const buildInput = (force = false): AppointmentInput => ({
@@ -123,6 +183,24 @@ export function AppointmentForm({ manifest, defaultDate, initial, onClose, onSav
     studentLastName: studentLastName.trim() || null,
     reminderOffsetsMinutes: reminders,
     ignoreConflicts: force || ignoreConflicts,
+    roomId: roomId || null,
+    participantHostUserIds: participantIds.filter((id) => id !== hostUserId),
+    guests: [
+      {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: phone.trim(),
+        isPrimary: true,
+      },
+      ...guests
+        .filter((guest) => guest.firstName.trim() || guest.lastName.trim() || guest.phone.trim())
+        .map((guest) => ({
+          firstName: guest.firstName.trim(),
+          lastName: guest.lastName.trim(),
+          phone: guest.phone.trim(),
+          isPrimary: false,
+        })),
+    ],
   });
 
   const submit = async (event: React.FormEvent) => {
@@ -133,6 +211,19 @@ export function AppointmentForm({ manifest, defaultDate, initial, onClose, onSav
     if (!firstName.trim() || !lastName.trim() || !phone.trim() || !hostUserId || !categoryId) {
       setError('Ad, soyad, telefon, görüşmeci ve kategori zorunludur.');
       return;
+    }
+
+    if (method === 'FaceToFace' && !roomId) {
+      setError('Yüz yüze görüşmede oda seçilmelidir.');
+      return;
+    }
+
+    for (const guest of guests) {
+      const filled = guest.firstName.trim() || guest.lastName.trim() || guest.phone.trim();
+      if (filled && (!guest.firstName.trim() || !guest.lastName.trim() || !guest.phone.trim())) {
+        setError('Ek misafirlerin ad, soyad ve telefonu doldurulmalıdır.');
+        return;
+      }
     }
 
     if (seriesEnabled && (count < 2 || count > 12)) {
@@ -212,7 +303,7 @@ export function AppointmentForm({ manifest, defaultDate, initial, onClose, onSav
           </div>
           <div className="field">
             <label>Yöntem</label>
-            <select className="select" value={method} onChange={(event) => setMethod(event.target.value as AppointmentMethod)}>
+            <select className="select" value={method} onChange={(event) => selectMethod(event.target.value as AppointmentMethod)}>
               {methods.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -243,14 +334,25 @@ export function AppointmentForm({ manifest, defaultDate, initial, onClose, onSav
           </div>
         </div>
 
-        <div className="grid-2" style={{ marginTop: 12 }}>
+        <div className="grid-3" style={{ marginTop: 12 }}>
           <div className="field">
             <label>Görüşmeci</label>
-            <select className="select" value={hostUserId} onChange={(event) => setHostUserId(event.target.value)}>
+            <select className="select" value={hostUserId} onChange={(event) => selectHost(event.target.value)}>
               <option value="">Seçin</option>
               {(manifest?.hosts ?? []).map((host) => (
                 <option key={host.id} value={host.id}>
-                  {host.displayName}
+                  {host.displayNameWithTitle}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label>Oda</label>
+            <select className="select" value={roomId} onChange={(event) => setRoomId(event.target.value)}>
+              <option value="">Oda yok</option>
+              {(manifest?.rooms ?? []).map((room) => (
+                <option key={room.id} value={room.id}>
+                  {room.displayName}
                 </option>
               ))}
             </select>
@@ -266,6 +368,86 @@ export function AppointmentForm({ manifest, defaultDate, initial, onClose, onSav
               ))}
             </select>
           </div>
+        </div>
+
+        <div className="field" style={{ marginTop: 12 }}>
+          <label>Katılımcılar</label>
+          <div className="checkbox-row">
+            {(manifest?.hosts ?? [])
+              .filter((host) => host.id !== hostUserId)
+              .map((host) => (
+                <label key={host.id}>
+                  <input
+                    type="checkbox"
+                    checked={participantIds.includes(host.id)}
+                    onChange={(event) =>
+                      setParticipantIds((current) =>
+                        event.target.checked
+                          ? [...current, host.id]
+                          : current.filter((id) => id !== host.id),
+                      )
+                    }
+                  />
+                  {host.displayNameWithTitle}
+                </label>
+              ))}
+          </div>
+        </div>
+
+        <div className="field" style={{ marginTop: 12 }}>
+          <label>Ek misafirler</label>
+          {guests.map((guest, index) => (
+            <div className="grid-3" key={index} style={{ marginBottom: 8 }}>
+              <input
+                className="input"
+                placeholder="Ad"
+                value={guest.firstName}
+                onChange={(event) =>
+                  setGuests((current) =>
+                    current.map((item, itemIndex) =>
+                      itemIndex === index ? { ...item, firstName: event.target.value } : item,
+                    ),
+                  )
+                }
+              />
+              <input
+                className="input"
+                placeholder="Soyad"
+                value={guest.lastName}
+                onChange={(event) =>
+                  setGuests((current) =>
+                    current.map((item, itemIndex) =>
+                      itemIndex === index ? { ...item, lastName: event.target.value } : item,
+                    ),
+                  )
+                }
+              />
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input
+                  className="input"
+                  placeholder="Telefon"
+                  value={guest.phone}
+                  onChange={(event) =>
+                    setGuests((current) =>
+                      current.map((item, itemIndex) =>
+                        itemIndex === index ? { ...item, phone: event.target.value } : item,
+                      ),
+                    )
+                  }
+                />
+                <button
+                  type="button"
+                  className="btn btn-sm btn-ghost"
+                  onClick={() => setGuests((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                >
+                  Kaldır
+                </button>
+              </div>
+            </div>
+          ))}
+          <button type="button" className="btn btn-sm" onClick={() => setGuests((current) => [...current, { ...emptyGuest }])}>
+            + Misafir ekle
+          </button>
         </div>
 
         <div className="grid-2" style={{ marginTop: 12 }}>
@@ -358,7 +540,9 @@ export function AppointmentForm({ manifest, defaultDate, initial, onClose, onSav
             <ul style={{ margin: '6px 0 0 18px' }}>
               {conflicts.map((conflict, index) => (
                 <li key={index}>
-                  {conflict.personName} · {new Date(conflict.startsAtLocal).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                  {conflict.kind === 'Room' ? 'Oda' : conflict.kind === 'Guest' ? 'Misafir' : 'Görüşmeci'}
+                  {conflict.resourceName ? `: ${conflict.resourceName}` : ''} — {conflict.personName} ·{' '}
+                  {new Date(conflict.startsAtLocal).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                   {conflict.categoryName ? ` · ${conflict.categoryName}` : ''}
                 </li>
               ))}

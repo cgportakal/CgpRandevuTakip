@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
+using CgpRandevuTakip.Desktop.Common;
 using CgpRandevuTakip.Desktop.Services;
 using CgpRandevuTakip.Domain.Rules;
 using CgpRandevuTakip.Application.Appointments;
@@ -10,6 +11,58 @@ using CommunityToolkit.Mvvm.Input;
 namespace CgpRandevuTakip.Desktop.ViewModels;
 
 public sealed record AttendanceOption(Attendance Value, string Label);
+
+public partial class GuestOutcomeRowViewModel : ObservableObject
+{
+    public GuestOutcomeRowViewModel(
+        string guestId,
+        string name,
+        Attendance? attendance,
+        string? summary,
+        bool willRepeat,
+        string? postNotes,
+        bool isClosed)
+    {
+        GuestId = guestId;
+        Name = name;
+
+        AttendanceOptions = new ObservableCollection<AttendanceOption>
+        {
+            new(Attendance.Arrived, "Geldi"),
+            new(Attendance.NoShow, "Gelmedi"),
+            new(Attendance.Postponed, "Ertelendi"),
+            new(Attendance.Cancelled, "İptal")
+        };
+
+        _selectedAttendance = AttendanceOptions.FirstOrDefault(x => x.Value == attendance)
+                              ?? AttendanceOptions[0];
+        _summary = summary ?? string.Empty;
+        _willRepeat = willRepeat;
+        _postNotes = postNotes ?? string.Empty;
+        _isClosed = isClosed;
+    }
+
+    public string GuestId { get; }
+
+    public string Name { get; }
+
+    public ObservableCollection<AttendanceOption> AttendanceOptions { get; }
+
+    [ObservableProperty]
+    private AttendanceOption? _selectedAttendance;
+
+    [ObservableProperty]
+    private string _summary;
+
+    [ObservableProperty]
+    private bool _willRepeat;
+
+    [ObservableProperty]
+    private string _postNotes;
+
+    [ObservableProperty]
+    private bool _isClosed;
+}
 
 public partial class AppointmentOutcomeViewModel : ObservableObject
 {
@@ -48,6 +101,10 @@ public partial class AppointmentOutcomeViewModel : ObservableObject
     public ObservableCollection<AttendanceOption> AttendanceOptions { get; }
 
     public ObservableCollection<string> TimeOptions { get; }
+
+    public RangeObservableCollection<GuestOutcomeRowViewModel> GuestOutcomes { get; } = new();
+
+    public bool HasMultipleGuests => GuestOutcomes.Count > 1;
 
     [ObservableProperty]
     private DateTime? _postponeDate = DateTime.Today.AddDays(1);
@@ -111,7 +168,8 @@ public partial class AppointmentOutcomeViewModel : ObservableObject
             }
 
             AppointmentSummary =
-                $"{detail.PersonFullName} · {detail.DateLabel} {detail.TimeRangeLabel} · {detail.HostName}";
+                $"{detail.GuestSummaryText} · {detail.DateLabel} {detail.TimeRangeLabel} · {detail.HostNameWithTitle}"
+                + (string.IsNullOrWhiteSpace(detail.RoomName) ? string.Empty : $" · {detail.RoomName}");
 
             PostponeDate = detail.StartsAtLocal.Date;
             PostponeTimeText = detail.StartsAtLocal.ToString("HH:mm", CultureInfo.InvariantCulture);
@@ -127,6 +185,17 @@ public partial class AppointmentOutcomeViewModel : ObservableObject
             WillRepeat = outcome?.WillRepeat ?? false;
             PostNotes = outcome?.PostNotes ?? string.Empty;
             IsClosed = outcome?.IsClosed ?? detail.Status is AppointmentStatus.Completed or AppointmentStatus.Cancelled;
+
+            GuestOutcomes.ReplaceWith((detail.Guests ?? Array.Empty<AppointmentGuestDto>())
+                .Select(guest => new GuestOutcomeRowViewModel(
+                    guest.GuestId,
+                    guest.FullName,
+                    guest.Outcome?.Attendance,
+                    guest.Outcome?.Summary,
+                    guest.Outcome?.WillRepeat ?? false,
+                    guest.Outcome?.PostNotes,
+                    guest.Outcome?.IsClosed ?? false)));
+            OnPropertyChanged(nameof(HasMultipleGuests));
         }
         catch (Exception ex)
         {
@@ -180,14 +249,33 @@ public partial class AppointmentOutcomeViewModel : ObservableObject
         IsBusy = true;
         try
         {
+            IReadOnlyList<GuestOutcomeInput>? guestOutcomes = null;
+            var aggregate = SelectedAttendance.Value;
+
+            if (HasMultipleGuests)
+            {
+                guestOutcomes = GuestOutcomes
+                    .Select(guest => new GuestOutcomeInput(
+                        guest.GuestId,
+                        guest.SelectedAttendance?.Value ?? Attendance.Arrived,
+                        guest.Summary,
+                        guest.WillRepeat,
+                        guest.PostNotes,
+                        guest.IsClosed))
+                    .ToList();
+
+                aggregate = AggregateAttendance(guestOutcomes);
+            }
+
             var result = await _outcomes.SaveAsync(
                 _appointmentId,
                 new AppointmentOutcomeInput(
-                    SelectedAttendance.Value,
+                    aggregate,
                     Summary,
                     WillRepeat,
                     PostNotes,
-                    IsClosed));
+                    IsClosed,
+                    guestOutcomes));
 
             if (!result.Success)
             {
@@ -269,6 +357,18 @@ public partial class AppointmentOutcomeViewModel : ObservableObject
     }
 
     partial void OnIsBusyChanged(bool value) => SaveCommand.NotifyCanExecuteChanged();
+
+    private static Attendance AggregateAttendance(IReadOnlyList<GuestOutcomeInput> guests)
+    {
+        var values = guests.Select(x => x.Attendance).ToList();
+        if (values.All(x => x == Attendance.NoShow))
+            return Attendance.NoShow;
+        if (values.All(x => x == Attendance.Cancelled))
+            return Attendance.Cancelled;
+        if (values.All(x => x == Attendance.Postponed))
+            return Attendance.Postponed;
+        return values.Contains(Attendance.Arrived) ? Attendance.Arrived : values[0];
+    }
 
     private static Attendance DefaultAttendance(AppointmentStatus status) => status switch
     {

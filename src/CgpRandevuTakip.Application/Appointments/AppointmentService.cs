@@ -1,6 +1,7 @@
 using System.Text.Json;
 using CgpRandevuTakip.Application.Abstractions;
 using CgpRandevuTakip.Application.Common;
+using CgpRandevuTakip.Application.Rooms;
 using CgpRandevuTakip.Domain.Entities;
 using CgpRandevuTakip.Domain.Enums;
 using CgpRandevuTakip.Domain.Rules;
@@ -15,6 +16,8 @@ public sealed class AppointmentService : IAppointmentService
     private const int MaxNameLength = 100;
     private const int MaxDescriptionLength = 4000;
     private const int DeletedRetentionDays = 30;
+    private const int MaxGuests = 10;
+    private const int MaxHosts = 10;
 
     private static readonly ReminderState[] AlreadyNotifiedStates =
     {
@@ -30,6 +33,7 @@ public sealed class AppointmentService : IAppointmentService
     private readonly IPersonRepository _persons;
     private readonly IUserRepository _users;
     private readonly ICategoryRepository _categories;
+    private readonly IMeetingRoomService _rooms;
     private readonly IAuditLogger _audit;
     private readonly IClock _clock;
     private readonly ICurrentUser _currentUser;
@@ -39,6 +43,7 @@ public sealed class AppointmentService : IAppointmentService
         IPersonRepository persons,
         IUserRepository users,
         ICategoryRepository categories,
+        IMeetingRoomService rooms,
         IAuditLogger audit,
         IClock clock,
         ICurrentUser currentUser)
@@ -47,6 +52,7 @@ public sealed class AppointmentService : IAppointmentService
         _persons = persons;
         _users = users;
         _categories = categories;
+        _rooms = rooms;
         _audit = audit;
         _clock = clock;
         _currentUser = currentUser;
@@ -74,7 +80,8 @@ public sealed class AppointmentService : IAppointmentService
         AppointmentStatus? status,
         DateTime? fromLocal,
         DateTime? toLocal,
-        string? hostUserId = null)
+        string? hostUserId = null,
+        string? roomId = null)
     {
         var term = searchText?.Trim();
         var hasTerm = !string.IsNullOrWhiteSpace(term);
@@ -97,7 +104,8 @@ public sealed class AppointmentService : IAppointmentService
             hasTerm ? term : null,
             string.IsNullOrWhiteSpace(categoryId) ? null : categoryId,
             hostFilter,
-            status));
+            status,
+            NormalizeOptional(roomId)));
 
         return rows.Select(ToListItem).ToList();
     }
@@ -108,13 +116,17 @@ public sealed class AppointmentService : IAppointmentService
         if (appointment is null)
             return null;
 
-        if (_currentUser.IsInRole(UserRole.Host) && appointment.HostUserId != _currentUser.UserId)
+        if (_currentUser.IsInRole(UserRole.Host) && !CanAccess(appointment))
             return null;
 
         var reminders = await _appointments.GetRemindersAsync(id);
         var closedByName = await ResolveClosedByNameAsync(appointment.ClosedByUserId);
-        return ToDetail(appointment, reminders, closedByName);
+        return await ToDetailAsync(appointment, reminders, closedByName);
     }
+
+    private bool CanAccess(Appointment appointment)
+        => appointment.HostUserId == _currentUser.UserId
+           || appointment.Participants.Any(x => x.UserId == _currentUser.UserId);
 
     public async Task<AppointmentListItemDto?> GetNextAppointmentAsync()
     {
@@ -153,8 +165,9 @@ public sealed class AppointmentService : IAppointmentService
         if (!input.IgnoreConflicts)
         {
             var conflicts = await FindConflictsAsync(
-                validation.PhoneE164!,
-                validation.HostUserId!,
+                validation.GuestPhones,
+                validation.HostUserIds,
+                validation.RoomId,
                 startsAtUtc,
                 endsAtUtc,
                 excludeAppointmentId: null);
@@ -163,10 +176,8 @@ public sealed class AppointmentService : IAppointmentService
                 return AppointmentSaveResult.Conflict(BuildConflictMessage(conflicts), conflicts);
         }
 
-        var person = await ResolvePersonAsync(
-            validation.FirstName!,
-            validation.LastName!,
-            validation.PhoneE164!);
+        var resolvedGuests = await ResolveGuestsAsync(validation.Guests);
+        var person = resolvedGuests.First(x => x.IsPrimary).Person;
 
         var now = _clock.UtcNow;
         var appointment = BuildEntity(
@@ -174,6 +185,9 @@ public sealed class AppointmentService : IAppointmentService
             input,
             startsAtUtc,
             now,
+            validation.RoomId,
+            validation.Hosts,
+            resolvedGuests,
             clientRequestId: input.ClientRequestId);
 
         await _appointments.AddAsync(appointment);
@@ -240,10 +254,8 @@ public sealed class AppointmentService : IAppointmentService
                 "Seride oluşturulabilecek uygun tarih yok. Çakışan veya geçmiş tarihleri düzeltin.",
                 slots);
 
-        var person = await ResolvePersonAsync(
-            validation.FirstName!,
-            validation.LastName!,
-            validation.PhoneE164!);
+        var resolvedGuests = await ResolveGuestsAsync(validation.Guests);
+        var person = resolvedGuests.First(x => x.IsPrimary).Person;
 
         var now = _clock.UtcNow;
         var seriesId = Guid.NewGuid().ToString("N");
@@ -257,6 +269,9 @@ public sealed class AppointmentService : IAppointmentService
                 input,
                 startsAtUtc,
                 now,
+                validation.RoomId,
+                validation.Hosts,
+                resolvedGuests,
                 seriesId,
                 slot.Index,
                 slots.Count,
@@ -390,19 +405,50 @@ public sealed class AppointmentService : IAppointmentService
             .Distinct()
             .ToArray();
 
+        var template = rows[0];
         var request = new AppointmentInput(
             person.FirstName,
             person.LastName,
             person.PhoneE164,
-            _clock.ToLocal(rows[0].StartsAtUtc),
-            rows[0].DurationMinutes,
-            rows[0].HostUserId,
-            rows[0].CategoryId,
-            rows[0].Method,
-            rows[0].Description,
-            rows[0].StudentFirstName,
-            rows[0].StudentLastName,
-            offsets);
+            _clock.ToLocal(template.StartsAtUtc),
+            template.DurationMinutes,
+            template.HostUserId,
+            template.CategoryId,
+            template.Method,
+            template.Description,
+            template.StudentFirstName,
+            template.StudentLastName,
+            offsets,
+            RoomId: template.RoomId,
+            ParticipantHostUserIds: template.Participants
+                .Where(x => !x.IsPrimary)
+                .Select(x => x.UserId)
+                .ToList(),
+            Guests: template.Guests
+                .Select(x => new AppointmentGuestInput(
+                    x.PersonId,
+                    x.Person?.FirstName ?? string.Empty,
+                    x.Person?.LastName ?? string.Empty,
+                    x.Person?.PhoneE164 ?? string.Empty,
+                    x.Person?.Email,
+                    x.Person?.Organization,
+                    x.IsPrimary))
+                .ToList());
+
+        var hosts = template.Participants
+            .Select(x => new HostDraft(x.UserId, x.IsPrimary, x.SortOrder))
+            .ToList();
+
+        if (hosts.Count == 0)
+            hosts.Add(new HostDraft(template.HostUserId, true, 0));
+
+        var guests = template.Guests
+            .Where(x => x.Person is not null)
+            .Select(x => new ResolvedGuest(x.Person!, x.IsPrimary, x.SortOrder))
+            .ToList();
+
+        if (guests.Count == 0)
+            guests.Add(new ResolvedGuest(person, true, 0));
 
         var newSeriesCount = context.RequestedCount + count;
         var now = _clock.UtcNow;
@@ -415,6 +461,9 @@ public sealed class AppointmentService : IAppointmentService
                 request,
                 _clock.ToUtc(slot.StartsAtLocal),
                 now,
+                template.RoomId,
+                hosts,
+                guests,
                 seriesId,
                 slot.Index,
                 newSeriesCount,
@@ -469,6 +518,41 @@ public sealed class AppointmentService : IAppointmentService
         if (category is null)
             return SeriesUpdateResult.Fail("Kategori bulunamadı.");
 
+        var hostUserIds = new List<string> { input.HostUserId };
+        foreach (var rawId in input.ParticipantHostUserIds ?? Array.Empty<string>())
+        {
+            var participantId = rawId?.Trim();
+            if (string.IsNullOrWhiteSpace(participantId)
+                || hostUserIds.Contains(participantId, StringComparer.Ordinal))
+            {
+                continue;
+            }
+
+            var participant = await _users.GetByIdAsync(participantId);
+            if (participant is null || !participant.IsActive)
+                return SeriesUpdateResult.Fail("Katılımcı görüşmeci bulunamadı veya pasif.");
+
+            hostUserIds.Add(participantId);
+        }
+
+        if (hostUserIds.Count > MaxHosts)
+            return SeriesUpdateResult.Fail($"Bir görüşmeye en fazla {MaxHosts} görüşmeci eklenebilir.");
+
+        var roomId = NormalizeOptional(input.RoomId);
+        if (roomId is not null)
+        {
+            var room = await _rooms.GetByIdAsync(roomId);
+            if (room is null || !room.IsActive)
+                return SeriesUpdateResult.Fail("Seçilen oda bulunamadı veya pasif.");
+        }
+        else if (input.Method == AppointmentMethod.FaceToFace)
+        {
+            await _rooms.EnsureHostRoomAsync(input.HostUserId, host.DisplayName);
+            roomId = (await _rooms.GetHostRoomAsync(input.HostUserId))?.Id;
+            if (roomId is null)
+                return SeriesUpdateResult.Fail("Görüşmecinin odası tanımlı değil.");
+        }
+
         var rows = await _appointments.GetSeriesAsync(seriesId);
         if (rows.Count == 0)
             return SeriesUpdateResult.Fail("Seri bulunamadı.");
@@ -487,7 +571,6 @@ public sealed class AppointmentService : IAppointmentService
         if (targets.Count == 0)
             return SeriesUpdateResult.Fail("Güncellenecek gelecek tarihli planlanmış görüşme bulunamadı.");
 
-        var phone = rows[0].Person?.PhoneE164;
         var updated = 0;
         var skipped = 0;
         var warnings = new List<string>();
@@ -504,9 +587,18 @@ public sealed class AppointmentService : IAppointmentService
 
             var endsAtUtc = startsAtUtc.AddMinutes(input.DurationMinutes);
 
+            var phones = appointment.Guests
+                .Where(x => x.Person is not null)
+                .Select(x => x.Person!.PhoneE164)
+                .Append(appointment.Person?.PhoneE164 ?? string.Empty)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
+
             var conflicts = await FindConflictsAsync(
-                phone ?? appointment.Person?.PhoneE164 ?? string.Empty,
-                input.HostUserId,
+                phones,
+                hostUserIds,
+                roomId,
                 startsAtUtc,
                 endsAtUtc,
                 excludeAppointmentId: appointment.Id);
@@ -536,6 +628,7 @@ public sealed class AppointmentService : IAppointmentService
 
             appointment.HostUserId = input.HostUserId;
             appointment.CategoryId = input.CategoryId;
+            appointment.RoomId = roomId;
             appointment.StartsAtUtc = startsAtUtc;
             appointment.DurationMinutes = input.DurationMinutes;
             appointment.Method = input.Method;
@@ -545,6 +638,18 @@ public sealed class AppointmentService : IAppointmentService
             appointment.UpdatedAtUtc = now;
             appointment.UpdatedByUserId = _currentUser.UserId;
             appointment.RowVersion++;
+
+            appointment.Participants.Clear();
+            for (var hostIndex = 0; hostIndex < hostUserIds.Count; hostIndex++)
+            {
+                appointment.Participants.Add(new AppointmentHost
+                {
+                    AppointmentId = appointment.Id,
+                    UserId = hostUserIds[hostIndex],
+                    IsPrimary = hostIndex == 0,
+                    SortOrder = hostIndex
+                });
+            }
 
             var newAppointmentReminders = ReminderScheduleCalculator
                 .Calculate(startsAtUtc, input.ReminderOffsetsMinutes, now)
@@ -681,8 +786,19 @@ public sealed class AppointmentService : IAppointmentService
         int count)
     {
         var now = _clock.UtcNow;
-        var phone = rows[0].Person?.PhoneE164 ?? string.Empty;
-        var hostUserId = rows[0].HostUserId;
+        var phones = rows[0].Guests
+            .Where(x => x.Person is not null)
+            .Select(x => x.Person!.PhoneE164)
+            .Append(rows[0].Person?.PhoneE164 ?? string.Empty)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        var hostUserIds = rows[0].Participants
+            .Select(x => x.UserId)
+            .Append(rows[0].HostUserId)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        var roomId = rows[0].RoomId;
         var duration = rows[0].DurationMinutes;
         var slots = new List<SeriesSlotDto>(count);
 
@@ -707,8 +823,9 @@ public sealed class AppointmentService : IAppointmentService
             }
 
             var conflicts = await FindConflictsAsync(
-                phone,
-                hostUserId,
+                phones,
+                hostUserIds,
+                roomId,
                 startsAtUtc,
                 endsAtUtc,
                 excludeAppointmentId: null);
@@ -762,8 +879,9 @@ public sealed class AppointmentService : IAppointmentService
             }
 
             var conflicts = await FindConflictsAsync(
-                validation.PhoneE164!,
-                validation.HostUserId!,
+                validation.GuestPhones,
+                validation.HostUserIds,
+                validation.RoomId,
                 startsAtUtc,
                 endsAtUtc,
                 excludeAppointmentId: null);
@@ -793,6 +911,9 @@ public sealed class AppointmentService : IAppointmentService
         AppointmentInput input,
         DateTime startsAtUtc,
         DateTime now,
+        string? roomId,
+        IReadOnlyList<HostDraft> hosts,
+        IReadOnlyList<ResolvedGuest> guests,
         string? seriesId = null,
         int? seriesIndex = null,
         int? seriesCount = null,
@@ -805,6 +926,7 @@ public sealed class AppointmentService : IAppointmentService
             PersonId = person.Id,
             HostUserId = input.HostUserId,
             CategoryId = input.CategoryId,
+            RoomId = roomId,
             StartsAtUtc = startsAtUtc,
             DurationMinutes = input.DurationMinutes,
             Method = input.Method,
@@ -823,6 +945,28 @@ public sealed class AppointmentService : IAppointmentService
             SeriesFrequency = seriesFrequency,
             SeriesAnchorLocal = seriesAnchorLocal
         };
+
+        foreach (var host in hosts)
+        {
+            appointment.Participants.Add(new AppointmentHost
+            {
+                AppointmentId = appointment.Id,
+                UserId = host.UserId,
+                IsPrimary = host.IsPrimary,
+                SortOrder = host.SortOrder
+            });
+        }
+
+        foreach (var guest in guests)
+        {
+            appointment.Guests.Add(new AppointmentGuest
+            {
+                AppointmentId = appointment.Id,
+                PersonId = guest.Person.Id,
+                IsPrimary = guest.IsPrimary,
+                SortOrder = guest.SortOrder
+            });
+        }
 
         foreach (var plan in ReminderScheduleCalculator.Calculate(
                      startsAtUtc,
@@ -899,8 +1043,9 @@ public sealed class AppointmentService : IAppointmentService
         if (!input.IgnoreConflicts)
         {
             var conflicts = await FindConflictsAsync(
-                validation.PhoneE164!,
-                validation.HostUserId!,
+                validation.GuestPhones,
+                validation.HostUserIds,
+                validation.RoomId,
                 startsAtUtc,
                 endsAtUtc,
                 excludeAppointmentId: id);
@@ -909,10 +1054,8 @@ public sealed class AppointmentService : IAppointmentService
                 return AppointmentSaveResult.Conflict(BuildConflictMessage(conflicts), conflicts);
         }
 
-        var person = await ResolvePersonAsync(
-            validation.FirstName!,
-            validation.LastName!,
-            validation.PhoneE164!);
+        var resolvedGuests = await ResolveGuestsAsync(validation.Guests);
+        var person = resolvedGuests.First(x => x.IsPrimary).Person;
 
         var now = _clock.UtcNow;
         var existingReminders = await _appointments.GetRemindersAsync(id);
@@ -931,6 +1074,7 @@ public sealed class AppointmentService : IAppointmentService
         appointment.PersonId = person.Id;
         appointment.HostUserId = validation.HostUserId!;
         appointment.CategoryId = validation.CategoryId!;
+        appointment.RoomId = validation.RoomId;
         appointment.StartsAtUtc = startsAtUtc;
         appointment.DurationMinutes = input.DurationMinutes;
         appointment.Method = input.Method;
@@ -940,6 +1084,46 @@ public sealed class AppointmentService : IAppointmentService
         appointment.UpdatedAtUtc = now;
         appointment.UpdatedByUserId = _currentUser.UserId;
         appointment.RowVersion++;
+
+        appointment.Participants.Clear();
+        foreach (var host in validation.Hosts)
+        {
+            appointment.Participants.Add(new AppointmentHost
+            {
+                AppointmentId = appointment.Id,
+                UserId = host.UserId,
+                IsPrimary = host.IsPrimary,
+                SortOrder = host.SortOrder
+            });
+        }
+
+        var existingGuests = appointment.Guests
+            .GroupBy(x => x.PersonId)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
+
+        appointment.Guests.Clear();
+        foreach (var guest in resolvedGuests)
+        {
+            existingGuests.TryGetValue(guest.Person.Id, out var existing);
+            appointment.Guests.Add(new AppointmentGuest
+            {
+                Id = existing?.Id ?? Guid.NewGuid().ToString("N"),
+                AppointmentId = appointment.Id,
+                PersonId = guest.Person.Id,
+                IsPrimary = guest.IsPrimary,
+                SortOrder = guest.SortOrder,
+                Attendance = existing?.Attendance,
+                Summary = existing?.Summary,
+                PostNotes = existing?.PostNotes,
+                WillRepeat = existing?.WillRepeat ?? false,
+                IsClosed = existing?.IsClosed ?? false,
+                ClosedAtUtc = existing?.ClosedAtUtc,
+                ClosedByUserId = existing?.ClosedByUserId,
+                UpdatedAtUtc = existing?.UpdatedAtUtc ?? now,
+                UpdatedByUserId = existing?.UpdatedByUserId,
+                CreatedAtUtc = existing?.CreatedAtUtc ?? now
+            });
+        }
 
         var newAppointmentReminders = ReminderScheduleCalculator
             .Calculate(startsAtUtc, input.ReminderOffsetsMinutes, now)
@@ -1188,56 +1372,16 @@ public sealed class AppointmentService : IAppointmentService
     private string? ScopedHostUserId()
         => _currentUser.IsInRole(UserRole.Host) ? _currentUser.UserId : null;
 
-    private async Task<ValidationResult> ValidateAsync(AppointmentInput input, string? currentAppointmentId)
+    private async Task<ValidationResult> ValidateAsync(
+        AppointmentInput input,
+        string? currentAppointmentId)
     {
-        var firstName = input.FirstName?.Trim() ?? string.Empty;
-        var lastName = input.LastName?.Trim() ?? string.Empty;
-
-        if (firstName.Length == 0)
-            return ValidationResult.Fail("Ad zorunludur.");
-
-        if (firstName.Length > MaxNameLength)
-            return ValidationResult.Fail($"Ad en fazla {MaxNameLength} karakter olabilir.");
-
-        if (lastName.Length == 0)
-            return ValidationResult.Fail("Soyad zorunludur.");
-
-        if (lastName.Length > MaxNameLength)
-            return ValidationResult.Fail($"Soyad en fazla {MaxNameLength} karakter olabilir.");
-
-        if (!PhoneNumber.TryNormalize(input.Phone, out var phoneE164))
-            return ValidationResult.Fail("Telefon numarası geçerli değil. Örnek: 0532 123 45 67.");
-
         if (input.StartsAtLocal == default)
             return ValidationResult.Fail("Görüşme tarihi ve saati zorunludur.");
 
         if (input.DurationMinutes is < MinDurationMinutes or > MaxDurationMinutes)
             return ValidationResult.Fail(
                 $"Görüşme süresi {MinDurationMinutes}–{MaxDurationMinutes} dakika arasında olmalıdır.");
-
-        if (string.IsNullOrWhiteSpace(input.HostUserId))
-            return ValidationResult.Fail("Görüşülecek kişi (host) seçilmelidir.");
-
-        var host = await _users.GetByIdAsync(input.HostUserId);
-        if (host is null || !host.IsActive)
-            return ValidationResult.Fail("Seçilen host bulunamadı veya pasif.");
-
-        if (string.IsNullOrWhiteSpace(input.CategoryId))
-            return ValidationResult.Fail("Kategori seçilmelidir.");
-
-        var category = await _categories.GetByIdAsync(input.CategoryId);
-        if (category is null)
-            return ValidationResult.Fail("Seçilen kategori bulunamadı.");
-
-        if (!category.IsActive)
-        {
-            var current = currentAppointmentId is null
-                ? null
-                : await _appointments.GetByIdAsync(currentAppointmentId);
-
-            if (current is null || current.CategoryId != category.Id)
-                return ValidationResult.Fail("Pasif kategori yeni görüşmelerde seçilemez.");
-        }
 
         if (!Enum.IsDefined(input.Method))
             return ValidationResult.Fail("Geçersiz görüşme yöntemi.");
@@ -1259,58 +1403,318 @@ public sealed class AppointmentService : IAppointmentService
             return ValidationResult.Fail(
                 $"Hatırlatıcı aralığı 1–{ReminderScheduleCalculator.MaxOffsetMinutes} dakika arasında olmalıdır.");
 
-        return ValidationResult.Ok(firstName, lastName, phoneE164, input.HostUserId, input.CategoryId);
+        var hostUserId = input.HostUserId?.Trim() ?? string.Empty;
+        if (hostUserId.Length == 0)
+            return ValidationResult.Fail("Görüşülecek kişi (host) seçilmelidir.");
+
+        var host = await _users.GetByIdAsync(hostUserId);
+        if (host is null || !host.IsActive)
+            return ValidationResult.Fail("Seçilen host bulunamadı veya pasif.");
+
+        var hosts = new List<HostDraft> { new(hostUserId, true, 0) };
+        foreach (var rawId in input.ParticipantHostUserIds ?? Array.Empty<string>())
+        {
+            var participantId = rawId?.Trim();
+            if (string.IsNullOrWhiteSpace(participantId)
+                || hosts.Any(x => string.Equals(x.UserId, participantId, StringComparison.Ordinal)))
+            {
+                continue;
+            }
+
+            if (hosts.Count >= MaxHosts)
+                return ValidationResult.Fail($"Bir görüşmeye en fazla {MaxHosts} görüşmeci eklenebilir.");
+
+            var participant = await _users.GetByIdAsync(participantId);
+            if (participant is null || !participant.IsActive)
+                return ValidationResult.Fail("Katılımcı görüşmeci bulunamadı veya pasif.");
+
+            hosts.Add(new HostDraft(participantId, false, hosts.Count));
+        }
+
+        if (string.IsNullOrWhiteSpace(input.CategoryId))
+            return ValidationResult.Fail("Kategori seçilmelidir.");
+
+        var category = await _categories.GetByIdAsync(input.CategoryId);
+        if (category is null)
+            return ValidationResult.Fail("Seçilen kategori bulunamadı.");
+
+        if (!category.IsActive)
+        {
+            var current = currentAppointmentId is null
+                ? null
+                : await _appointments.GetByIdAsync(currentAppointmentId);
+
+            if (current is null || current.CategoryId != category.Id)
+                return ValidationResult.Fail("Pasif kategori yeni görüşmelerde seçilemez.");
+        }
+
+        var guests = new List<GuestDraft>();
+        if (input.Guests is { Count: > 0 })
+        {
+            if (input.Guests.Count > MaxGuests)
+                return ValidationResult.Fail($"Bir görüşmeye en fazla {MaxGuests} misafir eklenebilir.");
+
+            foreach (var guest in input.Guests)
+            {
+                var error = await TryBuildGuestDraftAsync(guest, guests);
+                if (error is not null)
+                    return ValidationResult.Fail(error);
+            }
+
+            var duplicate = guests
+                .GroupBy(x => string.IsNullOrWhiteSpace(x.PersonId) ? x.PhoneE164 : x.PersonId)
+                .FirstOrDefault(g => g.Count() > 1);
+
+            if (duplicate is not null)
+                return ValidationResult.Fail("Aynı misafir bir görüşmeye birden fazla kez eklenemez.");
+
+            NormalizePrimaryGuest(guests);
+        }
+        else
+        {
+            var firstName = input.FirstName?.Trim() ?? string.Empty;
+            var lastName = input.LastName?.Trim() ?? string.Empty;
+
+            if (firstName.Length == 0)
+                return ValidationResult.Fail("Ad zorunludur.");
+
+            if (firstName.Length > MaxNameLength)
+                return ValidationResult.Fail($"Ad en fazla {MaxNameLength} karakter olabilir.");
+
+            if (lastName.Length == 0)
+                return ValidationResult.Fail("Soyad zorunludur.");
+
+            if (lastName.Length > MaxNameLength)
+                return ValidationResult.Fail($"Soyad en fazla {MaxNameLength} karakter olabilir.");
+
+            if (!PhoneNumber.TryNormalize(input.Phone, out var phoneE164))
+                return ValidationResult.Fail("Telefon numarası geçerli değil. Örnek: 0532 123 45 67.");
+
+            guests.Add(new GuestDraft(
+                null,
+                firstName,
+                lastName,
+                phoneE164,
+                null,
+                null,
+                true));
+        }
+
+        var roomId = NormalizeOptional(input.RoomId);
+        if (roomId is not null)
+        {
+            var room = await _rooms.GetByIdAsync(roomId);
+            if (room is null || !room.IsActive)
+                return ValidationResult.Fail("Seçilen oda bulunamadı veya pasif.");
+        }
+        else if (input.Method == AppointmentMethod.FaceToFace)
+        {
+            await _rooms.EnsureHostRoomAsync(hostUserId, host.DisplayName);
+            roomId = (await _rooms.GetHostRoomAsync(hostUserId))?.Id;
+            if (roomId is null)
+                return ValidationResult.Fail("Görüşmecinin odası tanımlı değil.");
+        }
+
+        return ValidationResult.Ok(guests, hosts, input.CategoryId, roomId);
+    }
+
+    private async Task<string?> TryBuildGuestDraftAsync(
+        AppointmentGuestInput input,
+        List<GuestDraft> target)
+    {
+        var personId = NormalizeOptional(input.PersonId);
+        Person? person = null;
+
+        if (personId is not null)
+        {
+            person = await _persons.GetByIdAsync(personId);
+            if (person is null)
+                return "Seçilen misafir bulunamadı.";
+        }
+
+        var firstName = input.FirstName?.Trim() ?? person?.FirstName ?? string.Empty;
+        var lastName = input.LastName?.Trim() ?? person?.LastName ?? string.Empty;
+
+        if (firstName.Length == 0)
+            return "Misafir adı zorunludur.";
+
+        if (firstName.Length > MaxNameLength)
+            return $"Misafir adı en fazla {MaxNameLength} karakter olabilir.";
+
+        if (lastName.Length == 0)
+            return "Misafir soyadı zorunludur.";
+
+        if (lastName.Length > MaxNameLength)
+            return $"Misafir soyadı en fazla {MaxNameLength} karakter olabilir.";
+
+        var phone = input.Phone;
+        if (!PhoneNumber.TryNormalize(phone, out var phoneE164))
+        {
+            if (person is null)
+                return "Misafir telefon numarası geçerli değil.";
+
+            phoneE164 = person.PhoneE164;
+        }
+
+        target.Add(new GuestDraft(
+            personId,
+            firstName,
+            lastName,
+            phoneE164,
+            NormalizeOptional(input.Email) ?? person?.Email,
+            NormalizeOptional(input.Organization) ?? person?.Organization,
+            input.IsPrimary));
+
+        return null;
+    }
+
+    private static void NormalizePrimaryGuest(List<GuestDraft> guests)
+    {
+        var primaryIndex = guests.FindIndex(x => x.IsPrimary);
+        if (primaryIndex < 0)
+            primaryIndex = 0;
+
+        for (var i = 0; i < guests.Count; i++)
+            guests[i] = guests[i] with { IsPrimary = i == primaryIndex };
+    }
+
+    private async Task<IReadOnlyList<ResolvedGuest>> ResolveGuestsAsync(
+        IReadOnlyList<GuestDraft> drafts)
+    {
+        var result = new List<ResolvedGuest>(drafts.Count);
+
+        for (var i = 0; i < drafts.Count; i++)
+        {
+            var draft = drafts[i];
+            Person? person = null;
+
+            if (!string.IsNullOrWhiteSpace(draft.PersonId))
+                person = await _persons.GetByIdAsync(draft.PersonId);
+
+            if (person is null)
+            {
+                person = await _persons.FindByPhoneAndNameAsync(
+                    draft.PhoneE164,
+                    draft.FirstName,
+                    draft.LastName);
+
+                if (person is null)
+                {
+                    person = new Person
+                    {
+                        FirstName = draft.FirstName,
+                        LastName = draft.LastName,
+                        PhoneE164 = draft.PhoneE164,
+                        Email = draft.Email,
+                        Organization = draft.Organization
+                    };
+
+                    await _persons.AddAsync(person);
+                }
+            }
+            else
+            {
+                var changed = false;
+                if (!string.IsNullOrWhiteSpace(draft.Email) && person.Email != draft.Email)
+                {
+                    person.Email = draft.Email;
+                    changed = true;
+                }
+
+                if (!string.IsNullOrWhiteSpace(draft.Organization)
+                    && person.Organization != draft.Organization)
+                {
+                    person.Organization = draft.Organization;
+                    changed = true;
+                }
+
+                if (changed)
+                    await _persons.SaveAsync(person);
+            }
+
+            result.Add(new ResolvedGuest(person, draft.IsPrimary, i));
+        }
+
+        return result;
     }
 
     private async Task<IReadOnlyList<AppointmentConflictDto>> FindConflictsAsync(
-        string phoneE164,
-        string hostUserId,
+        IReadOnlyCollection<string> guestPhones,
+        IReadOnlyCollection<string> hostUserIds,
+        string? roomId,
         DateTime startsAtUtc,
         DateTime endsAtUtc,
         string? excludeAppointmentId)
     {
-        var records = await _appointments.FindHostConflictsAsync(
-            hostUserId,
+        var phones = guestPhones
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToHashSet(StringComparer.Ordinal);
+
+        var result = new List<AppointmentConflictDto>();
+
+        var hostRecords = await _appointments.FindHostConflictsAsync(
+            hostUserIds,
             startsAtUtc,
             endsAtUtc,
             excludeAppointmentId);
 
-        return records.Select(x => new AppointmentConflictDto(
-                x.AppointmentId,
-                $"{x.PersonFirstName} {x.PersonLastName}".Trim(),
-                _clock.ToLocal(x.StartsAtUtc),
-                _clock.ToLocal(x.EndsAtUtc),
-                x.CategoryName,
-                string.Equals(x.PhoneE164, phoneE164, StringComparison.Ordinal)))
-            .ToList();
+        result.AddRange(hostRecords.Select(x =>
+            MapConflict(x, ConflictKind.Host, x.HostName, phones)));
+
+        if (!string.IsNullOrWhiteSpace(roomId))
+        {
+            var roomRecords = await _appointments.FindRoomConflictsAsync(
+                roomId,
+                startsAtUtc,
+                endsAtUtc,
+                excludeAppointmentId);
+
+            result.AddRange(roomRecords.Select(x =>
+                MapConflict(x, ConflictKind.Room, x.RoomName, phones)));
+        }
+
+        var guestRecords = await _appointments.FindGuestConflictsAsync(
+            phones,
+            startsAtUtc,
+            endsAtUtc,
+            excludeAppointmentId);
+
+        result.AddRange(guestRecords.Select(x =>
+            MapConflict(x, ConflictKind.Guest, x.GuestName, phones)));
+
+        return result;
     }
+
+    private AppointmentConflictDto MapConflict(
+        AppointmentConflictRecord record,
+        ConflictKind kind,
+        string? resourceName,
+        IReadOnlySet<string> phones)
+        => new(
+            record.AppointmentId,
+            $"{record.PersonFirstName} {record.PersonLastName}".Trim(),
+            _clock.ToLocal(record.StartsAtUtc),
+            _clock.ToLocal(record.EndsAtUtc),
+            record.CategoryName,
+            phones.Contains(record.PhoneE164),
+            kind,
+            resourceName);
 
     private static string BuildConflictMessage(IReadOnlyList<AppointmentConflictDto> conflicts)
     {
         var first = conflicts[0];
         var samePerson = conflicts.Any(x => x.IsSamePerson);
         var prefix = samePerson
-            ? "Aynı kişi ve host için çakışan bir görüşme var"
-            : "Host'un bu saatte başka bir görüşmesi var";
+            ? "Aynı kişi için çakışan bir görüşme var"
+            : first.Kind switch
+            {
+                ConflictKind.Room => $"{first.ResourceName ?? "Oda"} bu saatte dolu",
+                ConflictKind.Guest => $"{first.ResourceName ?? first.PersonName} bu saatte başka bir görüşmede",
+                _ => $"{first.ResourceName ?? "Görüşmeci"} bu saatte başka bir görüşmede"
+            };
 
-        return $"{prefix}: {first.StartsAtLocal:dd/MM/yyyy HH:mm} · {first.PersonName}. Yine de kaydedilsin mi?";
-    }
-
-    private async Task<Person> ResolvePersonAsync(string firstName, string lastName, string phoneE164)
-    {
-        var existing = await _persons.FindByPhoneAndNameAsync(phoneE164, firstName, lastName);
-        if (existing is not null)
-            return existing;
-
-        var person = new Person
-        {
-            FirstName = firstName,
-            LastName = lastName,
-            PhoneE164 = phoneE164
-        };
-
-        await _persons.AddAsync(person);
-        return person;
+        var extra = conflicts.Count > 1 ? $" (+{conflicts.Count - 1} çakışma)" : string.Empty;
+        return $"{prefix}{extra}: {first.StartsAtLocal:dd/MM/yyyy HH:mm} · {first.PersonName}. Yine de kaydedilsin mi?";
     }
 
     private DeletedAppointmentDto ToDeletedDto(Appointment appointment)
@@ -1331,6 +1735,9 @@ public sealed class AppointmentService : IAppointmentService
     private AppointmentListItemDto ToListItem(Appointment appointment)
     {
         var startsAtLocal = _clock.ToLocal(appointment.StartsAtUtc);
+        var participants = BuildParticipantDtos(appointment);
+        var guests = BuildGuestDtos(appointment, new Dictionary<string, string>());
+        var primaryHost = participants.FirstOrDefault(x => x.IsPrimary) ?? participants.FirstOrDefault();
 
         return new AppointmentListItemDto(
             appointment.Id,
@@ -1349,15 +1756,40 @@ public sealed class AppointmentService : IAppointmentService
             appointment.Status,
             appointment.IsOverdue(_clock.UtcNow),
             appointment.IsDeleted,
-            NullIfEmpty(appointment.StudentFullName));
+            NullIfEmpty(appointment.StudentFullName),
+            RoomId: appointment.RoomId,
+            RoomName: appointment.Room?.Name,
+            HostTitleName: primaryHost?.TitleName,
+            ParticipantCount: participants.Count,
+            GuestCount: guests.Count,
+            ParticipantNames: participants.Count == 0
+                ? null
+                : string.Join(", ", participants.Select(x => x.DisplayName)),
+            GuestNames: guests.Count == 0
+                ? null
+                : string.Join(", ", guests.Select(x => x.FullName)));
     }
 
-    private AppointmentDetailDto ToDetail(
+    private async Task<AppointmentDetailDto> ToDetailAsync(
         Appointment appointment,
         IReadOnlyList<ReminderDispatch> reminders,
         string? closedByName)
     {
         var startsAtLocal = _clock.ToLocal(appointment.StartsAtUtc);
+        var participants = BuildParticipantDtos(appointment);
+
+        var guestClosedByNames = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var userId in appointment.Guests
+                     .Where(x => !string.IsNullOrWhiteSpace(x.ClosedByUserId))
+                     .Select(x => x.ClosedByUserId!)
+                     .Distinct(StringComparer.Ordinal))
+        {
+            var user = await _users.GetByIdAsync(userId);
+            if (user is not null)
+                guestClosedByNames[userId] = user.DisplayName;
+        }
+
+        var guests = BuildGuestDtos(appointment, guestClosedByNames);
 
         var outcome = appointment.Outcome is null
             ? null
@@ -1371,7 +1803,8 @@ public sealed class AppointmentService : IAppointmentService
                     ? null
                     : _clock.ToLocal(appointment.Outcome.ClosedAtUtc.Value),
                 closedByName,
-                _clock.ToLocal(appointment.Outcome.UpdatedAtUtc));
+                _clock.ToLocal(appointment.Outcome.UpdatedAtUtc),
+                guests);
 
         return new AppointmentDetailDto(
             appointment.Id,
@@ -1408,7 +1841,111 @@ public sealed class AppointmentService : IAppointmentService
             appointment.SeriesId,
             appointment.SeriesIndex,
             appointment.SeriesCount,
-            appointment.UpdatedAtUtc);
+            appointment.UpdatedAtUtc,
+            RoomId: appointment.RoomId,
+            RoomName: appointment.Room?.Name,
+            RoomKind: appointment.Room?.Kind,
+            Participants: participants,
+            Guests: guests);
+    }
+
+    private List<AppointmentParticipantDto> BuildParticipantDtos(Appointment appointment)
+    {
+        if (appointment.Participants.Count > 0)
+        {
+            return appointment.Participants
+                .OrderBy(x => x.SortOrder)
+                .Select(x => new AppointmentParticipantDto(
+                    x.UserId,
+                    x.User?.DisplayName
+                    ?? (x.UserId == appointment.HostUserId ? appointment.HostUser?.DisplayName : null)
+                    ?? string.Empty,
+                    x.User?.Title?.Name
+                    ?? (x.UserId == appointment.HostUserId ? appointment.HostUser?.Title?.Name : null),
+                    x.IsPrimary))
+                .Where(x => !string.IsNullOrWhiteSpace(x.DisplayName))
+                .ToList();
+        }
+
+        return new List<AppointmentParticipantDto>
+        {
+            new(
+                appointment.HostUserId,
+                appointment.HostUser?.DisplayName ?? string.Empty,
+                appointment.HostUser?.Title?.Name,
+                true)
+        };
+    }
+
+    private List<AppointmentGuestDto> BuildGuestDtos(
+        Appointment appointment,
+        IReadOnlyDictionary<string, string> closedByNames)
+    {
+        var guests = appointment.Guests
+            .OrderBy(x => x.SortOrder)
+            .Select(x => ToGuestDto(x, closedByNames))
+            .ToList();
+
+        if (guests.Count == 0 && appointment.Person is not null)
+        {
+            guests.Add(new AppointmentGuestDto(
+                appointment.Id,
+                appointment.PersonId,
+                appointment.Person.FirstName,
+                appointment.Person.LastName,
+                appointment.Person.PhoneE164,
+                true,
+                appointment.Outcome is null
+                    ? null
+                    : new AppointmentGuestOutcomeDto(
+                        appointment.Outcome.Attendance,
+                        appointment.Outcome.Summary,
+                        appointment.Outcome.WillRepeat,
+                        appointment.Outcome.PostNotes,
+                        appointment.Outcome.IsClosed,
+                        appointment.Outcome.ClosedAtUtc is null
+                            ? null
+                            : _clock.ToLocal(appointment.Outcome.ClosedAtUtc.Value),
+                        null,
+                        _clock.ToLocal(appointment.Outcome.UpdatedAtUtc))));
+        }
+
+        return guests;
+    }
+
+    private AppointmentGuestDto ToGuestDto(
+        AppointmentGuest guest,
+        IReadOnlyDictionary<string, string> closedByNames)
+    {
+        AppointmentGuestOutcomeDto? outcome = null;
+
+        if (guest.Attendance is { } attendance)
+        {
+            string? guestClosedByName = null;
+            if (!string.IsNullOrWhiteSpace(guest.ClosedByUserId))
+                closedByNames.TryGetValue(guest.ClosedByUserId, out guestClosedByName);
+
+            outcome = new AppointmentGuestOutcomeDto(
+                attendance,
+                guest.Summary,
+                guest.WillRepeat,
+                guest.PostNotes,
+                guest.IsClosed,
+                guest.ClosedAtUtc is null
+                    ? null
+                    : _clock.ToLocal(guest.ClosedAtUtc.Value),
+                guestClosedByName,
+                _clock.ToLocal(guest.UpdatedAtUtc));
+        }
+
+        return new AppointmentGuestDto(
+            guest.Id,
+            guest.PersonId,
+            guest.Person?.FirstName ?? string.Empty,
+            guest.Person?.LastName ?? string.Empty,
+            guest.Person?.PhoneE164 ?? string.Empty,
+            guest.IsPrimary,
+            outcome);
     }
 
     private async Task<string?> ResolveClosedByNameAsync(string? closedByUserId)
@@ -1432,26 +1969,61 @@ public sealed class AppointmentService : IAppointmentService
             appointment.StartsAtUtc,
             appointment.DurationMinutes,
             appointment.Status,
-            appointment.Method
+            appointment.Method,
+            appointment.RoomId,
+            hostUserIds = appointment.Participants.Select(x => x.UserId).ToList(),
+            guestPersonIds = appointment.Guests.Select(x => x.PersonId).ToList()
         });
+
+    private sealed record GuestDraft(
+        string? PersonId,
+        string FirstName,
+        string LastName,
+        string PhoneE164,
+        string? Email,
+        string? Organization,
+        bool IsPrimary);
+
+    private sealed record HostDraft(
+        string UserId,
+        bool IsPrimary,
+        int SortOrder);
+
+    private sealed record ResolvedGuest(
+        Person Person,
+        bool IsPrimary,
+        int SortOrder);
 
     private sealed record ValidationResult(
         string? Error,
-        string? FirstName,
-        string? LastName,
-        string? PhoneE164,
-        string? HostUserId,
-        string? CategoryId)
+        IReadOnlyList<GuestDraft> Guests,
+        IReadOnlyList<HostDraft> Hosts,
+        string? CategoryId,
+        string? RoomId)
     {
+        public string? FirstName => Guests.FirstOrDefault(x => x.IsPrimary)?.FirstName;
+
+        public string? LastName => Guests.FirstOrDefault(x => x.IsPrimary)?.LastName;
+
+        public string? PhoneE164 => Guests.FirstOrDefault(x => x.IsPrimary)?.PhoneE164;
+
+        public string? HostUserId => Hosts.FirstOrDefault(x => x.IsPrimary)?.UserId;
+
+        public IReadOnlyList<string> HostUserIds => Hosts.Select(x => x.UserId).ToList();
+
+        public IReadOnlyList<string> GuestPhones => Guests
+            .Select(x => x.PhoneE164)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
         public static ValidationResult Fail(string error)
-            => new(error, null, null, null, null, null);
+            => new(error, Array.Empty<GuestDraft>(), Array.Empty<HostDraft>(), null, null);
 
         public static ValidationResult Ok(
-            string firstName,
-            string lastName,
-            string phoneE164,
-            string hostUserId,
-            string categoryId)
-            => new(null, firstName, lastName, phoneE164, hostUserId, categoryId);
+            IReadOnlyList<GuestDraft> guests,
+            IReadOnlyList<HostDraft> hosts,
+            string categoryId,
+            string? roomId)
+            => new(null, guests, hosts, categoryId, roomId);
     }
 }

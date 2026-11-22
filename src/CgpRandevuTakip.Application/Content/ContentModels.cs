@@ -1,6 +1,8 @@
 using CgpRandevuTakip.Application.Categories;
 using CgpRandevuTakip.Application.Common;
 using CgpRandevuTakip.Application.Hosts;
+using CgpRandevuTakip.Application.Rooms;
+using CgpRandevuTakip.Application.Titles;
 using CgpRandevuTakip.Domain.Enums;
 
 namespace CgpRandevuTakip.Application.Content;
@@ -40,7 +42,9 @@ public sealed record ContentAdminDto(
     IReadOnlyList<CategoryDto> Categories,
     IReadOnlyList<HostDto> Hosts,
     ContentVersionDto? CurrentVersion,
-    IReadOnlyList<ContentVersionDto> Versions);
+    IReadOnlyList<ContentVersionDto> Versions,
+    IReadOnlyList<HostTitleDto>? Titles = null,
+    IReadOnlyList<MeetingRoomDto>? Rooms = null);
 
 public sealed record ContentSettingsInput(
     string InstitutionName,
@@ -71,7 +75,24 @@ public sealed record ContentSnapshotDto(
     ContentInstitutionDto Institution,
     ContentSettingsDto Settings,
     IReadOnlyList<ContentCategorySnapshot> Categories,
-    IReadOnlyList<ContentHostSnapshot> Hosts);
+    IReadOnlyList<ContentHostSnapshot> Hosts,
+    IReadOnlyList<ContentTitleSnapshot>? Titles = null,
+    IReadOnlyList<ContentRoomSnapshot>? Rooms = null);
+
+public sealed record ContentTitleSnapshot(
+    string Id,
+    string Name,
+    int SortOrder,
+    bool IsActive);
+
+public sealed record ContentRoomSnapshot(
+    string Id,
+    string Name,
+    MeetingRoomKind Kind,
+    string? HostUserId,
+    int SortOrder,
+    bool IsActive,
+    bool AutoNamed);
 
 public sealed record ContentCategorySnapshot(
     string Id,

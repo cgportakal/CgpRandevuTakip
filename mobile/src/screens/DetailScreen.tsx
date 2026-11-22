@@ -2,7 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useNetInfo } from '@react-native-community/netinfo';
 import { api } from '../api/client';
-import type { AppointmentDetail, AppointmentListItem, AppointmentOutcomeInput } from '../api/types';
+import type {
+  AppointmentDetail,
+  AppointmentGuest,
+  AppointmentListItem,
+  AppointmentOutcomeInput,
+  GuestOutcomeInput,
+} from '../api/types';
 import { enqueue, pendingCount } from '../db/outbox';
 import { flushOutbox } from '../sync/sync';
 import { colors, radius, spacing } from '../theme';
@@ -94,6 +100,43 @@ export function DetailScreen({ item, onBack, onChanged }: Props) {
       isClosed: closed,
     });
 
+  const guestOutcome = (guest: AppointmentGuest, attendance: GuestOutcomeInput['attendance']) => {
+    const guests = detail?.guests ?? [];
+    if (guests.length === 0) return;
+
+    const guestOutcomes: GuestOutcomeInput[] = guests.map((item) => ({
+      guestId: item.guestId,
+      attendance: item.guestId === guest.guestId ? attendance : (item.outcome?.attendance ?? 'Arrived'),
+      summary: item.outcome?.summary ?? null,
+      willRepeat: item.outcome?.willRepeat ?? false,
+      postNotes: item.outcome?.postNotes ?? null,
+      isClosed:
+        item.guestId === guest.guestId
+          ? attendance === 'Arrived' || attendance === 'NoShow' || attendance === 'Cancelled'
+          : item.outcome?.isClosed ?? false,
+    }));
+
+    const values = guestOutcomes.map((item) => item.attendance);
+    const aggregate = values.every((value) => value === 'NoShow')
+      ? 'NoShow'
+      : values.every((value) => value === 'Cancelled')
+        ? 'Cancelled'
+        : values.every((value) => value === 'Postponed')
+          ? 'Postponed'
+          : values.includes('Arrived')
+            ? 'Arrived'
+            : values[0];
+
+    void saveOutcome({
+      attendance: aggregate,
+      summary: null,
+      willRepeat: false,
+      postNotes: null,
+      isClosed: true,
+      guestOutcomes,
+    });
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -110,7 +153,19 @@ export function DetailScreen({ item, onBack, onChanged }: Props) {
 
         <View style={styles.card}>
           <Text style={styles.label}>GÖRÜŞMECİ</Text>
-          <Text style={styles.value}>{detail?.hostName ?? item.hostName}</Text>
+          <Text style={styles.value}>
+            {detail?.hostNameWithTitle ?? item.hostNameWithTitle}
+          </Text>
+          <Text style={styles.label}>ODA</Text>
+          <Text style={styles.value}>{detail?.roomDisplayName ?? item.roomName ?? '—'}</Text>
+          {detail?.hasParticipants ? (
+            <>
+              <Text style={styles.label}>KATILIMCILAR</Text>
+              <Text style={styles.value}>
+                {(detail.participants ?? []).map((participant) => participant.displayNameWithTitle).join(', ')}
+              </Text>
+            </>
+          ) : null}
           <Text style={styles.label}>KATEGORİ</Text>
           <Text style={styles.value}>{detail?.categoryName ?? item.categoryName}</Text>
           <Text style={styles.label}>DURUM</Text>
@@ -121,6 +176,34 @@ export function DetailScreen({ item, onBack, onChanged }: Props) {
         </View>
 
         {loading ? <ActivityIndicator color={colors.primary} /> : null}
+
+        {detail?.hasMultipleGuests ? (
+          <View style={styles.card}>
+            <Text style={styles.label}>MİSAFİRLER</Text>
+            {(detail.guests ?? []).map((guest) => (
+              <View key={guest.guestId} style={{ marginTop: spacing.sm }}>
+                <Text style={styles.value}>
+                  {guest.fullName}
+                  {guest.isPrimary ? ' (Birincil)' : ''}
+                </Text>
+                <View style={styles.actions}>
+                  <TouchableOpacity style={styles.action} onPress={() => guestOutcome(guest, 'Arrived')}>
+                    <Text style={styles.actionText}>Geldi</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.action} onPress={() => guestOutcome(guest, 'NoShow')}>
+                    <Text style={styles.actionText}>Gelmedi</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.action} onPress={() => guestOutcome(guest, 'Postponed')}>
+                    <Text style={styles.actionText}>Ertelendi</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.actionDanger} onPress={() => guestOutcome(guest, 'Cancelled')}>
+                    <Text style={styles.actionDangerText}>İptal</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </View>
+        ) : null}
 
         <Text style={styles.section}>Sonuç gir</Text>
         <View style={styles.actions}>

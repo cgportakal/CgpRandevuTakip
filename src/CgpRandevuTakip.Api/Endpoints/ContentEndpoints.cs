@@ -5,7 +5,9 @@ using CgpRandevuTakip.Api.Contracts;
 using CgpRandevuTakip.Api.Infrastructure;
 using CgpRandevuTakip.Application.Categories;
 using CgpRandevuTakip.Application.Hosts;
+using CgpRandevuTakip.Application.Rooms;
 using CgpRandevuTakip.Application.Settings;
+using CgpRandevuTakip.Application.Titles;
 
 namespace CgpRandevuTakip.Api.Endpoints;
 
@@ -27,12 +29,16 @@ public static class ContentEndpoints
             ISettingsService settingsService,
             ICategoryService categories,
             IHostService hosts,
+            IHostTitleService titles,
+            IMeetingRoomService rooms,
             IConfiguration configuration,
             ApiEnvironment environment) =>
         {
             var settings = await settingsService.GetAsync();
             var activeCategories = await categories.GetActiveAsync();
             var selectableHosts = await hosts.GetSelectableHostsAsync();
+            var activeTitles = await titles.GetActiveAsync();
+            var activeRooms = await rooms.GetActiveAsync();
 
             var institution = new InstitutionDto(
                 settings.InstitutionName,
@@ -65,6 +71,8 @@ public static class ContentEndpoints
                 settings = publicSettings,
                 categories = activeCategories,
                 hosts = selectableHosts,
+                titles = activeTitles,
+                rooms = activeRooms,
                 features,
                 versionPolicy = policy
             };
@@ -86,6 +94,8 @@ public static class ContentEndpoints
                 publicSettings,
                 activeCategories,
                 selectableHosts,
+                activeTitles,
+                activeRooms,
                 features,
                 policy));
         });

@@ -22,9 +22,12 @@ public sealed class AppointmentRepository : IAppointmentRepository
         await using var db = await _factory.CreateDbContextAsync();
         return await db.Appointments.AsNoTracking()
             .Include(x => x.Person)
-            .Include(x => x.HostUser)
+            .Include(x => x.HostUser).ThenInclude(x => x!.Title)
+            .Include(x => x.Room)
             .Include(x => x.Category)
             .Include(x => x.Outcome)
+            .Include(x => x.Participants).ThenInclude(x => x.User).ThenInclude(x => x!.Title)
+            .Include(x => x.Guests).ThenInclude(x => x.Person)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
@@ -36,9 +39,12 @@ public sealed class AppointmentRepository : IAppointmentRepository
         await using var db = await _factory.CreateDbContextAsync();
         return await db.Appointments.AsNoTracking()
             .Include(x => x.Person)
-            .Include(x => x.HostUser)
+            .Include(x => x.HostUser).ThenInclude(x => x!.Title)
+            .Include(x => x.Room)
             .Include(x => x.Category)
             .Include(x => x.Outcome)
+            .Include(x => x.Participants).ThenInclude(x => x.User).ThenInclude(x => x!.Title)
+            .Include(x => x.Guests).ThenInclude(x => x.Person)
             .FirstOrDefaultAsync(x => x.ClientRequestId == clientRequestId);
     }
 
@@ -55,8 +61,10 @@ public sealed class AppointmentRepository : IAppointmentRepository
 
         var query = db.Appointments.AsNoTracking()
             .Include(x => x.Person)
-            .Include(x => x.HostUser)
+            .Include(x => x.HostUser).ThenInclude(x => x!.Title)
+            .Include(x => x.Room)
             .Include(x => x.Category)
+            .Include(x => x.Guests).ThenInclude(x => x.Person)
             .Where(x => !x.IsDeleted
                         && !x.IsClosed
                         && x.StartsAtUtc >= nowUtc
@@ -64,7 +72,9 @@ public sealed class AppointmentRepository : IAppointmentRepository
                             || x.Status == AppointmentStatus.Arrived));
 
         if (!string.IsNullOrWhiteSpace(hostUserId))
-            query = query.Where(x => x.HostUserId == hostUserId);
+            query = query.Where(x =>
+                x.HostUserId == hostUserId
+                || x.Participants.Any(p => p.UserId == hostUserId));
 
         return await query
             .OrderBy(x => x.StartsAtUtc)
@@ -77,8 +87,11 @@ public sealed class AppointmentRepository : IAppointmentRepository
 
         var rows = db.Appointments.AsNoTracking()
             .Include(x => x.Person)
-            .Include(x => x.HostUser)
+            .Include(x => x.HostUser).ThenInclude(x => x!.Title)
+            .Include(x => x.Room)
             .Include(x => x.Category)
+            .Include(x => x.Participants).ThenInclude(x => x.User).ThenInclude(x => x!.Title)
+            .Include(x => x.Guests).ThenInclude(x => x.Person)
             .Where(x => !x.IsDeleted);
 
         if (query.FromUtc is not null)
@@ -94,7 +107,12 @@ public sealed class AppointmentRepository : IAppointmentRepository
             rows = rows.Where(x => x.CategoryId == query.CategoryId);
 
         if (!string.IsNullOrWhiteSpace(query.HostUserId))
-            rows = rows.Where(x => x.HostUserId == query.HostUserId);
+            rows = rows.Where(x =>
+                x.HostUserId == query.HostUserId
+                || x.Participants.Any(p => p.UserId == query.HostUserId));
+
+        if (!string.IsNullOrWhiteSpace(query.RoomId))
+            rows = rows.Where(x => x.RoomId == query.RoomId);
 
         var list = await rows
             .OrderBy(x => x.StartsAtUtc)
@@ -113,20 +131,32 @@ public sealed class AppointmentRepository : IAppointmentRepository
     }
 
     public async Task<IReadOnlyList<AppointmentConflictRecord>> FindHostConflictsAsync(
-        string hostUserId,
+        IReadOnlyCollection<string> hostUserIds,
         DateTime startsAtUtc,
         DateTime endsAtUtc,
         string? excludeAppointmentId)
     {
+        var ids = hostUserIds
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        if (ids.Count == 0)
+            return Array.Empty<AppointmentConflictRecord>();
+
         await using var db = await _factory.CreateDbContextAsync();
 
         var windowStart = startsAtUtc.AddMinutes(-MaxDurationMinutes);
 
         var rows = await db.Appointments.AsNoTracking()
             .Include(x => x.Person)
+            .Include(x => x.HostUser)
+            .Include(x => x.Room)
             .Include(x => x.Category)
+            .Include(x => x.Participants).ThenInclude(x => x.User)
             .Where(x => !x.IsDeleted
-                        && x.HostUserId == hostUserId
+                        && (ids.Contains(x.HostUserId)
+                            || x.Participants.Any(p => ids.Contains(p.UserId)))
                         && x.StartsAtUtc > windowStart
                         && x.StartsAtUtc < endsAtUtc
                         && (excludeAppointmentId == null || x.Id != excludeAppointmentId)
@@ -136,18 +166,123 @@ public sealed class AppointmentRepository : IAppointmentRepository
             .ToListAsync();
 
         return rows
-            .Where(x => x.StartsAtUtc < endsAtUtc
-                        && x.StartsAtUtc.AddMinutes(x.DurationMinutes) > startsAtUtc)
-            .Select(x => new AppointmentConflictRecord(
-                x.Id,
-                x.Person?.FirstName ?? string.Empty,
-                x.Person?.LastName ?? string.Empty,
-                x.Person?.PhoneE164 ?? string.Empty,
-                x.StartsAtUtc,
-                x.StartsAtUtc.AddMinutes(x.DurationMinutes),
-                x.Category?.Name))
+            .Where(x => Overlaps(x, startsAtUtc, endsAtUtc))
+            .Select(x =>
+            {
+                var matchedId = ids.FirstOrDefault(id =>
+                    x.HostUserId == id || x.Participants.Any(p => p.UserId == id));
+                var hostName = x.Participants
+                                   .FirstOrDefault(p => p.UserId == matchedId)?.User?.DisplayName
+                               ?? x.HostUser?.DisplayName;
+                return MapConflict(x, hostName: hostName);
+            })
             .ToList();
     }
+
+    public async Task<IReadOnlyList<AppointmentConflictRecord>> FindRoomConflictsAsync(
+        string roomId,
+        DateTime startsAtUtc,
+        DateTime endsAtUtc,
+        string? excludeAppointmentId)
+    {
+        if (string.IsNullOrWhiteSpace(roomId))
+            return Array.Empty<AppointmentConflictRecord>();
+
+        await using var db = await _factory.CreateDbContextAsync();
+
+        var windowStart = startsAtUtc.AddMinutes(-MaxDurationMinutes);
+
+        var rows = await db.Appointments.AsNoTracking()
+            .Include(x => x.Person)
+            .Include(x => x.HostUser)
+            .Include(x => x.Room)
+            .Include(x => x.Category)
+            .Where(x => !x.IsDeleted
+                        && x.RoomId == roomId
+                        && x.StartsAtUtc > windowStart
+                        && x.StartsAtUtc < endsAtUtc
+                        && (excludeAppointmentId == null || x.Id != excludeAppointmentId)
+                        && (x.Status == AppointmentStatus.Scheduled
+                            || x.Status == AppointmentStatus.Arrived
+                            || x.Status == AppointmentStatus.Postponed))
+            .ToListAsync();
+
+        return rows
+            .Where(x => Overlaps(x, startsAtUtc, endsAtUtc))
+            .Select(x => MapConflict(x, hostName: x.HostUser?.DisplayName))
+            .ToList();
+    }
+
+    public async Task<IReadOnlyList<AppointmentConflictRecord>> FindGuestConflictsAsync(
+        IReadOnlyCollection<string> phoneE164s,
+        DateTime startsAtUtc,
+        DateTime endsAtUtc,
+        string? excludeAppointmentId)
+    {
+        var phones = phoneE164s
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        if (phones.Count == 0)
+            return Array.Empty<AppointmentConflictRecord>();
+
+        await using var db = await _factory.CreateDbContextAsync();
+
+        var windowStart = startsAtUtc.AddMinutes(-MaxDurationMinutes);
+
+        var rows = await db.Appointments.AsNoTracking()
+            .Include(x => x.Person)
+            .Include(x => x.HostUser)
+            .Include(x => x.Room)
+            .Include(x => x.Category)
+            .Include(x => x.Guests).ThenInclude(x => x.Person)
+            .Where(x => !x.IsDeleted
+                        && ((x.Person != null && phones.Contains(x.Person.PhoneE164))
+                            || x.Guests.Any(g => g.Person != null
+                                                 && phones.Contains(g.Person.PhoneE164)))
+                        && x.StartsAtUtc > windowStart
+                        && x.StartsAtUtc < endsAtUtc
+                        && (excludeAppointmentId == null || x.Id != excludeAppointmentId)
+                        && (x.Status == AppointmentStatus.Scheduled
+                            || x.Status == AppointmentStatus.Arrived
+                            || x.Status == AppointmentStatus.Postponed))
+            .ToListAsync();
+
+        return rows
+            .Where(x => Overlaps(x, startsAtUtc, endsAtUtc))
+            .Select(x =>
+            {
+                var guestName = x.Guests
+                    .FirstOrDefault(g => g.Person != null
+                                         && phones.Contains(g.Person.PhoneE164))?.Person?.FullName;
+                return MapConflict(
+                    x,
+                    hostName: x.HostUser?.DisplayName,
+                    guestName: guestName);
+            })
+            .ToList();
+    }
+
+    private static bool Overlaps(Appointment appointment, DateTime startsAtUtc, DateTime endsAtUtc)
+        => appointment.StartsAtUtc < endsAtUtc
+           && appointment.StartsAtUtc.AddMinutes(appointment.DurationMinutes) > startsAtUtc;
+
+    private static AppointmentConflictRecord MapConflict(
+        Appointment appointment,
+        string? hostName = null,
+        string? guestName = null)
+        => new(
+            appointment.Id,
+            appointment.Person?.FirstName ?? string.Empty,
+            appointment.Person?.LastName ?? string.Empty,
+            appointment.Person?.PhoneE164 ?? string.Empty,
+            appointment.StartsAtUtc,
+            appointment.StartsAtUtc.AddMinutes(appointment.DurationMinutes),
+            appointment.Category?.Name,
+            hostName,
+            appointment.Room?.Name,
+            guestName);
 
     public async Task<IReadOnlyList<ReminderDispatch>> GetRemindersAsync(string appointmentId)
     {
@@ -314,13 +449,27 @@ public sealed class AppointmentRepository : IAppointmentRepository
     public async Task<IReadOnlyDictionary<string, int>> GetHostUsageCountsAsync()
     {
         await using var db = await _factory.CreateDbContextAsync();
-        var rows = await db.Appointments.AsNoTracking()
+
+        var primary = await db.Appointments.AsNoTracking()
             .Where(x => !x.IsDeleted)
             .GroupBy(x => x.HostUserId)
-            .Select(g => new { HostUserId = g.Key, Count = g.Count() })
+            .Select(g => new { UserId = g.Key, Count = g.Count() })
             .ToListAsync();
 
-        return rows.ToDictionary(x => x.HostUserId, x => x.Count);
+        var participants = await db.AppointmentHosts.AsNoTracking()
+            .Where(x => !x.Appointment!.IsDeleted && !x.IsPrimary)
+            .GroupBy(x => x.UserId)
+            .Select(g => new { UserId = g.Key, Count = g.Count() })
+            .ToListAsync();
+
+        var result = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var row in primary)
+            result[row.UserId] = result.GetValueOrDefault(row.UserId) + row.Count;
+
+        foreach (var row in participants)
+            result[row.UserId] = result.GetValueOrDefault(row.UserId) + row.Count;
+
+        return result;
     }
 
     public async Task AddAsync(Appointment appointment)
@@ -345,8 +494,11 @@ public sealed class AppointmentRepository : IAppointmentRepository
         await using var db = await _factory.CreateDbContextAsync();
         return await db.Appointments.AsNoTracking()
             .Include(x => x.Person)
-            .Include(x => x.HostUser)
+            .Include(x => x.HostUser).ThenInclude(x => x!.Title)
+            .Include(x => x.Room)
             .Include(x => x.Category)
+            .Include(x => x.Participants).ThenInclude(x => x.User).ThenInclude(x => x!.Title)
+            .Include(x => x.Guests).ThenInclude(x => x.Person)
             .Where(x => x.SeriesId == seriesId)
             .OrderBy(x => x.StartsAtUtc)
             .ToListAsync();
@@ -386,10 +538,16 @@ public sealed class AppointmentRepository : IAppointmentRepository
         }
 
         // AsNoTracking ile gelen eski navigation'lar, FK değişikliğini geri ezebilir.
+        var participants = appointment.Participants.ToList();
+        var guests = appointment.Guests.ToList();
+
         appointment.Person = null;
         appointment.HostUser = null;
+        appointment.Room = null;
         appointment.Category = null;
         appointment.Outcome = null;
+        appointment.Participants = new List<AppointmentHost>();
+        appointment.Guests = new List<AppointmentGuest>();
 
         var attached = db.Appointments.Attach(appointment);
         attached.State = EntityState.Modified;
@@ -402,6 +560,9 @@ public sealed class AppointmentRepository : IAppointmentRepository
             db.ReminderDispatches.AddRange(newReminders);
         }
 
+        await SyncParticipantsAsync(db, appointment.Id, participants);
+        await SyncGuestsAsync(db, appointment.Id, guests);
+
         await db.SaveChangesAsync();
         attached.State = EntityState.Detached;
     }
@@ -409,6 +570,7 @@ public sealed class AppointmentRepository : IAppointmentRepository
     public async Task SaveOutcomeAsync(
         Appointment appointment,
         AppointmentOutcome outcome,
+        IReadOnlyList<AppointmentGuest>? guests,
         bool cancelPendingReminders)
     {
         await using var db = await _factory.CreateDbContextAsync();
@@ -423,6 +585,14 @@ public sealed class AppointmentRepository : IAppointmentRepository
                     .SetProperty(x => x.State, ReminderState.Cancelled));
         }
 
+        appointment.Person = null;
+        appointment.HostUser = null;
+        appointment.Room = null;
+        appointment.Category = null;
+        appointment.Outcome = null;
+        appointment.Participants = new List<AppointmentHost>();
+        appointment.Guests = new List<AppointmentGuest>();
+
         var attachedAppointment = db.Appointments.Attach(appointment);
         attachedAppointment.State = EntityState.Modified;
 
@@ -436,10 +606,98 @@ public sealed class AppointmentRepository : IAppointmentRepository
         else
             db.AppointmentOutcomes.Add(outcome);
 
+        if (guests is { Count: > 0 })
+            await SyncGuestsAsync(db, appointment.Id, guests);
+
         await db.SaveChangesAsync();
         await transaction.CommitAsync();
 
         attachedAppointment.State = EntityState.Detached;
+    }
+
+    private static async Task SyncParticipantsAsync(
+        AppDbContext db,
+        string appointmentId,
+        IReadOnlyList<AppointmentHost> participants)
+    {
+        await db.AppointmentHosts
+            .Where(x => x.AppointmentId == appointmentId)
+            .ExecuteDeleteAsync();
+
+        foreach (var participant in participants
+                     .GroupBy(x => x.UserId)
+                     .Select(g => g.First()))
+        {
+            db.AppointmentHosts.Add(new AppointmentHost
+            {
+                AppointmentId = appointmentId,
+                UserId = participant.UserId,
+                IsPrimary = participant.IsPrimary,
+                SortOrder = participant.SortOrder,
+                CreatedAtUtc = participant.CreatedAtUtc
+            });
+        }
+    }
+
+    private static async Task SyncGuestsAsync(
+        AppDbContext db,
+        string appointmentId,
+        IReadOnlyList<AppointmentGuest> guests)
+    {
+        var incoming = guests
+            .GroupBy(x => x.PersonId)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
+
+        var existing = await db.AppointmentGuests
+            .Where(x => x.AppointmentId == appointmentId)
+            .ToListAsync();
+
+        foreach (var row in existing)
+        {
+            if (!incoming.TryGetValue(row.PersonId, out var updated))
+            {
+                db.AppointmentGuests.Remove(row);
+                continue;
+            }
+
+            row.IsPrimary = updated.IsPrimary;
+            row.SortOrder = updated.SortOrder;
+            row.Attendance = updated.Attendance;
+            row.Summary = updated.Summary;
+            row.PostNotes = updated.PostNotes;
+            row.WillRepeat = updated.WillRepeat;
+            row.IsClosed = updated.IsClosed;
+            row.ClosedAtUtc = updated.ClosedAtUtc;
+            row.ClosedByUserId = updated.ClosedByUserId;
+            row.UpdatedAtUtc = updated.UpdatedAtUtc;
+            row.UpdatedByUserId = updated.UpdatedByUserId;
+
+            incoming.Remove(row.PersonId);
+        }
+
+        foreach (var guest in incoming.Values)
+        {
+            db.AppointmentGuests.Add(new AppointmentGuest
+            {
+                Id = string.IsNullOrWhiteSpace(guest.Id)
+                    ? Guid.NewGuid().ToString("N")
+                    : guest.Id,
+                AppointmentId = appointmentId,
+                PersonId = guest.PersonId,
+                IsPrimary = guest.IsPrimary,
+                SortOrder = guest.SortOrder,
+                Attendance = guest.Attendance,
+                Summary = guest.Summary,
+                PostNotes = guest.PostNotes,
+                WillRepeat = guest.WillRepeat,
+                IsClosed = guest.IsClosed,
+                ClosedAtUtc = guest.ClosedAtUtc,
+                ClosedByUserId = guest.ClosedByUserId,
+                UpdatedAtUtc = guest.UpdatedAtUtc,
+                UpdatedByUserId = guest.UpdatedByUserId,
+                CreatedAtUtc = guest.CreatedAtUtc
+            });
+        }
     }
 
     public async Task SoftDeleteAsync(string id, DateTime nowUtc)
@@ -468,20 +726,28 @@ public sealed class AppointmentRepository : IAppointmentRepository
 
         var appointments = await db.Appointments
             .Include(x => x.Person)
+            .Include(x => x.Guests).ThenInclude(x => x.Person)
             .Where(x => x.StartsAtUtc < cutoffUtc)
             .ToListAsync();
 
         if (appointments.Count == 0)
             return 0;
 
-        var personIds = appointments.Select(x => x.PersonId).Distinct().ToList();
-        var recentPersonIds = await db.Appointments
-            .Where(x => personIds.Contains(x.PersonId) && x.StartsAtUtc >= cutoffUtc)
-            .Select(x => x.PersonId)
+        var personIds = appointments
+            .SelectMany(x => x.Guests.Select(g => g.PersonId).Append(x.PersonId))
             .Distinct()
+            .ToList();
+
+        var recentAppointments = await db.Appointments.AsNoTracking()
+            .Include(x => x.Guests)
+            .Where(x => x.StartsAtUtc >= cutoffUtc
+                        && (personIds.Contains(x.PersonId)
+                            || x.Guests.Any(g => personIds.Contains(g.PersonId))))
             .ToListAsync();
 
-        var recent = recentPersonIds.ToHashSet(StringComparer.Ordinal);
+        var recent = recentAppointments
+            .SelectMany(x => x.Guests.Select(g => g.PersonId).Append(x.PersonId))
+            .ToHashSet(StringComparer.Ordinal);
         var changed = 0;
 
         foreach (var appointment in appointments)
@@ -505,16 +771,25 @@ public sealed class AppointmentRepository : IAppointmentRepository
                 appointmentChanged = true;
             }
 
-            if (!recent.Contains(appointment.PersonId)
-                && appointment.Person is not null
-                && appointment.Person.FirstName != "Anonim")
+            var people = appointment.Guests
+                .Select(x => x.Person)
+                .Append(appointment.Person)
+                .Where(x => x is not null)
+                .Select(x => x!)
+                .GroupBy(x => x.Id)
+                .Select(g => g.First());
+
+            foreach (var person in people)
             {
-                appointment.Person.FirstName = "Anonim";
-                appointment.Person.LastName = "Kişi";
-                appointment.Person.PhoneE164 = "+900000000000";
-                appointment.Person.Email = null;
-                appointment.Person.Organization = null;
-                appointment.Person.Notes = null;
+                if (recent.Contains(person.Id) || person.FirstName == "Anonim")
+                    continue;
+
+                person.FirstName = "Anonim";
+                person.LastName = "Kişi";
+                person.PhoneE164 = "+900000000000";
+                person.Email = null;
+                person.Organization = null;
+                person.Notes = null;
                 appointmentChanged = true;
             }
 
@@ -612,20 +887,34 @@ public sealed class AppointmentRepository : IAppointmentRepository
 
     private static bool MatchesText(Appointment appointment, string term, string digits)
     {
-        var person = appointment.Person;
-        if (person is null)
-            return false;
+        var people = appointment.Guests
+            .Select(x => x.Person)
+            .Where(x => x is not null)
+            .Select(x => x!)
+            .ToList();
 
-        if (Contains(person.FirstName, term)
-            || Contains(person.LastName, term)
-            || Contains(person.FullName, term)
-            || Contains(appointment.Category?.Name, term)
-            || Contains(appointment.HostUser?.DisplayName, term))
+        if (appointment.Person is not null
+            && people.All(x => x.Id != appointment.Person.Id))
+        {
+            people.Insert(0, appointment.Person);
+        }
+
+        if (people.Any(person => Contains(person.FirstName, term)
+                                 || Contains(person.LastName, term)
+                                 || Contains(person.FullName, term)))
         {
             return true;
         }
 
-        return digits.Length >= 3 && person.PhoneE164.Contains(digits, StringComparison.Ordinal);
+        if (Contains(appointment.Category?.Name, term)
+            || Contains(appointment.HostUser?.DisplayName, term)
+            || appointment.Participants.Any(x => Contains(x.User?.DisplayName, term)))
+        {
+            return true;
+        }
+
+        return digits.Length >= 3
+               && people.Any(person => person.PhoneE164.Contains(digits, StringComparison.Ordinal));
     }
 
     private static bool Contains(string? value, string term)

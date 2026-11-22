@@ -9,6 +9,9 @@ public class Appointment : EntityBase
     public string HostUserId { get; set; } = string.Empty;
     public string CategoryId { get; set; } = string.Empty;
 
+    /// <summary>Görüşme odası; boşsa birincil görüşmecinin odası kullanılır.</summary>
+    public string? RoomId { get; set; }
+
     /// <summary>Randevu başlangıcı, UTC. Gösterim sistem saat dilimiyle yapılır.</summary>
     public DateTime StartsAtUtc { get; set; }
 
@@ -52,8 +55,11 @@ public class Appointment : EntityBase
 
     public Person? Person { get; set; }
     public User? HostUser { get; set; }
+    public MeetingRoom? Room { get; set; }
     public Category? Category { get; set; }
     public AppointmentOutcome? Outcome { get; set; }
+    public ICollection<AppointmentHost> Participants { get; set; } = new List<AppointmentHost>();
+    public ICollection<AppointmentGuest> Guests { get; set; } = new List<AppointmentGuest>();
     public ICollection<ReminderDispatch> Reminders { get; set; } = new List<ReminderDispatch>();
 
     public DateTime EndsAtUtc => StartsAtUtc.AddMinutes(DurationMinutes);

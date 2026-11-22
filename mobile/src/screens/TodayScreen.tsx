@@ -211,10 +211,14 @@ export function TodayScreen({ displayName, onLogout, onOpenAppointment, onAdd, o
               </View>
 
               <View style={{ flex: 1 }}>
-                <Text style={styles.person}>{item.personFullName}</Text>
+                <Text style={styles.person}>{item.guestSummaryText}</Text>
                 <Text style={styles.meta}>
-                  {item.categoryName} · {item.hostName}
+                  {item.categoryName} · {item.hostNameWithTitle}
+                  {item.roomName ? ` · ${item.roomName}` : ''}
                 </Text>
+                {item.participantCount > 1 ? (
+                  <Text style={styles.meta}>Katılımcılar: {item.participantNames}</Text>
+                ) : null}
                 {item.studentFullName ? (
                   <Text style={styles.meta}>Öğrenci: {item.studentFullName}</Text>
                 ) : null}
@@ -232,10 +236,10 @@ export function TodayScreen({ displayName, onLogout, onOpenAppointment, onAdd, o
       )}
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.footerButton} onPress={onAdd}>
+        <TouchableOpacity testID="open-add" style={styles.footerButton} onPress={onAdd}>
           <Text style={styles.footerText}>+ Yeni görüşme</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerButton} onPress={onReports}>
+        <TouchableOpacity testID="open-reports" style={styles.footerButton} onPress={onReports}>
           <Text style={styles.footerText}>Raporlar</Text>
         </TouchableOpacity>
       </View>

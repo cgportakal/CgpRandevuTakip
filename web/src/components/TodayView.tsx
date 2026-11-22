@@ -28,7 +28,13 @@ export function TodayView({ manifest, online }: Props) {
   const [syncedAt, setSyncedAt] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [searching, setSearching] = useState(false);
+  const [roomFilter, setRoomFilter] = useState('');
   const [modal, setModal] = useState<ModalState>({ kind: 'none' });
+
+  const visibleItems = useMemo(
+    () => (roomFilter ? items.filter((item) => item.roomId === roomFilter) : items),
+    [items, roomFilter],
+  );
 
   const load = useCallback(async (key: string) => {
     const cached = readCache<AppointmentListItem[]>(dayCacheKey(key));
@@ -136,7 +142,7 @@ export function TodayView({ manifest, online }: Props) {
           <div>
             <div className="date-title">{dateLabel}</div>
             <div className="muted">
-              {items.length} görüşme
+              {visibleItems.length} görüşme
               {syncedAt ? ` · ${new Date(syncedAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}` : ''}
             </div>
           </div>
@@ -148,6 +154,20 @@ export function TodayView({ manifest, online }: Props) {
           </button>
 
           <div className="spacer" />
+
+          <select
+            className="select"
+            style={{ width: 150 }}
+            value={roomFilter}
+            onChange={(event) => setRoomFilter(event.target.value)}
+          >
+            <option value="">Tüm odalar</option>
+            {(manifest?.rooms ?? []).map((room) => (
+              <option key={room.id} value={room.id}>
+                {room.displayName}
+              </option>
+            ))}
+          </select>
 
           <input
             className="input search"
@@ -179,7 +199,7 @@ export function TodayView({ manifest, online }: Props) {
       <div className="card">
         {loading || searching ? (
           <div className="empty">Yükleniyor…</div>
-        ) : items.length === 0 ? (
+        ) : visibleItems.length === 0 ? (
           <div className="empty">
             <strong>Kayıt yok</strong>
             {search.trim() ? 'Aramanızla eşleşen görüşme bulunamadı.' : 'Bu gün için görüşme yok.'}
@@ -192,13 +212,14 @@ export function TodayView({ manifest, online }: Props) {
                 <th>Kişi</th>
                 <th>Kategori</th>
                 <th>Görüşmeci</th>
+                <th>Oda</th>
                 <th>Yöntem</th>
                 <th>Durum</th>
                 <th style={{ width: 70 }} />
               </tr>
             </thead>
             <tbody>
-              {items.map((item) => (
+              {visibleItems.map((item) => (
                 <tr key={item.id}>
                   <td>
                     <div className="time-pill" style={{ backgroundColor: item.categoryColorHex }}>
@@ -207,12 +228,19 @@ export function TodayView({ manifest, online }: Props) {
                     </div>
                   </td>
                   <td>
-                    <div style={{ fontWeight: 600 }}>{item.personFullName}</div>
+                    <div style={{ fontWeight: 600 }}>{item.guestSummaryText}</div>
                     <div className="muted">{item.phoneE164}</div>
+                    {item.guestCount > 1 ? (
+                      <div className="muted">{item.guestNames}</div>
+                    ) : null}
                     {item.studentFullName ? <div className="muted">Öğrenci: {item.studentFullName}</div> : null}
                   </td>
                   <td>{item.categoryName}</td>
-                  <td>{item.hostName}</td>
+                  <td>
+                    <div>{item.hostNameWithTitle}</div>
+                    {item.participantCount > 1 ? <div className="muted">{item.participantNames}</div> : null}
+                  </td>
+                  <td>{item.roomName ?? '—'}</td>
                   <td>{item.methodText}</td>
                   <td>
                     <span className={`badge ${statusClass(item.status)}`}>{item.statusText}</span>

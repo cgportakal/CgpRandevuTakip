@@ -5,12 +5,11 @@
 
 ## İndir
 
-> **Son sürüm: 1.10.2** · 22.11.2026 · 432 test geçiyor
+> **Son sürüm: 1.11.0** · 22.11.2026 · 438 test geçiyor
 
-- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.10.2-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.10.2/CGP-RandevuTakip-1.10.2-Setup.exe)
+- **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.11.0-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.11.0/CGP-RandevuTakip-1.11.0-Setup.exe)
+- **Taşınabilir (ZIP):** [CGP-RandevuTakip-1.11.0-portable.zip](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.11.0/CGP-RandevuTakip-1.11.0-portable.zip)
 - **Tüm sürümler:** [Releases](https://github.com/cgportakal/CgpRandevuTakip/releases/latest)
-- **Taşınabilir ZIP:** Yalnızca kararlı sürümlerde yayınlanır. Son taşınabilir paket:
-  [1.10.0 portable](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.10.0/CGP-RandevuTakip-1.10.0-portable.zip).
 
 > Kurulum EXE'si per-user çalışır; yönetici hakkı istemez. Taşınabilir ZIP'i yazılabilir bir klasöre açıp
 > `CgpRandevuTakip.Desktop.exe` dosyasını çalıştırın. Dijital imza ayrıntıları:
@@ -19,13 +18,16 @@
 Windows 11 x64 masaüstünde çalışan, randevu/görüşme kayıtlarını yöneten, günlük listeyi
 WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma üreten kurumsal uygulama.
 
-> Durum: **1.10.2 hazır** — masaüstü sunucuyla çift yönlü çalışıyor: yazma yolu + outbox,
-> çevrimdışı görünürlük, SignalR canlı yenileme, çakışma çözümü ve **60 sn’lik sessiz pull**.
-> Sunucu modunda yerel hatırlatıcı kapatılır (çift bildirim yok). Android push Samsung S21’de
-> doğrulandı.
+> Durum: **1.11.0 hazır** — görüşme odaları, yönetilen ünvanlar, çoklu görüşmeci ve
+> misafir başına bağımsız sonuç. Masaüstü, web ve mobil aynı kayıtları görür; çevrimdışı
+> kuyruk ve çakışma çözümü korunur. 1.081+ kayıtla API ve web E2E UAT doğrulandı.
 
 ### Son yenilikler
 
+- **Görüşme odaları ve ünvanlar (1.11.0):** her görüşmecinin kendi odası + 3 ortak oda;
+  oda/host/misafir çakışma kontrolü. Yönetilen ünvan listesi, adın altında/parantez içinde.
+- **Çoklu görüşmeci ve misafir (1.11.0):** bir randevuda “Katılımcılar” ve ek misafirler;
+  her misafirin katılım/sonuç/notu bağımsız; randevu durumu otomatik türetilir.
 - **Dayanıklılık (1.10.2):** açılışta oturum → manifest → outbox → günlük liste; sunucu modunda
   60 sn’de bir pull; ağ hatasında çevrimdışı durumu; yerel hatırlatıcı devre dışı.
 - **Çakışma yönetimi (1.10.1):** aynı randevu iki istemcide düzenlenirse eski sürüm `409` alır;
@@ -64,10 +66,10 @@ WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma �
 
 | Platform | Durum | Not |
 |---|---|---|
-| Masaüstü (Windows) | **1.10.2** | Tam özellik, çevrimdışı, sunucu senkronu (P3 yazma + P4 SignalR + P5 çakışma + P6 dayanıklılık), seçmeli yedek/geri yükleme |
-| Sunucu API’si | **v1** | Ortak iş kuralları, JWT, içerik manifesti |
-| Mobil (Android/iOS) | **1.0.0** | Giriş, günlük liste, detay, yeni görüşme/seri, raporlar, çevrimdışı kuyruk, push (Expo; Android doğrulandı) |
-| Web | **1.10.0 (Beta)** | Giriş, günlük liste, yeni görüşme/seri, detay/sonuç, 7 rapor türü (Next.js) |
+| Masaüstü (Windows) | **1.11.0** | Tam özellik, çevrimdışı, sunucu senkronu (P3–P6), oda/ünvan/çoklu misafir, seçmeli yedek/geri yükleme |
+| Sunucu API’si | **v1** | Ortak iş kuralları, JWT, içerik manifesti, oda/ünvan/katılımcı/misafir |
+| Mobil (Android/iOS) | **1.0.0** | Giriş, günlük liste, oda/katılımcı/ek misafir, detay/sonuç, raporlar, çevrimdışı kuyruk, push (Expo; Android doğrulandı) |
+| Web | **1.11.0** | Giriş, günlük liste/oda filtresi, oda/katılımcı/misafir, detay/sonuç, 7 rapor türü (Next.js) |
 
 Ayrıntılar: [docs/29_Platform_Mimarisi.md](docs/29_Platform_Mimarisi.md) ·
 [docs/30_Api_ve_Mobil_Kurulum.md](docs/30_Api_ve_Mobil_Kurulum.md)
@@ -139,6 +141,8 @@ kayda geçmiyor. Bu uygulama tek ekrandan günlük akışı yönetir.
 | 43 | [Yedekleme ve Geri Yükleme](docs/43_Yedekleme_ve_Geri_Yukleme.md) | Seçmeli yedek/geri yükleme, içerik özeti, boş yedek koruması, bağlantı ayarları |
 | 44 | [Masaüstü Senkronizasyonu Devir](docs/44_Masaustu_Senkronizasyon_Devir.md) | P1–P4 mimarisi, outbox/overlay/SignalR, UAT ve P5–P7 planı |
 | 45 | [Masaüstü Senkronizasyon Saha UAT](docs/45_Masaustu_Senkronizasyon_UAT.md) | P3/P4/P5: çevrimdışı kuyruk, SignalR, çakışma çözümü |
+| 46 | [Test Verisi Üretimi](docs/46_Test_Verisi_Uretimi.md) | 1000+ kayıt, oda/ünvan/misafir zenginleştirme, doğrulama |
+| 47 | [Görüşme Odaları, Ünvanlar, Misafirler](docs/47_Gorusme_Odalari_Unvanlar_Misafirler.md) | Veri modeli, iş kuralları, API, UAT sonuçları |
 
 ## Alınan temel kararlar
 

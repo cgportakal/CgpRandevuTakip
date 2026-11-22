@@ -70,6 +70,9 @@ namespace CgpRandevuTakip.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("RoomId")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("RowVersion")
                         .HasColumnType("INTEGER");
 
@@ -118,6 +121,8 @@ namespace CgpRandevuTakip.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("PersonId");
 
+                    b.HasIndex("RoomId");
+
                     b.HasIndex("SeriesId");
 
                     b.HasIndex("StartsAtUtc");
@@ -126,9 +131,101 @@ namespace CgpRandevuTakip.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("HostUserId", "StartsAtUtc");
 
+                    b.HasIndex("RoomId", "StartsAtUtc");
+
                     b.HasIndex("Status", "StartsAtUtc");
 
                     b.ToTable("Appointments", (string)null);
+                });
+
+            modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.AppointmentGuest", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AppointmentId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Attendance")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ClosedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ClosedByUserId")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsClosed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PersonId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PostNotes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Summary")
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedByUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("WillRepeat")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId", "IsPrimary");
+
+                    b.HasIndex("AppointmentId", "PersonId")
+                        .IsUnique();
+
+                    b.HasIndex("PersonId", "AppointmentId");
+
+                    b.ToTable("AppointmentGuests", (string)null);
+                });
+
+            modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.AppointmentHost", b =>
+                {
+                    b.Property<string>("AppointmentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("AppointmentId", "UserId");
+
+                    b.HasIndex("AppointmentId", "IsPrimary");
+
+                    b.HasIndex("UserId", "AppointmentId");
+
+                    b.ToTable("AppointmentHosts", (string)null);
                 });
 
             modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.AppointmentOutcome", b =>
@@ -315,6 +412,76 @@ namespace CgpRandevuTakip.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("ContentVersions", (string)null);
+                });
+
+            modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.HostTitle", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .UseCollation("NOCASE");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive", "SortOrder");
+
+                    b.ToTable("HostTitles", (string)null);
+                });
+
+            modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.MeetingRoom", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("AutoNamed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("HostUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .UseCollation("NOCASE");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HostUserId")
+                        .IsUnique()
+                        .HasFilter("\"Kind\" = 0 AND \"HostUserId\" IS NOT NULL");
+
+                    b.HasIndex("Kind", "IsActive", "SortOrder");
+
+                    b.ToTable("MeetingRooms", (string)null);
                 });
 
             modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.Person", b =>
@@ -614,6 +781,9 @@ namespace CgpRandevuTakip.Infrastructure.Persistence.Migrations
                     b.Property<int>("Role")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("TitleId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -625,6 +795,8 @@ namespace CgpRandevuTakip.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.HasIndex("RememberTokenHash");
+
+                    b.HasIndex("TitleId");
 
                     b.HasIndex("Username")
                         .IsUnique();
@@ -693,11 +865,56 @@ namespace CgpRandevuTakip.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("CgpRandevuTakip.Domain.Entities.MeetingRoom", "Room")
+                        .WithMany("Appointments")
+                        .HasForeignKey("RoomId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Category");
 
                     b.Navigation("HostUser");
 
                     b.Navigation("Person");
+
+                    b.Navigation("Room");
+                });
+
+            modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.AppointmentGuest", b =>
+                {
+                    b.HasOne("CgpRandevuTakip.Domain.Entities.Appointment", "Appointment")
+                        .WithMany("Guests")
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CgpRandevuTakip.Domain.Entities.Person", "Person")
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("Person");
+                });
+
+            modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.AppointmentHost", b =>
+                {
+                    b.HasOne("CgpRandevuTakip.Domain.Entities.Appointment", "Appointment")
+                        .WithMany("Participants")
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CgpRandevuTakip.Domain.Entities.User", "User")
+                        .WithMany("AppointmentParticipations")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.AppointmentOutcome", b =>
@@ -711,6 +928,16 @@ namespace CgpRandevuTakip.Infrastructure.Persistence.Migrations
                     b.Navigation("Appointment");
                 });
 
+            modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.MeetingRoom", b =>
+                {
+                    b.HasOne("CgpRandevuTakip.Domain.Entities.User", "HostUser")
+                        .WithMany("MeetingRooms")
+                        .HasForeignKey("HostUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("HostUser");
+                });
+
             modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.ReminderDispatch", b =>
                 {
                     b.HasOne("CgpRandevuTakip.Domain.Entities.Appointment", "Appointment")
@@ -722,14 +949,38 @@ namespace CgpRandevuTakip.Infrastructure.Persistence.Migrations
                     b.Navigation("Appointment");
                 });
 
+            modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.User", b =>
+                {
+                    b.HasOne("CgpRandevuTakip.Domain.Entities.HostTitle", "Title")
+                        .WithMany("Users")
+                        .HasForeignKey("TitleId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Title");
+                });
+
             modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.Appointment", b =>
                 {
+                    b.Navigation("Guests");
+
                     b.Navigation("Outcome");
+
+                    b.Navigation("Participants");
 
                     b.Navigation("Reminders");
                 });
 
             modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.Category", b =>
+                {
+                    b.Navigation("Appointments");
+                });
+
+            modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.HostTitle", b =>
+                {
+                    b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.MeetingRoom", b =>
                 {
                     b.Navigation("Appointments");
                 });
@@ -741,7 +992,11 @@ namespace CgpRandevuTakip.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("CgpRandevuTakip.Domain.Entities.User", b =>
                 {
+                    b.Navigation("AppointmentParticipations");
+
                     b.Navigation("HostedAppointments");
+
+                    b.Navigation("MeetingRooms");
                 });
 #pragma warning restore 612, 618
         }

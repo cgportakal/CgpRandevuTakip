@@ -25,6 +25,47 @@
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel>
+                <Border Style="{StaticResource Card}"
+                        Visibility="{Binding HasMultipleGuests, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="Misafir sonuçları" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Text="Her misafirin katılımı ve değerlendirmesi bağımsız kaydedilir."
+                                   Style="{StaticResource MutedText}" Margin="0,-6,0,12" TextWrapping="Wrap" />
+
+                        <ItemsControl ItemsSource="{Binding GuestOutcomes}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="{DynamicResource BorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="10"
+                                            Margin="0,0,0,10">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}"
+                                                       FontWeight="SemiBold"
+                                                       Margin="0,0,0,6" />
+                                            <ComboBox ItemsSource="{Binding AttendanceOptions}"
+                                                      SelectedItem="{Binding SelectedAttendance}"
+                                                      DisplayMemberPath="Label"
+                                                      AutomationProperties.Name="Misafir katılım durumu" />
+                                            <CheckBox Content="Misafir görüşmesi kapandı"
+                                                      IsChecked="{Binding IsClosed}"
+                                                      Margin="0,8,0,0" />
+                                            <TextBlock Text="Değerlendirme" Style="{StaticResource LabelText}" Margin="0,8,0,4" />
+                                            <TextBox Text="{Binding Summary, UpdateSourceTrigger=PropertyChanged}"
+                                                     MaxLength="4000"
+                                                     AcceptsReturn="True"
+                                                     TextWrapping="Wrap"
+                                                     MinHeight="54"
+                                                     VerticalContentAlignment="Top" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
                 <Border Style="{StaticResource Card}">
                     <StackPanel>
                         <TextBlock Text="Katılım" Style="{StaticResource SectionTitle}" />

@@ -62,10 +62,11 @@ public sealed class SyncedAppointmentService : IAppointmentService
         AppointmentStatus? status,
         DateTime? fromLocal,
         DateTime? toLocal,
-        string? hostUserId = null)
+        string? hostUserId = null,
+        string? roomId = null)
     {
         if (!await _reads.IsServerReadActiveAsync())
-            return await _local.SearchAsync(searchText, categoryId, status, fromLocal, toLocal, hostUserId);
+            return await _local.SearchAsync(searchText, categoryId, status, fromLocal, toLocal, hostUserId, roomId);
 
         var result = await _reads.SearchAsync(
             searchText,
@@ -73,7 +74,8 @@ public sealed class SyncedAppointmentService : IAppointmentService
             status?.ToString(),
             fromLocal,
             toLocal,
-            hostUserId);
+            hostUserId,
+            roomId);
 
         if (result.Success && result.Data is not null)
         {
@@ -88,7 +90,7 @@ public sealed class SyncedAppointmentService : IAppointmentService
                     status);
         }
 
-        return await _local.SearchAsync(searchText, categoryId, status, fromLocal, toLocal, hostUserId);
+        return await _local.SearchAsync(searchText, categoryId, status, fromLocal, toLocal, hostUserId, roomId);
     }
 
     public async Task<AppointmentDetailDto?> GetDetailAsync(string id)

@@ -100,7 +100,7 @@ public sealed class ReportService : IReportService
         if (to < from)
             (from, to) = (to, from);
 
-        var normalized = new ReportQuery(from, to, query.CategoryId, query.HostUserId);
+        var normalized = new ReportQuery(from, to, query.CategoryId, query.HostUserId, query.RoomId);
 
         var scopeHost = _currentUser.IsInRole(UserRole.Host)
             ? _currentUser.UserId
@@ -113,7 +113,8 @@ public sealed class ReportService : IReportService
             fromUtc,
             toUtc,
             NormalizeOptional(query.CategoryId),
-            scopeHost);
+            scopeHost,
+            NormalizeOptional(query.RoomId));
 
         var days = (to - from).Days + 1;
         var granularity = days <= DailyBucketLimit
@@ -142,7 +143,8 @@ public sealed class ReportService : IReportService
         var postponed = rows.Count(x => x.Status == AppointmentStatus.Postponed);
         var scheduled = rows.Count(x => x.Status == AppointmentStatus.Scheduled);
 
-        var personCounts = rows
+        var guests = FlattenGuests(rows);
+        var personCounts = guests
             .GroupBy(x => x.PersonId)
             .Select(g => g.Count())
             .ToList();
@@ -168,36 +170,54 @@ public sealed class ReportService : IReportService
             BuildPoints(localRows, query.FromLocalDate, query.ToLocalDate, loaded.Granularity),
             BuildCategories(rows),
             BuildHosts(rows),
-            BuildHours(localRows));
+            BuildHours(localRows),
+            BuildRooms(rows),
+            guests.Count,
+            guests.Count(x => x.Attendance == Attendance.Arrived),
+            guests.Count(x => x.Attendance == Attendance.NoShow),
+            guests.Count(x => x.Attendance == Attendance.Cancelled),
+            guests.Count(x => x.Attendance == Attendance.Postponed));
     }
 
     private static IReadOnlyList<HostPerformanceDto> BuildHostPerformance(
         IReadOnlyList<ReportRow> rows)
-        => rows
-            .GroupBy(x => new { x.HostUserId, x.HostName })
-            .Select(g =>
+    {
+        var names = CollectHostNames(rows);
+
+        return names.Select(pair =>
             {
-                var total = g.Count();
-                var completed = g.Count(x => x.Status == AppointmentStatus.Completed);
-                var arrived = g.Count(x => x.Status == AppointmentStatus.Arrived);
-                var noShow = g.Count(x => x.Status == AppointmentStatus.NoShow);
-                var cancelled = g.Count(x => x.Status == AppointmentStatus.Cancelled);
+                var primary = rows
+                    .Where(x => x.HostUserId == pair.Key)
+                    .ToList();
+
+                var participant = rows
+                    .Where(x => x.HostUserId != pair.Key
+                                && (x.ParticipantUserIds?.Contains(pair.Key) ?? false))
+                    .ToList();
+
+                var all = primary.Concat(participant).ToList();
+                var completed = primary.Count(x => x.Status == AppointmentStatus.Completed);
+                var arrived = primary.Count(x => x.Status == AppointmentStatus.Arrived);
+                var noShow = primary.Count(x => x.Status == AppointmentStatus.NoShow);
+                var cancelled = primary.Count(x => x.Status == AppointmentStatus.Cancelled);
 
                 return new HostPerformanceDto(
-                    g.Key.HostUserId,
-                    g.Key.HostName,
-                    total,
+                    pair.Key,
+                    pair.Value,
+                    primary.Count,
                     completed,
                     arrived,
                     noShow,
                     cancelled,
-                    total == 0 ? 0 : completed * 100d / total,
-                    total == 0 ? 0 : noShow * 100d / total,
-                    g.Average(x => x.DurationMinutes));
+                    primary.Count == 0 ? 0 : completed * 100d / primary.Count,
+                    primary.Count == 0 ? 0 : noShow * 100d / primary.Count,
+                    all.Count == 0 ? 0 : all.Average(x => x.DurationMinutes),
+                    participant.Count);
             })
-            .OrderByDescending(x => x.Total)
+            .OrderByDescending(x => x.Total + x.ParticipantTotal)
             .ThenBy(x => x.HostName, StringComparer.CurrentCulture)
             .ToList();
+    }
 
     private IReadOnlyList<CategoryTrendDto> BuildCategoryTrends(
         IReadOnlyList<ReportRow> rows,
@@ -233,6 +253,8 @@ public sealed class ReportService : IReportService
         {
             var bucket = byDay.TryGetValue(date, out var list) ? list : new List<ReportRow>();
 
+            var guests = FlattenGuests(bucket);
+
             days.Add(new AttendanceDayDto(
                 date,
                 bucket.Count(x => x.Status == AppointmentStatus.Arrived),
@@ -240,7 +262,11 @@ public sealed class ReportService : IReportService
                 bucket.Count(x => x.Status == AppointmentStatus.NoShow),
                 bucket.Count(x => x.Status == AppointmentStatus.Cancelled),
                 bucket.Count(x => x.Status == AppointmentStatus.Postponed),
-                bucket.Count(x => x.Status == AppointmentStatus.Scheduled)));
+                bucket.Count(x => x.Status == AppointmentStatus.Scheduled),
+                guests.Count(x => x.Attendance == Attendance.Arrived),
+                guests.Count(x => x.Attendance == Attendance.NoShow),
+                guests.Count(x => x.Attendance == Attendance.Cancelled),
+                guests.Count(x => x.Attendance == Attendance.Postponed)));
         }
 
         return days;
@@ -251,21 +277,28 @@ public sealed class ReportService : IReportService
         var reference = loaded.Query.ToLocalDate;
 
         return loaded.Rows
-            .GroupBy(x => new { x.PersonId, x.PersonFullName, x.PhoneE164 })
+            .SelectMany(row => FlattenGuests(new[] { row })
+                .Select(guest => new { Row = row, Guest = guest }))
+            .GroupBy(x => new
+            {
+                x.Guest.PersonId,
+                x.Guest.FullName,
+                x.Guest.PhoneE164
+            })
             .Select(g =>
             {
-                var last = g.Max(x => _clock.ToLocal(x.StartsAtUtc));
+                var last = g.Max(x => _clock.ToLocal(x.Row.StartsAtUtc));
                 var days = (reference.Date - last.Date).Days;
 
                 return new RepeatPersonDto(
                     g.Key.PersonId,
-                    string.IsNullOrWhiteSpace(g.Key.PersonFullName) ? "—" : g.Key.PersonFullName,
+                    string.IsNullOrWhiteSpace(g.Key.FullName) ? "—" : g.Key.FullName,
                     g.Key.PhoneE164,
                     g.Count(),
                     last,
                     Math.Max(0, days));
             })
-            .Where(x => x.VisitCount > 1 || loaded.Rows.Any(r => r.PersonId == x.PersonId && r.WillRepeat))
+            .Where(x => x.VisitCount > 1 || loaded.Rows.Any(r => r.WillRepeat))
             .OrderByDescending(x => x.VisitCount)
             .ThenBy(x => x.PersonName, StringComparer.CurrentCulture)
             .Take(MaxPersonResults)
@@ -278,29 +311,35 @@ public sealed class ReportService : IReportService
     {
         var term = NormalizeOptional(search);
 
-        var filtered = term is null
-            ? loaded.Rows
-            : loaded.Rows
-                .Where(x => x.PersonFullName.Contains(term, StringComparison.CurrentCultureIgnoreCase)
-                            || x.PhoneE164.Contains(term, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+        var entries = loaded.Rows
+            .SelectMany(row => FlattenGuests(new[] { row })
+                .Select(guest => new { Row = row, Guest = guest }))
+            .Where(x => term is null
+                        || x.Guest.FullName.Contains(term, StringComparison.CurrentCultureIgnoreCase)
+                        || x.Guest.PhoneE164.Contains(term, StringComparison.OrdinalIgnoreCase))
+            .ToList();
 
-        return filtered
-            .GroupBy(x => new { x.PersonId, x.PersonFullName, x.PhoneE164 })
+        return entries
+            .GroupBy(x => new
+            {
+                x.Guest.PersonId,
+                x.Guest.FullName,
+                x.Guest.PhoneE164
+            })
             .Select(g => new PersonHistoryPersonDto(
                 g.Key.PersonId,
-                string.IsNullOrWhiteSpace(g.Key.PersonFullName) ? "—" : g.Key.PersonFullName,
+                string.IsNullOrWhiteSpace(g.Key.FullName) ? "—" : g.Key.FullName,
                 g.Key.PhoneE164,
                 g.Count(),
-                _clock.ToLocal(g.Max(x => x.StartsAtUtc)),
-                g.OrderByDescending(x => x.StartsAtUtc)
+                _clock.ToLocal(g.Max(x => x.Row.StartsAtUtc)),
+                g.OrderByDescending(x => x.Row.StartsAtUtc)
                     .Select(x => new PersonHistoryEntryDto(
-                        x.AppointmentId,
-                        _clock.ToLocal(x.StartsAtUtc),
-                        x.HostName,
-                        x.CategoryName,
-                        x.Status,
-                        x.IsClosed,
+                        x.Row.AppointmentId,
+                        _clock.ToLocal(x.Row.StartsAtUtc),
+                        x.Row.HostNameWithTitle,
+                        x.Row.CategoryName,
+                        x.Row.Status,
+                        x.Row.IsClosed,
                         null))
                     .ToList()))
             .OrderByDescending(x => x.Total)
@@ -411,18 +450,95 @@ public sealed class ReportService : IReportService
             .ToList();
 
     private static IReadOnlyList<ReportHostDto> BuildHosts(IReadOnlyList<ReportRow> rows)
+    {
+        var names = CollectHostNames(rows);
+
+        return names.Select(pair =>
+            {
+                var primary = rows
+                    .Where(x => x.HostUserId == pair.Key)
+                    .ToList();
+
+                var participant = rows
+                    .Where(x => x.HostUserId != pair.Key
+                                && (x.ParticipantUserIds?.Contains(pair.Key) ?? false))
+                    .ToList();
+
+                return new ReportHostDto(
+                    pair.Key,
+                    pair.Value,
+                    primary.Count,
+                    primary.Count(x => x.Status == AppointmentStatus.Completed),
+                    primary.Count(x => x.Status == AppointmentStatus.NoShow),
+                    primary.Count(x => x.Status == AppointmentStatus.Cancelled),
+                    participant.Count);
+            })
+            .OrderByDescending(x => x.Total + x.ParticipantTotal)
+            .ThenBy(x => x.HostName, StringComparer.CurrentCulture)
+            .ToList();
+    }
+
+    private static IReadOnlyList<ReportRoomDto> BuildRooms(IReadOnlyList<ReportRow> rows)
         => rows
-            .GroupBy(x => new { x.HostUserId, x.HostName })
-            .Select(g => new ReportHostDto(
-                g.Key.HostUserId,
-                g.Key.HostName,
+            .GroupBy(x => new { x.RoomId, x.RoomName })
+            .Select(g => new ReportRoomDto(
+                g.Key.RoomId ?? string.Empty,
+                string.IsNullOrWhiteSpace(g.Key.RoomName) ? "Oda atanmamış" : g.Key.RoomName,
                 g.Count(),
                 g.Count(x => x.Status == AppointmentStatus.Completed),
                 g.Count(x => x.Status == AppointmentStatus.NoShow),
                 g.Count(x => x.Status == AppointmentStatus.Cancelled)))
             .OrderByDescending(x => x.Total)
-            .ThenBy(x => x.HostName, StringComparer.CurrentCulture)
+            .ThenBy(x => x.RoomName, StringComparer.CurrentCulture)
             .ToList();
+
+    private static IReadOnlyList<ReportGuestRow> FlattenGuests(IReadOnlyList<ReportRow> rows)
+    {
+        var result = new List<ReportGuestRow>();
+
+        foreach (var row in rows)
+        {
+            if (row.Guests is { Count: > 0 })
+            {
+                result.AddRange(row.Guests);
+                continue;
+            }
+
+            result.Add(new ReportGuestRow(
+                row.PersonId,
+                row.PersonFullName,
+                row.PhoneE164,
+                null,
+                true));
+        }
+
+        return result;
+    }
+
+    private static IReadOnlyDictionary<string, string> CollectHostNames(
+        IReadOnlyList<ReportRow> rows)
+    {
+        var names = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        foreach (var row in rows)
+        {
+            if (!string.IsNullOrWhiteSpace(row.HostUserId))
+                names[row.HostUserId] = row.HostName;
+
+            if (row.ParticipantUserIds is null || row.ParticipantNames is null)
+                continue;
+
+            for (var i = 0; i < row.ParticipantUserIds.Count
+                            && i < row.ParticipantNames.Count; i++)
+            {
+                var id = row.ParticipantUserIds[i];
+                if (!string.IsNullOrWhiteSpace(id))
+                    names[id] = row.ParticipantNames[i];
+            }
+        }
+
+        return names;
+    }
 
     private static IReadOnlyList<ReportHourDto> BuildHours(IReadOnlyList<LocalRow> rows)
         => rows

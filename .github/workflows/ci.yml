@@ -81,6 +81,67 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
+  web-e2e:
+    name: Web E2E (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build API
+        run: dotnet build src/CgpRandevuTakip.Api/CgpRandevuTakip.Api.csproj -c Release
+
+      - name: Start API
+        env:
+          CGP_API_DATA: ${{ runner.temp }}/cgp-e2e-data
+        run: |
+          mkdir -p "$CGP_API_DATA"
+          nohup dotnet run --project src/CgpRandevuTakip.Api -c Release --no-build --urls http://127.0.0.1:5199 > "$RUNNER_TEMP/api.log" 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:5199/v1/health > /dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat "$RUNNER_TEMP/api.log"
+          exit 1
+
+      - name: Seed UAT data
+        run: |
+          node scripts/seed-test-data.mjs --count 1000 --force
+          node scripts/seed-meeting-rooms.mjs --force
+          node scripts/verify-uat.mjs --samples 10
+
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Run Playwright
+        working-directory: web
+        run: npx playwright test
+
+      - name: Upload Playwright results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-results
+          path: |
+            web/test-results
+            web/playwright-report
+          if-no-files-found: warn
+
   web-check:
     name: Web (Next.js)
     runs-on: ubuntu-latest

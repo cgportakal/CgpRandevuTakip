@@ -11,9 +11,13 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<HostTitle> HostTitles => Set<HostTitle>();
+    public DbSet<MeetingRoom> MeetingRooms => Set<MeetingRoom>();
     public DbSet<Person> Persons => Set<Person>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Appointment> Appointments => Set<Appointment>();
+    public DbSet<AppointmentHost> AppointmentHosts => Set<AppointmentHost>();
+    public DbSet<AppointmentGuest> AppointmentGuests => Set<AppointmentGuest>();
     public DbSet<ReminderDispatch> ReminderDispatches => Set<ReminderDispatch>();
     public DbSet<AppointmentOutcome> AppointmentOutcomes => Set<AppointmentOutcome>();
     public DbSet<Recipient> Recipients => Set<Recipient>();
@@ -45,6 +49,38 @@ public class AppDbContext : DbContext
             entity.HasIndex(x => x.Username).IsUnique();
             entity.HasIndex(x => x.Email).IsUnique();
             entity.HasIndex(x => x.RememberTokenHash);
+            entity.HasIndex(x => x.TitleId);
+
+            entity.HasOne(x => x.Title)
+                  .WithMany(x => x.Users)
+                  .HasForeignKey(x => x.TitleId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<HostTitle>(entity =>
+        {
+            entity.ToTable("HostTitles");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(120).UseCollation("NOCASE").IsRequired();
+            entity.HasIndex(x => x.Name).IsUnique();
+            entity.HasIndex(x => new { x.IsActive, x.SortOrder });
+        });
+
+        modelBuilder.Entity<MeetingRoom>(entity =>
+        {
+            entity.ToTable("MeetingRooms");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(120).UseCollation("NOCASE").IsRequired();
+            entity.Property(x => x.Kind).HasConversion<int>();
+            entity.HasIndex(x => new { x.Kind, x.IsActive, x.SortOrder });
+            entity.HasIndex(x => x.HostUserId)
+                  .IsUnique()
+                  .HasFilter("\"Kind\" = 0 AND \"HostUserId\" IS NOT NULL");
+
+            entity.HasOne(x => x.HostUser)
+                  .WithMany(x => x.MeetingRooms)
+                  .HasForeignKey(x => x.HostUserId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Person>(entity =>
@@ -86,6 +122,8 @@ public class AppDbContext : DbContext
             entity.HasIndex(x => new { x.HostUserId, x.StartsAtUtc });
             entity.HasIndex(x => x.CategoryId);
             entity.HasIndex(x => x.SeriesId);
+            entity.HasIndex(x => x.RoomId);
+            entity.HasIndex(x => new { x.RoomId, x.StartsAtUtc });
             entity.HasIndex(x => new { x.Status, x.StartsAtUtc });
             entity.HasIndex(x => new { x.CategoryId, x.StartsAtUtc });
             entity.Property(x => x.SeriesId).HasMaxLength(100);
@@ -101,6 +139,21 @@ public class AppDbContext : DbContext
                   .WithMany(x => x.HostedAppointments)
                   .HasForeignKey(x => x.HostUserId)
                   .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(x => x.Room)
+                  .WithMany(x => x.Appointments)
+                  .HasForeignKey(x => x.RoomId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(x => x.Participants)
+                  .WithOne(x => x.Appointment)
+                  .HasForeignKey(x => x.AppointmentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(x => x.Guests)
+                  .WithOne(x => x.Appointment)
+                  .HasForeignKey(x => x.AppointmentId)
+                  .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(x => x.Category)
                   .WithMany(x => x.Appointments)
@@ -119,6 +172,37 @@ public class AppDbContext : DbContext
 
             entity.Ignore(x => x.EndsAtUtc);
             entity.Ignore(x => x.StudentFullName);
+        });
+
+        modelBuilder.Entity<AppointmentHost>(entity =>
+        {
+            entity.ToTable("AppointmentHosts");
+            entity.HasKey(x => new { x.AppointmentId, x.UserId });
+            entity.HasIndex(x => new { x.UserId, x.AppointmentId });
+            entity.HasIndex(x => new { x.AppointmentId, x.IsPrimary });
+
+            entity.HasOne(x => x.User)
+                  .WithMany(x => x.AppointmentParticipations)
+                  .HasForeignKey(x => x.UserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<AppointmentGuest>(entity =>
+        {
+            entity.ToTable("AppointmentGuests");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Summary).HasMaxLength(4000);
+            entity.Property(x => x.PostNotes).HasMaxLength(4000);
+            entity.Property(x => x.ClosedByUserId).HasMaxLength(100);
+            entity.HasIndex(x => new { x.AppointmentId, x.PersonId }).IsUnique();
+            entity.HasIndex(x => new { x.PersonId, x.AppointmentId });
+            entity.HasIndex(x => new { x.AppointmentId, x.IsPrimary });
+            entity.Property(x => x.Attendance).HasConversion<int?>();
+
+            entity.HasOne(x => x.Person)
+                  .WithMany()
+                  .HasForeignKey(x => x.PersonId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<ReminderDispatch>(entity =>

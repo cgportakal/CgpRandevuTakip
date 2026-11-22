@@ -3,6 +3,25 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [1.11.0] — 2026-11-22 · Görüşme odaları, ünvanlar, çoklu misafir
+
+### Eklendi
+- **Görüşme odaları:** her görüşmecinin kendi odası + 3 ortak oda; oda, host ve misafir çakışma kontrolü. Aynı odada çift rezervasyon engellenir.
+- **Ünvanlar:** yönetilen ünvan listesi; görüşmeci adının altında ve kompakt yerlerde `Ad Soyad (Ünvan)` olarak gösterilir.
+- **Çoklu görüşmeci:** randevuda “Katılımcılar”; birincil host + ek görüşmeciler. Katılımcı host randevuyu görür ve sonuç girebilir.
+- **Çoklu misafir:** bir randevuda birden fazla misafir; her misafirin katılım/sonuç/not/kapanışı bağımsız. Randevu durumu misafir sonuçlarından otomatik türetilir.
+- **API:** `/v1/titles`, `/v1/rooms`, admin ünvan/oda CRUD; randevu ve sonuç sözleşmelerinde oda/katılımcı/misafir alanları.
+- **Raporlar:** oda dağılımı, misafir toplamları, katılımcı host sayıları; kişi geçmişi ve tekrar raporları tüm misafirleri kapsar.
+- **UAT:** `scripts/seed-meeting-rooms.mjs` + `scripts/verify-uat.mjs`; 1.082 görünür randevu, çoklu misafir/katılımcı, oda çakışmaları. Web Playwright E2E ve mobil Maestro akışları eklendi.
+
+### Doğrulama
+- **438/438** .NET testi; web `next build`; mobil `tsc`.
+- API UAT: 1.082 randevu, rapor toplamları eşit, oda çakışması `Room` türüyle döndü.
+- Web Playwright: oda + katılımcı + ek misafir oluşturma, detay, rapor ve içerik yönetimi.
+
+### Paket
+- Setup + taşınabilir ZIP (kararlı `x.y.0` sürümü).
+
 ## [1.10.2] — 2026-11-22 · Dayanıklılık
 
 ### Eklendi

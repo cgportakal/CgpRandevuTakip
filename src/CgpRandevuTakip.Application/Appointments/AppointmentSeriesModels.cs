@@ -189,7 +189,9 @@ public sealed record SeriesUpdateInput(
     string? StudentFirstName,
     string? StudentLastName,
     TimeSpan? TimeOfDay,
-    IReadOnlyList<int> ReminderOffsetsMinutes);
+    IReadOnlyList<int> ReminderOffsetsMinutes,
+    string? RoomId = null,
+    IReadOnlyList<string>? ParticipantHostUserIds = null);
 
 public sealed record SeriesUpdateResult(
     bool Success,

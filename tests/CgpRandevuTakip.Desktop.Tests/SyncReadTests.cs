@@ -356,7 +356,8 @@ public class SyncReadTests
             AppointmentStatus? status,
             DateTime? fromLocal,
             DateTime? toLocal,
-            string? hostUserId = null)
+            string? hostUserId = null,
+            string? roomId = null)
             => GetDayAsync(DateTime.Today);
 
         public Task<AppointmentDetailDto?> GetDetailAsync(string id) => Task.FromResult<AppointmentDetailDto?>(null);

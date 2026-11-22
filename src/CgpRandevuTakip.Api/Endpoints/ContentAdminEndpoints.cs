@@ -4,6 +4,8 @@ using CgpRandevuTakip.Application.Categories;
 using CgpRandevuTakip.Application.Common;
 using CgpRandevuTakip.Application.Content;
 using CgpRandevuTakip.Application.Hosts;
+using CgpRandevuTakip.Application.Rooms;
+using CgpRandevuTakip.Application.Titles;
 using System.IO;
 
 namespace CgpRandevuTakip.Api.Endpoints;
@@ -119,6 +121,50 @@ public static class ContentAdminEndpoints
             HostUpdateInput input,
             IHostService service) =>
             ToResult(await service.UpdateAsync(id, input)));
+
+        group.MapPost("/titles", async (
+            HostTitleInput input,
+            IHostTitleService service) =>
+            ToResult(await service.CreateAsync(input)));
+
+        group.MapPut("/titles/{id}", async (
+            string id,
+            HostTitleInput input,
+            IHostTitleService service) =>
+            ToResult(await service.UpdateAsync(id, input)));
+
+        group.MapPost("/titles/{id}/active", async (
+            string id,
+            SetActiveRequest request,
+            IHostTitleService service) =>
+            ToResult(await service.SetActiveAsync(id, request.IsActive)));
+
+        group.MapDelete("/titles/{id}", async (
+            string id,
+            IHostTitleService service) =>
+            ToResult(await service.DeleteAsync(id)));
+
+        group.MapPost("/rooms", async (
+            MeetingRoomInput input,
+            IMeetingRoomService service) =>
+            ToResult(await service.CreateAsync(input)));
+
+        group.MapPut("/rooms/{id}", async (
+            string id,
+            MeetingRoomInput input,
+            IMeetingRoomService service) =>
+            ToResult(await service.UpdateAsync(id, input)));
+
+        group.MapPost("/rooms/{id}/active", async (
+            string id,
+            SetActiveRequest request,
+            IMeetingRoomService service) =>
+            ToResult(await service.SetActiveAsync(id, request.IsActive)));
+
+        group.MapDelete("/rooms/{id}", async (
+            string id,
+            IMeetingRoomService service) =>
+            ToResult(await service.DeleteAsync(id)));
 
         return app;
     }

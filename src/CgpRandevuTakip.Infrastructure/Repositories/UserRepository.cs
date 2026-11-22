@@ -37,6 +37,7 @@ public sealed class UserRepository : IUserRepository
     {
         await using var db = await _factory.CreateDbContextAsync();
         return await db.Users.AsNoTracking()
+            .Include(x => x.Title)
             .OrderBy(x => x.DisplayName)
             .ToListAsync();
     }
@@ -66,6 +67,7 @@ public sealed class UserRepository : IUserRepository
     {
         await using var db = await _factory.CreateDbContextAsync();
         return await db.Users.AsNoTracking()
+            .Include(x => x.Title)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 

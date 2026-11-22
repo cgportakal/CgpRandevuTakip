@@ -4,7 +4,7 @@ import * as SQLite from 'expo-sqlite';
  * Mobil yerel veritabanı. Şema sürümü `meta` tablosunda tutulur; yeni sürümlerde
  * `SCHEMA_VERSION` artırılıp migration adımları eklenir.
  */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 let databasePromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
@@ -43,6 +43,10 @@ async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
       phone_e164 TEXT NOT NULL,
       host_user_id TEXT NOT NULL,
       host_name TEXT NOT NULL,
+      room_id TEXT,
+      room_name TEXT,
+      guest_count INTEGER NOT NULL DEFAULT 1,
+      host_count INTEGER NOT NULL DEFAULT 1,
       category_id TEXT NOT NULL,
       category_name TEXT NOT NULL,
       category_color_hex TEXT NOT NULL,
@@ -54,6 +58,7 @@ async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
 
     CREATE INDEX IF NOT EXISTS ix_appointments_starts ON appointments(starts_at_local);
     CREATE INDEX IF NOT EXISTS ix_appointments_host ON appointments(host_user_id, starts_at_local);
+    CREATE INDEX IF NOT EXISTS ix_appointments_room ON appointments(room_id, starts_at_local);
 
     CREATE TABLE IF NOT EXISTS outbox (
       id TEXT PRIMARY KEY NOT NULL,
@@ -75,11 +80,30 @@ async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
     );
   `);
 
+  // v2 -> v3: yeni sütunlar mevcut veritabanlarına eklenir.
+  await ensureColumn(db, 'appointments', 'room_id', 'TEXT');
+  await ensureColumn(db, 'appointments', 'room_name', 'TEXT');
+  await ensureColumn(db, 'appointments', 'guest_count', 'INTEGER NOT NULL DEFAULT 1');
+  await ensureColumn(db, 'appointments', 'host_count', 'INTEGER NOT NULL DEFAULT 1');
+
   await db.runAsync(
     `INSERT INTO meta (key, value) VALUES ('schema_version', ?)
      ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
     String(SCHEMA_VERSION),
   );
+}
+
+async function ensureColumn(
+  db: SQLite.SQLiteDatabase,
+  table: string,
+  column: string,
+  definition: string,
+): Promise<void> {
+  const columns = await db.getAllAsync<{ name: string }>(`PRAGMA table_info(${table})`);
+  if (columns.some((item) => item.name === column))
+    return;
+
+  await db.execAsync(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
 }
 
 export async function getMeta(key: string): Promise<string | null> {

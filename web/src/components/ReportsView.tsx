@@ -21,11 +21,12 @@ const kinds: { value: ReportKind; label: string }[] = [
   { value: 'AuditActivity', label: 'Denetim' },
 ];
 
-export function ReportsView({ online }: Props) {
+export function ReportsView({ manifest, online }: Props) {
   const initial = firstNameMonthRange();
   const [from, setFrom] = useState(initial.from);
   const [to, setTo] = useState(initial.to);
   const [kind, setKind] = useState<ReportKind>('Summary');
+  const [roomId, setRoomId] = useState('');
   const [personSearch, setPersonSearch] = useState('');
   const [summary, setSummary] = useState<ReportSummary | null>(null);
   const [report, setReport] = useState<ReportResult | null>(null);
@@ -61,8 +62,14 @@ export function ReportsView({ online }: Props) {
     void (async () => {
       try {
         const [overview, detail] = await Promise.all([
-          api.getReportSummary(from, to),
-          api.getReport(kind, from, to, kind === 'PersonHistory' ? personSearch : undefined),
+          api.getReportSummary(from, to, roomId || undefined),
+          api.getReport(
+            kind,
+            from,
+            to,
+            kind === 'PersonHistory' ? personSearch : undefined,
+            roomId || undefined,
+          ),
         ]);
 
         if (cancelled) return;
@@ -78,7 +85,7 @@ export function ReportsView({ online }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [from, to, kind, personSearch, online, refreshKey]);
+  }, [from, to, kind, personSearch, roomId, online, refreshKey]);
 
   const applyPreset = (range: { from: string; to: string }) => {
     setFrom(range.from);
@@ -101,6 +108,18 @@ export function ReportsView({ online }: Props) {
           <div className="field" style={{ width: 160 }}>
             <label>Bitiş</label>
             <input className="input" type="date" value={to} onChange={(event) => setTo(event.target.value)} />
+          </div>
+
+          <div className="field" style={{ width: 180 }}>
+            <label>Oda</label>
+            <select className="select" value={roomId} onChange={(event) => setRoomId(event.target.value)}>
+              <option value="">Tüm odalar</option>
+              {(manifest?.rooms ?? []).map((room) => (
+                <option key={room.id} value={room.id}>
+                  {room.displayName}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="spacer" />
@@ -133,7 +152,38 @@ export function ReportsView({ online }: Props) {
               <Kpi value={summary.cancelled} label="İptal" />
               <Kpi value={summary.completionRateText} label="Tamamlanma" />
               <Kpi value={summary.averageDurationText} label="Ortalama süre" />
+              {summary.guestTotal ? <Kpi value={summary.guestTotal} label="Misafir kaydı" /> : null}
             </div>
+
+            {summary.rooms && summary.rooms.length > 0 ? (
+              <div className="card" style={{ boxShadow: 'none', marginTop: 16 }}>
+                <div className="card-header">
+                  <h2>Oda dağılımı</h2>
+                </div>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Oda</th>
+                      <th>Toplam</th>
+                      <th>Tamamlanan</th>
+                      <th>Gelmedi</th>
+                      <th>İptal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {summary.rooms.map((room) => (
+                      <tr key={room.roomId || room.roomName}>
+                        <td>{room.roomName}</td>
+                        <td>{room.total}</td>
+                        <td>{room.completed}</td>
+                        <td>{room.noShow}</td>
+                        <td>{room.cancelled}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
 
             <div className="card" style={{ boxShadow: 'none', marginTop: 16 }}>
               <div className="card-header">

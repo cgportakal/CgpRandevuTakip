@@ -52,7 +52,7 @@
                           BorderThickness="0"
                           Background="Transparent">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="AD SOYAD" Binding="{Binding DisplayName}" Width="*" MinWidth="150" ElementStyle="{StaticResource DataGridCellText}" />
+                        <DataGridTextColumn Header="AD SOYAD" Binding="{Binding DisplayNameWithTitle}" Width="*" MinWidth="150" ElementStyle="{StaticResource DataGridCellText}" />
 
                         <DataGridTemplateColumn Header="ROL" Width="84" SortMemberPath="Role">
                             <DataGridTemplateColumn.CellTemplate>
@@ -160,6 +160,12 @@
                         <TextBlock Text="Ad soyad" Style="{StaticResource LabelText}" />
                         <TextBox Text="{Binding DisplayName, UpdateSourceTrigger=PropertyChanged}" MaxLength="100"
                                  AutomationProperties.Name="Görüşmeci ad soyad" />
+
+                        <TextBlock Text="Ünvan" Style="{StaticResource LabelText}" Margin="0,12,0,6" />
+                        <ComboBox ItemsSource="{Binding Titles}"
+                                  SelectedItem="{Binding SelectedTitle}"
+                                  DisplayMemberPath="Name"
+                                  AutomationProperties.Name="Görüşmeci ünvanı" />
 
                         <CheckBox Content="Bu kişi uygulamaya giriş yapabilsin"
                                   IsChecked="{Binding LoginEnabled}"

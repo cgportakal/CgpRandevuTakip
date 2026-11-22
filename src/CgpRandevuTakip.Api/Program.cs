@@ -15,6 +15,8 @@ using CgpRandevuTakip.Application.Hosts;
 using CgpRandevuTakip.Application.Notifications;
 using CgpRandevuTakip.Application.Reminders;
 using CgpRandevuTakip.Application.Reports;
+using CgpRandevuTakip.Application.Rooms;
+using CgpRandevuTakip.Application.Titles;
 using CgpRandevuTakip.Application.Settings;
 using CgpRandevuTakip.Infrastructure.Auditing;
 using CgpRandevuTakip.Infrastructure.Persistence;
@@ -56,6 +58,8 @@ builder.Services.AddSingleton<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddSingleton<ISecretProtector, AesSecretProtector>();
 
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
+builder.Services.AddSingleton<IHostTitleRepository, HostTitleRepository>();
+builder.Services.AddSingleton<IMeetingRoomRepository, MeetingRoomRepository>();
 builder.Services.AddSingleton<ICategoryRepository, CategoryRepository>();
 builder.Services.AddSingleton<ISettingsRepository, SettingsRepository>();
 builder.Services.AddSingleton<IContentVersionRepository, ContentVersionRepository>();
@@ -72,6 +76,8 @@ builder.Services.AddScoped<ISettingsService, SettingsService>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IAppointmentOutcomeService, AppointmentOutcomeService>();
 builder.Services.AddScoped<IHostService, HostService>();
+builder.Services.AddScoped<IHostTitleService, HostTitleService>();
+builder.Services.AddScoped<IMeetingRoomService, MeetingRoomService>();
 builder.Services.AddScoped<IContentAdminService, ContentAdminService>();
 builder.Services.AddScoped<IReminderService, ReminderService>();
 

@@ -23,6 +23,7 @@ public static class AppointmentEndpoints
             DateTime? from,
             DateTime? to,
             string? hostUserId,
+            string? roomId,
             IAppointmentService appointments) =>
         {
             AppointmentStatus? parsed = null;
@@ -40,7 +41,8 @@ public static class AppointmentEndpoints
                 parsed,
                 from,
                 to,
-                hostUserId));
+                hostUserId,
+                roomId));
         });
 
         group.MapGet("/next", async (IAppointmentService appointments) =>

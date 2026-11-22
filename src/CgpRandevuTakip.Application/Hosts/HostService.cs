@@ -1,6 +1,8 @@
 using CgpRandevuTakip.Application.Abstractions;
 using CgpRandevuTakip.Application.Auth;
 using CgpRandevuTakip.Application.Common;
+using CgpRandevuTakip.Application.Rooms;
+using CgpRandevuTakip.Application.Titles;
 using CgpRandevuTakip.Domain.Entities;
 using CgpRandevuTakip.Domain.Enums;
 
@@ -13,6 +15,8 @@ public sealed class HostService : IHostService
 
     private readonly IUserRepository _users;
     private readonly IAppointmentRepository _appointments;
+    private readonly IHostTitleRepository _titles;
+    private readonly IMeetingRoomService _rooms;
     private readonly IPasswordHasher _hasher;
     private readonly IAuditLogger _audit;
     private readonly ICurrentUser _currentUser;
@@ -20,12 +24,16 @@ public sealed class HostService : IHostService
     public HostService(
         IUserRepository users,
         IAppointmentRepository appointments,
+        IHostTitleRepository titles,
+        IMeetingRoomService rooms,
         IPasswordHasher hasher,
         IAuditLogger audit,
         ICurrentUser currentUser)
     {
         _users = users;
         _appointments = appointments;
+        _titles = titles;
+        _rooms = rooms;
         _hasher = hasher;
         _audit = audit;
         _currentUser = currentUser;
@@ -66,6 +74,10 @@ public sealed class HostService : IHostService
         if (displayName.Length > MaxDisplayNameLength)
             return OperationResult.Fail(
                 $"Ad soyad en fazla {MaxDisplayNameLength} karakter olabilir.");
+
+        var titleError = await ValidateTitleAsync(input.TitleId);
+        if (titleError is not null)
+            return OperationResult.Fail(titleError);
 
         string username;
         string passwordHash;
@@ -110,10 +122,12 @@ public sealed class HostService : IHostService
             PasswordIterations = iterations,
             Role = UserRole.Host,
             IsActive = true,
-            IsLoginEnabled = input.LoginEnabled
+            IsLoginEnabled = input.LoginEnabled,
+            TitleId = NormalizeId(input.TitleId)
         };
 
         await _users.AddAsync(user);
+        await _rooms.EnsureHostRoomAsync(user.Id, user.DisplayName);
         await _audit.LogAsync(
             AuditAction.UserCreated,
             _currentUser.UserId,
@@ -141,6 +155,12 @@ public sealed class HostService : IHostService
             return OperationResult.Fail(
                 $"Ad soyad en fazla {MaxDisplayNameLength} karakter olabilir.");
 
+        var titleError = input.ClearTitle
+            ? null
+            : await ValidateTitleAsync(input.TitleId);
+        if (titleError is not null)
+            return OperationResult.Fail(titleError);
+
         if (!input.IsActive && user.Id == _currentUser.UserId)
             return OperationResult.Fail("Kendi hesabınızı pasifleştiremezsiniz.");
 
@@ -156,7 +176,15 @@ public sealed class HostService : IHostService
 
         user.DisplayName = displayName;
         user.IsActive = input.IsActive;
+
+        if (input.ClearTitle)
+            user.TitleId = null;
+        else if (!string.IsNullOrWhiteSpace(input.TitleId))
+            user.TitleId = input.TitleId.Trim();
+
         await _users.SaveAsync(user);
+        await _rooms.EnsureHostRoomAsync(user.Id, user.DisplayName);
+        await _rooms.SetHostRoomActiveAsync(user.Id, user.IsActive);
 
         await _audit.LogAsync(
             deactivating ? AuditAction.UserDeactivated : AuditAction.UserUpdated,
@@ -205,6 +233,20 @@ public sealed class HostService : IHostService
         _ => char.IsAsciiLetterOrDigit(c) ? c : '\0'
     };
 
+    private async Task<string?> ValidateTitleAsync(string? titleId)
+    {
+        if (string.IsNullOrWhiteSpace(titleId))
+            return null;
+
+        var title = await _titles.GetByIdAsync(titleId.Trim());
+        return title is null || !title.IsActive
+            ? "Seçilen ünvan bulunamadı veya pasif."
+            : null;
+    }
+
+    private static string? NormalizeId(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
     private static HostDto ToDto(User user, IReadOnlyDictionary<string, int> usage)
         => new(
             user.Id,
@@ -213,5 +255,7 @@ public sealed class HostService : IHostService
             user.Role,
             user.IsLoginEnabled,
             user.IsActive,
-            usage.TryGetValue(user.Id, out var count) ? count : 0);
+            usage.TryGetValue(user.Id, out var count) ? count : 0,
+            user.TitleId,
+            user.Title?.Name);
 }

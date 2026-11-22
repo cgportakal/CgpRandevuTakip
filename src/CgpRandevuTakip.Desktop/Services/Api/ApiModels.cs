@@ -1,6 +1,8 @@
 using System.Net;
 using CgpRandevuTakip.Application.Categories;
 using CgpRandevuTakip.Application.Hosts;
+using CgpRandevuTakip.Application.Rooms;
+using CgpRandevuTakip.Application.Titles;
 
 namespace CgpRandevuTakip.Desktop.Services.Api;
 
@@ -60,7 +62,9 @@ public sealed record ApiManifest(
     IReadOnlyList<CategoryDto> Categories,
     IReadOnlyList<HostDto> Hosts,
     IReadOnlyDictionary<string, bool> Features,
-    ApiVersionPolicy VersionPolicy);
+    ApiVersionPolicy VersionPolicy,
+    IReadOnlyList<HostTitleDto>? Titles = null,
+    IReadOnlyList<MeetingRoomDto>? Rooms = null);
 
 /// <summary>İstemci sonucu; ağ hatalarında <see cref="StatusCode"/> 0 olur.</summary>
 public sealed record ApiResult<T>(bool Success, T? Data, string? Error, int StatusCode)

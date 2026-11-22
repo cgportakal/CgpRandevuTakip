@@ -1,5 +1,6 @@
 using CgpRandevuTakip.Application.Appointments;
 using CgpRandevuTakip.Application.Auth;
+using CgpRandevuTakip.Application.Rooms;
 using CgpRandevuTakip.Domain.Entities;
 using CgpRandevuTakip.Domain.Enums;
 using CgpRandevuTakip.Infrastructure.Repositories;
@@ -70,13 +71,20 @@ public class AppointmentSeriesTests
         currentUser.SignIn(new UserSession("actor", "actor", "Aktör", UserRole.Secretary));
         var audit = new RecordingAuditLogger();
 
+        var clock = new FixedClock(NowUtc);
         var service = new AppointmentService(
             new AppointmentRepository(db.Factory),
             new PersonRepository(db.Factory),
             new UserRepository(db.Factory),
             new CategoryRepository(db.Factory),
+            new MeetingRoomService(
+                new MeetingRoomRepository(db.Factory),
+                new UserRepository(db.Factory),
+                audit,
+                currentUser,
+                clock),
             audit,
-            new FixedClock(NowUtc),
+            clock,
             currentUser);
 
         return new Sut

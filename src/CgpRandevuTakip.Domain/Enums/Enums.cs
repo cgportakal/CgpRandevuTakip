@@ -125,7 +125,20 @@ public enum AuditAction
     SeriesExtended = 34,
     ContentPublished = 35,
     ContentRestored = 36,
-    ContentLogoUpdated = 37
+    ContentLogoUpdated = 37,
+    HostTitleCreated = 38,
+    HostTitleUpdated = 39,
+    HostTitleDeactivated = 40,
+    MeetingRoomCreated = 41,
+    MeetingRoomUpdated = 42,
+    MeetingRoomDeactivated = 43
+}
+
+/// <summary>Görüşme odası türü.</summary>
+public enum MeetingRoomKind
+{
+    HostRoom = 0,
+    Shared = 1
 }
 
 /// <summary>Tekrarlayan görüşme serisinin sıklığı.</summary>
