@@ -251,6 +251,16 @@ export function AddAppointmentScreen({ manifest, onBack, onSaved }: Props) {
       onSaved();
     } catch (error) {
       if (error instanceof ApiError) {
+        if (error.status === 0) {
+          await enqueue('appointment.create', { ...input, ignoreConflicts: true });
+          Alert.alert(
+            'Kuyruğa alındı',
+            'Bağlantı gelince görüşme sunucuya gönderilecek.',
+          );
+          onSaved();
+          return;
+        }
+
         const payload = error.payload as
           | { error?: string; conflicts?: unknown[] }
           | undefined;

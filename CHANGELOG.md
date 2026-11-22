@@ -3,6 +3,21 @@
 Tüm önemli değişiklikler bu dosyada tutulur. Biçim: [Keep a Changelog](https://keepachangelog.com/tr/1.1.0/),
 sürümleme: [SemVer](https://semver.org/lang/tr/).
 
+## [Mobil 1.1.0] — 2026-11-22 · Android APK
+
+### Eklendi
+- Android 1.1.0 APK (EAS `preview`, versionCode 1): oda/katılımcı/ek misafir, misafir başına sonuç, çevrimdışı kuyruk.
+- `GOOGLE_SERVICES_JSON` EAS file secret; Firebase yapılandırması repoya girmez.
+- `expo-build-properties` ile release APK’da cleartext HTTP izni.
+
+### Düzeltildi
+- Ağ hatasında (`ApiError.status == 0`) randevu outbox’a alınır; `NetInfo` gecikmesi veri kaybına yol açmaz.
+- Expo push zaman aşımı API host’unu durdurmaz; `DevicePushSender` uyarı loglayıp devam eder.
+
+### Doğrulama
+- Samsung S21 (R5CN3C6SN): giriş, oluşturma, çevrimdışı kuyruk ve rapor Maestro akışları geçti.
+- Çevrimdışı kayıt yeniden açılışta otomatik gönderildi.
+
 ## [1.11.0] — 2026-11-22 · Görüşme odaları, ünvanlar, çoklu misafir
 
 ### Eklendi

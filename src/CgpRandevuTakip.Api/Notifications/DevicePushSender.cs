@@ -181,6 +181,12 @@ public sealed class DevicePushSender : IDevicePushSender
             _logger.LogWarning("Expo push yanıtı başarısız: {Status}", (int)response.StatusCode);
             return 0;
         }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            // HttpClient zaman aşımı, uygulama kapanışından farklıdır; host'u durdurmamalı.
+            _logger.LogWarning("Expo push zaman aşımına uğradı; sonraki turda yeniden denenecek.");
+            return 0;
+        }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogWarning(ex, "Expo push gönderilemedi.");

@@ -69,7 +69,7 @@ WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma �
 |---|---|---|
 | Masaüstü (Windows) | **1.11.0** | Tam özellik, çevrimdışı, sunucu senkronu (P3–P6), oda/ünvan/çoklu misafir, seçmeli yedek/geri yükleme |
 | Sunucu API’si | **v1** | Ortak iş kuralları, JWT, içerik manifesti, oda/ünvan/katılımcı/misafir |
-| Mobil (Android/iOS) | **1.0.0** | Giriş, günlük liste, oda/katılımcı/ek misafir, detay/sonuç, raporlar, çevrimdışı kuyruk, push (Expo; Android doğrulandı) |
+| Mobil (Android/iOS) | **1.1.0** | Giriş, günlük liste, oda/katılımcı/ek misafir, detay/sonuç, raporlar, çevrimdışı kuyruk, push (Expo; Android doğrulandı) |
 | Web | **1.11.0** | Giriş, günlük liste/oda filtresi, oda/katılımcı/misafir, detay/sonuç, 7 rapor türü (Next.js) |
 
 Ayrıntılar: [docs/29_Platform_Mimarisi.md](docs/29_Platform_Mimarisi.md) ·
