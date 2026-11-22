@@ -1,14 +1,17 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-22 11:45 (UTC+3)
+**Son güncelleme:** 2026-11-22 11:55 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** **1.11.0 sürüm hazırlığı** — görüşme odaları, ünvanlar, çoklu görüşmeci ve
+**Durum:** **1.11.0 yayında** — görüşme odaları, ünvanlar, çoklu görüşmeci ve
 misafir başına sonuç tamamlandı. **438/438** .NET testi; web `next build`; mobil `tsc`;
-API UAT 1.082 kayıt; web Playwright geçti.
+API UAT 1.082 kayıt; web Playwright geçti. Kurulu masaüstü sürümü **1.11.0**.
 
 ## Bu turda tamamlanan
 
+- **1.11.0 yayını:** `v1.11.0` GitHub Release; assetler Setup (~67,2 MB), portable
+  (~95,4 MB), Dev.cer, SHA256SUMS, version-policy (`latestDesktopVersion/latestWebVersion:
+  1.11.0`). Kurulu sürüm 1.11.0 doğrulandı. Master CI ve Release işi yeşil.
 - **Görüşme odaları / ünvanlar / çoklu misafir (1.11.0):** `HostTitles`, `MeetingRooms`,
   `AppointmentHosts`, `AppointmentGuests`; migration + idempotent backfill. Host odası + 3
   ortak oda; oda/host/misafir çakışma türleri. Yönetilen ünvan listesi ve `Ad Soyad (Ünvan)`
@@ -397,8 +400,8 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 Bu dal: yerel **438/438** test (341 uygulama + 79 masaüstü/VM + 16 API + 2 UI), web build ve
 mobil `tsc` başarılı. API UAT: 1.082 randevu; web Playwright geçti.
-Önceki master CI ✅ ve **Release v1.10.2** ✅ (PR #70 / tag `v1.10.2`).
-Son release: **1.10.2** (Setup-only); **1.11.0** hazırlığı sürüyor.
+Master CI ✅ ve **Release v1.11.0** ✅ (PR #75 / tag `v1.11.0`).
+Son release: **1.11.0** (Setup + portable); kurulu sürüm 1.11.0.
 Android emülatör ve **Samsung S21 gerçek cihaz UAT** tamamlandı; iOS Mac bekliyor.
 Dependabot picomatch uyarısı **withdrawn** olduğu için dismissed; kod bağımlılığı değiştirilmedi.
 Android SDK/JDK/adb/emulator `D:\Android` altında; AVD `cgp_uat` hazır; `expo-dev-client` eklendi.
