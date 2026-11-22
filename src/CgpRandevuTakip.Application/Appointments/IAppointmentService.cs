@@ -12,7 +12,8 @@ public interface IAppointmentService
         AppointmentStatus? status,
         DateTime? fromLocal,
         DateTime? toLocal,
-        string? hostUserId = null);
+        string? hostUserId = null,
+        string? roomId = null);
     Task<AppointmentDetailDto?> GetDetailAsync(string id);
     Task<AppointmentListItemDto?> GetNextAppointmentAsync();
     Task<IReadOnlyList<DeletedAppointmentDto>> GetDeletedAsync();

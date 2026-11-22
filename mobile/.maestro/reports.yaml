@@ -1,0 +1,9 @@
+appId: com.cgportakal.cgpRandevuTakip
+---
+- runFlow: login.yaml
+- tapOn:
+    id: open-reports
+- assertVisible:
+    text: ".*Rapor.*"
+- assertVisible:
+    text: ".*Toplam.*"

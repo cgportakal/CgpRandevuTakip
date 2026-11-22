@@ -1,5 +1,6 @@
 using CgpRandevuTakip.Application.Appointments;
 using CgpRandevuTakip.Application.Auth;
+using CgpRandevuTakip.Application.Rooms;
 using CgpRandevuTakip.Domain.Entities;
 using CgpRandevuTakip.Domain.Enums;
 using CgpRandevuTakip.Infrastructure.Repositories;
@@ -114,6 +115,12 @@ public class AppointmentOutcomeServiceTests
                 new PersonRepository(db.Factory),
                 new UserRepository(db.Factory),
                 new CategoryRepository(db.Factory),
+                new MeetingRoomService(
+                    new MeetingRoomRepository(db.Factory),
+                    new UserRepository(db.Factory),
+                    audit,
+                    currentUser,
+                    new FixedClock(NowUtc)),
                 audit,
                 new FixedClock(NowUtc),
                 currentUser),

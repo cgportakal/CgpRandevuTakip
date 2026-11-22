@@ -1,6 +1,7 @@
 using CgpRandevuTakip.Application.Appointments;
 using CgpRandevuTakip.Application.Auth;
 using CgpRandevuTakip.Application.Reminders;
+using CgpRandevuTakip.Application.Rooms;
 using CgpRandevuTakip.Domain.Entities;
 using CgpRandevuTakip.Domain.Enums;
 using CgpRandevuTakip.Infrastructure.Repositories;
@@ -61,7 +62,14 @@ public class ReminderServiceTests
 
         var appointmentService = new AppointmentService(
             appointments, persons, new UserRepository(db.Factory),
-            new CategoryRepository(db.Factory), audit, clock, currentUser);
+            new CategoryRepository(db.Factory),
+            new MeetingRoomService(
+                new MeetingRoomRepository(db.Factory),
+                new UserRepository(db.Factory),
+                audit,
+                currentUser,
+                clock),
+            audit, clock, currentUser);
 
         var outcomeService = new AppointmentOutcomeService(
             appointments, new UserRepository(db.Factory), audit, clock, currentUser);

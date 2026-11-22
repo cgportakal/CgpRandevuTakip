@@ -42,6 +42,10 @@ Koyu tema yalnızca masaüstünde platform tercihi olarak sunulur; web/mobil aç
 | Raporlar | Rapor merkezi |
 | Görüşme | Randevu yerine kullanılan kurumsal terim |
 | Görüşmeci | Randevuyu yapan personel |
+| Ünvan | Görüşmecinin kurumsal unvanı; adının altında/parantez içinde |
+| Oda | Fiziksel görüşme odası (host odası veya ortak oda) |
+| Katılımcı | Randevuya ek görüşmeci olarak katılan personel |
+| Misafir | Görüşmeye gelen kişi; birden fazla olabilir |
 | Kategori | Görüşme türü |
 | Katılım | Geldi / tamamlandı / gelmedi / iptal |
 | Kişi geçmişi | Aynı kişinin geçmiş görüşmeleri |

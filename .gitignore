@@ -30,6 +30,9 @@ logs/
 
 # UAT tohumlama durumu (yerel)
 scripts/.seed-demo-state.json
+scripts/.seed-rooms-state.json
+web/test-results/
+web/playwright-report/
 
 # Test ve kapsam
 TestResults/

@@ -2,12 +2,21 @@ using CgpRandevuTakip.Domain.Enums;
 
 namespace CgpRandevuTakip.Application.Appointments;
 
-public sealed record AppointmentOutcomeInput(
+public sealed record GuestOutcomeInput(
+    string GuestId,
     Attendance Attendance,
     string? Summary,
     bool WillRepeat,
     string? PostNotes,
     bool IsClosed);
+
+public sealed record AppointmentOutcomeInput(
+    Attendance Attendance,
+    string? Summary,
+    bool WillRepeat,
+    string? PostNotes,
+    bool IsClosed,
+    IReadOnlyList<GuestOutcomeInput>? GuestOutcomes = null);
 
 public sealed record AppointmentOutcomeDto(
     Attendance Attendance,
@@ -17,7 +26,8 @@ public sealed record AppointmentOutcomeDto(
     bool IsClosed,
     DateTime? ClosedAtLocal,
     string? ClosedByName,
-    DateTime UpdatedAtLocal)
+    DateTime UpdatedAtLocal,
+    IReadOnlyList<AppointmentGuestDto>? Guests = null)
 {
     public string AttendanceText => Attendance switch
     {

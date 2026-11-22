@@ -13,7 +13,9 @@ using CgpRandevuTakip.Application.Notifications;
 using CgpRandevuTakip.Application.Recipients;
 using CgpRandevuTakip.Application.Reminders;
 using CgpRandevuTakip.Application.Reports;
+using CgpRandevuTakip.Application.Rooms;
 using CgpRandevuTakip.Application.Settings;
+using CgpRandevuTakip.Application.Titles;
 using CgpRandevuTakip.Application.Users;
 using System.Net.Http;
 using CgpRandevuTakip.Desktop.Services;
@@ -351,6 +353,8 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IBitLockerService, BitLockerService>();
 
         services.AddSingleton<IUserRepository, UserRepository>();
+        services.AddSingleton<IHostTitleRepository, HostTitleRepository>();
+        services.AddSingleton<IMeetingRoomRepository, MeetingRoomRepository>();
         services.AddSingleton<ICategoryRepository, CategoryRepository>();
         services.AddSingleton<ISettingsRepository, SettingsRepository>();
         services.AddSingleton<IAppointmentRepository, AppointmentRepository>();
@@ -387,6 +391,14 @@ public partial class App : System.Windows.Application
         services.AddSingleton<HostService>();
         services.AddSingleton<IHostService>(sp => new SyncedHostService(
             sp.GetRequiredService<HostService>(),
+            sp.GetRequiredService<ServerReadService>()));
+        services.AddSingleton<HostTitleService>();
+        services.AddSingleton<IHostTitleService>(sp => new SyncedHostTitleService(
+            sp.GetRequiredService<HostTitleService>(),
+            sp.GetRequiredService<ServerReadService>()));
+        services.AddSingleton<MeetingRoomService>();
+        services.AddSingleton<IMeetingRoomService>(sp => new SyncedMeetingRoomService(
+            sp.GetRequiredService<MeetingRoomService>(),
             sp.GetRequiredService<ServerReadService>()));
         services.AddSingleton<AppointmentOutcomeService>();
         services.AddSingleton<IAppointmentOutcomeService>(sp => new SyncedAppointmentOutcomeService(

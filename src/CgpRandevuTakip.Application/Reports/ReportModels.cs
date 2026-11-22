@@ -5,7 +5,8 @@ public sealed record ReportQuery(
     DateTime FromLocalDate,
     DateTime ToLocalDate,
     string? CategoryId = null,
-    string? HostUserId = null)
+    string? HostUserId = null,
+    string? RoomId = null)
 {
     public int DayCount => Math.Max(1, (ToLocalDate.Date - FromLocalDate.Date).Days + 1);
 }
@@ -29,6 +30,15 @@ public sealed record ReportCategoryDto(
 public sealed record ReportHostDto(
     string HostUserId,
     string HostName,
+    int Total,
+    int Completed,
+    int NoShow,
+    int Cancelled,
+    int ParticipantTotal = 0);
+
+public sealed record ReportRoomDto(
+    string RoomId,
+    string RoomName,
     int Total,
     int Completed,
     int NoShow,
@@ -65,7 +75,13 @@ public sealed record ReportSummaryDto(
     IReadOnlyList<ReportPointDto> Points,
     IReadOnlyList<ReportCategoryDto> Categories,
     IReadOnlyList<ReportHostDto> Hosts,
-    IReadOnlyList<ReportHourDto> Hours)
+    IReadOnlyList<ReportHourDto> Hours,
+    IReadOnlyList<ReportRoomDto>? Rooms = null,
+    int GuestTotal = 0,
+    int GuestArrived = 0,
+    int GuestNoShow = 0,
+    int GuestCancelled = 0,
+    int GuestPostponed = 0)
 {
     public bool IsEmpty => Total == 0;
 

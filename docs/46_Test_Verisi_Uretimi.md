@@ -116,7 +116,25 @@ arama penceresinde 1073; bugün **105**, yarın **68**, 8 seri, 17 silinmiş kay
 2092 hatırlatıcı kaydı. Masaüstü (1.10.2, okuma modu), web ve Android cihaz aynı listeyi
 gösterdi.
 
-## 6. Temizleme
+## 6. Oda, ünvan ve çoklu misafir zenginleştirme
+
+Temel seed sonrasında yeni modeli doldurmak için:
+
+```powershell
+node scripts/seed-meeting-rooms.mjs --force
+node scripts/verify-uat.mjs --samples 25
+```
+
+- 6 ünvan oluşturur ve 8 hosta atar.
+- Her host için oda + 3 ortak oda kullanır.
+- Randevulara oda, 0–2 katılımcı görüşmeci ve 0–2 ek misafir ekler.
+- Geçmiş kayıtlarda misafir başına sonuç yazar.
+- Bilinçli oda çakışmaları oluşturur.
+- `verify-uat.mjs`: sayımlar, rapor toplamları, oda çakışması ve süre ölçümü.
+
+Ayrıntılar: [docs/47](47_Gorusme_Odalari_Unvanlar_Misafirler.md).
+
+## 7. Temizleme
 
 Test verisi yalnızca yerel API veritabanındadır (`src/CgpRandevuTakip.Api/data/`, git'e
 girmez). Sıfırlamak için API'yi durdurup `cgp.db`, `cgp.db-shm`, `cgp.db-wal` dosyalarını

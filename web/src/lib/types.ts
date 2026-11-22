@@ -31,7 +31,87 @@ export type Host = {
   isLoginEnabled: boolean;
   isActive: boolean;
   appointmentCount: number;
+  titleId: string | null;
+  titleName: string | null;
+  displayNameWithTitle: string;
 };
+
+export type HostTitle = {
+  id: string;
+  name: string;
+  sortOrder: number;
+  isActive: boolean;
+  hostCount: number;
+};
+
+export type MeetingRoomKind = 'HostRoom' | 'Shared';
+
+export type MeetingRoom = {
+  id: string;
+  name: string;
+  kind: MeetingRoomKind;
+  hostUserId: string | null;
+  hostName: string | null;
+  isActive: boolean;
+  sortOrder: number;
+  appointmentCount: number;
+  isHostRoom: boolean;
+  kindText: string;
+  displayName: string;
+};
+
+export type AppointmentParticipant = {
+  userId: string;
+  displayName: string;
+  titleName: string | null;
+  isPrimary: boolean;
+  displayNameWithTitle: string;
+};
+
+export type AppointmentGuestOutcome = {
+  attendance: 'Arrived' | 'NoShow' | 'Postponed' | 'Cancelled';
+  summary: string | null;
+  willRepeat: boolean;
+  postNotes: string | null;
+  isClosed: boolean;
+  closedAtLocal: string | null;
+  closedByName: string | null;
+  updatedAtLocal: string;
+  attendanceText: string;
+  repeatText: string;
+};
+
+export type AppointmentGuest = {
+  guestId: string;
+  personId: string;
+  firstName: string;
+  lastName: string;
+  phoneE164: string;
+  isPrimary: boolean;
+  fullName: string;
+  outcome: AppointmentGuestOutcome | null;
+};
+
+export type AppointmentGuestInput = {
+  personId?: string | null;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email?: string | null;
+  organization?: string | null;
+  isPrimary?: boolean;
+};
+
+export type GuestOutcomeInput = {
+  guestId: string;
+  attendance: 'Arrived' | 'NoShow' | 'Postponed' | 'Cancelled';
+  summary: string | null;
+  willRepeat: boolean;
+  postNotes: string | null;
+  isClosed: boolean;
+};
+
+export type ConflictKind = 'Host' | 'Room' | 'Guest';
 
 export type AppointmentStatus =
   | 'Scheduled'
@@ -62,6 +142,16 @@ export type AppointmentListItem = {
   isDeleted: boolean;
   studentFullName: string | null;
   personFullName: string;
+  roomId: string | null;
+  roomName: string | null;
+  hostTitleName: string | null;
+  participantCount: number;
+  guestCount: number;
+  participantNames: string | null;
+  guestNames: string | null;
+  hostNameWithTitle: string;
+  guestSummaryText: string;
+  participantSummaryText: string;
   timeLabel: string;
   endTimeLabel: string;
   methodText: string;
@@ -106,6 +196,8 @@ export type ContentManifest = {
   settings: PublicSettings;
   categories: Category[];
   hosts: Host[];
+  titles: HostTitle[];
+  rooms: MeetingRoom[];
   features: Record<string, boolean>;
   versionPolicy: VersionPolicy;
 };
@@ -147,6 +239,8 @@ export type ContentAdminData = {
   settings: ContentSettings;
   categories: Category[];
   hosts: Host[];
+  titles: HostTitle[];
+  rooms: MeetingRoom[];
   currentVersion: ContentVersion | null;
   versions: ContentVersion[];
 };
@@ -180,11 +274,14 @@ export type HostCreateInput = {
   username: string | null;
   password: string | null;
   confirmPassword: string | null;
+  titleId?: string | null;
 };
 
 export type HostUpdateInput = {
   displayName: string;
   isActive: boolean;
+  titleId?: string | null;
+  clearTitle?: boolean;
 };
 
 export type AppointmentOutcomeInput = {
@@ -193,6 +290,7 @@ export type AppointmentOutcomeInput = {
   willRepeat: boolean;
   postNotes: string | null;
   isClosed: boolean;
+  guestOutcomes?: GuestOutcomeInput[] | null;
 };
 
 export type AppointmentInput = {
@@ -209,6 +307,9 @@ export type AppointmentInput = {
   studentLastName: string | null;
   reminderOffsetsMinutes: number[];
   ignoreConflicts?: boolean;
+  roomId?: string | null;
+  participantHostUserIds?: string[] | null;
+  guests?: AppointmentGuestInput[] | null;
 };
 
 export type AppointmentDetail = {
@@ -232,6 +333,17 @@ export type AppointmentDetail = {
   seriesId: string | null;
   seriesIndex: number | null;
   seriesCount: number | null;
+  roomId: string | null;
+  roomName: string | null;
+  roomKind: MeetingRoomKind | null;
+  participants: AppointmentParticipant[] | null;
+  guests: AppointmentGuest[] | null;
+  hasMultipleGuests: boolean;
+  hasParticipants: boolean;
+  hostNameWithTitle: string;
+  roomDisplayName: string;
+  guestSummaryText: string;
+  participantSummaryText: string;
   dateLabel: string;
   timeRangeLabel: string;
   statusText: string;
@@ -302,7 +414,13 @@ export type ReportSummary = {
   granularity: 'Daily' | 'Monthly';
   points: { label: string; total: number; completed: number; noShow: number }[];
   categories: { categoryId: string; categoryName: string; colorHex: string; total: number }[];
-  hosts: { hostUserId: string; hostName: string; total: number; completed: number; cancelled: number }[];
+  hosts: { hostUserId: string; hostName: string; total: number; completed: number; cancelled: number; participantTotal?: number }[];
+  rooms?: { roomId: string; roomName: string; total: number; completed: number; noShow: number; cancelled: number }[];
+  guestTotal?: number;
+  guestArrived?: number;
+  guestNoShow?: number;
+  guestCancelled?: number;
+  guestPostponed?: number;
   hours: { hour: number; label: string; total: number }[];
   isEmpty: boolean;
   rangeText: string;
@@ -334,6 +452,7 @@ export type ReportResult = {
     completionRateText: string;
     noShowRateText: string;
     averageDurationText: string;
+    participantTotal?: number;
   }[];
   repeatPersons: {
     personName: string;
@@ -358,6 +477,10 @@ export type ReportResult = {
     cancelled: number;
     postponed: number;
     scheduled: number;
+    guestArrived?: number;
+    guestNoShow?: number;
+    guestCancelled?: number;
+    guestPostponed?: number;
     total: number;
   }[];
   personHistory: {

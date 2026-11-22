@@ -30,6 +30,16 @@ public partial class AppointmentRowViewModel : ObservableObject
 
     public string HostName => Item.HostName;
 
+    public string HostDisplay => Item.ParticipantSummaryText;
+
+    public string GuestDisplay => Item.GuestSummaryText;
+
+    public string RoomName => string.IsNullOrWhiteSpace(Item.RoomName) ? "—" : Item.RoomName;
+
+    public bool HasMultipleGuests => Item.GuestCount > 1;
+
+    public bool HasParticipants => Item.ParticipantCount > 1;
+
     public string CategoryName => Item.CategoryName;
 
     public string CategoryColorHex => Item.CategoryColorHex;

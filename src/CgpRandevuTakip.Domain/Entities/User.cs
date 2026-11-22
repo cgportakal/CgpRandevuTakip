@@ -25,6 +25,9 @@ public class User : EntityBase
     public UserRole Role { get; set; } = UserRole.Host;
     public bool IsActive { get; set; } = true;
 
+    /// <summary>Görüşmeci ünvanı; adının altında parantez içinde gösterilir.</summary>
+    public string? TitleId { get; set; }
+
     /// <summary>Giriş yapmasına gerek olmayan kaynak kişiler (host) için false olabilir.</summary>
     public bool IsLoginEnabled { get; set; } = true;
 
@@ -32,7 +35,11 @@ public class User : EntityBase
     public DateTime? LockoutUntilUtc { get; set; }
     public DateTime? LastLoginAtUtc { get; set; }
 
+    public HostTitle? Title { get; set; }
+
     public ICollection<Appointment> HostedAppointments { get; set; } = new List<Appointment>();
+    public ICollection<AppointmentHost> AppointmentParticipations { get; set; } = new List<AppointmentHost>();
+    public ICollection<MeetingRoom> MeetingRooms { get; set; } = new List<MeetingRoom>();
 
     public bool IsLockedOut(DateTime nowUtc)
         => LockoutUntilUtc is not null && LockoutUntilUtc > nowUtc;

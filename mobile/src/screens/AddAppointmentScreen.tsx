@@ -68,6 +68,9 @@ export function AddAppointmentScreen({ manifest, onBack, onSaved }: Props) {
   const [duration, setDuration] = useState('30');
   const [method, setMethod] = useState<AppointmentMethod>('FaceToFace');
   const [hostId, setHostId] = useState(manifest?.hosts[0]?.id ?? '');
+  const [roomId, setRoomId] = useState('');
+  const [participantIds, setParticipantIds] = useState<string[]>([]);
+  const [guests, setGuests] = useState<{ firstName: string; lastName: string; phone: string }[]>([]);
   const [categoryId, setCategoryId] = useState(manifest?.categories[0]?.id ?? '');
   const [description, setDescription] = useState('');
   const [seriesEnabled, setSeriesEnabled] = useState(false);
@@ -78,12 +81,40 @@ export function AddAppointmentScreen({ manifest, onBack, onSaved }: Props) {
 
   const hosts = manifest?.hosts ?? [];
   const categories = manifest?.categories.filter((x) => x.isActive) ?? [];
+  const rooms = (manifest?.rooms ?? []).filter(
+    (room) => room.kind === 'Shared' || room.hostUserId === hostId,
+  );
+
+  const selectHost = (value: string) => {
+    setHostId(value);
+    setParticipantIds((current) => current.filter((id) => id !== value));
+    const room = manifest?.rooms.find(
+      (item) => item.kind === 'HostRoom' && item.hostUserId === value,
+    );
+    setRoomId(room?.id ?? '');
+  };
+
+  const selectMethod = (value: AppointmentMethod) => {
+    setMethod(value);
+    if (value !== 'FaceToFace') {
+      setRoomId('');
+    } else {
+      const room = manifest?.rooms.find(
+        (item) => item.kind === 'HostRoom' && item.hostUserId === hostId,
+      );
+      setRoomId(room?.id ?? '');
+    }
+  };
+
+  const addGuest = () =>
+    setGuests((current) => [...current, { firstName: '', lastName: '', phone: '' }]);
 
   const input = useMemo<AppointmentInput | null>(() => {
     if (!firstName.trim() || !lastName.trim() || !phone.trim() || !hostId || !categoryId) return null;
 
     const durationMinutes = Number(duration);
     if (!Number.isFinite(durationMinutes) || durationMinutes < 5 || durationMinutes > 240) return null;
+    if (method === 'FaceToFace' && !roomId) return null;
 
     return {
       firstName: firstName.trim(),
@@ -98,8 +129,38 @@ export function AddAppointmentScreen({ manifest, onBack, onSaved }: Props) {
       studentFirstName: null,
       studentLastName: null,
       reminderOffsetsMinutes: [30],
+      roomId: roomId || null,
+      participantHostUserIds: participantIds.filter((id) => id !== hostId),
+      guests: [
+        {
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          phone: phone.trim(),
+          isPrimary: true,
+        },
+        ...guests.map((guest) => ({
+          firstName: guest.firstName.trim(),
+          lastName: guest.lastName.trim(),
+          phone: guest.phone.trim(),
+          isPrimary: false,
+        })),
+      ],
     };
-  }, [firstName, lastName, phone, date, time, duration, hostId, categoryId, method, description]);
+  }, [
+    firstName,
+    lastName,
+    phone,
+    date,
+    time,
+    duration,
+    hostId,
+    categoryId,
+    method,
+    description,
+    roomId,
+    participantIds,
+    guests,
+  ]);
 
   const preview = async () => {
     if (!input || !online) {
@@ -192,20 +253,20 @@ export function AddAppointmentScreen({ manifest, onBack, onSaved }: Props) {
           </View>
         ) : null}
 
-        <Field label="Ad" value={firstName} onChange={setFirstName} />
-        <Field label="Soyad" value={lastName} onChange={setLastName} />
-        <Field label="Telefon (05xx...)" value={phone} onChange={setPhone} keyboard="phone-pad" />
+        <Field label="Ad" value={firstName} onChange={setFirstName} testID="first-name" />
+        <Field label="Soyad" value={lastName} onChange={setLastName} testID="last-name" />
+        <Field label="Telefon (05xx...)" value={phone} onChange={setPhone} keyboard="phone-pad" testID="phone" />
 
         <View style={styles.row}>
           <View style={{ flex: 1, marginRight: spacing.sm }}>
-            <Field label="Tarih (YYYY-AA-GG)" value={date} onChange={setDate} />
+            <Field label="Tarih (YYYY-AA-GG)" value={date} onChange={setDate} testID="date" />
           </View>
           <View style={{ width: 100 }}>
-            <Field label="Saat (SS:dd)" value={time} onChange={setTime} />
+            <Field label="Saat (SS:dd)" value={time} onChange={setTime} testID="time" />
           </View>
         </View>
 
-        <Field label="Süre (dk)" value={duration} onChange={setDuration} keyboard="number-pad" />
+        <Field label="Süre (dk)" value={duration} onChange={setDuration} keyboard="number-pad" testID="duration" />
         <Field label="Açıklama" value={description} onChange={setDescription} multiline />
 
         <Text style={styles.label}>Görüşmeci</Text>
@@ -213,12 +274,104 @@ export function AddAppointmentScreen({ manifest, onBack, onSaved }: Props) {
           {hosts.map((host) => (
             <Chip
               key={host.id}
-              label={host.displayName}
+              label={host.displayNameWithTitle}
               selected={host.id === hostId}
-              onPress={() => setHostId(host.id)}
+              onPress={() => selectHost(host.id)}
             />
           ))}
         </View>
+
+        <Text style={styles.label}>Oda</Text>
+        <View style={styles.chips}>
+          {rooms.map((room) => (
+            <Chip
+              key={room.id}
+              label={room.displayName}
+              selected={room.id === roomId}
+              onPress={() => setRoomId(room.id)}
+            />
+          ))}
+        </View>
+
+        <Text style={styles.label}>Katılımcılar</Text>
+        <View style={styles.chips}>
+          {hosts
+            .filter((host) => host.id !== hostId)
+            .map((host) => (
+              <Chip
+                key={host.id}
+                label={host.displayNameWithTitle}
+                selected={participantIds.includes(host.id)}
+                onPress={() =>
+                  setParticipantIds((current) =>
+                    current.includes(host.id)
+                      ? current.filter((id) => id !== host.id)
+                      : [...current, host.id],
+                  )
+                }
+              />
+            ))}
+        </View>
+
+        <Text style={styles.label}>Ek misafirler</Text>
+        {guests.map((guest, index) => (
+          <View key={index} style={styles.row}>
+            <View style={{ flex: 1, marginRight: spacing.sm }}>
+              <TextInput
+                testID={`guest-first-${index}`}
+                style={styles.input}
+                placeholder="Ad"
+                value={guest.firstName}
+                onChangeText={(value) =>
+                  setGuests((current) =>
+                    current.map((item, itemIndex) =>
+                      itemIndex === index ? { ...item, firstName: value } : item,
+                    ),
+                  )
+                }
+              />
+            </View>
+            <View style={{ flex: 1, marginRight: spacing.sm }}>
+              <TextInput
+                testID={`guest-last-${index}`}
+                style={styles.input}
+                placeholder="Soyad"
+                value={guest.lastName}
+                onChangeText={(value) =>
+                  setGuests((current) =>
+                    current.map((item, itemIndex) =>
+                      itemIndex === index ? { ...item, lastName: value } : item,
+                    ),
+                  )
+                }
+              />
+            </View>
+            <View style={{ flex: 1, marginRight: spacing.sm }}>
+              <TextInput
+                testID={`guest-phone-${index}`}
+                style={styles.input}
+                placeholder="Telefon"
+                keyboardType="phone-pad"
+                value={guest.phone}
+                onChangeText={(value) =>
+                  setGuests((current) =>
+                    current.map((item, itemIndex) =>
+                      itemIndex === index ? { ...item, phone: value } : item,
+                    ),
+                  )
+                }
+              />
+            </View>
+            <TouchableOpacity
+              onPress={() => setGuests((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+            >
+              <Text style={styles.removeGuest}>Sil</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+        <TouchableOpacity testID="add-guest" style={styles.addGuest} onPress={addGuest}>
+          <Text style={styles.addGuestText}>+ Misafir ekle</Text>
+        </TouchableOpacity>
 
         <Text style={styles.label}>Kategori</Text>
         <View style={styles.chips}>
@@ -240,7 +393,7 @@ export function AddAppointmentScreen({ manifest, onBack, onSaved }: Props) {
               key={item.value}
               label={item.label}
               selected={item.value === method}
-              onPress={() => setMethod(item.value)}
+              onPress={() => selectMethod(item.value)}
             />
           ))}
         </View>
@@ -280,7 +433,7 @@ export function AddAppointmentScreen({ manifest, onBack, onSaved }: Props) {
           </View>
         ) : null}
 
-        <TouchableOpacity style={styles.primary} onPress={() => void save()} disabled={busy}>
+        <TouchableOpacity testID="save-appointment" style={styles.primary} onPress={() => void save()} disabled={busy}>
           <Text style={styles.primaryText}>{busy ? 'Kaydediliyor…' : 'Kaydet'}</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -294,13 +447,15 @@ type FieldProps = {
   onChange: (value: string) => void;
   keyboard?: 'default' | 'phone-pad' | 'number-pad';
   multiline?: boolean;
+  testID?: string;
 };
 
-function Field({ label, value, onChange, keyboard = 'default', multiline }: FieldProps) {
+function Field({ label, value, onChange, keyboard = 'default', multiline, testID }: FieldProps) {
   return (
     <View style={{ marginTop: spacing.sm }}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
+        testID={testID}
         value={value}
         onChangeText={onChange}
         keyboardType={keyboard}
@@ -364,7 +519,10 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginTop: 4,
   },
-  row: { flexDirection: 'row' },
+  row: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs },
+  removeGuest: { color: colors.danger, fontWeight: '700', paddingHorizontal: spacing.xs },
+  addGuest: { paddingVertical: spacing.sm },
+  addGuestText: { color: colors.primary, fontWeight: '700' },
   chips: { flexDirection: 'row', flexWrap: 'wrap', marginTop: spacing.xs },
   chip: {
     flexDirection: 'row',

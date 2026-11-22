@@ -17,6 +17,7 @@ public static class ReportEndpoints
             DateTime? to,
             string? categoryId,
             string? hostUserId,
+            string? roomId,
             IReportService reports) =>
         {
             var toDate = (to ?? DateTime.Today).Date;
@@ -25,7 +26,7 @@ public static class ReportEndpoints
             if ((toDate - fromDate).TotalDays > 3660)
                 return Results.BadRequest(new ErrorResponse("Rapor aralığı en fazla 10 yıl olabilir."));
 
-            var query = new ReportQuery(fromDate, toDate, categoryId, hostUserId);
+            var query = new ReportQuery(fromDate, toDate, categoryId, hostUserId, roomId);
             return Results.Ok(await reports.GetSummaryAsync(query));
         });
 
@@ -35,6 +36,7 @@ public static class ReportEndpoints
             DateTime? to,
             string? categoryId,
             string? hostUserId,
+            string? roomId,
             string? personSearch,
             IReportService reports) =>
         {
@@ -47,7 +49,7 @@ public static class ReportEndpoints
             if ((toDate - fromDate).TotalDays > 3660)
                 return Results.BadRequest(new ErrorResponse("Rapor aralığı en fazla 10 yıl olabilir."));
 
-            var query = new ReportQuery(fromDate, toDate, categoryId, hostUserId);
+            var query = new ReportQuery(fromDate, toDate, categoryId, hostUserId, roomId);
             return Results.Ok(await reports.GetReportAsync(parsed, query, personSearch));
         });
 

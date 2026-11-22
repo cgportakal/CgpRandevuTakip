@@ -1,13 +1,24 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-22 10:10 (UTC+3)
+**Son güncelleme:** 2026-11-22 11:45 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** Yeşil — **432 test**. **1.10.2 yayında** (Setup-only); kurulu sürüm 1.10.2.
-P6 tamamlandı. Sıradaki: **P7 uçtan uca UAT** (web UI + mobil + masaüstü).
+**Durum:** **1.11.0 sürüm hazırlığı** — görüşme odaları, ünvanlar, çoklu görüşmeci ve
+misafir başına sonuç tamamlandı. **438/438** .NET testi; web `next build`; mobil `tsc`;
+API UAT 1.082 kayıt; web Playwright geçti.
 
 ## Bu turda tamamlanan
 
+- **Görüşme odaları / ünvanlar / çoklu misafir (1.11.0):** `HostTitles`, `MeetingRooms`,
+  `AppointmentHosts`, `AppointmentGuests`; migration + idempotent backfill. Host odası + 3
+  ortak oda; oda/host/misafir çakışma türleri. Yönetilen ünvan listesi ve `Ad Soyad (Ünvan)`
+  gösterimi. Birincil host + katılımcılar; her misafir için bağımsız katılım/sonuç/not.
+  Randevu durumu misafirlerden otomatik türetiliyor. Masaüstü/web/mobil UI ve raporlar
+  güncellendi ([docs/47](docs/47_Gorusme_Odalari_Unvanlar_Misafirler.md)).
+- **UAT:** `scripts/seed-meeting-rooms.mjs` 1.082 randevuyu yeni modele taşıdı;
+  `scripts/verify-uat.mjs` oda çakışması, rapor toplamları ve süreleri doğruladı.
+  Web Playwright akışı (`web/e2e/meeting-rooms.spec.ts`) geçti. Mobil Maestro akışları
+  `mobile/.maestro/` altında hazır.
 - **UAT test verisi (1000+ kayıt):** [`scripts/seed-test-data.mjs`](scripts/seed-test-data.mjs)
   API’ye geçmiş/bugün/gelecek karışık **1081 görünür kayıt**, 8 seri, bilinçli host/kişi
   çakışmaları, geçmişte planlı kayıtlar, silinenler ve hatırlatıcı denemeleri yazdı.
@@ -384,10 +395,11 @@ dotnet test CgpRandevuTakip.sln -c Release
 
 ## Son CI
 
-Bu dal: yerel **432/432** test (335 uygulama + 79 masaüstü/VM + 16 API + 2 UI), web build ve
-mobil `tsc` başarılı. Master CI ✅ ve **Release v1.10.2** ✅ (PR #70 / tag `v1.10.2`).
-Son release: **1.10.2** (Setup-only); README Setup bağlantısı HTTP 200; kurulu sürüm 1.10.2.
-Android emülatör ve **Samsung S21 gerçek cihaz UAT** tamamlandı.
+Bu dal: yerel **438/438** test (341 uygulama + 79 masaüstü/VM + 16 API + 2 UI), web build ve
+mobil `tsc` başarılı. API UAT: 1.082 randevu; web Playwright geçti.
+Önceki master CI ✅ ve **Release v1.10.2** ✅ (PR #70 / tag `v1.10.2`).
+Son release: **1.10.2** (Setup-only); **1.11.0** hazırlığı sürüyor.
+Android emülatör ve **Samsung S21 gerçek cihaz UAT** tamamlandı; iOS Mac bekliyor.
 Dependabot picomatch uyarısı **withdrawn** olduğu için dismissed; kod bağımlılığı değiştirilmedi.
 Android SDK/JDK/adb/emulator `D:\Android` altında; AVD `cgp_uat` hazır; `expo-dev-client` eklendi.
 `master` korumalı: doğrudan push reddedilir; force-push/silme kapalı; üç kontrol + güncel dal + yalnızca squash.

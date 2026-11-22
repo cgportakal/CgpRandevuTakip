@@ -1,0 +1,31 @@
+appId: com.cgportakal.cgpRandevuTakip
+---
+- runFlow: login.yaml
+- tapOn:
+    id: open-add
+- tapOn:
+    id: first-name
+- inputText: UAT
+- tapOn:
+    id: last-name
+- inputText: Mobil Misafir
+- tapOn:
+    id: phone
+- inputText: "05557779911"
+- tapOn:
+    id: add-guest
+- tapOn:
+    id: guest-first-0
+- inputText: Ek
+- tapOn:
+    id: guest-last-0
+- inputText: Misafir
+- tapOn:
+    id: guest-phone-0
+- inputText: "05557779922"
+- tapOn:
+    text: "Oda 1"
+- tapOn:
+    id: save-appointment
+- assertVisible:
+    text: ".*Mobil Misafir.*"

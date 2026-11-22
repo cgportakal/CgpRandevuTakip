@@ -10,7 +10,8 @@ public sealed record AppointmentQuery(
     string? SearchText,
     string? CategoryId,
     string? HostUserId,
-    AppointmentStatus? Status);
+    AppointmentStatus? Status,
+    string? RoomId = null);
 
 public sealed record AppointmentConflictRecord(
     string AppointmentId,
@@ -19,7 +20,10 @@ public sealed record AppointmentConflictRecord(
     string PhoneE164,
     DateTime StartsAtUtc,
     DateTime EndsAtUtc,
-    string? CategoryName);
+    string? CategoryName,
+    string? HostName = null,
+    string? RoomName = null,
+    string? GuestName = null);
 
 public interface IAppointmentRepository
 {
@@ -29,7 +33,17 @@ public interface IAppointmentRepository
     Task<IReadOnlyList<Appointment>> QueryAsync(AppointmentQuery query);
     Task<Appointment?> GetNextAsync(DateTime nowUtc, string? hostUserId);
     Task<IReadOnlyList<AppointmentConflictRecord>> FindHostConflictsAsync(
-        string hostUserId,
+        IReadOnlyCollection<string> hostUserIds,
+        DateTime startsAtUtc,
+        DateTime endsAtUtc,
+        string? excludeAppointmentId);
+    Task<IReadOnlyList<AppointmentConflictRecord>> FindRoomConflictsAsync(
+        string roomId,
+        DateTime startsAtUtc,
+        DateTime endsAtUtc,
+        string? excludeAppointmentId);
+    Task<IReadOnlyList<AppointmentConflictRecord>> FindGuestConflictsAsync(
+        IReadOnlyCollection<string> phoneE164s,
         DateTime startsAtUtc,
         DateTime endsAtUtc,
         string? excludeAppointmentId);
@@ -64,6 +78,7 @@ public interface IAppointmentRepository
     Task SaveOutcomeAsync(
         Appointment appointment,
         AppointmentOutcome outcome,
+        IReadOnlyList<AppointmentGuest>? guests,
         bool cancelPendingReminders);
     Task SoftDeleteAsync(string id, DateTime nowUtc);
     Task<int> AnonymizeBeforeAsync(DateTime cutoffUtc, DateTime nowUtc);

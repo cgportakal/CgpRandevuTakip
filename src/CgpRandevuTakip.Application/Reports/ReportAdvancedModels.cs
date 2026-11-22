@@ -24,7 +24,8 @@ public sealed record HostPerformanceDto(
     int Cancelled,
     double CompletionRate,
     double NoShowRate,
-    double AverageDurationMinutes)
+    double AverageDurationMinutes,
+    int ParticipantTotal = 0)
 {
     public string CompletionRateText => $"{CompletionRate:0.#}%";
 
@@ -47,7 +48,11 @@ public sealed record AttendanceDayDto(
     int NoShow,
     int Cancelled,
     int Postponed,
-    int Scheduled)
+    int Scheduled,
+    int GuestArrived = 0,
+    int GuestNoShow = 0,
+    int GuestCancelled = 0,
+    int GuestPostponed = 0)
 {
     public string DateText => DateLocal.ToString("dd/MM/yyyy");
 

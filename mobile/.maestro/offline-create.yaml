@@ -1,0 +1,35 @@
+appId: com.cgportakal.cgpRandevuTakip
+---
+- runFlow: login.yaml
+- setAirplaneMode: enabled
+- tapOn:
+    id: open-add
+- tapOn:
+    id: first-name
+- inputText: UAT
+- tapOn:
+    id: last-name
+- inputText: Cevrimdisi
+- tapOn:
+    id: phone
+- inputText: "05557779933"
+- tapOn:
+    id: add-guest
+- tapOn:
+    id: guest-first-0
+- inputText: Ek
+- tapOn:
+    id: guest-last-0
+- inputText: Misafir
+- tapOn:
+    id: guest-phone-0
+- inputText: "05557779944"
+- tapOn:
+    id: save-appointment
+- assertVisible:
+    text: ".*Kuyru.*"
+- setAirplaneMode: disabled
+- tapOn:
+    id: open-reports
+- assertVisible:
+    text: ".*Rapor.*"

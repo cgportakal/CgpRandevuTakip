@@ -65,6 +65,17 @@ API karşılığı: `GET /v1/reports/summary` ve `GET /v1/reports/kind/{kind}` (
 `HostPerformance`, `CategoryTrend`, `Attendance`, `Repeat`, `PersonHistory`, `AuditActivity`).
 Görüşmeci rolü her iki uçta da yalnızca kendi verisini görür.
 
+### Oda, ünvan ve misafir kırılımı (1.11.0)
+
+- `ReportQuery.RoomId` ile raporlar odaya göre filtrelenir.
+- `ReportSummaryDto.Rooms` oda dağılımını taşır.
+- `GuestTotal`, `GuestArrived`, `GuestNoShow`, `GuestCancelled`, `GuestPostponed`
+  misafir düzeyindeki toplamlardır; randevu toplamlarından ayrıdır.
+- `ReportHostDto.ParticipantTotal` ve `HostPerformanceDto.ParticipantTotal` bir görüşmecinin
+  katılımcı olarak yer aldığı randevuları gösterir.
+- Kişi geçmişi ve tekrar raporları tüm misafirleri kapsar; bir randevuda birden fazla
+  misafir varsa her biri ayrı satır/kişi olarak değerlendirilir.
+
 ## Performans
 
 - `Appointments` tablosuna `(Status, StartsAtUtc)` ve `(CategoryId, StartsAtUtc)` bileşik

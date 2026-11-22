@@ -1,4 +1,5 @@
 using CgpRandevuTakip.Application.Hosts;
+using CgpRandevuTakip.Application.Titles;
 using CgpRandevuTakip.Desktop.Common;
 using CgpRandevuTakip.Desktop.Services;
 using CgpRandevuTakip.Domain.Enums;
@@ -10,26 +11,34 @@ namespace CgpRandevuTakip.Desktop.ViewModels;
 public partial class HostsViewModel : ObservableObject
 {
     private readonly IHostService _hosts;
+    private readonly IHostTitleService _titles;
     private readonly Application.Abstractions.ICurrentUser _currentUser;
     private readonly IDialogService _dialogs;
 
     public HostsViewModel(
         IHostService hosts,
+        IHostTitleService titles,
         Application.Abstractions.ICurrentUser currentUser,
         IDialogService dialogs)
     {
         _hosts = hosts;
+        _titles = titles;
         _currentUser = currentUser;
         _dialogs = dialogs;
     }
 
     public RangeObservableCollection<HostDto> Hosts { get; } = new();
 
+    public RangeObservableCollection<HostTitleDto> Titles { get; } = new();
+
     [ObservableProperty]
     private HostDto? _selectedHost;
 
     [ObservableProperty]
     private string _displayName = string.Empty;
+
+    [ObservableProperty]
+    private HostTitleDto? _selectedTitle;
 
     [ObservableProperty]
     private bool _loginEnabled;
@@ -77,8 +86,10 @@ public partial class HostsViewModel : ObservableObject
     {
         var selectedId = SelectedHost?.Id;
         var rows = await _hosts.GetAllAsync();
+        var titles = await _titles.GetActiveAsync();
 
         Hosts.ReplaceWith(rows);
+        Titles.ReplaceWith(titles);
 
         SelectedHost = selectedId is null
             ? Hosts.FirstOrDefault()
@@ -93,6 +104,7 @@ public partial class HostsViewModel : ObservableObject
         SelectedHost = null;
         IsEditing = false;
         DisplayName = string.Empty;
+        SelectedTitle = null;
         LoginEnabled = false;
         Username = string.Empty;
         Password = string.Empty;
@@ -112,6 +124,7 @@ public partial class HostsViewModel : ObservableObject
 
         IsEditing = true;
         DisplayName = SelectedHost.DisplayName;
+        SelectedTitle = Titles.FirstOrDefault(x => x.Id == SelectedHost.TitleId);
         IsActive = SelectedHost.IsActive;
         LoginEnabled = SelectedHost.IsLoginEnabled;
         Username = SelectedHost.Username;
@@ -133,13 +146,20 @@ public partial class HostsViewModel : ObservableObject
         try
         {
             var result = IsEditing && SelectedHost is not null
-                ? await _hosts.UpdateAsync(SelectedHost.Id, new HostUpdateInput(DisplayName, IsActive))
+                ? await _hosts.UpdateAsync(
+                    SelectedHost.Id,
+                    new HostUpdateInput(
+                        DisplayName,
+                        IsActive,
+                        SelectedTitle?.Id,
+                        ClearTitle: SelectedTitle is null))
                 : await _hosts.CreateAsync(new HostCreateInput(
                     DisplayName,
                     LoginEnabled,
                     Username,
                     Password,
-                    ConfirmPassword));
+                    ConfirmPassword,
+                    SelectedTitle?.Id));
 
             if (!result.Success)
             {

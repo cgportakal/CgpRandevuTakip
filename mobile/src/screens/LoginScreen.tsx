@@ -57,6 +57,7 @@ export function LoginScreen({ onSignedIn }: Props) {
 
         <Text style={styles.label}>Kullanıcı adı</Text>
         <TextInput
+          testID="login-username"
           style={styles.input}
           value={username}
           onChangeText={setUsername}
@@ -69,6 +70,7 @@ export function LoginScreen({ onSignedIn }: Props) {
 
         <Text style={styles.label}>Şifre</Text>
         <TextInput
+          testID="login-password"
           style={styles.input}
           value={password}
           onChangeText={setPassword}
@@ -81,7 +83,7 @@ export function LoginScreen({ onSignedIn }: Props) {
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <TouchableOpacity style={styles.button} onPress={signIn} disabled={busy}>
+        <TouchableOpacity testID="login-submit" style={styles.button} onPress={signIn} disabled={busy}>
           {busy ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (

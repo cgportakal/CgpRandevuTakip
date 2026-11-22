@@ -77,7 +77,7 @@ public sealed class ServerReadService
         try
         {
             return await ReadAsync<ApiManifest>(
-                "content:manifest",
+                "content:manifest:v2",
                 conditional: true,
                 (session, etag, token) => _client.GetManifestAsync(
                     session.BaseUrl,
@@ -108,6 +108,7 @@ public sealed class ServerReadService
         DateTime? fromLocal,
         DateTime? toLocal,
         string? hostUserId,
+        string? roomId = null,
         CancellationToken ct = default)
     {
         var key = "search:" + Hash(
@@ -116,7 +117,8 @@ public sealed class ServerReadService
             status,
             fromLocal?.ToString("yyyy-MM-dd"),
             toLocal?.ToString("yyyy-MM-dd"),
-            hostUserId);
+            hostUserId,
+            roomId);
 
         return ReadAsync<IReadOnlyList<AppointmentListItemDto>>(
             key,
@@ -130,6 +132,7 @@ public sealed class ServerReadService
                 fromLocal,
                 toLocal,
                 hostUserId,
+                roomId,
                 token),
             ct);
     }

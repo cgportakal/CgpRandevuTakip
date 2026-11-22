@@ -4,7 +4,9 @@ using CgpRandevuTakip.Application.Abstractions;
 using CgpRandevuTakip.Application.Categories;
 using CgpRandevuTakip.Application.Common;
 using CgpRandevuTakip.Application.Hosts;
+using CgpRandevuTakip.Application.Rooms;
 using CgpRandevuTakip.Application.Settings;
+using CgpRandevuTakip.Application.Titles;
 using CgpRandevuTakip.Domain.Entities;
 using CgpRandevuTakip.Domain.Enums;
 
@@ -23,6 +25,8 @@ public sealed class ContentAdminService : IContentAdminService
 
     private readonly ICategoryService _categoryService;
     private readonly IHostService _hostService;
+    private readonly IHostTitleService _titleService;
+    private readonly IMeetingRoomService _roomService;
     private readonly ISettingsService _settingsService;
     private readonly ICategoryRepository _categories;
     private readonly IUserRepository _users;
@@ -36,6 +40,8 @@ public sealed class ContentAdminService : IContentAdminService
     public ContentAdminService(
         ICategoryService categoryService,
         IHostService hostService,
+        IHostTitleService titleService,
+        IMeetingRoomService roomService,
         ISettingsService settingsService,
         ICategoryRepository categories,
         IUserRepository users,
@@ -48,6 +54,8 @@ public sealed class ContentAdminService : IContentAdminService
     {
         _categoryService = categoryService;
         _hostService = hostService;
+        _titleService = titleService;
+        _roomService = roomService;
         _settingsService = settingsService;
         _categories = categories;
         _users = users;
@@ -64,6 +72,8 @@ public sealed class ContentAdminService : IContentAdminService
         var settings = await _settingsService.GetAsync();
         var categories = await _categoryService.GetAllAsync();
         var hosts = await _hostService.GetAllAsync();
+        var titles = await _titleService.GetAllAsync();
+        var rooms = await _roomService.GetAllAsync();
         var versions = await _versions.GetRecentAsync(20);
         var current = versions.FirstOrDefault();
 
@@ -73,7 +83,9 @@ public sealed class ContentAdminService : IContentAdminService
             categories,
             hosts,
             current is null ? null : ToVersionDto(current, current.Id),
-            versions.Select(version => ToVersionDto(version, current?.Id)).ToList());
+            versions.Select(version => ToVersionDto(version, current?.Id)).ToList(),
+            titles,
+            rooms);
     }
 
     public async Task<OperationResult> SaveSettingsAsync(ContentSettingsInput input)
@@ -226,6 +238,8 @@ public sealed class ContentAdminService : IContentAdminService
 
         await RestoreCategoriesAsync(snapshot.Categories);
         await RestoreHostsAsync(snapshot.Hosts);
+        await RestoreTitlesAsync(snapshot.Titles);
+        await RestoreRoomsAsync(snapshot.Rooms);
         await RestoreSettingsAsync(snapshot.Institution, snapshot.Settings);
 
         await _audit.LogAsync(
@@ -280,6 +294,8 @@ public sealed class ContentAdminService : IContentAdminService
         var hosts = (await _hostService.GetAllAsync())
             .Where(host => host.Role == UserRole.Host)
             .ToList();
+        var titles = await _titleService.GetAllAsync();
+        var rooms = await _roomService.GetAllAsync();
 
         return new ContentSnapshotDto(
             ToInstitution(settings),
@@ -298,7 +314,115 @@ public sealed class ContentAdminService : IContentAdminService
                     host.DisplayName,
                     host.Role,
                     host.IsActive))
+                .ToList(),
+            titles
+                .Select(title => new ContentTitleSnapshot(
+                    title.Id,
+                    title.Name,
+                    title.SortOrder,
+                    title.IsActive))
+                .ToList(),
+            rooms
+                .Select(room => new ContentRoomSnapshot(
+                    room.Id,
+                    room.Name,
+                    room.Kind,
+                    room.HostUserId,
+                    room.SortOrder,
+                    room.IsActive,
+                    false))
                 .ToList());
+    }
+
+    private async Task RestoreTitlesAsync(IReadOnlyList<ContentTitleSnapshot>? snapshot)
+    {
+        if (snapshot is null)
+            return;
+
+        var existing = (await _titleService.GetAllAsync()).ToList();
+        var snapshotIds = snapshot.Select(x => x.Id).ToHashSet(StringComparer.Ordinal);
+        var snapshotNames = snapshot.Select(x => x.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var item in snapshot)
+        {
+            var title = existing.FirstOrDefault(x => x.Id == item.Id)
+                        ?? existing.FirstOrDefault(x =>
+                            string.Equals(x.Name, item.Name, StringComparison.OrdinalIgnoreCase));
+
+            if (title is null)
+            {
+                await _titleService.CreateAsync(new HostTitleInput(
+                    item.Name,
+                    item.SortOrder,
+                    item.IsActive));
+                continue;
+            }
+
+            if (title.Name != item.Name
+                || title.SortOrder != item.SortOrder
+                || title.IsActive != item.IsActive)
+            {
+                await _titleService.UpdateAsync(title.Id, new HostTitleInput(
+                    item.Name,
+                    item.SortOrder,
+                    item.IsActive));
+            }
+        }
+
+        foreach (var title in existing.Where(x =>
+                     x.IsActive && !snapshotIds.Contains(x.Id) && !snapshotNames.Contains(x.Name)))
+        {
+            await _titleService.SetActiveAsync(title.Id, false);
+        }
+    }
+
+    private async Task RestoreRoomsAsync(IReadOnlyList<ContentRoomSnapshot>? snapshot)
+    {
+        if (snapshot is null)
+            return;
+
+        var existing = (await _roomService.GetAllAsync()).ToList();
+        var snapshotIds = snapshot.Select(x => x.Id).ToHashSet(StringComparer.Ordinal);
+        var snapshotNames = snapshot.Select(x => x.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var item in snapshot)
+        {
+            var room = existing.FirstOrDefault(x => x.Id == item.Id)
+                       ?? existing.FirstOrDefault(x =>
+                           string.Equals(x.Name, item.Name, StringComparison.OrdinalIgnoreCase));
+
+            if (room is null)
+            {
+                await _roomService.CreateAsync(new MeetingRoomInput(
+                    item.Name,
+                    item.Kind,
+                    item.HostUserId,
+                    item.SortOrder,
+                    item.IsActive));
+                continue;
+            }
+
+            if (room.Name != item.Name
+                || room.SortOrder != item.SortOrder
+                || room.IsActive != item.IsActive)
+            {
+                await _roomService.UpdateAsync(room.Id, new MeetingRoomInput(
+                    item.Name,
+                    item.Kind,
+                    item.HostUserId,
+                    item.SortOrder,
+                    item.IsActive));
+            }
+        }
+
+        foreach (var room in existing.Where(x =>
+                     x.Kind == MeetingRoomKind.Shared
+                     && x.IsActive
+                     && !snapshotIds.Contains(x.Id)
+                     && !snapshotNames.Contains(x.Name)))
+        {
+            await _roomService.SetActiveAsync(room.Id, false);
+        }
     }
 
     private async Task RestoreCategoriesAsync(IReadOnlyList<ContentCategorySnapshot> snapshot)

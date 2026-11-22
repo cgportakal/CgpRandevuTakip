@@ -88,6 +88,27 @@
                                       DisplayMemberPath="DisplayName"
                                       AutomationProperties.Name="Görüşmeci" />
 
+                            <TextBlock Text="Oda" Style="{StaticResource LabelText}" Margin="0,12,0,6" />
+                            <ComboBox ItemsSource="{Binding Rooms}"
+                                      SelectedItem="{Binding SelectedRoom}"
+                                      DisplayMemberPath="DisplayName"
+                                      AutomationProperties.Name="Oda" />
+                            <TextBlock Text="Yüz yüze görüşmede oda zorunludur."
+                                       Style="{StaticResource MutedText}" Margin="0,5,0,0" />
+
+                            <TextBlock Text="Katılımcılar" Style="{StaticResource SectionTitle}" Margin="0,16,0,6" />
+                            <TextBlock Text="Birincil görüşmeci dışında görüşmeye katılanları seçin."
+                                       Style="{StaticResource MutedText}" Margin="0,-4,0,6" />
+                            <ItemsControl ItemsSource="{Binding ParticipantHosts}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox Content="{Binding DisplayName}"
+                                                  IsChecked="{Binding IsSelected}"
+                                                  Margin="0,0,0,4" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
                             <TextBlock Text="Kategori *" Style="{StaticResource LabelText}" Margin="0,12,0,6" />
                             <ComboBox ItemsSource="{Binding Categories}"
                                       SelectedItem="{Binding SelectedCategory}"
@@ -125,6 +146,38 @@
                             <TextBlock Text="Öğrenci soyadı (opsiyonel)" Style="{StaticResource LabelText}" Margin="0,12,0,6" />
                             <TextBox Text="{Binding StudentLastName, UpdateSourceTrigger=PropertyChanged}" MaxLength="100"
                                      AutomationProperties.Name="Öğrenci soyadı" />
+
+                            <TextBlock Text="Ek misafirler" Style="{StaticResource SectionTitle}" Margin="0,16,0,6" />
+                            <TextBlock Text="Aynı görüşmeye birden fazla misafir ekleyebilirsiniz."
+                                       Style="{StaticResource MutedText}" Margin="0,-4,0,6" />
+                            <ItemsControl ItemsSource="{Binding Guests}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,0,0,6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="6" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="6" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Grid.Column="0" Text="{Binding FirstName, UpdateSourceTrigger=PropertyChanged}"
+                                                     MaxLength="100" AutomationProperties.Name="Misafir adı" />
+                                            <TextBox Grid.Column="2" Text="{Binding LastName, UpdateSourceTrigger=PropertyChanged}"
+                                                     MaxLength="100" AutomationProperties.Name="Misafir soyadı" />
+                                            <TextBox Grid.Column="4" Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}"
+                                                     MaxLength="24" AutomationProperties.Name="Misafir telefonu" />
+                                            <Button Grid.Column="5" Content="Kaldır" Margin="6,0,0,0"
+                                                    Style="{StaticResource GhostButton}"
+                                                    Command="{Binding DataContext.RemoveGuestCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Button Content="+ Misafir ekle" Command="{Binding AddGuestCommand}"
+                                    Style="{StaticResource GhostButton}" HorizontalAlignment="Left" />
                         </StackPanel>
                     </Border>
 

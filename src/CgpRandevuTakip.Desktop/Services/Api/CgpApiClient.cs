@@ -111,6 +111,7 @@ public sealed class CgpApiClient
         DateTime? fromLocal,
         DateTime? toLocal,
         string? hostUserId,
+        string? roomId = null,
         CancellationToken ct = default)
         => SendAsync<IReadOnlyList<AppointmentListItemDto>>(
             new HttpRequestMessage(
@@ -121,7 +122,8 @@ public sealed class CgpApiClient
                     ("status", status),
                     ("from", fromLocal?.ToString("yyyy-MM-dd")),
                     ("to", toLocal?.ToString("yyyy-MM-dd")),
-                    ("hostUserId", hostUserId)))),
+                    ("hostUserId", hostUserId),
+                    ("roomId", roomId)))),
             accessToken,
             ct);
 

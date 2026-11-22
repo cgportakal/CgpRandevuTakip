@@ -283,14 +283,17 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="GÖRÜŞMECİ" Binding="{Binding HostName}"
+                        <DataGridTextColumn Header="GÖRÜŞMECİ" Binding="{Binding HostDisplay}"
                                             SortMemberPath="HostName" Width="165" ElementStyle="{StaticResource DataGridCellText}" />
+
+                        <DataGridTextColumn Header="ODA" Binding="{Binding RoomName}"
+                                            SortMemberPath="RoomName" Width="120" ElementStyle="{StaticResource DataGridCellText}" />
 
                         <DataGridTemplateColumn Header="KİŞİ" Width="*" SortMemberPath="PersonFullName">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding PersonFullName}"
+                                        <TextBlock Text="{Binding GuestDisplay}"
                                                    FontWeight="SemiBold"
                                                    TextTrimming="CharacterEllipsis" />
                                         <TextBlock Text="{Binding PhoneE164}"

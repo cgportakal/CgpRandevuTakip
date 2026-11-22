@@ -8,13 +8,15 @@ import type {
   ContentAdminData,
   ContentSettingsInput,
   Host,
+  HostTitle,
+  MeetingRoom,
 } from '@/lib/types';
 
 type Props = {
   online: boolean;
 };
 
-type Tab = 'categories' | 'hosts' | 'settings' | 'publish';
+type Tab = 'categories' | 'hosts' | 'catalog' | 'settings' | 'publish';
 
 type CategoryForm = {
   id: string | null;
@@ -26,11 +28,28 @@ type CategoryForm = {
 type HostForm = {
   id: string | null;
   displayName: string;
+  titleId: string | null;
   isActive: boolean;
   loginEnabled: boolean;
   username: string;
   password: string;
   confirmPassword: string;
+};
+
+type TitleForm = {
+  id: string | null;
+  name: string;
+  sortOrder: number;
+  isActive: boolean;
+};
+
+type RoomForm = {
+  id: string | null;
+  name: string;
+  kind: 'HostRoom' | 'Shared';
+  hostUserId: string | null;
+  sortOrder: number;
+  isActive: boolean;
 };
 
 const emptyCategory: CategoryForm = {
@@ -43,11 +62,28 @@ const emptyCategory: CategoryForm = {
 const emptyHost: HostForm = {
   id: null,
   displayName: '',
+  titleId: null,
   isActive: true,
   loginEnabled: false,
   username: '',
   password: '',
   confirmPassword: '',
+};
+
+const emptyTitle: TitleForm = {
+  id: null,
+  name: '',
+  sortOrder: 0,
+  isActive: true,
+};
+
+const emptyRoom: RoomForm = {
+  id: null,
+  name: '',
+  kind: 'Shared',
+  hostUserId: null,
+  sortOrder: 0,
+  isActive: true,
 };
 
 const reminderOptions = [
@@ -65,6 +101,8 @@ export function ContentAdminView({ online }: Props) {
   const [notice, setNotice] = useState<string | null>(null);
   const [categoryForm, setCategoryForm] = useState<CategoryForm>(emptyCategory);
   const [hostForm, setHostForm] = useState<HostForm>(emptyHost);
+  const [titleForm, setTitleForm] = useState<TitleForm>(emptyTitle);
+  const [roomForm, setRoomForm] = useState<RoomForm>(emptyRoom);
   const [settingsForm, setSettingsForm] = useState<ContentSettingsInput | null>(null);
   const [publishNote, setPublishNote] = useState('');
   const [logoBusy, setLogoBusy] = useState(false);
@@ -138,6 +176,8 @@ export function ContentAdminView({ online }: Props) {
         await api.updateHost(hostForm.id, {
           displayName: hostForm.displayName,
           isActive: hostForm.isActive,
+          titleId: hostForm.titleId,
+          clearTitle: !hostForm.titleId,
         });
       } else {
         await api.createHost({
@@ -146,10 +186,47 @@ export function ContentAdminView({ online }: Props) {
           username: hostForm.loginEnabled ? hostForm.username : null,
           password: hostForm.loginEnabled ? hostForm.password : null,
           confirmPassword: hostForm.loginEnabled ? hostForm.confirmPassword : null,
+          titleId: hostForm.titleId,
         });
       }
       setHostForm(emptyHost);
     }, hostForm.id ? 'Görüşmeci güncellendi.' : 'Görüşmeci eklendi.');
+  };
+
+  const saveTitle = async () => {
+    const input = {
+      name: titleForm.name,
+      sortOrder: titleForm.sortOrder,
+      isActive: titleForm.isActive,
+    };
+
+    await run(async () => {
+      if (titleForm.id) {
+        await api.updateTitle(titleForm.id, input);
+      } else {
+        await api.createTitle(input);
+      }
+      setTitleForm(emptyTitle);
+    }, titleForm.id ? 'Ünvan güncellendi.' : 'Ünvan eklendi.');
+  };
+
+  const saveRoom = async () => {
+    const input = {
+      name: roomForm.name,
+      kind: roomForm.kind,
+      hostUserId: roomForm.kind === 'HostRoom' ? roomForm.hostUserId : null,
+      sortOrder: roomForm.sortOrder,
+      isActive: roomForm.isActive,
+    };
+
+    await run(async () => {
+      if (roomForm.id) {
+        await api.updateRoom(roomForm.id, input);
+      } else {
+        await api.createRoom(input);
+      }
+      setRoomForm(emptyRoom);
+    }, roomForm.id ? 'Oda güncellendi.' : 'Oda eklendi.');
   };
 
   const saveSettings = async () => {
@@ -221,6 +298,9 @@ export function ContentAdminView({ online }: Props) {
             <TabButton active={tab === 'hosts'} onClick={() => setTab('hosts')}>
               Görüşmeciler
             </TabButton>
+            <TabButton active={tab === 'catalog'} onClick={() => setTab('catalog')}>
+              Ünvanlar ve Odalar
+            </TabButton>
             <TabButton active={tab === 'settings'} onClick={() => setTab('settings')}>
               Kurum ve Ayarlar
             </TabButton>
@@ -272,6 +352,7 @@ export function ContentAdminView({ online }: Props) {
       {data && tab === 'hosts' ? (
         <HostsPanel
           hosts={data.hosts}
+          titles={data.titles ?? []}
           form={hostForm}
           setForm={setHostForm}
           busy={busy}
@@ -282,6 +363,41 @@ export function ContentAdminView({ online }: Props) {
               host.isActive ? 'Görüşmeci pasifleştirildi.' : 'Görüşmeci etkinleştirildi.',
             )
           }
+        />
+      ) : null}
+
+      {data && tab === 'catalog' ? (
+        <CatalogPanel
+          titles={data.titles ?? []}
+          rooms={data.rooms ?? []}
+          hosts={data.hosts}
+          titleForm={titleForm}
+          setTitleForm={setTitleForm}
+          roomForm={roomForm}
+          setRoomForm={setRoomForm}
+          busy={busy}
+          onSaveTitle={saveTitle}
+          onSaveRoom={saveRoom}
+          onToggleTitle={(title) =>
+            void run(
+              () => api.setTitleActive(title.id, !title.isActive),
+              title.isActive ? 'Ünvan pasifleştirildi.' : 'Ünvan etkinleştirildi.',
+            )
+          }
+          onDeleteTitle={(title) => {
+            if (!window.confirm(`"${title.name}" ünvanı silinsin mi?`)) return;
+            void run(() => api.deleteTitle(title.id), 'Ünvan silindi.');
+          }}
+          onToggleRoom={(room) =>
+            void run(
+              () => api.setRoomActive(room.id, !room.isActive),
+              room.isActive ? 'Oda pasifleştirildi.' : 'Oda etkinleştirildi.',
+            )
+          }
+          onDeleteRoom={(room) => {
+            if (!window.confirm(`"${room.name}" odası silinsin mi?`)) return;
+            void run(() => api.deleteRoom(room.id), 'Oda silindi.');
+          }}
         />
       ) : null}
 
@@ -493,6 +609,7 @@ function CategoriesPanel({
 
 function HostsPanel({
   hosts,
+  titles,
   form,
   setForm,
   busy,
@@ -500,6 +617,7 @@ function HostsPanel({
   onToggle,
 }: {
   hosts: Host[];
+  titles: HostTitle[];
   form: HostForm;
   setForm: (form: HostForm) => void;
   busy: boolean;
@@ -525,16 +643,34 @@ function HostsPanel({
             />
           </div>
           <div className="field">
-            <label>Durum</label>
-            <label className="checkbox-row" style={{ marginTop: 8 }}>
-              <input
-                type="checkbox"
-                checked={form.isActive}
-                onChange={(event) => setForm({ ...form, isActive: event.target.checked })}
-              />
-              Etkin
-            </label>
+            <label>Ünvan</label>
+            <select
+              className="select"
+              value={form.titleId ?? ''}
+              onChange={(event) =>
+                setForm({ ...form, titleId: event.target.value || null })
+              }
+            >
+              <option value="">Ünvan yok</option>
+              {titles.map((title) => (
+                <option key={title.id} value={title.id}>
+                  {title.name}
+                </option>
+              ))}
+            </select>
           </div>
+        </div>
+
+        <div className="field" style={{ marginTop: 12 }}>
+          <label>Durum</label>
+          <label className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={form.isActive}
+              onChange={(event) => setForm({ ...form, isActive: event.target.checked })}
+            />
+            Etkin
+          </label>
         </div>
 
         {!form.id ? (
@@ -615,7 +751,7 @@ function HostsPanel({
               {hostUsers.map((host) => (
                 <tr key={host.id}>
                   <td>
-                    <strong>{host.displayName}</strong>
+                    <strong>{host.displayNameWithTitle}</strong>
                   </td>
                   <td>{host.username}</td>
                   <td>{host.isLoginEnabled ? 'Açık' : 'Kapalı'}</td>
@@ -634,6 +770,7 @@ function HostsPanel({
                             ...emptyHost,
                             id: host.id,
                             displayName: host.displayName,
+                            titleId: host.titleId,
                             isActive: host.isActive,
                           })
                         }
@@ -643,6 +780,280 @@ function HostsPanel({
                       </button>
                       <button className="btn btn-sm" onClick={() => onToggle(host)} disabled={busy}>
                         {host.isActive ? 'Pasifleştir' : 'Etkinleştir'}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </>
+  );
+}
+
+function CatalogPanel({
+  titles,
+  rooms,
+  hosts,
+  titleForm,
+  setTitleForm,
+  roomForm,
+  setRoomForm,
+  busy,
+  onSaveTitle,
+  onSaveRoom,
+  onToggleTitle,
+  onDeleteTitle,
+  onToggleRoom,
+  onDeleteRoom,
+}: {
+  titles: HostTitle[];
+  rooms: MeetingRoom[];
+  hosts: Host[];
+  titleForm: TitleForm;
+  setTitleForm: (form: TitleForm) => void;
+  roomForm: RoomForm;
+  setRoomForm: (form: RoomForm) => void;
+  busy: boolean;
+  onSaveTitle: () => void;
+  onSaveRoom: () => void;
+  onToggleTitle: (title: HostTitle) => void;
+  onDeleteTitle: (title: HostTitle) => void;
+  onToggleRoom: (room: MeetingRoom) => void;
+  onDeleteRoom: (room: MeetingRoom) => void;
+}) {
+  return (
+    <>
+      <div className="card">
+        <div className="card-header">
+          <h2>{titleForm.id ? 'Ünvanı düzenle' : 'Yeni ünvan'}</h2>
+        </div>
+        <div className="grid-3">
+          <div className="field">
+            <label>Ünvan adı</label>
+            <input
+              className="input"
+              value={titleForm.name}
+              onChange={(event) => setTitleForm({ ...titleForm, name: event.target.value })}
+              placeholder="Örn. Genel Müdür"
+            />
+          </div>
+          <div className="field">
+            <label>Sıra</label>
+            <input
+              className="input"
+              type="number"
+              value={titleForm.sortOrder}
+              onChange={(event) => setTitleForm({ ...titleForm, sortOrder: Number(event.target.value) })}
+            />
+          </div>
+          <div className="field">
+            <label>Durum</label>
+            <label className="checkbox-row" style={{ paddingTop: 10 }}>
+              <input
+                type="checkbox"
+                checked={titleForm.isActive}
+                onChange={(event) => setTitleForm({ ...titleForm, isActive: event.target.checked })}
+              />
+              Etkin
+            </label>
+          </div>
+        </div>
+        <div className="toolbar" style={{ marginTop: 12 }}>
+          <button className="btn btn-primary btn-sm" onClick={onSaveTitle} disabled={busy || !titleForm.name.trim()}>
+            {titleForm.id ? 'Güncelle' : 'Ekle'}
+          </button>
+          {titleForm.id ? (
+            <button className="btn btn-sm" onClick={() => setTitleForm(emptyTitle)} disabled={busy}>
+              Vazgeç
+            </button>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-header">
+          <h2>Ünvanlar</h2>
+          <span className="muted">{titles.length} ünvan</span>
+        </div>
+        {titles.length === 0 ? (
+          <div className="empty">Henüz ünvan yok.</div>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Ünvan</th>
+                <th>Görüşmeci</th>
+                <th>Durum</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody>
+              {titles.map((title) => (
+                <tr key={title.id}>
+                  <td><strong>{title.name}</strong></td>
+                  <td>{title.hostCount}</td>
+                  <td>
+                    <span className={`badge ${title.isActive ? 'live' : 'warn'}`}>
+                      {title.isActive ? 'Etkin' : 'Pasif'}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="toolbar" style={{ gap: 6 }}>
+                      <button
+                        className="btn btn-sm"
+                        onClick={() =>
+                          setTitleForm({
+                            id: title.id,
+                            name: title.name,
+                            sortOrder: title.sortOrder,
+                            isActive: title.isActive,
+                          })
+                        }
+                        disabled={busy}
+                      >
+                        Düzenle
+                      </button>
+                      <button className="btn btn-sm" onClick={() => onToggleTitle(title)} disabled={busy}>
+                        {title.isActive ? 'Pasifleştir' : 'Etkinleştir'}
+                      </button>
+                      <button className="btn btn-sm btn-danger" onClick={() => onDeleteTitle(title)} disabled={busy}>
+                        Sil
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      <div className="card">
+        <div className="card-header">
+          <h2>{roomForm.id ? 'Odayı düzenle' : 'Yeni oda'}</h2>
+        </div>
+        <div className="grid-3">
+          <div className="field">
+            <label>Oda adı</label>
+            <input
+              className="input"
+              value={roomForm.name}
+              onChange={(event) => setRoomForm({ ...roomForm, name: event.target.value })}
+              placeholder="Örn. Oda 4"
+            />
+          </div>
+          <div className="field">
+            <label>Tür</label>
+            <select
+              className="select"
+              value={roomForm.kind}
+              onChange={(event) =>
+                setRoomForm({ ...roomForm, kind: event.target.value as 'HostRoom' | 'Shared' })
+              }
+            >
+              <option value="Shared">Ortak oda</option>
+              <option value="HostRoom">Görüşmeci odası</option>
+            </select>
+          </div>
+          <div className="field">
+            <label>Görüşmeci</label>
+            <select
+              className="select"
+              value={roomForm.hostUserId ?? ''}
+              onChange={(event) => setRoomForm({ ...roomForm, hostUserId: event.target.value || null })}
+              disabled={roomForm.kind !== 'HostRoom'}
+            >
+              <option value="">Seçin</option>
+              {hosts
+                .filter((host) => host.role === 'Host')
+                .map((host) => (
+                  <option key={host.id} value={host.id}>
+                    {host.displayNameWithTitle}
+                  </option>
+                ))}
+            </select>
+          </div>
+        </div>
+        <div className="field" style={{ marginTop: 12 }}>
+          <label>Durum</label>
+          <label className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={roomForm.isActive}
+              onChange={(event) => setRoomForm({ ...roomForm, isActive: event.target.checked })}
+            />
+            Etkin
+          </label>
+        </div>
+        <div className="toolbar" style={{ marginTop: 12 }}>
+          <button className="btn btn-primary btn-sm" onClick={onSaveRoom} disabled={busy || !roomForm.name.trim()}>
+            {roomForm.id ? 'Güncelle' : 'Ekle'}
+          </button>
+          {roomForm.id ? (
+            <button className="btn btn-sm" onClick={() => setRoomForm(emptyRoom)} disabled={busy}>
+              Vazgeç
+            </button>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-header">
+          <h2>Odalar</h2>
+          <span className="muted">{rooms.length} oda</span>
+        </div>
+        {rooms.length === 0 ? (
+          <div className="empty">Henüz oda yok.</div>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Oda</th>
+                <th>Tür</th>
+                <th>Görüşmeci</th>
+                <th>Randevu</th>
+                <th>Durum</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rooms.map((room) => (
+                <tr key={room.id}>
+                  <td><strong>{room.name}</strong></td>
+                  <td>{room.kindText}</td>
+                  <td>{room.hostName ?? '—'}</td>
+                  <td>{room.appointmentCount}</td>
+                  <td>
+                    <span className={`badge ${room.isActive ? 'live' : 'warn'}`}>
+                      {room.isActive ? 'Etkin' : 'Pasif'}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="toolbar" style={{ gap: 6 }}>
+                      <button
+                        className="btn btn-sm"
+                        onClick={() =>
+                          setRoomForm({
+                            id: room.id,
+                            name: room.name,
+                            kind: room.kind,
+                            hostUserId: room.hostUserId,
+                            sortOrder: room.sortOrder,
+                            isActive: room.isActive,
+                          })
+                        }
+                        disabled={busy}
+                      >
+                        Düzenle
+                      </button>
+                      <button className="btn btn-sm" onClick={() => onToggleRoom(room)} disabled={busy}>
+                        {room.isActive ? 'Pasifleştir' : 'Etkinleştir'}
+                      </button>
+                      <button className="btn btn-sm btn-danger" onClick={() => onDeleteRoom(room)} disabled={busy}>
+                        Sil
                       </button>
                     </div>
                   </td>

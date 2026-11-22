@@ -3,6 +3,7 @@ using System.Globalization;
 using CgpRandevuTakip.Application.Appointments;
 using CgpRandevuTakip.Application.Categories;
 using CgpRandevuTakip.Application.Hosts;
+using CgpRandevuTakip.Application.Rooms;
 using CgpRandevuTakip.Application.Settings;
 using CgpRandevuTakip.Desktop.Common;
 using CgpRandevuTakip.Domain.Enums;
@@ -26,12 +27,42 @@ public sealed record SeriesSlotView(
     string StateText,
     bool WillCreate);
 
+public partial class HostSelectionItem : ObservableObject
+{
+    public HostSelectionItem(HostDto host)
+    {
+        Host = host;
+    }
+
+    public HostDto Host { get; }
+
+    public string Id => Host.Id;
+
+    public string DisplayName => Host.DisplayNameWithTitle;
+
+    [ObservableProperty]
+    private bool _isSelected;
+}
+
+public partial class GuestRowViewModel : ObservableObject
+{
+    [ObservableProperty]
+    private string _firstName = string.Empty;
+
+    [ObservableProperty]
+    private string _lastName = string.Empty;
+
+    [ObservableProperty]
+    private string _phone = string.Empty;
+}
+
 public partial class AppointmentEditorViewModel : ObservableObject
 {
     private readonly IAppointmentService _appointments;
     private readonly ICategoryService _categories;
     private readonly ISettingsService _settings;
     private readonly IHostService _hosts;
+    private readonly IMeetingRoomService _rooms;
     private readonly IAppointmentOutcomeDialogService _outcomeDialogs;
     private readonly IDialogService _dialogs;
 
@@ -50,6 +81,7 @@ public partial class AppointmentEditorViewModel : ObservableObject
         ICategoryService categories,
         ISettingsService settings,
         IHostService hosts,
+        IMeetingRoomService rooms,
         IAppointmentOutcomeDialogService outcomeDialogs,
         IDialogService dialogs)
     {
@@ -57,6 +89,7 @@ public partial class AppointmentEditorViewModel : ObservableObject
         _categories = categories;
         _settings = settings;
         _hosts = hosts;
+        _rooms = rooms;
         _outcomeDialogs = outcomeDialogs;
         _dialogs = dialogs;
 
@@ -108,6 +141,12 @@ public partial class AppointmentEditorViewModel : ObservableObject
 
     public RangeObservableCollection<HostDto> Hosts { get; } = new();
 
+    public RangeObservableCollection<MeetingRoomDto> Rooms { get; } = new();
+
+    public RangeObservableCollection<HostSelectionItem> ParticipantHosts { get; } = new();
+
+    public RangeObservableCollection<GuestRowViewModel> Guests { get; } = new();
+
     public ObservableCollection<string> TimeOptions { get; }
 
     public ObservableCollection<int> ReminderHourOptions { get; }
@@ -150,6 +189,9 @@ public partial class AppointmentEditorViewModel : ObservableObject
 
     [ObservableProperty]
     private HostDto? _selectedHost;
+
+    [ObservableProperty]
+    private MeetingRoomDto? _selectedRoom;
 
     [ObservableProperty]
     private CategoryDto? _selectedCategory;
@@ -269,6 +311,29 @@ public partial class AppointmentEditorViewModel : ObservableObject
             Durations.Add(SelectedDuration);
         }
         SelectedHost = Hosts.FirstOrDefault(x => x.Id == detail.HostUserId);
+        SelectedMethod = Methods.FirstOrDefault(x => x.Value == detail.Method) ?? Methods[0];
+        SelectedRoom = Rooms.FirstOrDefault(x => x.Id == detail.RoomId);
+
+        foreach (var participant in detail.Participants?.Where(x => !x.IsPrimary)
+                     ?? Enumerable.Empty<AppointmentParticipantDto>())
+        {
+            var item = ParticipantHosts.FirstOrDefault(x => x.Id == participant.UserId);
+            if (item is not null)
+                item.IsSelected = true;
+        }
+
+        Guests.Clear();
+        foreach (var guest in detail.Guests?.Where(x => !x.IsPrimary)
+                     ?? Enumerable.Empty<AppointmentGuestDto>())
+        {
+            Guests.Add(new GuestRowViewModel
+            {
+                FirstName = guest.FirstName,
+                LastName = guest.LastName,
+                Phone = guest.PhoneE164
+            });
+        }
+
         SelectedCategory = Categories.FirstOrDefault(x => x.Id == detail.CategoryId);
         if (SelectedCategory is null)
         {
@@ -282,7 +347,6 @@ public partial class AppointmentEditorViewModel : ObservableObject
             Categories.Add(SelectedCategory);
         }
 
-        SelectedMethod = Methods.FirstOrDefault(x => x.Value == detail.Method) ?? Methods[0];
         Description = detail.Description ?? string.Empty;
         StudentFirstName = detail.StudentFirstName ?? string.Empty;
         StudentLastName = detail.StudentLastName ?? string.Empty;
@@ -332,6 +396,29 @@ public partial class AppointmentEditorViewModel : ObservableObject
         SelectedDuration = Durations.FirstOrDefault(x => x.Minutes == source.DurationMinutes)
                            ?? Durations.First(x => x.Minutes == 60);
         SelectedHost = Hosts.FirstOrDefault(x => x.Id == source.HostUserId) ?? Hosts.FirstOrDefault();
+        SelectedMethod = Methods.FirstOrDefault(x => x.Value == source.Method) ?? Methods[0];
+        SelectedRoom = Rooms.FirstOrDefault(x => x.Id == source.RoomId);
+
+        foreach (var participant in source.Participants?.Where(x => !x.IsPrimary)
+                     ?? Enumerable.Empty<AppointmentParticipantDto>())
+        {
+            var item = ParticipantHosts.FirstOrDefault(x => x.Id == participant.UserId);
+            if (item is not null)
+                item.IsSelected = true;
+        }
+
+        Guests.Clear();
+        foreach (var guest in source.Guests?.Where(x => !x.IsPrimary)
+                     ?? Enumerable.Empty<AppointmentGuestDto>())
+        {
+            Guests.Add(new GuestRowViewModel
+            {
+                FirstName = guest.FirstName,
+                LastName = guest.LastName,
+                Phone = guest.PhoneE164
+            });
+        }
+
         SelectedCategory = Categories.FirstOrDefault(x => x.Id == source.CategoryId);
         if (SelectedCategory is null)
         {
@@ -345,7 +432,6 @@ public partial class AppointmentEditorViewModel : ObservableObject
             Categories.Add(SelectedCategory);
         }
 
-        SelectedMethod = Methods.FirstOrDefault(x => x.Value == source.Method) ?? Methods[0];
         Description = source.Description ?? string.Empty;
         StudentFirstName = source.StudentFirstName ?? string.Empty;
         StudentLastName = source.StudentLastName ?? string.Empty;
@@ -394,8 +480,9 @@ public partial class AppointmentEditorViewModel : ObservableObject
         var settingsTask = _settings.GetAsync();
         var categoriesTask = _categories.GetAllAsync();
         var hostsTask = _hosts.GetSelectableHostsAsync();
+        var roomsTask = _rooms.GetActiveAsync();
 
-        await Task.WhenAll(settingsTask, categoriesTask, hostsTask);
+        await Task.WhenAll(settingsTask, categoriesTask, hostsTask, roomsTask);
 
         var settings = await settingsTask;
         _defaultReminderMinutes = settings.DefaultReminderMinutes;
@@ -416,7 +503,10 @@ public partial class AppointmentEditorViewModel : ObservableObject
         var categories = await categoriesTask;
         Categories.ReplaceWith(categories.Where(x => x.IsActive));
 
-        Hosts.ReplaceWith(await hostsTask);
+        var hosts = await hostsTask;
+        Hosts.ReplaceWith(hosts);
+        ParticipantHosts.ReplaceWith(hosts.Select(x => new HostSelectionItem(x)));
+        Rooms.ReplaceWith(await roomsTask);
     }
 
     private void ApplyOutcomeDisplay(AppointmentDetailDto detail)
@@ -655,6 +745,38 @@ public partial class AppointmentEditorViewModel : ObservableObject
             offsets.Add(customOffset);
         }
 
+        var guestInputs = new List<AppointmentGuestInput>
+        {
+            new(null, FirstName, LastName, Phone, null, null, true)
+        };
+
+        foreach (var guest in Guests)
+        {
+            if (string.IsNullOrWhiteSpace(guest.FirstName)
+                && string.IsNullOrWhiteSpace(guest.LastName)
+                && string.IsNullOrWhiteSpace(guest.Phone))
+            {
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(guest.FirstName)
+                || string.IsNullOrWhiteSpace(guest.LastName)
+                || string.IsNullOrWhiteSpace(guest.Phone))
+            {
+                ErrorMessage = "Ek misafirlerin ad, soyad ve telefonu doldurulmalıdır.";
+                return false;
+            }
+
+            guestInputs.Add(new AppointmentGuestInput(
+                null,
+                guest.FirstName,
+                guest.LastName,
+                guest.Phone,
+                null,
+                null,
+                false));
+        }
+
         input = new AppointmentInput(
             FirstName,
             LastName,
@@ -667,9 +789,60 @@ public partial class AppointmentEditorViewModel : ObservableObject
             Description,
             StudentFirstName,
             StudentLastName,
-            offsets);
+            offsets,
+            RoomId: SelectedRoom?.Id,
+            ParticipantHostUserIds: ParticipantHosts
+                .Where(x => x.IsSelected && x.Id != SelectedHost?.Id)
+                .Select(x => x.Id)
+                .ToList(),
+            Guests: guestInputs);
 
         return true;
+    }
+
+    [RelayCommand]
+    private void AddGuest() => Guests.Add(new GuestRowViewModel());
+
+    [RelayCommand]
+    private void RemoveGuest(GuestRowViewModel? guest)
+    {
+        if (guest is not null)
+            Guests.Remove(guest);
+    }
+
+    partial void OnSelectedHostChanged(HostDto? value)
+    {
+        if (value is null)
+            return;
+
+        var item = ParticipantHosts.FirstOrDefault(x => x.Id == value.Id);
+        if (item is not null)
+            item.IsSelected = false;
+
+        if (SelectedMethod?.Value == AppointmentMethod.FaceToFace)
+            SelectHostRoom(value.Id);
+    }
+
+    partial void OnSelectedMethodChanged(MethodOption? value)
+    {
+        if (value?.Value == AppointmentMethod.FaceToFace)
+        {
+            if (SelectedHost is not null)
+                SelectHostRoom(SelectedHost.Id);
+        }
+        else
+        {
+            SelectedRoom = null;
+        }
+    }
+
+    private void SelectHostRoom(string hostUserId)
+    {
+        var room = Rooms.FirstOrDefault(x =>
+            x.Kind == MeetingRoomKind.HostRoom && x.HostUserId == hostUserId);
+
+        if (room is not null)
+            SelectedRoom = room;
     }
 
     partial void OnIsEditChanged(bool value)
@@ -696,7 +869,9 @@ public partial class AppointmentEditorViewModel : ObservableObject
            || !string.IsNullOrWhiteSpace(Phone)
            || !string.IsNullOrWhiteSpace(Description)
            || !string.IsNullOrWhiteSpace(StudentFirstName)
-           || !string.IsNullOrWhiteSpace(StudentLastName);
+           || !string.IsNullOrWhiteSpace(StudentLastName)
+           || Guests.Count > 0
+           || ParticipantHosts.Any(x => x.IsSelected);
 
     private void EnsureTimeOption(string time)
     {

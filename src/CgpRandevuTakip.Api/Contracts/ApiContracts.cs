@@ -1,5 +1,7 @@
 using CgpRandevuTakip.Application.Categories;
 using CgpRandevuTakip.Application.Hosts;
+using CgpRandevuTakip.Application.Rooms;
+using CgpRandevuTakip.Application.Titles;
 
 namespace CgpRandevuTakip.Api.Contracts;
 
@@ -58,6 +60,8 @@ public sealed record ContentManifestDto(
     PublicSettingsDto Settings,
     IReadOnlyList<CategoryDto> Categories,
     IReadOnlyList<HostDto> Hosts,
+    IReadOnlyList<HostTitleDto> Titles,
+    IReadOnlyList<MeetingRoomDto> Rooms,
     IReadOnlyDictionary<string, bool> Features,
     VersionPolicyDto VersionPolicy);
 

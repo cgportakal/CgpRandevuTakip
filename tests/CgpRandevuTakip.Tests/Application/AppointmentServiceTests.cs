@@ -1,5 +1,6 @@
 using CgpRandevuTakip.Application.Appointments;
 using CgpRandevuTakip.Application.Auth;
+using CgpRandevuTakip.Application.Rooms;
 using CgpRandevuTakip.Domain.Entities;
 using CgpRandevuTakip.Domain.Enums;
 using CgpRandevuTakip.Infrastructure.Repositories;
@@ -96,13 +97,20 @@ public class AppointmentServiceTests
         currentUser.SignIn(new UserSession("actor", "actor", "Aktör", UserRole.Secretary));
         var audit = new RecordingAuditLogger();
 
+        var clock = new FixedClock(NowUtc);
         var service = new AppointmentService(
             new AppointmentRepository(db.Factory),
             new PersonRepository(db.Factory),
             new UserRepository(db.Factory),
             new CategoryRepository(db.Factory),
+            new MeetingRoomService(
+                new MeetingRoomRepository(db.Factory),
+                new UserRepository(db.Factory),
+                audit,
+                currentUser,
+                clock),
             audit,
-            new FixedClock(NowUtc),
+            clock,
             currentUser);
 
         return new Sut
@@ -240,8 +248,10 @@ public class AppointmentServiceTests
 
         Assert.False(conflicting.Success);
         Assert.NotNull(conflicting.Conflicts);
-        Assert.Single(conflicting.Conflicts!);
-        Assert.False(conflicting.Conflicts![0].IsSamePerson);
+        Assert.Equal(2, conflicting.Conflicts!.Count);
+        Assert.Contains(conflicting.Conflicts!, x => x.Kind == ConflictKind.Host);
+        Assert.Contains(conflicting.Conflicts!, x => x.Kind == ConflictKind.Room);
+        Assert.All(conflicting.Conflicts!, x => Assert.False(x.IsSamePerson));
 
         var forced = await sut.Service.CreateAsync(
             sut.Input(firstName: "Zeynep", lastName: "Kaya", phone: "0555 111 22 33",
