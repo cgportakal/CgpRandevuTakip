@@ -9,7 +9,7 @@ P6 tamamlandı. Sıradaki: **P7 uçtan uca UAT** (web UI + mobil + masaüstü).
 ## Bu turda tamamlanan
 
 - **UAT test verisi (1000+ kayıt):** [`scripts/seed-test-data.mjs`](scripts/seed-test-data.mjs)
-  API’ye geçmiş/bugün/gelecek karışık **1073 görünür kayıt**, 8 seri, bilinçli host/kişi
+  API’ye geçmiş/bugün/gelecek karışık **1081 görünür kayıt**, 8 seri, bilinçli host/kişi
   çakışmaları, geçmişte planlı kayıtlar, silinenler ve hatırlatıcı denemeleri yazdı.
   Masaüstü (okuma modu, 1.10.2), web ve Android cihazda aynı günlük liste doğrulandı
   ([docs/46](docs/46_Test_Verisi_Uretimi.md)).

@@ -59,7 +59,7 @@ Betik deterministik `clientRequestId` (`demo-2026-11-22-0001`, …) kullanır; y
 - **Çakışmalar:** aynı host + aynı saatte bilinçli çakışan kayıtlar ve aynı kişi çakışması.
   Bunlar `ignoreConflicts` ile yazılır; normal kayıtlar çakışmayacak şekilde planlanır.
 - **Seriler:** 8 seri (haftalık / iki haftada bir / aylık), 5–8 oturum.
-- **Silinenler:** 18 kayıt yumuşak silinir (30 gün içinde geri alma testi).
+- **Silinenler:** 17 kayıt yumuşak silinir (30 gün içinde geri alma testi).
 - **Hatırlatıcılar:** bugün için 30/60 dk önce tetiklenecek 4 kayıt, yarın için 1440 dk
   (bir gün önce) hatırlatması olan kayıt. Sunucu `ReminderWorker` 15 sn'de bir çalışır;
   durumlar `ReminderDispatches` tablosunda izlenir.
@@ -111,9 +111,10 @@ GET /v1/appointments/search?from=2026-08-01&to=2027-02-28
 GET /v1/reports/summary
 ```
 
-22.11.2026 doğrulaması: **1073 görünür kayıt**, bugün **105**, yarın **68**, 8 seri,
-17 silinmiş kayıt, 2092 hatırlatıcı kaydı. Masaüstü (1.10.2, okuma modu), web ve Android
-cihaz aynı listeyi gösterdi.
+22.11.2026 doğrulaması: **1081 görünür kayıt** (24.08.2026 – 25.05.2027), 6 aylık
+arama penceresinde 1073; bugün **105**, yarın **68**, 8 seri, 17 silinmiş kayıt,
+2092 hatırlatıcı kaydı. Masaüstü (1.10.2, okuma modu), web ve Android cihaz aynı listeyi
+gösterdi.
 
 ## 6. Temizleme
 
