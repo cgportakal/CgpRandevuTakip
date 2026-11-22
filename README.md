@@ -9,6 +9,7 @@
 
 - **Kurulum (Setup EXE):** [CGP-RandevuTakip-1.11.0-Setup.exe](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.11.0/CGP-RandevuTakip-1.11.0-Setup.exe)
 - **Taşınabilir (ZIP):** [CGP-RandevuTakip-1.11.0-portable.zip](https://github.com/cgportakal/CgpRandevuTakip/releases/download/v1.11.0/CGP-RandevuTakip-1.11.0-portable.zip)
+- **Android APK (1.1.0):** [CGP-RandevuTakip-1.1.0.apk](https://github.com/cgportakal/CgpRandevuTakip/releases/download/mobile-v1.1.0/CGP-RandevuTakip-1.1.0.apk)
 - **Tüm sürümler:** [Releases](https://github.com/cgportakal/CgpRandevuTakip/releases/latest)
 
 > Kurulum EXE'si per-user çalışır; yönetici hakkı istemez. Taşınabilir ZIP'i yazılabilir bir klasöre açıp
