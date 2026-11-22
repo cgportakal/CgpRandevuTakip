@@ -1,13 +1,15 @@
 # CURRENT — Devir Durumu
 
-**Son güncelleme:** 2026-11-22 02:45 (UTC+3)
+**Son güncelleme:** 2026-11-22 03:05 (UTC+3)
 **Son commit:** Güncel hash için `git log -1 --oneline` (bu dosya commit edildikçe değişir)
 **Dal:** `master` (origin ile eşit)
-**Durum:** **1.10.2 sürüm hazırlığı** — P6 (açılış/pull/ağ/hatırlatıcı) kod olarak tamamlandı;
-432 test. Setup-only yayın sıradaki; ardından **P7 uçtan uca UAT**.
+**Durum:** Yeşil — **432 test**. **1.10.2 yayında** (Setup-only); kurulu sürüm 1.10.2.
+P6 tamamlandı. Sıradaki: **P7 uçtan uca UAT** (web UI + mobil + masaüstü).
 
 ## Bu turda tamamlanan
 
+- **1.10.2 yayını:** `v1.10.2` GitHub Release (Setup-only). Assetler: Setup (~67,1 MB), Dev.cer,
+  SHA256SUMS, version-policy (`latestDesktopVersion: 1.10.2`); kurulu sürüm 1.10.2 doğrulandı.
 - **P6 — açılış/pull/ağ/hatırlatıcı:** `SyncMaintenanceService` eklendi. Açılışta oturum →
   manifest → outbox flush → günlük liste (8 sn zaman aşımı); sunucu modunda 60 sn’de bir pull ve
   `ServerSyncTickMessage` ile liste tazeleme; ağ hatası çevrimdışı durumuna yazılıyor. Yerel
@@ -378,8 +380,8 @@ dotnet test CgpRandevuTakip.sln -c Release
 ## Son CI
 
 Bu dal: yerel **432/432** test (335 uygulama + 79 masaüstü/VM + 16 API + 2 UI), web build ve
-mobil `tsc` başarılı. Master CI ✅ ve **Release v1.10.1** ✅ (PR #67 / tag `v1.10.1`).
-Son release: **1.10.1** (Setup-only); README Setup bağlantısı HTTP 200; kurulu sürüm 1.10.1.
+mobil `tsc` başarılı. Master CI ✅ ve **Release v1.10.2** ✅ (PR #70 / tag `v1.10.2`).
+Son release: **1.10.2** (Setup-only); README Setup bağlantısı HTTP 200; kurulu sürüm 1.10.2.
 Android emülatör ve **Samsung S21 gerçek cihaz UAT** tamamlandı.
 Dependabot picomatch uyarısı **withdrawn** olduğu için dismissed; kod bağımlılığı değiştirilmedi.
 Android SDK/JDK/adb/emulator `D:\Android` altında; AVD `cgp_uat` hazır; `expo-dev-client` eklendi.
