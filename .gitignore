@@ -28,6 +28,9 @@ Yedekler/
 logs/
 *.log
 
+# UAT tohumlama durumu (yerel)
+scripts/.seed-demo-state.json
+
 # Test ve kapsam
 TestResults/
 coverage/
