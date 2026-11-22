@@ -113,6 +113,10 @@ public partial class AppointmentListViewModel : ObservableObject
             this,
             static (recipient, message) =>
                 ((AppointmentListViewModel)recipient).ApplyDate(message.Date));
+
+        WeakReferenceMessenger.Default.Register<ServerSyncTickMessage>(
+            this,
+            static (recipient, _) => ((AppointmentListViewModel)recipient).ScheduleServerRefresh());
     }
 
     public RangeObservableCollection<AppointmentRowViewModel> Appointments { get; } = new();
@@ -842,6 +846,8 @@ public partial class AppointmentListViewModel : ObservableObject
             _realtimeReloadTimer.Start();
         });
     }
+
+    private void ScheduleServerRefresh() => ScheduleRealtimeReload();
 
     partial void OnSelectedDateChanged(DateTime value)
     {

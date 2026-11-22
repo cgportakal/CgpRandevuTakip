@@ -7,6 +7,7 @@ using CgpRandevuTakip.Application.Reminders;
 using CgpRandevuTakip.Application.Settings;
 using CgpRandevuTakip.Desktop.ViewModels;
 using CgpRandevuTakip.Desktop.Views;
+using CgpRandevuTakip.Desktop.Services.Sync;
 using Microsoft.Extensions.Hosting;
 
 namespace CgpRandevuTakip.Desktop.Services;
@@ -30,6 +31,7 @@ public sealed class ReminderDispatcher : BackgroundService
     private readonly IPushNotifier _push;
     private readonly WindowsToastService _windowsToast;
     private readonly IDialogService _dialogs;
+    private readonly ServerReadService _serverReads;
 
     private readonly ConcurrentDictionary<string, ReminderActionWindow> _openWindows = new();
     private readonly ConcurrentDictionary<string, ReminderContextDto> _recentContexts = new();
@@ -42,7 +44,8 @@ public sealed class ReminderDispatcher : BackgroundService
         IClock clock,
         IPushNotifier push,
         WindowsToastService windowsToast,
-        IDialogService dialogs)
+        IDialogService dialogs,
+        ServerReadService serverReads)
     {
         _reminders = reminders;
         _settings = settings;
@@ -52,6 +55,7 @@ public sealed class ReminderDispatcher : BackgroundService
         _push = push;
         _windowsToast = windowsToast;
         _dialogs = dialogs;
+        _serverReads = serverReads;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -82,6 +86,11 @@ public sealed class ReminderDispatcher : BackgroundService
 
     private async Task TickAsync()
     {
+        // Sunucu modunda hatırlatmalar API worker'ı tarafından gönderilir; yerel
+        // dispatcher çalışırsa çift bildirim oluşur.
+        if (await _serverReads.IsServerReadActiveAsync())
+            return;
+
         var nowUtc = _clock.UtcNow;
 
         await _reminders.RequeueExpiredAsync(nowUtc, RepeatDelay, MaxRepeats);

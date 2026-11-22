@@ -146,12 +146,15 @@ geçici kimlikler sunucu kimlikleriyle eşlenir. **Kalan tek adım saha UAT’id
 - [x] UAT: iki istemcide aynı randevu düzenlenir; ikinci kayıt çakışma dialog’u görür.
       ([docs/45](45_Masaustu_Senkronizasyon_UAT.md))
 
-### P6 — Açılış/kapanış ve dayanıklılık
-- [ ] Açılışta: oturum → manifest → outbox flush → günlük liste.
-- [ ] Arka planda 30–60 sn’lik pull (yalnızca çevrimiçiyken) + SignalR.
-- [ ] Ağ durumu: `NetworkAvailabilityChanged` veya periyodik sağlık kontrolü.
-- [ ] Kapanışta outbox dosyaya yazılır; uygulama çökerse veri kaybı olmaz.
-- [ ] Sunucu bağlıyken yerel `ReminderDispatcher` kapatılır.
+### P6 — Açılış/kapanış ve dayanıklılık — **kod tamamlandı**
+- [x] Açılışta: oturum → manifest → outbox flush → günlük liste.
+- [x] Arka planda 60 sn’lik pull (yalnızca çevrimiçiyken) + SignalR.
+- [x] Ağ durumu: periyodik pull/health; hata `ServerReadService` çevrimdışı durumuna yazılır.
+- [x] Kapanışta outbox dosyaya yazılır; uygulama çökerse veri kaybı olmaz (SQLite’a anında yazım).
+- [x] Sunucu bağlıyken yerel `ReminderDispatcher` kapatılır.
+
+Uygulama: `SyncMaintenanceService` (açılış hazırlığı + 60 sn pull, `ServerSyncTickMessage`),
+`App` açılışında 8 sn zaman aşımlı `PrepareAsync`, `ReminderDispatcher` sunucu modunda atlar.
 
 ### P7 — UAT ve dokümantasyon
 - [ ] Aynı randevu: masaüstü oluştur → web/mobil anında görür; tersi de.
