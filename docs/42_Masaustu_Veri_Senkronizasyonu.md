@@ -1,6 +1,6 @@
 # 42 — Masaüstü Veri Senkronizasyonu (Devir Planı)
 
-**Tarih:** 19.11.2026 · **Durum:** P1, P2, P3 tamamlandı; P4 kod tamamlandı (UAT sıradaki) · **Kaynak karar:** [docs/41](41_Tasarim_ve_Veri_Paritesi.md) §4
+**Tarih:** 19.11.2026 · **Güncelleme:** 23.11.2026 · **Durum:** P1–P6 kod tamamlandı; 1.11.0 saha UAT’i geçti (sunucu bağlantısı + çoklu misafir); kalan yalnızca iOS UAT · **Kaynak karar:** [docs/41](41_Tasarim_ve_Veri_Paritesi.md) §4
 
 Bu belge, masaüstü uygulamasının API ile tam senkronize çalışması için yapılacak işleri ve
 teknik kararları diğer bilgisayara devretmek için yazıldı. Yeni oturumda önce

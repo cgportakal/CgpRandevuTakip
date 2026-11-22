@@ -243,8 +243,9 @@ node scripts/bootstrap.mjs --check      # eksik varsa: --install
 node coordination/lock.mjs status       # boşsa kendi kilidini al
 ```
 
-**Yayın:** `v1.10.0` hazır (Setup + portable). Uygulamayı denemek için GitHub Releases →
-`CGP-RandevuTakip-1.10.0-Setup.exe` (veya portable ZIP); kaynaktan çalıştırmak için:
+**Yayın:** `v1.11.1` hazır (Setup-only; son portable **1.11.0**). Uygulamayı denemek için
+GitHub Releases → `CGP-RandevuTakip-1.11.1-Setup.exe` (veya son portable `1.11.0` ZIP);
+kaynaktan çalıştırmak için:
 
 ```powershell
 # API (ayrı terminal)
@@ -265,19 +266,19 @@ npx expo start
 İlk API açılışında `POST /v1/auth/setup` ile yönetici oluşturulur; yerel veritabanı ve sırlar
 repoda değildir. Yedekleme davranışı: [docs/43](docs/43_Yedekleme_ve_Geri_Yukleme.md).
 
-**Sıradaki işin devri:** 1.10.0 yayınlandı. Sıradaki iş **P3/P4 saha UAT’i**:
-çevrimdışı tekil/seri oluştur-güncelle-sil-taşı, kuyruğun sırayla gönderimi ve SignalR canlı
-yenileme ([docs/44](docs/44_Masaustu_Senkronizasyon_Devir.md) §5). Ardından **P5 çakışma**
-([docs/42](docs/42_Masaustu_Veri_Senkronizasyonu.md)).
+**Sıradaki işin devri:** 1.11.1 yayınlandı; masaüstü, web ve mobil aynı API’yi kullanıyor.
+Sıradaki iş **iOS UAT** — macOS + Xcode + EAS dev build gerekir; çevrimdışı kuyruk, SignalR
+canlı olay ve push doğrulanmalı. Ardından online barındırma (ertelendi, Oracle Always Free
+İstanbul araştırıldı) ve istenirse mağaza AAB derlemesi.
 
 Kendi kilidini al:
 
 ```powershell
-node coordination/lock.mjs acquire --machine cafer-desktop --task "P3/P4 UAT" --branch agent/cafer-desktop/desktop-sync-uat
-git switch -c agent/cafer-desktop/desktop-sync-uat
+node coordination/lock.mjs acquire --machine cafer-desktop --task "iOS UAT" --branch agent/cafer-desktop/ios-uat
+git switch -c agent/cafer-desktop/ios-uat
 ```
 
-**Hazırlık durumu (21.11.2026):** `master` 1.10.0 sürümünde, 429/429 test, CI yeşil,
+**Hazırlık durumu (23.11.2026):** `master` 1.11.1 sürümünde, 438/438 test, CI yeşil,
 `bootstrap --check` tüm araçları buluyor (JDK 17, Android SDK, platform 35, adb, EAS CLI).
 API yerel veritabanı ve sırlar repoda değil; ilk çalıştırmada `POST /v1/auth/setup` gerekir.
 
@@ -309,15 +310,13 @@ ilk çalıştırmada `POST /v1/auth/setup` gerekir. Ayrıntı: [docs/39](docs/39
 
 ## Sıradaki iş (öncelik sırası)
 
-1. **1.11.1 yayını ve doğrulama** — Setup-only sürüm; API push timeout düzeltmesi.
-   Yayın sonrası `latestDesktopVersion/latestWebVersion = 1.11.1`, kurulu sürüm kontrolü.
-2. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
+1. **iOS UAT** — Xcode yalnızca macOS’ta çalışır; Mac’te EAS dev build ile çevrimdışı kuyruk,
    canlı olay ve push doğrulanmalı.
-3. **Online barındırma (ertelendi)** — araştırma: mevcut sistem için tek gerçekçi ücretsiz
+2. **Online barındırma (ertelendi)** — araştırma: mevcut sistem için tek gerçekçi ücretsiz
    seçenek Oracle Cloud Always Free (İstanbul bölgesi); InfinityFree uygun değil. İlk aşama
    SQLite, büyüme için PostgreSQL. Karar ileride verilecek.
-4. **Mağaza derlemesi (opsiyonel)** — EAS `production` profiliyle imzalı AAB/APK.
-5. **İçerik logosu UAT notları (opsiyonel)** — gerçek kurum verisiyle son kontrol.
+3. **Mağaza derlemesi (opsiyonel)** — EAS `production` profiliyle imzalı AAB/APK.
+4. **İçerik logosu UAT notları (opsiyonel)** — gerçek kurum verisiyle son kontrol.
 
 ## Aktif kilit
 
@@ -334,7 +333,8 @@ Yok. (Gerçek cihaz UAT tamamlandı; kilit bırakıldı. Kontrol: `node coordina
 - **Masaüstü verisi ayrıdır:** desktop `%LOCALAPPDATA%` SQLite, sunucu `CGP_API_DATA/cgp.db`.
   Okuma modu (`sync.read.enabled`, varsayılan kapalı) açıkken okumalar API'den yapılır ve
   `SyncCacheEntries` tablosuna önbelleklenir; yazmalar API'ye gider, bağlantı yoksa
-  `SyncOutboxItems` kuyruğuna alınır. **P3/P4 UAT tamamlanana kadar üretimde açılmamalıdır.**
+  `SyncOutboxItems` kuyruğuna alınır. Saha UAT’i (1.11.0) sunucuya bağlı 112 görüşme ile geçti;
+  yine de üretimde açmadan önce kurum verisiyle doğrulayın.
   Sunucu oturumu açma/çıkarma önbelleği temizler.
 - **Masaüstü zorunlu güncelleme testi:** `UpdateService` politikayı yerel API’den değil GitHub
   `master/version-policy.json` ve `releases/latest` üzerinden okur. Test için geçici düşük sürüm
