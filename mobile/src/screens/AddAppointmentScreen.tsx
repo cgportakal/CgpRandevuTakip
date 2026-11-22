@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   ScrollView,
@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { useNetInfo } from '@react-native-community/netinfo';
-import { api } from '../api/client';
+import { api, ApiError } from '../api/client';
 import type {
   AppointmentInput,
   AppointmentMethod,
@@ -84,6 +84,14 @@ export function AddAppointmentScreen({ manifest, onBack, onSaved }: Props) {
   const rooms = (manifest?.rooms ?? []).filter(
     (room) => room.kind === 'Shared' || room.hostUserId === hostId,
   );
+
+  useEffect(() => {
+    if (roomId) return;
+    const room = manifest?.rooms.find(
+      (item) => item.kind === 'HostRoom' && item.hostUserId === hostId,
+    );
+    if (room) setRoomId(room.id);
+  }, [manifest, hostId, roomId]);
 
   const selectHost = (value: string) => {
     setHostId(value);
@@ -178,7 +186,7 @@ export function AddAppointmentScreen({ manifest, onBack, onSaved }: Props) {
     }
   };
 
-  const save = async () => {
+  const save = async (force = false) => {
     if (!input) {
       Alert.alert('Eksik bilgi', 'Ad, soyad, telefon, görüşmeci ve kategori zorunludur.');
       return;
@@ -219,8 +227,21 @@ export function AddAppointmentScreen({ manifest, onBack, onSaved }: Props) {
 
     setBusy(true);
     try {
-      const result = await api.createAppointment(input);
+      const payload = force ? { ...input, ignoreConflicts: true } : input;
+      const result = await api.createAppointment(payload);
       if (!result.success) {
+        if (result.conflicts?.length) {
+          Alert.alert(
+            'Çakışma',
+            result.error ?? 'Bu saatte çakışan bir görüşme var.',
+            [
+              { text: 'Vazgeç', style: 'cancel' },
+              { text: 'Yine de kaydet', onPress: () => void save(true) },
+            ],
+          );
+          return;
+        }
+
         Alert.alert('Görüşme', result.error ?? 'Görüşme oluşturulamadı.');
         return;
       }
@@ -229,6 +250,24 @@ export function AddAppointmentScreen({ manifest, onBack, onSaved }: Props) {
       Alert.alert('Kaydedildi', 'Görüşme oluşturuldu.');
       onSaved();
     } catch (error) {
+      if (error instanceof ApiError) {
+        const payload = error.payload as
+          | { error?: string; conflicts?: unknown[] }
+          | undefined;
+
+        if (payload?.conflicts?.length) {
+          Alert.alert(
+            'Çakışma',
+            payload.error ?? 'Bu saatte çakışan bir görüşme var.',
+            [
+              { text: 'Vazgeç', style: 'cancel' },
+              { text: 'Yine de kaydet', onPress: () => void save(true) },
+            ],
+          );
+          return;
+        }
+      }
+
       Alert.alert('Hata', error instanceof Error ? error.message : 'Görüşme oluşturulamadı.');
     } finally {
       setBusy(false);

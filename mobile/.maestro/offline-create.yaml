@@ -12,22 +12,41 @@ appId: com.cgportakal.cgpRandevuTakip
 - inputText: Cevrimdisi
 - tapOn:
     id: phone
-- inputText: "05557779933"
+- inputText: "05558880033"
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: add-guest
+    direction: DOWN
 - tapOn:
     id: add-guest
+- scrollUntilVisible:
+    element:
+      id: guest-first-0
+    direction: DOWN
 - tapOn:
     id: guest-first-0
 - inputText: Ek
+- hideKeyboard
 - tapOn:
     id: guest-last-0
 - inputText: Misafir
+- hideKeyboard
 - tapOn:
     id: guest-phone-0
-- inputText: "05557779944"
+- inputText: "05558880044"
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: save-appointment
+    direction: DOWN
 - tapOn:
     id: save-appointment
 - assertVisible:
     text: ".*Kuyru.*"
+- tapOn:
+    text: "OK"
+    optional: true
 - setAirplaneMode: disabled
 - tapOn:
     id: open-reports

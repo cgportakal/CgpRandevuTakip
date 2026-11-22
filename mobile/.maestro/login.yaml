@@ -8,9 +8,9 @@ appId: com.cgportakal.cgpRandevuTakip
     id: login-username
 - inputText: admin
 - tapOn:
-    id: login-password
+    point: "50%,56%"
 - inputText: "CgpDemo!2026"
+- hideKeyboard
 - tapOn:
     id: login-submit
-- assertVisible:
-    text: ".*G.n.l.k.*"
+- assertVisible: "Çıkış"

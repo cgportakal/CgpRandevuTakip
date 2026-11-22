@@ -59,7 +59,7 @@ export function TodayScreen({ displayName, onLogout, onOpenAppointment, onAdd, o
   const load = useCallback(async (target: Date, isRefresh: boolean) => {
     const dateKeyValue = dateKey(target);
 
-    if (isRefresh) {
+    if (netInfo.isConnected !== false) {
       const flushed = await flushOutbox();
       if (flushed.sent > 0) {
         setPending(await pendingCount());

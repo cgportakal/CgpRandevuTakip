@@ -20,7 +20,8 @@ WhatsApp üzerinden paylaşan ve zamanı gelen görüşmeler için hatırlatma �
 
 > Durum: **1.11.0 hazır** — görüşme odaları, yönetilen ünvanlar, çoklu görüşmeci ve
 > misafir başına bağımsız sonuç. Masaüstü, web ve mobil aynı kayıtları görür; çevrimdışı
-> kuyruk ve çakışma çözümü korunur. 1.081+ kayıtla API ve web E2E UAT doğrulandı.
+> kuyruk ve çakışma çözümü korunur. 1.082 kayıtla API, web Playwright, masaüstü 1.11.0
+> ve Samsung S21 Maestro UAT’i tamamlandı; iOS Mac bekliyor.
 
 ### Son yenilikler
 

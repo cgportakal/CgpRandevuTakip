@@ -92,6 +92,26 @@ export type AppointmentGuest = {
   outcome: AppointmentGuestOutcome | null;
 };
 
+export type AppointmentConflict = {
+  appointmentId: string;
+  personName: string;
+  startsAtLocal: string;
+  endsAtLocal: string;
+  categoryName?: string | null;
+  isSamePerson: boolean;
+  kind?: 'Host' | 'Room' | 'Guest';
+  resourceName?: string | null;
+};
+
+export type AppointmentSaveResult = {
+  success: boolean;
+  error: string | null;
+  appointmentId: string | null;
+  conflicts?: AppointmentConflict[] | null;
+  queued?: boolean;
+  versionConflict?: boolean;
+};
+
 export type AppointmentGuestInput = {
   personId?: string | null;
   firstName: string;

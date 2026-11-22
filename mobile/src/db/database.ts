@@ -58,7 +58,6 @@ async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
 
     CREATE INDEX IF NOT EXISTS ix_appointments_starts ON appointments(starts_at_local);
     CREATE INDEX IF NOT EXISTS ix_appointments_host ON appointments(host_user_id, starts_at_local);
-    CREATE INDEX IF NOT EXISTS ix_appointments_room ON appointments(room_id, starts_at_local);
 
     CREATE TABLE IF NOT EXISTS outbox (
       id TEXT PRIMARY KEY NOT NULL,
@@ -85,6 +84,11 @@ async function migrate(db: SQLite.SQLiteDatabase): Promise<void> {
   await ensureColumn(db, 'appointments', 'room_name', 'TEXT');
   await ensureColumn(db, 'appointments', 'guest_count', 'INTEGER NOT NULL DEFAULT 1');
   await ensureColumn(db, 'appointments', 'host_count', 'INTEGER NOT NULL DEFAULT 1');
+
+  await db.execAsync(
+    `CREATE INDEX IF NOT EXISTS ix_appointments_room
+     ON appointments(room_id, starts_at_local);`,
+  );
 
   await db.runAsync(
     `INSERT INTO meta (key, value) VALUES ('schema_version', ?)
